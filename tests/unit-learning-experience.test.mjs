@@ -4,13 +4,30 @@ import vm from "node:vm";
 
 const indexHtml = fs.readFileSync("prototype/index.html", "utf8");
 const courseDataGuidePath = "课程/00-课程数据编辑与审校说明.md";
-assert.ok(fs.existsSync("prototype/course-data.js"), "alphabet course data should live in a standalone data file");
+const courseDataAggregatorPath = "prototype/course-data.js";
+const courseDataScriptPaths = [
+  "prototype/course-data/alphabet-data.js",
+  "prototype/course-data/combo-data.js",
+  "prototype/course-data/vocab-data.js",
+  "prototype/course-data/practice-data.js"
+];
+assert.ok(fs.existsSync(courseDataAggregatorPath), "course data aggregator should exist");
+for (const scriptPath of courseDataScriptPaths) {
+  assert.ok(fs.existsSync(scriptPath), `${scriptPath} should exist as a focused course data file`);
+}
 assert.ok(fs.existsSync(courseDataGuidePath), "course data editing guide should exist for non-technical review");
-const courseDataSource = fs.readFileSync("prototype/course-data.js", "utf8");
+const courseDataSource = fs.readFileSync(courseDataAggregatorPath, "utf8");
+const courseDataSources = Object.fromEntries(
+  courseDataScriptPaths.map((scriptPath) => [scriptPath, fs.readFileSync(scriptPath, "utf8")])
+);
 const courseDataGuide = fs.readFileSync(courseDataGuidePath, "utf8");
 const appSource = fs.readFileSync("prototype/app.js", "utf8");
 for (const phrase of [
   "prototype/course-data.js",
+  "prototype/course-data/alphabet-data.js",
+  "prototype/course-data/combo-data.js",
+  "prototype/course-data/vocab-data.js",
+  "prototype/course-data/practice-data.js",
   "alphabetGroups",
   "comboGroups",
   "vocabGroups",
@@ -24,11 +41,20 @@ assert.ok(
   courseDataSource.includes("window.ANA_TILIM_COURSE"),
   "course data file should expose a stable window.ANA_TILIM_COURSE object"
 );
+for (const globalName of [
+  "window.ANA_TILIM_ALPHABET",
+  "window.ANA_TILIM_COMBOS",
+  "window.ANA_TILIM_VOCAB",
+  "window.ANA_TILIM_PRACTICE"
+]) {
+  assert.ok(courseDataSource.includes(globalName), `course data aggregator should read ${globalName}`);
+}
 assert.ok(
   appSource.includes("window.ANA_TILIM_COURSE"),
   "app should read alphabet course content from the shared course data object"
 );
-assert.ok(courseDataSource.includes("comboGroups"), "unit two combo course data should live in the shared data file");
+assert.ok(courseDataSources["prototype/course-data/alphabet-data.js"].includes("alphabetGroups"), "unit one alphabet course data should live in the alphabet data file");
+assert.ok(courseDataSources["prototype/course-data/combo-data.js"].includes("comboGroups"), "unit two combo course data should live in the combo data file");
 assert.ok(
   !appSource.includes("const comboGroups = ["),
   "app should not define unit two combo content inline"
@@ -37,7 +63,7 @@ assert.ok(
   appSource.includes("comboGroups") && appSource.indexOf("comboGroups") < appSource.indexOf("const alphabetAudioByLetterId"),
   "app should read unit two combo content from the shared course data object"
 );
-assert.ok(courseDataSource.includes("vocabGroups"), "unit three vocabulary course data should live in the shared data file");
+assert.ok(courseDataSources["prototype/course-data/vocab-data.js"].includes("vocabGroups"), "unit three vocabulary course data should live in the vocab data file");
 assert.ok(
   !appSource.includes("const vocabGroups = ["),
   "app should not define unit three vocabulary content inline"
@@ -46,7 +72,7 @@ assert.ok(
   appSource.includes("vocabGroups") && appSource.indexOf("vocabGroups") < appSource.indexOf("const alphabetAudioByLetterId"),
   "app should read unit three vocabulary content from the shared course data object"
 );
-assert.ok(courseDataSource.includes("practiceGroups"), "unit four practice course data should live in the shared data file");
+assert.ok(courseDataSources["prototype/course-data/practice-data.js"].includes("practiceGroups"), "unit four practice course data should live in the practice data file");
 assert.ok(
   !appSource.includes("const practiceGroups = ["),
   "app should not define unit four practice content inline"
@@ -55,10 +81,17 @@ assert.ok(
   appSource.includes("practiceGroups") && appSource.indexOf("practiceGroups") < appSource.indexOf("const alphabetAudioByLetterId"),
   "app should read unit four practice content from the shared course data object"
 );
-assert.ok(
-  indexHtml.indexOf("course-data.js") >= 0 && indexHtml.indexOf("course-data.js") < indexHtml.indexOf("app.js"),
-  "course data should load before the app script"
+const htmlScriptOrder = [...courseDataScriptPaths, courseDataAggregatorPath, "prototype/app.js"].map((scriptPath) =>
+  scriptPath.replace("prototype/", "./")
 );
+for (let index = 0; index < htmlScriptOrder.length - 1; index += 1) {
+  const currentScript = htmlScriptOrder[index];
+  const nextScript = htmlScriptOrder[index + 1];
+  assert.ok(
+    indexHtml.indexOf(currentScript) >= 0 && indexHtml.indexOf(currentScript) < indexHtml.indexOf(nextScript),
+    `${currentScript} should load before ${nextScript}`
+  );
+}
 
 function makeElement(id) {
   return {
@@ -121,7 +154,10 @@ const context = {
 
 context.globalThis = context;
 vm.createContext(context);
-vm.runInContext(fs.readFileSync("prototype/course-data.js", "utf8"), context, { filename: "prototype/course-data.js" });
+for (const scriptPath of courseDataScriptPaths) {
+  vm.runInContext(fs.readFileSync(scriptPath, "utf8"), context, { filename: scriptPath });
+}
+vm.runInContext(fs.readFileSync(courseDataAggregatorPath, "utf8"), context, { filename: courseDataAggregatorPath });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
 
 function renderState(script) {

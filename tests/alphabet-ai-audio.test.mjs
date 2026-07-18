@@ -78,6 +78,14 @@ const context = {
 
 context.globalThis = context;
 vm.createContext(context);
+for (const scriptPath of [
+  "prototype/course-data/alphabet-data.js",
+  "prototype/course-data/combo-data.js",
+  "prototype/course-data/vocab-data.js",
+  "prototype/course-data/practice-data.js"
+]) {
+  vm.runInContext(fs.readFileSync(scriptPath, "utf8"), context, { filename: scriptPath });
+}
 vm.runInContext(fs.readFileSync("prototype/course-data.js", "utf8"), context, { filename: "prototype/course-data.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
 vm.runInContext("state.screen = 'group'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'; render();", context);
