@@ -598,6 +598,47 @@ const alphabetGroups = [
   { id: "vowels-final", title: "元音 3：ئې / ئى", letters: letters(["ee", "ii"]), goal: "后段元音和 ي 继续区分", status: "可学习" }
 ];
 
+const alphabetAudioItems = [
+  { letterId: "be", file: "ai_temp_letter_01_b.mp3" },
+  { letterId: "pe", file: "ai_temp_letter_02_p.mp3" },
+  { letterId: "te", file: "ai_temp_letter_03_t.mp3" },
+  { letterId: "nun", file: "ai_temp_letter_04_n.mp3" },
+  { letterId: "jim", file: "ai_temp_letter_05_j.mp3" },
+  { letterId: "che", file: "ai_temp_letter_06_ch.mp3" },
+  { letterId: "khe", file: "ai_temp_letter_07_x.mp3" },
+  { letterId: "dal", file: "ai_temp_letter_08_d.mp3" },
+  { letterId: "re", file: "ai_temp_letter_09_r.mp3" },
+  { letterId: "ze", file: "ai_temp_letter_10_z.mp3" },
+  { letterId: "zhe", file: "ai_temp_letter_11_zh.mp3" },
+  { letterId: "sin", file: "ai_temp_letter_12_s.mp3" },
+  { letterId: "shin", file: "ai_temp_letter_13_sh.mp3" },
+  { letterId: "ghayn", file: "ai_temp_letter_14_gh.mp3" },
+  { letterId: "fe", file: "ai_temp_letter_15_f.mp3" },
+  { letterId: "qaf", file: "ai_temp_letter_16_q.mp3" },
+  { letterId: "kaf", file: "ai_temp_letter_17_k.mp3" },
+  { letterId: "gaf", file: "ai_temp_letter_18_g.mp3" },
+  { letterId: "ng", file: "ai_temp_letter_19_ng.mp3" },
+  { letterId: "lam", file: "ai_temp_letter_20_l.mp3" },
+  { letterId: "mim", file: "ai_temp_letter_21_m.mp3" },
+  { letterId: "he", file: "ai_temp_letter_22_h.mp3" },
+  { letterId: "waw", file: "ai_temp_letter_23_w_v.mp3" },
+  { letterId: "ye", file: "ai_temp_letter_24_y.mp3" },
+  { letterId: "aa", file: "ai_temp_letter_25_a.mp3" },
+  { letterId: "ae", file: "ai_temp_letter_26_e.mp3" },
+  { letterId: "o", file: "ai_temp_letter_27_o.mp3" },
+  { letterId: "u", file: "ai_temp_letter_28_u.mp3" },
+  { letterId: "oe", file: "ai_temp_letter_29_oe.mp3" },
+  { letterId: "ue", file: "ai_temp_letter_30_ue.mp3" },
+  { letterId: "ee", file: "ai_temp_letter_31_ee.mp3" },
+  { letterId: "ii", file: "ai_temp_letter_32_i.mp3" }
+].map((item) => ({
+  ...item,
+  statusLabel: "AI 临时音频",
+  outputPath: `./assets/audio/ai-temp/alphabet/${item.file}`
+}));
+
+const alphabetAudioByLetterId = Object.fromEntries(alphabetAudioItems.map((item) => [item.letterId, item]));
+
 const comboGroups = [
   {
     id: "open-a",
@@ -1317,9 +1358,14 @@ const state = {
 const app = document.querySelector("#app");
 const toast = document.querySelector("#toast");
 let toastTimer = null;
+let activeAudio = null;
 
 function currentLetter() {
   return currentGroupLetters().find((letter) => letter.id === state.currentLetterId) || currentGroupLetters()[0];
+}
+
+function currentLetterAudio() {
+  return alphabetAudioByLetterId[currentLetter().id] || null;
 }
 
 function currentGroup() {
@@ -1806,6 +1852,7 @@ function renderUnitDetail() {
 function renderGroupLesson() {
   const group = currentGroup();
   const letter = currentLetter();
+  const audio = currentLetterAudio();
 
   return screen(
     `
@@ -1857,10 +1904,17 @@ function renderGroupLesson() {
           </div>
         </div>
         <div class="audio-strip">
-          <button class="play-dot" data-action="toast" type="button" aria-label="播放发音">听</button>
+          <button
+            class="play-dot"
+            data-action="play-audio"
+            data-audio-src="${audio ? audio.outputPath : ""}"
+            data-audio-label="${letter.letter}"
+            type="button"
+            aria-label="播放发音"
+          >听</button>
           <div>
             <strong>发音提示</strong>
-            <p class="caption">${letter.soundHint}</p>
+            <p class="caption">${audio ? `${audio.statusLabel}：${audio.file}。` : ""}${letter.soundHint}</p>
           </div>
         </div>
         <div class="form-grid">
@@ -2032,6 +2086,7 @@ function renderPicturePractice() {
 
 function renderListeningPractice() {
   const letter = currentLetter();
+  const audio = currentLetterAudio();
   const choices = currentGroupLetters();
   const hasPicked = Boolean(state.selectedListening);
   const picked = choices.find((choice) => choice.id === state.selectedListening);
@@ -2047,10 +2102,17 @@ function renderListeningPractice() {
       )}
       <section class="stack">
         <div class="audio-strip">
-          <button class="play-dot" data-action="toast" type="button" aria-label="播放发音">听</button>
+          <button
+            class="play-dot"
+            data-action="play-audio"
+            data-audio-src="${audio ? audio.outputPath : ""}"
+            data-audio-label="${letter.letter}"
+            type="button"
+            aria-label="播放发音"
+          >听</button>
           <div>
             <strong>播放：${letter.latin}</strong>
-            <p class="caption">${letter.soundHint}</p>
+            <p class="caption">${audio ? `${audio.statusLabel}。` : ""}${letter.soundHint}</p>
           </div>
         </div>
         <div class="choice-grid">
@@ -3309,6 +3371,27 @@ function showToast(message) {
   }, 1800);
 }
 
+function playAudio(src, label) {
+  if (!src) {
+    showToast("这个字母还没有音频文件");
+    return;
+  }
+
+  if (activeAudio && typeof activeAudio.pause === "function") {
+    activeAudio.pause();
+  }
+
+  activeAudio = new Audio(src);
+  activeAudio
+    .play()
+    .then(() => {
+      showToast(`${label || "字母"}：AI 临时音频`);
+    })
+    .catch(() => {
+      showToast("音频文件还没生成或浏览器暂时不能播放");
+    });
+}
+
 function goTo(target) {
   state.screen = target;
   render();
@@ -3525,6 +3608,11 @@ document.addEventListener("click", (event) => {
     state.favorite = !state.favorite;
     render();
     showToast(state.favorite ? "已加入收藏" : "已取消收藏");
+    return;
+  }
+
+  if (action === "play-audio") {
+    playAudio(button.dataset.audioSrc, button.dataset.audioLabel);
     return;
   }
 
