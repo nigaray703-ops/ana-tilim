@@ -573,6 +573,10 @@ button {
   line-height: 1;
 }
 
+.combo-big {
+  font-size: 74px;
+}
+
 .word-big {
   font-size: 52px;
   font-weight: 800;
@@ -599,6 +603,40 @@ button {
   display: block;
   font-size: 34px;
   line-height: 1.2;
+}
+
+.combo-parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.combo-part {
+  display: inline-grid;
+  place-items: center;
+  min-width: 54px;
+  min-height: 54px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.combo-part strong {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.combo-part small {
+  color: var(--ink-soft);
+  font-size: 10px;
+  line-height: 1;
+}
+
+.review-card {
+  border-color: rgba(231, 185, 93, 0.34);
+  background: var(--gold-soft);
 }
 
 .lesson-point-list {

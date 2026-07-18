@@ -598,12 +598,75 @@ const alphabetGroups = [
   { id: "vowels-final", title: "元音 3：ئې / ئى", letters: letters(["ee", "ii"]), goal: "后段元音和 ي 继续区分", status: "可学习" }
 ];
 
+const comboGroups = [
+  {
+    id: "open-a",
+    kind: "combo",
+    title: "开口组合：ا",
+    letters: ["با", "پا", "تا", "نا", "لا", "ما"],
+    goal: "先把熟悉辅音接到 ا 后面，慢慢看连接变化",
+    status: "当前",
+    items: [
+      { id: "ba", value: "با", latin: "ba", type: "两字母组合", parts: ["ب", "ا"], prompt: "ba", rule: "从右往左看：ب 接 ا，形成 ba。", hint: "ب 在词首会接住后面的 ا。", review: "组合练习，不作为正式词义。" },
+      { id: "pa", value: "پا", latin: "pa", type: "两字母组合", parts: ["پ", "ا"], prompt: "pa", rule: "پ 和 ا 连起来读 pa。", hint: "注意 پ 的下方三个点。", review: "组合练习，不作为正式词义。" },
+      { id: "ta", value: "تا", latin: "ta", type: "两字母组合", parts: ["ت", "ا"], prompt: "ta", rule: "ت 接 ا，读作 ta。", hint: "ت 的上方两个点要保留。", review: "组合练习，不作为正式词义。" },
+      { id: "na", value: "نا", latin: "na", type: "两字母组合", parts: ["ن", "ا"], prompt: "na", rule: "ن 接 ا，读作 na。", hint: "ن 的上方一个点要保留。", review: "组合练习，不作为正式词义。" },
+      { id: "la", value: "لا", latin: "la", type: "两字母组合", parts: ["ل", "ا"], prompt: "la", rule: "ل 接 ا，读作 la。", hint: "先熟悉 ل 和 ا 的连接样子。", review: "组合练习，不作为正式词义。" },
+      { id: "ma", value: "ما", latin: "ma", type: "两字母组合", parts: ["م", "ا"], prompt: "ma", rule: "م 接 ا，读作 ma。", hint: "م 的圆形部分会压缩成连接形。", review: "组合练习，不作为正式词义。" }
+    ]
+  },
+  {
+    id: "soft-e",
+    kind: "combo",
+    title: "轻声组合：ە",
+    letters: ["بە", "پە", "تە", "نە", "لە", "مە"],
+    goal: "把同一批辅音换成 ە，比较结尾符号变化",
+    status: "可学习",
+    items: [
+      { id: "be-e", value: "بە", latin: "be", type: "两字母组合", parts: ["ب", "ە"], prompt: "be", rule: "ب 接 ە，形成 be。", hint: "和 با 对比，最后一个符号不同。", review: "组合练习，不作为正式词义。" },
+      { id: "pe-e", value: "پە", latin: "pe", type: "两字母组合", parts: ["پ", "ە"], prompt: "pe", rule: "پ 接 ە，形成 pe。", hint: "先看 پ 的三个点，再看 ە。", review: "组合练习，不作为正式词义。" },
+      { id: "te-e", value: "تە", latin: "te", type: "两字母组合", parts: ["ت", "ە"], prompt: "te", rule: "ت 接 ە，形成 te。", hint: "和 تا 对比，结尾从 ا 换成 ە。", review: "组合练习，不作为正式词义。" },
+      { id: "ne-e", value: "نە", latin: "ne", type: "两字母组合", parts: ["ن", "ە"], prompt: "ne", rule: "ن 接 ە，形成 ne。", hint: "ن 的上方一点是识别关键。", review: "组合练习，不作为正式词义。" },
+      { id: "le-e", value: "لە", latin: "le", type: "两字母组合", parts: ["ل", "ە"], prompt: "le", rule: "ل 接 ە，形成 le。", hint: "和 لا 放在一起看差异。", review: "组合练习，不作为正式词义。" },
+      { id: "me-e", value: "مە", latin: "me", type: "两字母组合", parts: ["م", "ە"], prompt: "me", rule: "م 接 ە，形成 me。", hint: "م 的连接形和结尾 ە 一起看。", review: "组合练习，不作为正式词义。" }
+    ]
+  },
+  {
+    id: "three-step",
+    kind: "combo",
+    title: "三字母慢读",
+    letters: ["بال", "مان", "نان", "تال"],
+    goal: "从两字母过渡到三字母，只练拆分和输入",
+    status: "可学习",
+    items: [
+      { id: "bal", value: "بال", latin: "bal", type: "三字母组合", parts: ["ب", "ا", "ل"], prompt: "bal", rule: "先读 با，再接 ل。", hint: "先不要急着背词义，只看三个字母连起来。", review: "组合练习；如作为词汇使用，需要审校。" },
+      { id: "man", value: "مان", latin: "man", type: "三字母组合", parts: ["م", "ا", "ن"], prompt: "man", rule: "先读 ما，再接 ن。", hint: "观察 م 的词首形和 ن 的词尾形。", review: "组合练习；如作为词汇使用，需要审校。" },
+      { id: "nan", value: "نان", latin: "nan", type: "三字母组合", parts: ["ن", "ا", "ن"], prompt: "nan", rule: "先读 نا，再接 ن。", hint: "同一个 ن 在开头和结尾形态不同。", review: "组合练习；如作为词汇使用，需要审校。" },
+      { id: "tal", value: "تال", latin: "tal", type: "三字母组合", parts: ["ت", "ا", "ل"], prompt: "tal", rule: "先读 تا，再接 ل。", hint: "观察 ت 的点和最后 ل 的位置。", review: "组合练习；如作为词汇使用，需要审校。" }
+    ]
+  },
+  {
+    id: "phrase-preview",
+    kind: "combo",
+    title: "基础称呼预览",
+    letters: ["ئانا", "ئاپا", "ئاتا", "دادا"],
+    goal: "只做词形预览：主词、变体和含义都要等待母语者审校",
+    status: "待审校",
+    items: [
+      { id: "ana-word", value: "ئانا", latin: "ana", type: "基础称呼预览", parts: ["ئا", "ن", "ا"], prompt: "ana", meaning: "妈妈 / 母亲", rule: "从 ئا 开始，再接 ن 和 ا。", hint: "先把它当作词形预览，不作为唯一答案。", review: "标准主词待母语者审校。" },
+      { id: "apa-word", value: "ئاپا", latin: "apa", type: "基础称呼预览", parts: ["ئا", "پ", "ا"], prompt: "apa", meaning: "妈妈 / 家庭称呼变体", rule: "从 ئا 开始，再接 پ 和 ا。", hint: "用户已提醒它可能也表示妈妈；正式身份需审校。", review: "变体/口语身份待母语者审校，不直接作为考核唯一答案。" },
+      { id: "ata-word", value: "ئاتا", latin: "ata", type: "基础称呼预览", parts: ["ئا", "ت", "ا"], prompt: "ata", meaning: "爸爸 / 父亲", rule: "从 ئا 开始，再接 ت 和 ا。", hint: "先认词形，正式标准答案需审校。", review: "标准主词待母语者审校。" },
+      { id: "dada-word", value: "دادا", latin: "dada", type: "基础称呼预览", parts: ["د", "ا", "د", "ا"], prompt: "dada", meaning: "爸爸 / 家庭称呼变体", rule: "د 后面通常不继续连接，所以中间会看到断开。", hint: "用户已提醒它可能也表示爸爸；正式身份需审校。", review: "变体/口语身份待母语者审校，不直接作为考核唯一答案。" }
+    ]
+  }
+];
+
 const learningUnits = [
   {
     id: "letters",
     title: "第一单元：认识字母",
     subtitle: "32 个字母 / 相似分组",
-    status: "进行中",
+    status: "已完成",
     description: "先按截图顺序认识全部字母，学习时把看起来相似、容易混的字母放在一组。",
     bullets: ["认识字母形状", "区分点位和点数", "看四种形态", "练单字母键盘输入"],
     groups: alphabetGroups,
@@ -612,15 +675,12 @@ const learningUnits = [
   {
     id: "combos",
     title: "第二单元：组合与词组入门",
-    subtitle: "字母连起来 / 简单词组",
-    status: "下一单元",
-    description: "认识字母之后，再开始两字母组合、三字母组合和最基础词组。",
-    bullets: ["两字母组合", "三字母组合", "听音选择", "键盘输入"],
-    groups: [
-      { title: "开口组合", letters: ["با", "ما", "نا"], goal: "先看辅音接元音", status: "预告" },
-      { title: "简单词组", letters: ["待审校"], goal: "审校后再放正式词义和答案", status: "预告" }
-    ],
-    actionTarget: "picture"
+    subtitle: "字母连起来 / 词形预览",
+    status: "进行中",
+    description: "先做两字母和三字母组合，再加入少量基础称呼词形预览；含义和变体都标记为待母语者审校。",
+    bullets: ["两字母组合", "三字母慢读", "词形预览", "键盘输入"],
+    groups: comboGroups,
+    actionTarget: "combo"
   },
   {
     id: "basic-phrases",
@@ -664,6 +724,8 @@ const state = {
   keyboardValue: "",
   currentLetterId: "be",
   selectedGroupId: "dot-bone",
+  currentComboItemId: "ba",
+  selectedComboGroupId: "open-a",
   selectedUnitId: "letters",
   showGuide: true,
   favorite: false
@@ -693,10 +755,34 @@ function groupForLetter(letterId) {
   return alphabetGroups.find((group) => group.letters.some((letter) => letter.id === letterId));
 }
 
+function currentComboGroup() {
+  return comboGroups.find((group) => group.id === state.selectedComboGroupId) || comboGroups[0];
+}
+
+function currentComboItems() {
+  return currentComboGroup().items;
+}
+
+function currentComboItem() {
+  return currentComboItems().find((item) => item.id === state.currentComboItemId) || currentComboItems()[0];
+}
+
+function comboGroupForItem(itemId) {
+  return comboGroups.find((group) => group.items.some((item) => item.id === itemId));
+}
+
+function allComboItems() {
+  return comboGroups.flatMap((group) => group.items);
+}
+
 function resetPracticeState() {
   state.selectedPicture = "";
   state.selectedListening = "";
   state.keyboardValue = "";
+}
+
+function resetComboPracticeState() {
+  resetPracticeState();
 }
 
 function currentUnit() {
@@ -716,6 +802,10 @@ function render() {
     listening: renderListeningPractice,
     keyboard: renderKeyboardPractice,
     complete: renderComplete,
+    combo: renderComboLesson,
+    comboRecognition: renderComboRecognition,
+    comboKeyboard: renderComboKeyboard,
+    comboComplete: renderComboComplete,
     library: renderLibrary,
     profile: renderProfile
   };
@@ -827,14 +917,14 @@ function renderHome() {
           <div class="section-row">
             <div>
               <p class="caption">今日进度</p>
-              <h2 class="section-title">第一单元 · 认识字母</h2>
+              <h2 class="section-title">第二单元 · 组合与词形</h2>
             </div>
-            <span class="step-state">已开放</span>
+            <span class="step-state">进行中</span>
           </div>
           <div class="progress-track" aria-hidden="true">
-            <div class="progress-fill" style="--value: 100%"></div>
+            <div class="progress-fill" style="--value: 35%"></div>
           </div>
-          <p class="caption">第一单元 11 个相似字母组已放好；先认完整字母，第二单元再加入词组。</p>
+          <p class="caption">从 با、ما、نا 这样的组合开始，再少量预览基础称呼；词义统一待母语者审校。</p>
           <button class="primary-button" data-action="go" data-target="learn" type="button">
             继续学习
           </button>
@@ -842,8 +932,8 @@ function renderHome() {
 
         <div class="metric-grid" aria-label="今日学习概览">
           <div class="metric"><strong>3</strong><span>连续天数</span></div>
-          <div class="metric"><strong>1</strong><span>新字母</span></div>
-          <div class="metric"><strong>4</strong><span>待复习</span></div>
+          <div class="metric"><strong>4</strong><span>组合组</span></div>
+          <div class="metric"><strong>审校</strong><span>词义</span></div>
         </div>
 
         <section>
@@ -855,14 +945,14 @@ function renderHome() {
             <button class="quick-button" data-action="go" data-target="letter" type="button">
               <strong>学字母</strong><span>全部字母组</span>
             </button>
-            <button class="quick-button" data-action="go" data-target="writing" type="button">
-              <strong>练书写</strong><span>跟随当前字母</span>
+            <button class="quick-button" data-action="go" data-target="combo" type="button">
+              <strong>学组合</strong><span>当前第二单元</span>
             </button>
-            <button class="quick-button" data-action="go" data-target="listening" type="button">
-              <strong>听发音</strong><span>辨认字母</span>
+            <button class="quick-button" data-action="go" data-target="comboRecognition" type="button">
+              <strong>辨认组合</strong><span>看转写选词形</span>
             </button>
-            <button class="quick-button" data-action="go" data-target="keyboard" type="button">
-              <strong>键盘训练</strong><span>输入 ب</span>
+            <button class="quick-button" data-action="go" data-target="comboKeyboard" type="button">
+              <strong>键盘训练</strong><span>输入组合</span>
             </button>
           </div>
         </section>
@@ -940,6 +1030,7 @@ function renderLetterPills(items, activeId = "") {
 }
 
 function renderGroupCard(group) {
+  const action = group.kind === "combo" ? "open-combo-group" : "open-group";
   const cardContent = `
     <div class="section-row">
       <strong>${group.title}</strong>
@@ -958,7 +1049,7 @@ function renderGroupCard(group) {
   return `
     <button
       class="group-card group-card-button"
-      data-action="open-group"
+      data-action="${action}"
       data-id="${group.id}"
       type="button"
     >
@@ -1401,6 +1492,309 @@ function renderComplete() {
   );
 }
 
+function renderComboSelector(items, activeId) {
+  return items
+    .map(
+      (item) => `
+        <button
+          class="letter-pill button-pill ${item.id === activeId ? "active" : ""}"
+          data-action="select-combo"
+          data-id="${item.id}"
+          type="button"
+        >
+          <span class="uyghur">${item.value}</span>
+          <small>${item.latin}</small>
+        </button>
+      `
+    )
+    .join("");
+}
+
+function renderComboParts(item) {
+  return item.parts
+    .map(
+      (part, index) => `
+        <span class="combo-part">
+          <strong class="uyghur">${part}</strong>
+          <small>${index + 1}</small>
+        </span>
+      `
+    )
+    .join("");
+}
+
+function renderComboLesson() {
+  const group = currentComboGroup();
+  const item = currentComboItem();
+
+  return screen(
+    `
+      ${topBar(
+        group.title,
+        "第二单元：组合与词组入门",
+        "",
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack">
+        <article class="card">
+          <div class="section-row">
+            <div>
+              <p class="caption">本组目标</p>
+              <h2 class="section-title unit-goal-text">${group.goal}</h2>
+            </div>
+            <span class="step-state">${group.status}</span>
+          </div>
+          <div class="chip-row unit-goal-points">
+            <span class="chip">从右往左读</span>
+            <span class="chip">先拆开再合上</span>
+            <span class="chip">只少量词形预览</span>
+            <span class="chip">词义待审校</span>
+          </div>
+        </article>
+
+        <div class="alphabet-strip compact">
+          ${renderComboSelector(group.items, item.id)}
+        </div>
+
+        <div class="letter-focus">
+          <div>
+            <div class="uyghur letter-big combo-big">${item.value}</div>
+            <p class="caption">${item.type} / ${item.latin}</p>
+          </div>
+        </div>
+
+        <article class="card">
+          <p class="caption">拆开看</p>
+          <div class="combo-parts" aria-label="组合拆分">
+            ${renderComboParts(item)}
+          </div>
+          <p class="muted">${item.rule}</p>
+        </article>
+
+        ${
+          item.meaning
+            ? `<article class="card review-card">
+                <p class="caption">词义预览</p>
+                <h2 class="section-title">${item.meaning}</h2>
+                <p class="muted">${item.review}</p>
+              </article>`
+            : ""
+        }
+
+        <article class="card">
+          <p class="caption">学习小点</p>
+          <div class="lesson-point-list">
+            <div class="lesson-point">
+              <strong>怎么读</strong>
+              <span>先用 ${item.latin} 做过渡提示，正式发音以后接真人音频。</span>
+            </div>
+            <div class="lesson-point">
+              <strong>怎么看</strong>
+              <span>${item.hint}</span>
+            </div>
+            <div class="lesson-point">
+              <strong>审校状态</strong>
+              <span>${item.review}</span>
+            </div>
+          </div>
+        </article>
+
+        <div class="action-grid">
+          <button class="secondary-button" data-action="go" data-target="comboRecognition" type="button">
+            辨认
+          </button>
+          <button class="primary-button" data-action="go" data-target="comboKeyboard" type="button">
+            键盘
+          </button>
+        </div>
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function renderComboRecognition() {
+  const group = currentComboGroup();
+  const item = currentComboItem();
+  const choices = currentComboItems();
+  const hasPicked = Boolean(state.selectedPicture);
+  const picked = choices.find((choice) => choice.id === state.selectedPicture);
+  const isCorrect = picked && picked.id === item.id;
+  const prompt = item.meaning
+    ? `请选择 ${item.latin} 的词形（${item.meaning}：待审校）`
+    : `哪一个读作 ${item.prompt}？`;
+
+  return screen(
+    `
+      ${topBar(
+        "组合辨认",
+        group.title,
+        "",
+        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack">
+        <article class="card">
+          <p class="caption">选择正确组合</p>
+          <h2 class="section-title">${prompt}</h2>
+        </article>
+        <div class="choice-grid">
+          ${choices
+            .map((choice) => {
+              const selected = state.selectedPicture === choice.id;
+              const correctChoice = choice.id === item.id;
+              const resultClass = selected ? (correctChoice ? "correct" : "wrong") : "";
+              return `
+                <button
+                  class="choice-card ${resultClass}"
+                  data-action="pick-combo"
+                  data-id="${choice.id}"
+                  type="button"
+                >
+                  <span class="choice-art uyghur">${choice.value}</span>
+                  <span>
+                    <strong>${choice.latin}</strong>
+                    <span class="caption">${choice.meaning ? `${choice.meaning} / 待审校` : choice.type}</span>
+                  </span>
+                  <span class="step-state">${selected ? (correctChoice ? "正确" : "再想想") : "选择"}</span>
+                </button>
+              `;
+            })
+            .join("")}
+        </div>
+        ${
+          hasPicked
+            ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
+                isCorrect
+                  ? `答对了。${item.value} 现在只作为 ${item.type} 学习。`
+                  : "这个不是当前目标。先看转写提示，再回到组合。"
+              }</div>`
+            : ""
+        }
+        <button class="primary-button" data-action="go" data-target="comboKeyboard" type="button">
+          继续键盘
+        </button>
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function renderComboKeyboard() {
+  const group = currentComboGroup();
+  const item = currentComboItem();
+  const isCorrect = state.keyboardValue === item.value;
+  const hasInput = state.keyboardValue.length > 0;
+
+  return screen(
+    `
+      ${topBar(
+        "组合键盘",
+        group.title,
+        "",
+        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack">
+        <article class="card">
+          <p class="caption">请输入这个组合</p>
+          <div class="section-row">
+            <strong class="uyghur">${item.value}</strong>
+            <span class="caption">${item.latin}</span>
+          </div>
+        </article>
+        <input
+          class="rtl-input uyghur"
+          value="${state.keyboardValue}"
+          aria-label="维吾尔语组合输入框"
+          readonly
+          dir="rtl"
+        />
+        <div class="practice-key-row" aria-label="本组组合快捷键">
+          ${group.items
+            .map(
+              (choice) => `
+                <button class="key-button uyghur" data-action="key" data-key="${choice.value}" type="button">
+                  ${choice.value}
+                </button>
+              `
+            )
+            .join("")}
+        </div>
+        <div class="practice-key-row" aria-label="当前组合拆分键">
+          ${item.parts
+            .map(
+              (part) => `
+                <button class="key-button uyghur" data-action="key" data-key="${part}" type="button">
+                  ${part}
+                </button>
+              `
+            )
+            .join("")}
+        </div>
+        <div class="keyboard-grid" aria-label="维吾尔语虚拟键盘">
+          ${keyboardRows
+            .flat()
+            .map(
+              (key) => `
+                <button class="key-button uyghur" data-action="key" data-key="${key}" type="button">
+                  ${key}
+                </button>
+              `
+            )
+            .join("")}
+          <button class="key-button utility" data-action="backspace" type="button">删除</button>
+          <button class="key-button utility" data-action="clear-input" type="button">清空</button>
+        </div>
+        ${
+          hasInput
+            ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
+                isCorrect
+                  ? "输入正确。你已经完成这组组合练习。"
+                  : `继续输入，目标组合是 ${item.value}。`
+              }</div>`
+            : `<div class="feedback">提示：可以直接点击 <span class="uyghur">${item.value}</span>，也可以按拆分键慢慢输入。</div>`
+        }
+        <button class="primary-button" data-action="go" data-target="comboComplete" type="button">
+          完成这一组
+        </button>
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function renderComboComplete() {
+  const group = currentComboGroup();
+  const item = currentComboItem();
+  const groupValues = group.items.map((choice) => choice.value).join(" ");
+
+  return screen(
+    `
+      ${topBar("第二单元完成", group.title)}
+      <section class="stack">
+        <article class="card">
+          <p class="caption">本次练习</p>
+          <h2 class="screen-title">
+            <span class="uyghur">${groupValues}</span>
+          </h2>
+          <p class="muted">你拆分并输入了 ${item.value}。如果这一组有词义，它仍然需要母语者审校后才能进入正式考核。</p>
+        </article>
+        <div class="metric-grid">
+          <div class="metric"><strong>${group.items.length}</strong><span>组合</span></div>
+          <div class="metric"><strong>1</strong><span>输入</span></div>
+          <div class="metric"><strong>审校</strong><span>词义</span></div>
+        </div>
+        <button class="primary-button" data-action="go" data-target="unit" type="button">
+          回到第二单元
+        </button>
+        <button class="secondary-button" data-action="go" data-target="learn" type="button">
+          学习路径
+        </button>
+      </section>
+    `,
+    "learn"
+  );
+}
+
 function renderLibrary() {
   return screen(
     `
@@ -1443,7 +1837,8 @@ function renderProfile() {
           <p class="muted">第一版不需要登录，进度保存在本地。这个页面先展示未来个人中心的样子。</p>
         </article>
         <div class="profile-row"><strong>已开放字母</strong><span>32 / 32</span></div>
-        <div class="profile-row"><strong>下一单元</strong><span>组合 / 词组</span></div>
+        <div class="profile-row"><strong>已开放组合</strong><span>${allComboItems().length}</span></div>
+        <div class="profile-row"><strong>下一单元</strong><span>基础词组</span></div>
         <div class="profile-row"><strong>连续学习</strong><span>3 天</span></div>
         <button class="secondary-button" data-action="toast" type="button">学习提醒</button>
       </section>
@@ -1477,7 +1872,10 @@ document.addEventListener("click", (event) => {
 
   if (action === "go") {
     const target = button.dataset.target;
-    if (["picture", "listening", "keyboard"].includes(target)) {
+    if (target === "combo") {
+      state.selectedUnitId = "combos";
+    }
+    if (["picture", "listening", "keyboard", "comboRecognition", "comboKeyboard"].includes(target)) {
       resetPracticeState();
     }
     goTo(target);
@@ -1500,6 +1898,16 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (action === "open-combo-group") {
+    const group = comboGroups.find((item) => item.id === button.dataset.id) || comboGroups[0];
+    state.selectedUnitId = "combos";
+    state.selectedComboGroupId = group.id;
+    state.currentComboItemId = group.items[0].id;
+    resetComboPracticeState();
+    goTo("combo");
+    return;
+  }
+
   if (action === "pick-picture") {
     state.selectedPicture = button.dataset.id;
     render();
@@ -1508,6 +1916,12 @@ document.addEventListener("click", (event) => {
 
   if (action === "pick-listening") {
     state.selectedListening = button.dataset.id;
+    render();
+    return;
+  }
+
+  if (action === "pick-combo") {
+    state.selectedPicture = button.dataset.id;
     render();
     return;
   }
@@ -1522,6 +1936,17 @@ document.addEventListener("click", (event) => {
     if (button.dataset.target) {
       state.screen = button.dataset.target;
     }
+    render();
+    return;
+  }
+
+  if (action === "select-combo") {
+    const group = comboGroupForItem(button.dataset.id);
+    if (group) {
+      state.selectedComboGroupId = group.id;
+    }
+    state.currentComboItemId = button.dataset.id;
+    resetComboPracticeState();
     render();
     return;
   }
