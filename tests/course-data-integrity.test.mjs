@@ -160,6 +160,50 @@ assertUnique(
   "all learning item ids"
 );
 
+const vocabGroupById = Object.fromEntries(vocabGroups.map((group) => [group.id, group]));
+
+function assertVocabTopic({ id, minItems, requiredMeanings, requiredValues = [] }) {
+  const group = vocabGroupById[id];
+  assert.ok(group, `vocab group ${id} should exist`);
+  assert.ok(group.items.length >= minItems, `vocab group ${id} should include at least ${minItems} daily words`);
+
+  for (const requiredValue of requiredValues) {
+    assert.ok(
+      group.items.some((item) => item.value === requiredValue),
+      `vocab group ${id} should include ${requiredValue}`
+    );
+  }
+
+  for (const requiredMeaning of requiredMeanings) {
+    assert.ok(
+      group.items.some((item) => item.meaning.includes(requiredMeaning)),
+      `vocab group ${id} should include a word meaning ${requiredMeaning}`
+    );
+  }
+}
+
+assertVocabTopic({
+  id: "family",
+  minItems: 10,
+  requiredMeanings: ["家庭", "儿子", "女儿", "哥哥", "弟弟"]
+});
+assertVocabTopic({
+  id: "numbers",
+  minItems: 10,
+  requiredValues: ["ئون"],
+  requiredMeanings: ["一", "五", "十"]
+});
+assertVocabTopic({
+  id: "animals",
+  minItems: 6,
+  requiredMeanings: ["狗", "猫", "鱼", "鸟", "牛", "羊"]
+});
+assertVocabTopic({
+  id: "vegetables",
+  minItems: 6,
+  requiredMeanings: ["番茄", "洋葱", "土豆", "胡萝卜", "大蒜", "黄瓜"]
+});
+
 for (const item of comboItems) {
   for (const field of ["id", "value", "latin", "type", "prompt", "rule", "hint", "review"]) {
     assertText(item[field], `combo item ${item.id}.${field}`);

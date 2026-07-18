@@ -302,7 +302,7 @@ assert.equal(savedProgress().learningProgress.combos["open-a"].completed, true, 
 
 includesAll(
   renderState("state.screen = 'vocab'; state.selectedVocabGroupId = 'family'; state.currentVocabItemId = 'ana-family'"),
-  ["1 / 4", "上一个", "下一个", "不设唯一答案"],
+  ["1 / 10", "上一个", "下一个", "不设唯一答案"],
   "vocab lesson"
 );
 assert.ok(!app.innerHTML.includes("词库审校字段"), "learning mode should hide audit-only vocabulary fields");
