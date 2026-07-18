@@ -22,6 +22,7 @@ function makeElement(id) {
 const app = makeElement("app");
 const toast = makeElement("toast");
 let clickHandler = null;
+const storage = {};
 const context = {
   console,
   document: {
@@ -40,7 +41,18 @@ const context = {
     setTimeout() {
       return 1;
     },
-    clearTimeout() {}
+    clearTimeout() {},
+    localStorage: {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(storage, key) ? storage[key] : null;
+      },
+      setItem(key, value) {
+        storage[key] = String(value);
+      },
+      removeItem(key) {
+        delete storage[key];
+      }
+    }
   },
   Audio: function FakeAudio(src) {
     this.src = src;
@@ -76,6 +88,11 @@ function clickDataset(dataset) {
   });
 }
 
+function savedProgress() {
+  assert.ok(storage["ana-tilim-progress"], "local progress should be saved");
+  return JSON.parse(storage["ana-tilim-progress"]);
+}
+
 includesAll(
   renderState("state.screen = 'welcome'"),
   ["从字母、发音、书写到键盘输入，一步一步学会自己的母语。", "开始学习"],
@@ -91,7 +108,7 @@ includesAll(
 assert.ok(!app.innerHTML.includes("<br>"), "home screen should not force unit titles onto manual line breaks");
 assert.ok(!app.innerHTML.includes("AI 临时音频 / 真人音频待录制"), "home audio note should use readable punctuation");
 assert.ok(app.innerHTML.includes("<strong>第一单元</strong><small> · 认识字母</small>"), "home unit labels should use a compact one-line label");
-assert.ok(app.innerHTML.includes("<strong>听音辨认</strong><span> · 音频占位</span>"), "quick entry labels should stay readable on one line");
+assert.ok(app.innerHTML.includes("<strong>听音辨认</strong><span> · AI 临时</span>"), "quick entry labels should stay readable on one line");
 
 for (const unitId of ["letters", "combos", "basic-phrases", "practice"]) {
   includesAll(
@@ -137,8 +154,38 @@ includesAll(
   ["1 / 4", "上一个", "下一个", "不设唯一答案"],
   "vocab lesson"
 );
+assert.ok(!app.innerHTML.includes("词库审校字段"), "learning mode should hide audit-only vocabulary fields");
+clickDataset({ action: "set-app-mode", mode: "audit" });
+includesAll(
+  renderState("state.screen = 'vocab'; state.selectedVocabGroupId = 'family'; state.currentVocabItemId = 'ana-family'"),
+  ["词库审校字段", "退出审校模式"],
+  "vocab audit mode"
+);
+clickDataset({ action: "set-app-mode", mode: "learn" });
 clickDataset({ action: "select-adjacent-vocab", id: "apa-family" });
 assert.equal(vm.runInContext("state.currentVocabItemId", context), "apa-family", "next vocab button should switch words");
+
+renderState("state.screen = 'picture'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'");
+clickDataset({ action: "pick-picture", id: "pe" });
+let mistakeSummary = vm.runInContext("state.mistakes.map((item) => item.targetId).join(',')", context);
+assert.equal(mistakeSummary, "be", "wrong letter choice should create a review item");
+includesAll(
+  renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'review-loop'; state.currentPracticeItemId = 'practice-review-sin'"),
+  ["本轮错题", "ب"],
+  "dynamic mistake review"
+);
+
+renderState("state.screen = 'letterWriting'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'");
+clickDataset({ action: "go", target: "picture" });
+clickDataset({ action: "pick-picture", id: "be" });
+clickDataset({ action: "go", target: "listening" });
+clickDataset({ action: "pick-listening", id: "be" });
+clickDataset({ action: "go", target: "keyboard" });
+clickDataset({ action: "key", key: "ب" });
+clickDataset({ action: "go", target: "complete" });
+includesAll(app.innerHTML, ["闭环完成", "4 / 4"], "completed letter loop");
+assert.equal(savedProgress().learningProgress.letters["dot-bone"].completed, true, "completed loop should be saved locally");
+assert.equal(savedProgress().mistakes.length, 1, "mistakes should be saved locally");
 
 includesAll(
   renderState("state.screen = 'complete'"),

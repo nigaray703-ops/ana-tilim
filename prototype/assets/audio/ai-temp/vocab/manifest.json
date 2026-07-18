@@ -1,0 +1,192 @@
+{
+  "title": "Ana Tilim Unit 3 Vocabulary AI Temporary Audio",
+  "status": "ready_for_generation",
+  "outputDirectory": "./assets/audio/ai-temp/vocab/",
+  "model": "gpt-4o-mini-tts",
+  "voice": "shimmer",
+  "responseFormat": "mp3",
+  "speed": 0.88,
+  "instructions": "Use a clear adult female voice. Pronounce only the target Standard Uyghur word or phrase. Do not say Chinese, English, explanations, numbering, punctuation, or extra words. Say the target once, pause briefly, then repeat it once. Third-unit meanings are learning previews until reviewed by a standard Uyghur speaker.",
+  "items": [
+    {
+      "order": 1,
+      "id": "yaxshimusiz",
+      "groupId": "greetings",
+      "value": "ياخشىمۇسىز",
+      "latin": "yaxshimusiz",
+      "file": "ai_temp_vocab_yaxshimusiz.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_yaxshimusiz.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 2,
+      "id": "rahmat",
+      "groupId": "greetings",
+      "value": "رەھمەت",
+      "latin": "rehmet",
+      "file": "ai_temp_vocab_rahmat.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_rahmat.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 3,
+      "id": "xosh",
+      "groupId": "greetings",
+      "value": "خوش",
+      "latin": "xosh",
+      "file": "ai_temp_vocab_xosh.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_xosh.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 4,
+      "id": "assalamu",
+      "groupId": "greetings",
+      "value": "ئەسسالامۇ ئەلەيكۇم",
+      "latin": "assalamu alaykum",
+      "file": "ai_temp_vocab_assalamu.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_assalamu.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 5,
+      "id": "men",
+      "groupId": "pronouns",
+      "value": "مەن",
+      "latin": "men",
+      "file": "ai_temp_vocab_men.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_men.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 6,
+      "id": "siz",
+      "groupId": "pronouns",
+      "value": "سىز",
+      "latin": "siz",
+      "file": "ai_temp_vocab_siz.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_siz.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 7,
+      "id": "sen",
+      "groupId": "pronouns",
+      "value": "سەن",
+      "latin": "sen",
+      "file": "ai_temp_vocab_sen.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_sen.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 8,
+      "id": "u-pronoun",
+      "groupId": "pronouns",
+      "value": "ئۇ",
+      "latin": "u",
+      "file": "ai_temp_vocab_u_pronoun.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_u_pronoun.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 9,
+      "id": "biz",
+      "groupId": "pronouns",
+      "value": "بىز",
+      "latin": "biz",
+      "file": "ai_temp_vocab_biz.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_biz.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 10,
+      "id": "ana-family",
+      "groupId": "family",
+      "value": "ئانا",
+      "latin": "ana",
+      "file": "ai_temp_vocab_ana_family.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_ana_family.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 11,
+      "id": "apa-family",
+      "groupId": "family",
+      "value": "ئاپا",
+      "latin": "apa",
+      "file": "ai_temp_vocab_apa_family.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_apa_family.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 12,
+      "id": "ata-family",
+      "groupId": "family",
+      "value": "ئاتا",
+      "latin": "ata",
+      "file": "ai_temp_vocab_ata_family.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_ata_family.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 13,
+      "id": "dada-family",
+      "groupId": "family",
+      "value": "دادا",
+      "latin": "dada",
+      "file": "ai_temp_vocab_dada_family.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_dada_family.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 14,
+      "id": "one",
+      "groupId": "numbers",
+      "value": "بىر",
+      "latin": "bir",
+      "file": "ai_temp_vocab_one.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_one.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 15,
+      "id": "two",
+      "groupId": "numbers",
+      "value": "ئىككى",
+      "latin": "ikki",
+      "file": "ai_temp_vocab_two.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_two.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 16,
+      "id": "three",
+      "groupId": "numbers",
+      "value": "ئۈچ",
+      "latin": "üch",
+      "file": "ai_temp_vocab_three.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_three.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 17,
+      "id": "four",
+      "groupId": "numbers",
+      "value": "تۆت",
+      "latin": "töt",
+      "file": "ai_temp_vocab_four.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_four.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 18,
+      "id": "five",
+      "groupId": "numbers",
+      "value": "بەش",
+      "latin": "besh",
+      "file": "ai_temp_vocab_five.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_five.mp3",
+      "reviewStatus": "待审听"
+    }
+  ]
+}

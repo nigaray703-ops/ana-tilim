@@ -1,0 +1,212 @@
+{
+  "title": "Ana Tilim Unit 2 Combo AI Temporary Audio",
+  "status": "ready_for_generation",
+  "outputDirectory": "./assets/audio/ai-temp/combos/",
+  "model": "gpt-4o-mini-tts",
+  "voice": "shimmer",
+  "responseFormat": "mp3",
+  "speed": 0.88,
+  "instructions": "Use a clear adult female voice. Pronounce only the target Standard Uyghur combination or word-form preview. Do not say Chinese, English, explanations, numbering, punctuation, or extra words. Say the target once, pause briefly, then repeat it once. This is AI temporary audio and must be reviewed by the project owner and a standard Uyghur speaker.",
+  "items": [
+    {
+      "order": 1,
+      "id": "ba",
+      "groupId": "open-a",
+      "value": "با",
+      "latin": "ba",
+      "file": "ai_temp_combo_ba.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_ba.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 2,
+      "id": "pa",
+      "groupId": "open-a",
+      "value": "پا",
+      "latin": "pa",
+      "file": "ai_temp_combo_pa.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_pa.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 3,
+      "id": "ta",
+      "groupId": "open-a",
+      "value": "تا",
+      "latin": "ta",
+      "file": "ai_temp_combo_ta.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_ta.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 4,
+      "id": "na",
+      "groupId": "open-a",
+      "value": "نا",
+      "latin": "na",
+      "file": "ai_temp_combo_na.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_na.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 5,
+      "id": "la",
+      "groupId": "open-a",
+      "value": "لا",
+      "latin": "la",
+      "file": "ai_temp_combo_la.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_la.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 6,
+      "id": "ma",
+      "groupId": "open-a",
+      "value": "ما",
+      "latin": "ma",
+      "file": "ai_temp_combo_ma.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_ma.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 7,
+      "id": "be-e",
+      "groupId": "soft-e",
+      "value": "بە",
+      "latin": "be",
+      "file": "ai_temp_combo_be_e.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_be_e.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 8,
+      "id": "pe-e",
+      "groupId": "soft-e",
+      "value": "پە",
+      "latin": "pe",
+      "file": "ai_temp_combo_pe_e.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_pe_e.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 9,
+      "id": "te-e",
+      "groupId": "soft-e",
+      "value": "تە",
+      "latin": "te",
+      "file": "ai_temp_combo_te_e.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_te_e.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 10,
+      "id": "ne-e",
+      "groupId": "soft-e",
+      "value": "نە",
+      "latin": "ne",
+      "file": "ai_temp_combo_ne_e.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_ne_e.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 11,
+      "id": "le-e",
+      "groupId": "soft-e",
+      "value": "لە",
+      "latin": "le",
+      "file": "ai_temp_combo_le_e.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_le_e.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 12,
+      "id": "me-e",
+      "groupId": "soft-e",
+      "value": "مە",
+      "latin": "me",
+      "file": "ai_temp_combo_me_e.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_me_e.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 13,
+      "id": "bal",
+      "groupId": "three-step",
+      "value": "بال",
+      "latin": "bal",
+      "file": "ai_temp_combo_bal.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_bal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 14,
+      "id": "man",
+      "groupId": "three-step",
+      "value": "مان",
+      "latin": "man",
+      "file": "ai_temp_combo_man.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_man.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 15,
+      "id": "nan",
+      "groupId": "three-step",
+      "value": "نان",
+      "latin": "nan",
+      "file": "ai_temp_combo_nan.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_nan.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 16,
+      "id": "tal",
+      "groupId": "three-step",
+      "value": "تال",
+      "latin": "tal",
+      "file": "ai_temp_combo_tal.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_tal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 17,
+      "id": "ana-word",
+      "groupId": "phrase-preview",
+      "value": "ئانا",
+      "latin": "ana",
+      "file": "ai_temp_combo_ana_word.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_ana_word.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 18,
+      "id": "apa-word",
+      "groupId": "phrase-preview",
+      "value": "ئاپا",
+      "latin": "apa",
+      "file": "ai_temp_combo_apa_word.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_apa_word.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 19,
+      "id": "ata-word",
+      "groupId": "phrase-preview",
+      "value": "ئاتا",
+      "latin": "ata",
+      "file": "ai_temp_combo_ata_word.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_ata_word.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 20,
+      "id": "dada-word",
+      "groupId": "phrase-preview",
+      "value": "دادا",
+      "latin": "dada",
+      "file": "ai_temp_combo_dada_word.mp3",
+      "outputPath": "./assets/audio/ai-temp/combos/ai_temp_combo_dada_word.mp3",
+      "reviewStatus": "待审听"
+    }
+  ]
+}
