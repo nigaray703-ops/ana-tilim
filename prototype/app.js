@@ -1273,22 +1273,7 @@ function renderHome() {
       ${topBar("早上好", "今天继续 8 分钟就很好")}
 
       <section class="stack wide-gap">
-        <article class="card next-action-card">
-          <p class="caption">今日下一步</p>
-          <h2 class="section-title">${nextAction.title}</h2>
-          <p class="muted">${nextAction.detail}</p>
-          <div class="mini-unit-row">
-            ${learningUnits
-              .map((unit) => {
-                const [unitName, unitTopic] = unit.title.split("：");
-                return `<span><strong>${unitName}</strong><small> · ${unitTopic}</small></span>`;
-              })
-              .join("")}
-          </div>
-          <p class="caption">音频提醒：全部可听内容已接入 AI 临时音频路径；真人音频仍待录制。</p>
-        </article>
-
-        <article class="card">
+        <article class="card today-progress-card">
           <div class="section-row">
             <div>
               <p class="caption">今日进度</p>
@@ -1299,7 +1284,7 @@ function renderHome() {
           <div class="progress-track" aria-hidden="true">
             <div class="progress-fill" style="--value: ${progress.percent}%"></div>
           </div>
-          <p class="caption">不加新词，先把字母、组合和候选词形放进听音、跟读、书写和复习闭环。</p>
+          <p class="caption today-progress-note">${nextAction.detail}</p>
           <button
             class="primary-button"
             data-action="${nextAction.action}"
