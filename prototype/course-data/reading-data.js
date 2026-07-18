@@ -236,70 +236,70 @@ const readingUnits = [
     groups: [
       {
         id: "proverb-bilim-kuch",
-        title: "بىلىم كۈچ",
+        title: "知识就是力量",
         items: [
           { id: "proverb-bilim-kuch-line", value: "بىلىم كۈچ.", meaning: "知识就是力量。", lesson: "学习越扎实，做事越有底气。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-yaxshi-soz",
-        title: "ياخشى سۆز",
+        title: "好话暖心",
         items: [
           { id: "proverb-yaxshi-soz-line", value: "ياخشى سۆز جان ئوزۇقى.", meaning: "好话是心灵的食粮。", lesson: "温和的话能让人舒服，也能让关系更近。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-aqil",
-        title: "ئەقىل",
+        title: "智慧不看年龄",
         items: [
           { id: "proverb-aqil-line", value: "ئەقىل ياشتا ئەمەس، باشتا.", meaning: "智慧不在年龄，而在头脑。", lesson: "不要只看年纪，真正重要的是思考和判断。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-birlik",
-        title: "بىرلىك",
+        title: "团结有力量",
         items: [
           { id: "proverb-birlik-line", value: "بىرلىك بار يەردە كۈچ بار.", meaning: "有团结的地方就有力量。", lesson: "一起做事时，互相配合比单打独斗更强。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-emgek",
-        title: "ئەمگەك",
+        title: "劳动受尊敬",
         items: [
           { id: "proverb-emgek-line", value: "ئەمگەك قىلغان ئەزىز.", meaning: "劳动的人值得尊敬。", lesson: "努力和付出本身就有价值。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-dost",
-        title: "دوست",
+        title: "朋友见真心",
         items: [
           { id: "proverb-dost-line", value: "دوست قىيىن كۈندە بىلىنەر.", meaning: "朋友在困难时才看得出来。", lesson: "真正的朋友会在需要时出现。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-kitap",
-        title: "كىتاب",
+        title: "书是知识源泉",
         items: [
           { id: "proverb-kitap-line", value: "كىتاب بىلىمنىڭ بۇلىقى.", meaning: "书是知识的泉源。", lesson: "多读书，会不断得到新的知识。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-sabr",
-        title: "سەۋر",
+        title: "耐心有回报",
         items: [
           { id: "proverb-sabr-line", value: "سەۋرنىڭ ئاخىرى ئالتۇن.", meaning: "耐心的最后是金子。", lesson: "坚持到最后，常常会得到好的结果。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-ana-til",
-        title: "ئانا تىل",
+        title: "母语连着心",
         items: [
           { id: "proverb-ana-til-line", value: "ئانا تىل جان تىلى.", meaning: "母语是心灵的语言。", lesson: "母语连接家庭、记忆和身份。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-qaduwq",
-        title: "قۇدۇق",
+        title: "饮水不忘源",
         items: [
           { id: "proverb-qaduwq-line", value: "سۇ ئىچكەن قۇدۇقنى ئۇنتۇما.", meaning: "不要忘记喝过水的井。", lesson: "得到帮助后，要记得感恩来源。", reviewStatus: "待母语者审校" }
         ]
