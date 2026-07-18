@@ -91,24 +91,24 @@ const learningUnits = [
     actionTarget: "combo"
   },
   {
-    id: "basic-phrases",
-    title: "第三单元：基础词组与主题词",
-    subtitle: "问候、人称、称呼、数字",
-    status: "已完成",
-    description: "进入真实词义前，先建立审校表：词形、中文预览、标准主词、变体和可考状态分开。",
-    bullets: ["词库审校", "主题分组", "词形辨认", "键盘输入"],
-    groups: vocabGroups,
-    actionTarget: "vocab"
-  },
-  {
     id: "practice",
-    title: "第四单元：听说与书写强化",
+    title: "第三单元：听说与书写强化",
     subtitle: "听音、跟读、书写、复习",
     status: "进行中",
-    description: "不加新词，把第一到三单元内容变成能听、能说、能写、能输入的复习闭环。",
+    description: "先用字母和组合完成听、说、写、输入闭环；词形只做流程预览，正式主题词放到第四单元。",
     bullets: ["AI 临时音频", "跟读确认", "描摹输入", "复习结果"],
     groups: practiceGroups,
     actionTarget: "writing"
+  },
+  {
+    id: "basic-phrases",
+    title: "第四单元：日常用语与词汇",
+    subtitle: "问候、人称、家庭、数字、动物、蔬菜",
+    status: "待审校",
+    description: "参考常见语言学习软件的入门主题，把日常用语和基础词汇拆成多个小课，一课一主题。",
+    bullets: ["主题小课", "一行一词", "词形辨认", "键盘输入"],
+    groups: vocabGroups,
+    actionTarget: "vocab"
   }
 ];
 
@@ -123,27 +123,28 @@ const unitExperience = {
   },
   combos: {
     recommended: "把字母连起来，从右往左拆分组合。",
-    steps: ["看两字母组合", "拆开再合上", "做组合辨认", "完成后进入词形"],
+    steps: ["看两字母组合", "拆开再合上", "做组合辨认", "完成后进入强化训练"],
     reviewLabel: "复习组合",
     reviewTarget: "combo",
     nextLabel: "进入第三单元",
-    nextUnitId: "basic-phrases"
-  },
-  "basic-phrases": {
-    recommended: "只练词形，不急着把中文含义定死。",
-    steps: ["选择主题词组", "看审校字段", "做词形辨认", "完成后进入强化训练"],
-    reviewLabel: "复习词形",
-    reviewTarget: "vocab",
-    nextLabel: "进入第四单元",
     nextUnitId: "practice"
   },
   practice: {
-    recommended: "不加新词，用听说写把前面内容走成闭环。",
-    steps: ["选择训练组", "完成一个目标", "查看本轮结果", "回到路径继续复习"],
+    recommended: "先把字母和组合练成听、说、写的闭环。",
+    steps: ["选择训练组", "完成一个目标", "查看本轮结果", "进入主题词汇"],
     reviewLabel: "再练一轮",
     reviewTarget: "practiceSession",
+    nextLabel: "进入第四单元",
+    nextUnitId: "basic-phrases"
+  },
+  "basic-phrases": {
+    recommended: "按主题小课学日常用语和词汇，一行一行看词形。",
+    steps: ["选择主题小课", "一行一行看词", "做词形辨认", "完成键盘输入"],
+    reviewLabel: "复习主题词",
+    reviewTarget: "vocab",
     nextLabel: "回到学习路径",
-    nextUnitId: "letters"
+    nextUnitId: "letters",
+    nextTarget: "learn"
   }
 };
 
@@ -216,7 +217,7 @@ const reviewBaseItems = [
       const isVariant = ["apa-family", "dada-family"].includes(item.id);
       return {
         id: `vocab-${item.id}`,
-        unit: "第三单元",
+        unit: "第四单元",
         kind: "候选词条",
         theme: group.title,
         value: item.value,
@@ -233,14 +234,14 @@ const reviewBaseItems = [
   ...practiceGroups.flatMap((group) =>
     group.items.map((item) => ({
       id: `practice-${item.id}`,
-      unit: "第四单元",
+      unit: "第三单元",
       kind: item.type,
       theme: group.title,
       value: item.value,
       latin: item.latin,
       meaning: item.label,
       reviewStatus: "display-only",
-      examPolicy: "第四单元只复用前面内容做流程练习，不新增词义考核。",
+      examPolicy: "第三单元先复用字母、组合和词形占位做流程练习，不新增正式词义考核。",
       audioStatus: "audio-ai-temp",
       priority: item.value === "ئانا" || item.value === "سىز",
       question: item.hint
@@ -647,8 +648,8 @@ function unitProgressSummaries() {
   return [
     { unit: "第一单元", label: "字母闭环", completed: countCompleted("letters"), total: alphabetGroups.length },
     { unit: "第二单元", label: "组合输入", completed: countCompleted("combos"), total: comboGroups.length },
-    { unit: "第三单元", label: "词形输入", completed: countCompleted("vocab"), total: vocabGroups.length },
-    { unit: "第四单元", label: "强化训练", completed: countCompleted("practice"), total: practiceGroups.length }
+    { unit: "第三单元", label: "强化训练", completed: countCompleted("practice"), total: practiceGroups.length },
+    { unit: "第四单元", label: "主题词汇", completed: countCompleted("vocab"), total: vocabGroups.length }
   ];
 }
 
@@ -1093,6 +1094,7 @@ function renderAdjacentNav({ previous, next, action, previousLabel = "上一个"
 function renderUnitNextActions(unitId, primaryClass = "primary-button") {
   const experience = currentUnitExperience(unitId);
   const nextUnit = learningUnits.find((unit) => unit.id === experience.nextUnitId);
+  const shouldOpenNextUnit = Boolean(nextUnit) && experience.nextTarget !== "learn";
 
   return `
     <article class="card next-action-card">
@@ -1103,9 +1105,9 @@ function renderUnitNextActions(unitId, primaryClass = "primary-button") {
         </button>
         <button
           class="${primaryClass}"
-          data-action="${nextUnit && unitId !== "practice" ? "open-unit" : "go"}"
-          data-id="${nextUnit && unitId !== "practice" ? nextUnit.id : ""}"
-          data-target="${unitId === "practice" ? "learn" : "unit"}"
+          data-action="${shouldOpenNextUnit ? "open-unit" : "go"}"
+          data-id="${shouldOpenNextUnit ? nextUnit.id : ""}"
+          data-target="${experience.nextTarget || "unit"}"
           type="button"
         >
           ${experience.nextLabel}
@@ -1277,7 +1279,7 @@ function renderHome() {
           <div class="section-row">
             <div>
               <p class="caption">今日进度</p>
-              <h2 class="section-title">第四单元 · 听说与书写</h2>
+              <h2 class="section-title">第三单元 · 听说与书写</h2>
             </div>
             <span class="step-state">进行中</span>
           </div>
@@ -1311,7 +1313,7 @@ function renderHome() {
           </div>
           <div class="quick-grid">
             <button class="quick-button" data-action="go" data-target="writing" type="button">
-              <strong>练习听、说、写</strong><span> · 第四单元</span>
+              <strong>练习听、说、写</strong><span> · 第三单元</span>
             </button>
             <button class="quick-button" data-action="open-practice-group" data-id="listening-loop" type="button">
               <strong>听音辨认</strong><span> · AI 临时</span>
@@ -1342,7 +1344,7 @@ function renderHome() {
 function renderLearnPath() {
   return screen(
     `
-      ${topBar("学习单元", "先认识字母，再进入组合、词组")}
+      ${topBar("学习单元", "先认识字母，再进入组合、听说写和主题词")}
       <section class="stack">
         <article class="card">
           <div class="section-row">
@@ -1352,7 +1354,7 @@ function renderLearnPath() {
             </div>
             <span class="step-state">待审校</span>
           </div>
-          <p class="muted">Ana Tilim 按截图顺序展示字母，学习时把相似字母放在一起。第二单元开始加入组合、词组。</p>
+          <p class="muted">Ana Tilim 按截图顺序展示字母，学习时把相似字母放在一起。第二单元加入组合，第四单元进入日常主题词。</p>
           <div class="alphabet-strip" aria-label="完整字母目录">
             ${alphabetLetters
               .map(
@@ -1376,7 +1378,6 @@ function renderLearnPath() {
                   <span>
                     <strong>${unit.title}</strong>
                     <span class="caption">${unit.subtitle}</span>
-                    <span class="caption">${currentUnitExperience(unit.id).steps.join("、")}</span>
                   </span>
                   <span class="step-state">${unit.status}</span>
                 </button>
@@ -2469,6 +2470,35 @@ function renderVocabSelector(items, activeId) {
     .join("");
 }
 
+function renderVocabRows(items, activeId) {
+  return `
+    <div class="vocab-row-list" aria-label="本课词汇">
+      ${items
+        .map((item) => {
+          const status = item.reviewStatus.replace("待母语者审校", "待审校");
+
+          return `
+            <button
+              class="vocab-row ${item.id === activeId ? "active" : ""}"
+              data-action="select-vocab"
+              data-id="${item.id}"
+              type="button"
+              ${item.id === activeId ? `aria-current="true"` : ""}
+            >
+              <span class="uyghur">${item.value}</span>
+              <span class="vocab-row-main">
+                <strong>${item.latin}</strong>
+                <small>${item.meaning}</small>
+              </span>
+              <span class="step-state">${status}</span>
+            </button>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
 function renderAuditRows(item) {
   const rows = [
     ["审校状态", item.reviewStatus],
@@ -2502,7 +2532,7 @@ function renderVocabLesson() {
     `
       ${topBar(
         group.title,
-        "第三单元：基础词组与主题词",
+        "第四单元：日常用语与词汇",
         modeActionButton(),
         `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
       )}
@@ -2510,21 +2540,22 @@ function renderVocabLesson() {
         <article class="card ${isAuditMode() ? "review-card" : ""}">
           <div class="section-row">
             <div>
-              <p class="caption">${isAuditMode() ? "审校优先" : "词形学习"}</p>
-              <h2 class="section-title unit-goal-text">${group.goal}</h2>
+              <p class="caption">${isAuditMode() ? "审校优先" : "本课词汇"}</p>
+              <h2 class="section-title unit-goal-text">${group.title} · ${group.items.length} 个词</h2>
             </div>
             <span class="step-state">${group.status}</span>
           </div>
-          <p class="muted">${
+          <p class="muted compact-note">${
             isAuditMode()
-              ? "本单元先练词形和输入，中文含义只是预览。正式答案要等母语者审校后再锁定。"
-              : "先把词形看熟、听熟、输入熟。中文只做帮助理解，不急着背标准答案。"
+              ? "中文含义只是预览，正式答案等审校后再锁定。"
+              : "点一行进入当前词，再做辨认或键盘。"
           }</p>
         </article>
 
-        <div class="alphabet-strip compact">
-          ${renderVocabSelector(group.items, item.id)}
-        </div>
+        <article class="card">
+          <p class="caption">本课词汇</p>
+          ${renderVocabRows(group.items, item.id)}
+        </article>
 
         ${renderItemProgress(position.label, "当前词形在本主题的位置")}
         ${renderAdjacentNav({
@@ -2735,14 +2766,14 @@ function renderVocabComplete() {
 
   return screen(
     `
-      ${topBar("第三单元完成", group.title)}
+      ${topBar("第四单元完成", group.title)}
       <section class="stack">
         <article class="card review-card">
           <p class="caption">本次练习</p>
           <h2 class="screen-title">
             <span class="uyghur">${groupValues}</span>
           </h2>
-          <p class="muted">你辨认并输入了 ${item.value}。这个单元仍是审校前词库，后续要由母语者确认标准主词、变体和可考答案。</p>
+          <p class="muted">你辨认并输入了 ${item.value}。这些主题词仍在审校前词库里，后续要由母语者确认标准主词、变体和可考答案。</p>
         </article>
         <div class="metric-grid">
           <div class="metric"><strong>${group.items.length}</strong><span>词形</span></div>
@@ -2858,7 +2889,7 @@ function renderPracticeModeCard(group, item) {
     return `
       <article class="card practice-mode-card">
         <p class="caption">先描摹，再输入</p>
-        <div class="practice-drawing-pad ${state.showGuide ? "" : "hide-guide"}" aria-label="第四单元书写画布示意">
+        <div class="practice-drawing-pad ${state.showGuide ? "" : "hide-guide"}" aria-label="第三单元书写画布示意">
           <span class="uyghur guide">${item.value}</span>
         </div>
         <button class="ghost-button" data-action="toggle-guide" type="button">
@@ -2878,7 +2909,7 @@ function renderPracticeModeCard(group, item) {
       <input
         class="rtl-input uyghur"
         value="${state.keyboardValue}"
-        aria-label="第四单元维吾尔语输入框"
+        aria-label="第三单元维吾尔语输入框"
         readonly
         dir="rtl"
       />
@@ -2958,20 +2989,20 @@ function renderPracticeModeCard(group, item) {
 function renderPracticeHub() {
   return screen(
     `
-      ${topBar("听说与书写强化", "第四单元：复习闭环")}
+      ${topBar("听说与书写强化", "第三单元：复习闭环")}
       <section class="stack">
         <article class="card review-card">
           <div class="section-row">
             <div>
               <p class="caption">本单元原则</p>
-              <h2 class="section-title unit-goal-text">不加新词，只复习第一到三单元已经出现过的内容。</h2>
+              <h2 class="section-title unit-goal-text">先复习字母和组合，把听、跟读、书写、键盘连起来。</h2>
             </div>
             <span class="step-state">进行中</span>
           </div>
-          <p class="muted">真实音频还没录制，所以听音和跟读先做流程；第三单元词义继续保持待母语者审校。</p>
+          <p class="muted">真实音频还没录制，所以听音和跟读先做流程；正式日常词汇放在第四单元继续审校。</p>
         </article>
 
-        <div class="metric-grid" aria-label="第四单元概览">
+        <div class="metric-grid" aria-label="第三单元概览">
           <div class="metric"><strong>${practiceGroups.length}</strong><span>训练组</span></div>
           <div class="metric"><strong>${allPracticeItems().length}</strong><span>复习项</span></div>
           <div class="metric"><strong>${state.mistakes.length}</strong><span>本地错题</span></div>
@@ -3001,7 +3032,7 @@ function renderPracticeSession() {
     `
       ${topBar(
         group.title,
-        "第四单元：听说与书写强化",
+        "第三单元：听说与书写强化",
         "",
         `<button class="back-button" data-action="go" data-target="writing" type="button" aria-label="返回">←</button>`
       )}
@@ -3035,7 +3066,7 @@ function renderPracticeSession() {
           audio,
           label: item.value,
           title: `播放：${item.latin}`,
-          hint: "第四单元使用 AI 临时音频测试听说流程，正式版仍需真人音频。"
+          hint: "第三单元使用 AI 临时音频测试听说流程，正式版仍需真人音频。"
         })}
 
         ${renderPracticeModeCard(group, item)}
@@ -3068,7 +3099,7 @@ function renderPracticeComplete() {
         <article class="card review-card">
           <p class="caption">本轮目标</p>
           <h2 class="screen-title"><span class="uyghur">${item.value}</span></h2>
-          <p class="muted">本页只记录练习流程，不确认第三单元词义是否最终正确。</p>
+          <p class="muted">本页只记录练习流程，不确认主题词义是否最终正确。</p>
         </article>
         <div class="metric-grid">
           <div class="metric"><strong>${group.items.length}</strong><span>本组项目</span></div>
@@ -3563,7 +3594,7 @@ document.addEventListener("click", (event) => {
     if (picked && picked.id === target.id) {
       markProgress("vocab", state.selectedVocabGroupId, "recognition");
     } else if (picked) {
-      recordItemMistake("vocab", target, picked, "第三单元错题");
+      recordItemMistake("vocab", target, picked, "第四单元错题");
     }
     render();
     return;
@@ -3576,7 +3607,7 @@ document.addEventListener("click", (event) => {
     if (picked && picked.id === target.id) {
       markProgress("practice", state.selectedPracticeGroupId, "listen");
     } else if (picked) {
-      recordItemMistake("practice", target, picked, "第四单元错题");
+      recordItemMistake("practice", target, picked, "第三单元错题");
     }
     render();
     return;

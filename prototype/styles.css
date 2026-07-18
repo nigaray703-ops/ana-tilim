@@ -742,7 +742,7 @@ button {
 .lesson-step {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr) minmax(44px, max-content);
-  align-items: start;
+  align-items: center;
   gap: 10px;
   min-height: 64px;
   padding: 10px;
@@ -760,6 +760,8 @@ button {
 .step-number {
   display: grid;
   place-items: center;
+  align-self: center;
+  justify-self: center;
   width: 34px;
   height: 34px;
   border-radius: var(--radius);
@@ -800,6 +802,68 @@ button {
 .letter-focus .caption {
   margin-top: 8px;
   text-align: center;
+}
+
+.compact-note {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.vocab-row-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.vocab-row {
+  display: grid;
+  grid-template-columns: minmax(76px, 1fr) minmax(94px, 1.2fr) minmax(46px, max-content);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 58px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.72);
+  text-align: left;
+}
+
+.vocab-row.active {
+  border-color: rgba(14, 155, 177, 0.42);
+  background: var(--teal-soft);
+}
+
+.vocab-row > .uyghur {
+  min-width: 0;
+  font-size: 23px;
+  font-weight: 900;
+  line-height: 1.18;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.vocab-row-main {
+  min-width: 0;
+  text-align: center;
+}
+
+.vocab-row-main strong,
+.vocab-row-main small {
+  display: block;
+  line-height: 1.25;
+}
+
+.vocab-row-main strong {
+  font-size: 12px;
+}
+
+.vocab-row-main small {
+  margin-top: 4px;
+  color: var(--ink-soft);
+  font-size: 11px;
 }
 
 .letter-focus .uyghur,

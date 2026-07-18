@@ -64,10 +64,13 @@ assert.ok(
   /\.alphabet-strip\s*\{[^}]*justify-content:\s*center;/s.test(styleSource),
   "full alphabet directory should center wrapped letter pills"
 );
+const lessonStepStyle = styleSource.match(/^\.lesson-step\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
+assert.ok(lessonStepStyle.includes("align-items: center;"), "learning unit cards should center their content vertically");
 const stepStateStyle = styleSource.match(/^\.step-state\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
 for (const declaration of ["overflow: visible;", "text-overflow: clip;", "min-width: max-content;", "flex: 0 0 auto;"]) {
   assert.ok(stepStateStyle.includes(declaration), `status labels should include ${declaration}`);
 }
+assert.ok(!appSource.includes("基础词组与主题词"), "old broad vocabulary unit title should be removed from the app");
 assert.ok(courseDataSources["prototype/course-data/alphabet-data.js"].includes("alphabetGroups"), "unit one alphabet course data should live in the alphabet data file");
 assert.ok(courseDataSources["prototype/course-data/combo-data.js"].includes("comboGroups"), "unit two combo course data should live in the combo data file");
 assert.ok(
@@ -212,7 +215,7 @@ assert.ok(!app.innerHTML.includes("<br>"), "welcome screen should not force the 
 
 includesAll(
   renderState("state.screen = 'home'"),
-  ["今日进度", "第四单元 · 听说与书写", "继续学习", "today-progress-note"],
+  ["今日进度", "第三单元 · 听说与书写", "继续学习", "today-progress-note"],
   "home screen"
 );
 assert.ok(!app.innerHTML.includes("今日下一步"), "home screen should remove the daily next-action explainer card");
@@ -220,6 +223,14 @@ assert.ok(!app.innerHTML.includes("next-action-card"), "home screen should not r
 assert.ok(!app.innerHTML.includes("<br>"), "home screen should not force unit titles onto manual line breaks");
 assert.ok(!app.innerHTML.includes("AI 临时音频 / 真人音频待录制"), "home audio note should use readable punctuation");
 assert.ok(app.innerHTML.includes("<strong>听音辨认</strong><span> · AI 临时</span>"), "quick entry labels should stay readable on one line");
+
+includesAll(
+  renderState("state.screen = 'learn'"),
+  ["第三单元：听说与书写强化", "第四单元：日常用语与词汇", "问候、人称、家庭、数字、动物、蔬菜"],
+  "learning path after unit swap"
+);
+assert.ok(!app.innerHTML.includes("基础词组与主题词"), "learning path should not show the removed vocabulary title");
+assert.ok(!app.innerHTML.includes("选择训练组、完成一个目标、查看本轮结果"), "learning unit cards should not show the full step explanation");
 
 includesAll(
   renderState(`
@@ -244,7 +255,7 @@ includesAll(
   "home progress map"
 );
 
-for (const unitId of ["letters", "combos", "basic-phrases", "practice"]) {
+for (const unitId of ["letters", "combos", "practice", "basic-phrases"]) {
   includesAll(
     renderState(`state.screen = 'unit'; state.selectedUnitId = '${unitId}'`),
     ["学习步骤", "进入当前学习"],
@@ -312,7 +323,7 @@ assert.equal(savedProgress().learningProgress.combos["open-a"].completed, true, 
 
 includesAll(
   renderState("state.screen = 'vocab'; state.selectedVocabGroupId = 'family'; state.currentVocabItemId = 'ana-family'"),
-  ["1 / 10", "上一个", "下一个", "不设唯一答案"],
+  ["第四单元：日常用语与词汇", "本课词汇", "vocab-row-list", "ئانا", "ana", "妈妈、母亲", "不设唯一答案"],
   "vocab lesson"
 );
 assert.ok(!app.innerHTML.includes("词库审校字段"), "learning mode should hide audit-only vocabulary fields");
@@ -398,14 +409,14 @@ includesAll(
 
 includesAll(
   renderState("state.screen = 'vocabComplete'"),
-  ["下一步建议", "复习词形", "进入第四单元"],
-  "unit three complete"
+  ["下一步建议", "复习主题词", "回到学习路径"],
+  "unit four vocabulary complete"
 );
 
 includesAll(
   renderState("state.screen = 'practiceComplete'"),
-  ["下一步建议", "再练一轮", "回到学习路径"],
-  "unit four complete"
+  ["下一步建议", "再练一轮", "进入第四单元"],
+  "unit three practice complete"
 );
 
 console.log("unit learning experience checks passed");

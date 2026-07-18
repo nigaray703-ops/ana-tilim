@@ -34,8 +34,8 @@ const practiceGroups = [
         type: "词形",
         value: "مەن",
         latin: "men",
-        label: "第三单元候选词",
-        hint: "第三单元词义仍待审校，本题只练词形辨认。",
+        label: "词形预览",
+        hint: "日常词义仍待审校，本题只练词形辨认。",
         parts: ["م", "ە", "ن"],
         audioStatus: "AI 临时音频，真人音频待录制"
       }
@@ -75,7 +75,7 @@ const practiceGroups = [
         type: "词形",
         value: "رەھمەت",
         latin: "rehmet",
-        label: "第三单元候选词",
+        label: "词形预览",
         hint: "中文含义仍待审校，先练 رەھمەت 的词形和转写。",
         parts: ["رە", "ھمەت"],
         audioStatus: "AI 临时音频，真人音频待录制"
@@ -116,7 +116,7 @@ const practiceGroups = [
         type: "词形",
         value: "ئانا",
         latin: "ana",
-        label: "第三单元候选称呼",
+        label: "称呼词形预览",
         hint: "家庭称呼不设唯一答案，先练 ئانا 的词形。",
         parts: ["ئا", "ن", "ا"],
         audioStatus: "AI 临时音频，真人音频待录制"
@@ -147,7 +147,7 @@ const practiceGroups = [
         type: "词形",
         value: "سىز",
         latin: "siz",
-        label: "第三单元候选人称",
+        label: "人称词形预览",
         hint: "和 سەن 同组比较，但不在这里考礼貌等级。",
         parts: ["س", "ى", "ز"],
         audioStatus: "AI 临时音频，真人音频待录制"
@@ -157,7 +157,7 @@ const practiceGroups = [
         type: "词形",
         value: "بەش",
         latin: "besh",
-        label: "第三单元候选数字",
+        label: "数字词形预览",
         hint: "数字词义仍待审校确认，先做词形回看。",
         parts: ["ب", "ە", "ش"],
         audioStatus: "AI 临时音频，真人音频待录制"
