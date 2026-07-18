@@ -231,6 +231,13 @@ includesAll(
 );
 
 renderState("state.screen = 'letterWriting'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'");
+includesAll(
+  app.innerHTML,
+  ["书写步骤", "起笔", "方向", "对比正确写法", "完成后评价", "点位正确"],
+  "letter writing coach"
+);
+clickDataset({ action: "toggle-writing-check", id: "dots" });
+includesAll(app.innerHTML, ["自查完成 1 / 3"], "letter writing self check");
 clickDataset({ action: "go", target: "picture" });
 clickDataset({ action: "pick-picture", id: "be" });
 clickDataset({ action: "go", target: "listening" });
@@ -274,7 +281,7 @@ includesAll(
 
 includesAll(
   renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'writing-loop'; state.currentPracticeItemId = 'practice-write-ana'; state.keyboardValue = ''"),
-  ["键盘步骤", "ئا → ن → ا", "点击 ئا", "还差 3 键"],
+  ["书写步骤", "拆分描摹", "完成后评价", "键盘步骤", "ئا → ن → ا", "点击 ئا", "还差 3 键"],
   "practice writing keyboard guide"
 );
 

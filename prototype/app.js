@@ -1453,6 +1453,7 @@ const state = {
   currentPracticeItemId: "practice-listen-be",
   selectedPracticeGroupId: "listening-loop",
   practiceSpoken: false,
+  writingChecks: [],
   selectedReviewItemId: "vocab-ana-family",
   reviewFilter: "all",
   reviewOverrides: {},
@@ -1537,6 +1538,10 @@ function hydrateLocalProgress() {
     if (Array.isArray(saved.mistakes)) {
       state.mistakes = saved.mistakes.slice(0, 24);
     }
+
+    if (Array.isArray(saved.writingChecks)) {
+      state.writingChecks = saved.writingChecks.slice(0, 3);
+    }
   } catch {
     // Ignore damaged local progress and keep the default starter state.
   }
@@ -1565,7 +1570,8 @@ function saveLocalProgress() {
     favorite: state.favorite,
     reviewOverrides: state.reviewOverrides,
     learningProgress: state.learningProgress,
-    mistakes: state.mistakes
+    mistakes: state.mistakes,
+    writingChecks: state.writingChecks
   };
 
   try {
@@ -2059,10 +2065,98 @@ function guidedKeyClass(key, parts, targetValue) {
   return "";
 }
 
+const writingCheckOptions = [
+  { id: "shape", label: "主体稳定" },
+  { id: "dots", label: "点位正确" },
+  { id: "spacing", label: "连接清楚" }
+];
+
+function renderWritingCoach({ value, parts, hint, mode = "letter" }) {
+  const partText = parts && parts.length > 1 ? parts.join(" → ") : value;
+  const startText = mode === "letter" ? "先看主体轮廓，再决定点的位置。" : `拆分描摹：${partText}`;
+
+  return `
+    <article class="card writing-coach-card">
+      <p class="caption">书写步骤</p>
+      <div class="lesson-point-list">
+        <div class="lesson-point"><strong>起笔</strong><span>${startText}</span></div>
+        <div class="lesson-point"><strong>方向</strong><span>从右往左写，先主体后点位，最后检查连接。</span></div>
+        <div class="lesson-point"><strong>自查</strong><span>${hint}</span></div>
+      </div>
+    </article>
+  `;
+}
+
+function renderWritingComparison({ value, parts, forms = [] }) {
+  const comparisonItems = forms.length
+    ? forms.map((form) => ({ label: form.label, value: form.value }))
+    : [
+        { label: "整体", value },
+        ...(parts || []).map((part, index) => ({ label: `部分 ${index + 1}`, value: part }))
+      ];
+
+  return `
+    <article class="card writing-comparison-card">
+      <div class="section-row">
+        <div>
+          <p class="caption">对比正确写法</p>
+          <h2 class="section-title"><span class="uyghur">${value}</span></h2>
+        </div>
+        <span class="step-state">${comparisonItems.length} 项</span>
+      </div>
+      <div class="writing-example-grid">
+        ${comparisonItems
+          .map(
+            (item) => `
+              <div class="writing-example">
+                <span>${item.label}</span>
+                <strong class="uyghur">${item.value}</strong>
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+    </article>
+  `;
+}
+
+function renderWritingSelfCheck() {
+  const checkedCount = writingCheckOptions.filter((item) => state.writingChecks.includes(item.id)).length;
+
+  return `
+    <article class="card writing-self-check-card">
+      <div class="section-row">
+        <div>
+          <p class="caption">完成后评价</p>
+          <h2 class="section-title">自查完成 ${checkedCount} / ${writingCheckOptions.length}</h2>
+        </div>
+        <span class="step-state">${checkedCount === writingCheckOptions.length ? "完成" : "自查"}</span>
+      </div>
+      <div class="writing-check-grid">
+        ${writingCheckOptions
+          .map(
+            (item) => `
+              <button
+                class="writing-check ${state.writingChecks.includes(item.id) ? "active" : ""}"
+                data-action="toggle-writing-check"
+                data-id="${item.id}"
+                type="button"
+              >
+                ${item.label}
+              </button>
+            `
+          )
+          .join("")}
+      </div>
+    </article>
+  `;
+}
+
 function resetPracticeState() {
   state.selectedPicture = "";
   state.selectedListening = "";
   state.keyboardValue = "";
+  state.writingChecks = [];
 }
 
 function resetComboPracticeState() {
@@ -2740,15 +2834,27 @@ function renderLetterWriting() {
             </button>
           </div>
         </article>
+        ${renderWritingCoach({
+          value: letter.letter,
+          parts: [letter.letter],
+          hint: letter.writingHint,
+          mode: "letter"
+        })}
         <div class="drawing-pad ${state.showGuide ? "" : "hide-guide"}" aria-label="书写画布示意">
           <span class="uyghur guide">${letter.letter}</span>
           <span class="stroke-line" aria-hidden="true"></span>
         </div>
+        ${renderWritingComparison({
+          value: letter.letter,
+          parts: [letter.letter],
+          forms: letter.forms
+        })}
         <div class="tool-row">
           <button class="secondary-button" data-action="toast" type="button">撤销</button>
           <button class="secondary-button" data-action="toast" type="button">清除</button>
           <button class="secondary-button" data-action="toast" type="button">重做</button>
         </div>
+        ${renderWritingSelfCheck()}
         <div class="feedback">
           ${letter.writingHint}
         </div>
@@ -3949,6 +4055,16 @@ function renderPracticeModeCard(group, item) {
           ${state.showGuide ? "隐藏参考" : "显示参考"}
         </button>
       </article>
+      ${renderWritingCoach({
+        value: item.value,
+        parts: item.parts,
+        hint: item.hint,
+        mode: "word"
+      })}
+      ${renderWritingComparison({
+        value: item.value,
+        parts: item.parts
+      })}
       <input
         class="rtl-input uyghur"
         value="${state.keyboardValue}"
@@ -3956,6 +4072,7 @@ function renderPracticeModeCard(group, item) {
         readonly
         dir="rtl"
       />
+      ${renderWritingSelfCheck()}
       ${renderKeyboardGuide(keyboardParts, item.value)}
       <div class="practice-key-row" aria-label="当前复习项快捷键">
         ${inputKeys
@@ -4821,6 +4938,17 @@ document.addEventListener("click", (event) => {
 
   if (action === "toggle-guide") {
     state.showGuide = !state.showGuide;
+    render();
+    return;
+  }
+
+  if (action === "toggle-writing-check") {
+    const checkId = button.dataset.id;
+    if (state.writingChecks.includes(checkId)) {
+      state.writingChecks = state.writingChecks.filter((item) => item !== checkId);
+    } else {
+      state.writingChecks = [...state.writingChecks, checkId].slice(0, writingCheckOptions.length);
+    }
     render();
     return;
   }
