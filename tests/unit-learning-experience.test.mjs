@@ -158,19 +158,46 @@ assert.ok(!app.innerHTML.includes(" / 待审校"), "letter library should separa
 
 includesAll(
   renderState("state.screen = 'group'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'"),
-  ["1 / 4", "上一个", "下一个", "AI 临时音频"],
+  ["1 / 4", "上一个", "下一个", "AI 临时音频", "找不同", "读音选择"],
   "letter lesson"
 );
 clickDataset({ action: "select-adjacent-letter", id: "pe" });
 assert.equal(vm.runInContext("state.currentLetterId", context), "pe", "next letter button should switch letters");
 
 includesAll(
+  renderState("state.screen = 'letterOdd'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'; state.selectedPicture = ''"),
+  ["找不同", "目标 ب", "下方三个点"],
+  "letter odd-one-out exercise"
+);
+clickDataset({ action: "pick-letter-odd", id: "pe" });
+includesAll(app.innerHTML, ["找对了", "پ"], "correct odd-one-out feedback");
+
+includesAll(
+  renderState("state.screen = 'letterSound'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'; state.selectedListening = ''; state.mistakes = []"),
+  ["读音选择", "选择正确字母", "b"],
+  "letter sound-choice exercise"
+);
+clickDataset({ action: "pick-letter-sound", id: "pe" });
+includesAll(app.innerHTML, ["目标是 ب", "你选了 پ"], "letter sound-choice mistake feedback");
+assert.equal(vm.runInContext("state.mistakes[0].targetId", context), "be", "sound-choice mistake should enter review");
+
+includesAll(
   renderState("state.screen = 'combo'; state.selectedComboGroupId = 'open-a'; state.currentComboItemId = 'ba'"),
-  ["1 / 6", "上一个", "下一个", "从右往左"],
+  ["1 / 6", "上一个", "下一个", "从右往左", "拼接"],
   "combo lesson"
 );
 clickDataset({ action: "select-adjacent-combo", id: "pa" });
 assert.equal(vm.runInContext("state.currentComboItemId", context), "pa", "next combo button should switch combos");
+
+includesAll(
+  renderState("state.screen = 'comboBuild'; state.selectedComboGroupId = 'open-a'; state.currentComboItemId = 'ba'; state.keyboardValue = ''"),
+  ["组合拼接", "ب + ا", "当前拼接"],
+  "combo build exercise"
+);
+clickDataset({ action: "build-part", key: "ب" });
+clickDataset({ action: "build-part", key: "ا" });
+includesAll(app.innerHTML, ["拼接正确", "با"], "combo build success feedback");
+assert.equal(savedProgress().learningProgress.combos["open-a"].completed, true, "combo build completion should be saved locally");
 
 includesAll(
   renderState("state.screen = 'vocab'; state.selectedVocabGroupId = 'family'; state.currentVocabItemId = 'ana-family'"),
