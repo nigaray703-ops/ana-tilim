@@ -577,6 +577,16 @@ button {
   font-size: 74px;
 }
 
+.vocab-big {
+  font-size: 58px;
+  line-height: 1.18;
+}
+
+.vocab-big.long-text {
+  font-size: 34px;
+  line-height: 1.35;
+}
+
 .word-big {
   font-size: 52px;
   font-weight: 800;
@@ -637,6 +647,35 @@ button {
 .review-card {
   border-color: rgba(231, 185, 93, 0.34);
   background: var(--gold-soft);
+}
+
+.audit-grid {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.audit-row {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid rgba(22, 38, 87, 0.10);
+}
+
+.audit-row:first-child {
+  border-top: 0;
+}
+
+.audit-row strong {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.audit-row span {
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .lesson-point-list {
@@ -765,6 +804,20 @@ button {
   color: var(--ink);
   font-size: 28px;
   font-weight: 900;
+}
+
+.vocab-choice {
+  grid-template-columns: minmax(88px, 112px) minmax(0, 1fr) minmax(44px, max-content);
+}
+
+.choice-art-wide {
+  width: 100%;
+  height: auto;
+  min-height: 64px;
+  padding: 8px;
+  font-size: 20px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .choice-card.correct {

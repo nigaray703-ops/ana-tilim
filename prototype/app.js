@@ -661,6 +661,319 @@ const comboGroups = [
   }
 ];
 
+const vocabGroups = [
+  {
+    id: "greetings",
+    kind: "vocab",
+    title: "问候",
+    letters: ["ياخشىمۇسىز", "رەھمەت", "خوش", "ئەسسالامۇ ئەلەيكۇم"],
+    goal: "先认识最常见的问候和礼貌词形，中文只做预览",
+    status: "待审校",
+    items: [
+      {
+        id: "yaxshimusiz",
+        value: "ياخشىمۇسىز",
+        latin: "yaxshimusiz",
+        meaning: "你好 / 你好吗",
+        theme: "问候",
+        parts: ["ياخشى", "مۇ", "سىز"],
+        standardNote: "候选标准问候词形，需母语者确认使用场景。",
+        variantNote: "可能兼有问候和询问状态用法，语境待审校。",
+        acceptableAnswer: "现阶段只练词形，不设最终可接受答案。",
+        testPolicy: "暂不考中文含义，只做词形辨认和输入。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "参考公开学习资料，进入项目审校队列。",
+        tip: "词形较长，先分成 ياخشى / مۇ / سىز 三块看。"
+      },
+      {
+        id: "rahmat",
+        value: "رەھمەت",
+        latin: "rehmet",
+        meaning: "谢谢",
+        theme: "问候",
+        parts: ["رە", "ھمەت"],
+        standardNote: "候选礼貌词，需确认标准转写和发音。",
+        variantNote: "口语发音和转写可能有差异，待审校。",
+        acceptableAnswer: "现阶段只练词形，不设最终可接受答案。",
+        testPolicy: "暂不考中文含义，只做词形辨认和输入。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "参考公开学习资料，进入项目审校队列。",
+        tip: "先看 ر 和 ھ，再整体记住词形。"
+      },
+      {
+        id: "xosh",
+        value: "خوش",
+        latin: "xosh",
+        meaning: "再见 / 告别",
+        theme: "问候",
+        parts: ["خ", "و", "ش"],
+        standardNote: "候选告别词，需确认使用范围。",
+        variantNote: "不同资料可能写作或转写略有差异，待审校。",
+        acceptableAnswer: "现阶段只练词形，不设最终可接受答案。",
+        testPolicy: "暂不考中文含义，只做词形辨认和输入。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "参考公开学习资料，进入项目审校队列。",
+        tip: "这个词短，适合练 خ / و / ش 的连续识别。"
+      },
+      {
+        id: "assalamu",
+        value: "ئەسسالامۇ ئەلەيكۇم",
+        latin: "assalamu alaykum",
+        meaning: "问候语 / 愿平安",
+        theme: "问候",
+        parts: ["ئەسسالامۇ", "ئەلەيكۇم"],
+        standardNote: "候选礼貌问候，需确认教学说明和场景。",
+        variantNote: "宗教/文化语境需单独说明，待审校。",
+        acceptableAnswer: "现阶段只练词形，不设最终可接受答案。",
+        testPolicy: "暂不考中文含义，只做词形辨认和输入。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "参考公开学习资料，进入项目审校队列。",
+        tip: "先把它看成两个词，不急着一次背完整。"
+      }
+    ]
+  },
+  {
+    id: "pronouns",
+    kind: "vocab",
+    title: "我 / 你 / 他",
+    letters: ["مەن", "سىز", "سەن", "ئۇ", "بىز"],
+    goal: "认识最基础人称词形，并把礼貌和亲近说法分开",
+    status: "待审校",
+    items: [
+      {
+        id: "men",
+        value: "مەن",
+        latin: "men",
+        meaning: "我",
+        theme: "我 / 你 / 他",
+        parts: ["م", "ە", "ن"],
+        standardNote: "候选标准人称词。",
+        variantNote: "暂无变体备注，待审校。",
+        acceptableAnswer: "现阶段只练词形，不设最终可接受答案。",
+        testPolicy: "可做词形辨认，不考语法变化。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "参考公开学习资料，进入项目审校队列。",
+        tip: "短词，适合练 م 和 ن。"
+      },
+      {
+        id: "siz",
+        value: "سىز",
+        latin: "siz",
+        meaning: "你 / 您",
+        theme: "我 / 你 / 他",
+        parts: ["س", "ى", "ز"],
+        standardNote: "候选礼貌/正式第二人称。",
+        variantNote: "和 سەن 的关系要在正式词条里说明。",
+        acceptableAnswer: "现阶段只练词形，不设最终可接受答案。",
+        testPolicy: "可做词形辨认，不考礼貌等级。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "参考公开学习资料，进入项目审校队列。",
+        tip: "和 سەن 同组比较，但不要混成一个答案。"
+      },
+      {
+        id: "sen",
+        value: "سەن",
+        latin: "sen",
+        meaning: "你",
+        theme: "我 / 你 / 他",
+        parts: ["س", "ە", "ن"],
+        standardNote: "候选亲近/非正式第二人称。",
+        variantNote: "使用场景和礼貌程度需母语者确认。",
+        acceptableAnswer: "现阶段只练词形，不设最终可接受答案。",
+        testPolicy: "可做词形辨认，不考礼貌等级。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "参考公开学习资料，进入项目审校队列。",
+        tip: "和 سىز 的区别先看中间和结尾字母。"
+      },
+      {
+        id: "u-pronoun",
+        value: "ئۇ",
+        latin: "u",
+        meaning: "他 / 她 / 它",
+        theme: "我 / 你 / 他",
+        parts: ["ئ", "ۇ"],
+        standardNote: "候选第三人称词。",
+        variantNote: "中文他/她/它的区分不能直接套入维吾尔语，待审校说明。",
+        acceptableAnswer: "现阶段只练词形，不设最终可接受答案。",
+        testPolicy: "可做词形辨认，不考语法变化。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "参考公开学习资料，进入项目审校队列。",
+        tip: "这是短词，但也和元音 ئۇ 视觉相关。"
+      },
+      {
+        id: "biz",
+        value: "بىز",
+        latin: "biz",
+        meaning: "我们",
+        theme: "我 / 你 / 他",
+        parts: ["ب", "ى", "ز"],
+        standardNote: "候选第一人称复数。",
+        variantNote: "暂无变体备注，待审校。",
+        acceptableAnswer: "现阶段只练词形，不设最终可接受答案。",
+        testPolicy: "可做词形辨认，不考语法变化。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "参考公开学习资料，进入项目审校队列。",
+        tip: "和 سىز 一起看，注意开头字母不同。"
+      }
+    ]
+  },
+  {
+    id: "family",
+    kind: "vocab",
+    title: "家庭 / 基础称呼",
+    letters: ["ئانا", "ئاپا", "ئاتا", "دادا"],
+    goal: "把标准主词和家庭口语变体分开记录，不设唯一答案",
+    status: "待审校",
+    items: [
+      {
+        id: "ana-family",
+        value: "ئانا",
+        latin: "ana",
+        meaning: "妈妈 / 母亲",
+        theme: "家庭 / 基础称呼",
+        parts: ["ئا", "ن", "ا"],
+        standardNote: "候选标准主词，需确认。",
+        variantNote: "和 ئاپا 的关系需母语者确认。",
+        acceptableAnswer: "正式考核前不设唯一答案。",
+        testPolicy: "只练词形，不考标准/变体判断。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "来自第二单元预览和用户提醒，进入审校队列。",
+        tip: "先记词形，不急着排除 ئاپا。"
+      },
+      {
+        id: "apa-family",
+        value: "ئاپا",
+        latin: "apa",
+        meaning: "妈妈 / 家庭称呼变体",
+        theme: "家庭 / 基础称呼",
+        parts: ["ئا", "پ", "ا"],
+        standardNote: "可能为家庭/口语称呼，需确认。",
+        variantNote: "用户已提醒它也可表示妈妈。",
+        acceptableAnswer: "正式考核前不设唯一答案。",
+        testPolicy: "只练词形，不考标准/变体判断。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "来自第二单元预览和用户提醒，进入审校队列。",
+        tip: "和 ئانا 比较：中间是 پ。"
+      },
+      {
+        id: "ata-family",
+        value: "ئاتا",
+        latin: "ata",
+        meaning: "爸爸 / 父亲",
+        theme: "家庭 / 基础称呼",
+        parts: ["ئا", "ت", "ا"],
+        standardNote: "候选标准主词，需确认。",
+        variantNote: "和 دادا 的关系需母语者确认。",
+        acceptableAnswer: "正式考核前不设唯一答案。",
+        testPolicy: "只练词形，不考标准/变体判断。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "来自第二单元预览和用户提醒，进入审校队列。",
+        tip: "和 ئانا 结构相似，中间字母不同。"
+      },
+      {
+        id: "dada-family",
+        value: "دادا",
+        latin: "dada",
+        meaning: "爸爸 / 家庭称呼变体",
+        theme: "家庭 / 基础称呼",
+        parts: ["د", "ا", "د", "ا"],
+        standardNote: "可能为家庭/口语称呼，需确认。",
+        variantNote: "用户已提醒它也可表示爸爸。",
+        acceptableAnswer: "正式考核前不设唯一答案。",
+        testPolicy: "只练词形，不考标准/变体判断。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "来自第二单元预览和用户提醒，进入审校队列。",
+        tip: "د 后面通常不继续连接，所以词形里会看到断开。"
+      }
+    ]
+  },
+  {
+    id: "numbers",
+    kind: "vocab",
+    title: "数字 1-5",
+    letters: ["بىر", "ئىككى", "ئۈچ", "تۆت", "بەش"],
+    goal: "先认识 1 到 5 的词形，后续再做数字专项",
+    status: "待审校",
+    items: [
+      {
+        id: "one",
+        value: "بىر",
+        latin: "bir",
+        meaning: "一",
+        theme: "数字 1-5",
+        parts: ["ب", "ى", "ر"],
+        standardNote: "候选数字词。",
+        variantNote: "暂无变体备注，待审校。",
+        acceptableAnswer: "现阶段只练词形，不设最终可接受答案。",
+        testPolicy: "可做词形辨认和输入。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "参考公开学习资料，进入项目审校队列。",
+        tip: "短词，注意 ر 后不继续连接。"
+      },
+      {
+        id: "two",
+        value: "ئىككى",
+        latin: "ikki",
+        meaning: "二",
+        theme: "数字 1-5",
+        parts: ["ئى", "ك", "كى"],
+        standardNote: "候选数字词。",
+        variantNote: "暂无变体备注，待审校。",
+        acceptableAnswer: "现阶段只练词形，不设最终可接受答案。",
+        testPolicy: "可做词形辨认和输入。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "参考公开学习资料，进入项目审校队列。",
+        tip: "ك 系字母出现两次，适合复习连接。"
+      },
+      {
+        id: "three",
+        value: "ئۈچ",
+        latin: "üch",
+        meaning: "三",
+        theme: "数字 1-5",
+        parts: ["ئۈ", "چ"],
+        standardNote: "候选数字词。",
+        variantNote: "暂无变体备注，待审校。",
+        acceptableAnswer: "现阶段只练词形，不设最终可接受答案。",
+        testPolicy: "可做词形辨认和输入。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "参考公开学习资料，进入项目审校队列。",
+        tip: "复习元音 ئۈ 和字母 چ。"
+      },
+      {
+        id: "four",
+        value: "تۆت",
+        latin: "töt",
+        meaning: "四",
+        theme: "数字 1-5",
+        parts: ["ت", "ۆ", "ت"],
+        standardNote: "候选数字词。",
+        variantNote: "暂无变体备注，待审校。",
+        acceptableAnswer: "现阶段只练词形，不设最终可接受答案。",
+        testPolicy: "可做词形辨认和输入。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "参考公开学习资料，进入项目审校队列。",
+        tip: "同一个 ت 出现在开头和结尾。"
+      },
+      {
+        id: "five",
+        value: "بەش",
+        latin: "besh",
+        meaning: "五",
+        theme: "数字 1-5",
+        parts: ["ب", "ە", "ش"],
+        standardNote: "候选数字词。",
+        variantNote: "暂无变体备注，待审校。",
+        acceptableAnswer: "现阶段只练词形，不设最终可接受答案。",
+        testPolicy: "可做词形辨认和输入。",
+        reviewStatus: "待母语者审校",
+        sourceNote: "参考公开学习资料，进入项目审校队列。",
+        tip: "复习 ب 和 ش。"
+      }
+    ]
+  }
+];
+
 const learningUnits = [
   {
     id: "letters",
@@ -676,7 +989,7 @@ const learningUnits = [
     id: "combos",
     title: "第二单元：组合与词组入门",
     subtitle: "字母连起来 / 词形预览",
-    status: "进行中",
+    status: "已完成",
     description: "先做两字母和三字母组合，再加入少量基础称呼词形预览；含义和变体都标记为待母语者审校。",
     bullets: ["两字母组合", "三字母慢读", "词形预览", "键盘输入"],
     groups: comboGroups,
@@ -685,15 +998,12 @@ const learningUnits = [
   {
     id: "basic-phrases",
     title: "第三单元：基础词组与主题词",
-    subtitle: "问候 / 称呼 / 日常物品",
-    status: "规划中",
-    description: "从这里开始进入真正的日常表达，家庭 / 基础称呼也放到这里或第二单元后半。",
-    bullets: ["标准语主词", "中文含义", "变体备注", "可接受答案"],
-    groups: [
-      { title: "问候", letters: ["待审校"], goal: "先做最常用表达", status: "规划中" },
-      { title: "家庭 / 基础称呼", letters: ["待审校"], goal: "标准说法和地区变体分开", status: "规划中" }
-    ],
-    actionTarget: "library"
+    subtitle: "问候 / 人称 / 称呼 / 数字",
+    status: "进行中",
+    description: "进入真实词义前，先建立审校表：词形、中文预览、标准主词、变体和可考状态分开。",
+    bullets: ["词库审校", "主题分组", "词形辨认", "键盘输入"],
+    groups: vocabGroups,
+    actionTarget: "vocab"
   },
   {
     id: "practice",
@@ -726,6 +1036,8 @@ const state = {
   selectedGroupId: "dot-bone",
   currentComboItemId: "ba",
   selectedComboGroupId: "open-a",
+  currentVocabItemId: "yaxshimusiz",
+  selectedVocabGroupId: "greetings",
   selectedUnitId: "letters",
   showGuide: true,
   favorite: false
@@ -775,6 +1087,26 @@ function allComboItems() {
   return comboGroups.flatMap((group) => group.items);
 }
 
+function currentVocabGroup() {
+  return vocabGroups.find((group) => group.id === state.selectedVocabGroupId) || vocabGroups[0];
+}
+
+function currentVocabItems() {
+  return currentVocabGroup().items;
+}
+
+function currentVocabItem() {
+  return currentVocabItems().find((item) => item.id === state.currentVocabItemId) || currentVocabItems()[0];
+}
+
+function vocabGroupForItem(itemId) {
+  return vocabGroups.find((group) => group.items.some((item) => item.id === itemId));
+}
+
+function allVocabItems() {
+  return vocabGroups.flatMap((group) => group.items);
+}
+
 function resetPracticeState() {
   state.selectedPicture = "";
   state.selectedListening = "";
@@ -782,6 +1114,10 @@ function resetPracticeState() {
 }
 
 function resetComboPracticeState() {
+  resetPracticeState();
+}
+
+function resetVocabPracticeState() {
   resetPracticeState();
 }
 
@@ -806,6 +1142,10 @@ function render() {
     comboRecognition: renderComboRecognition,
     comboKeyboard: renderComboKeyboard,
     comboComplete: renderComboComplete,
+    vocab: renderVocabLesson,
+    vocabRecognition: renderVocabRecognition,
+    vocabKeyboard: renderVocabKeyboard,
+    vocabComplete: renderVocabComplete,
     library: renderLibrary,
     profile: renderProfile
   };
@@ -917,14 +1257,14 @@ function renderHome() {
           <div class="section-row">
             <div>
               <p class="caption">今日进度</p>
-              <h2 class="section-title">第二单元 · 组合与词形</h2>
+              <h2 class="section-title">第三单元 · 基础词组</h2>
             </div>
             <span class="step-state">进行中</span>
           </div>
           <div class="progress-track" aria-hidden="true">
-            <div class="progress-fill" style="--value: 35%"></div>
+            <div class="progress-fill" style="--value: 25%"></div>
           </div>
-          <p class="caption">从 با、ما、نا 这样的组合开始，再少量预览基础称呼；词义统一待母语者审校。</p>
+          <p class="caption">先看问候、人称、家庭称呼和数字 1-5；所有中文含义都进入审校表，不直接当最终答案。</p>
           <button class="primary-button" data-action="go" data-target="learn" type="button">
             继续学习
           </button>
@@ -932,8 +1272,8 @@ function renderHome() {
 
         <div class="metric-grid" aria-label="今日学习概览">
           <div class="metric"><strong>3</strong><span>连续天数</span></div>
-          <div class="metric"><strong>4</strong><span>组合组</span></div>
-          <div class="metric"><strong>审校</strong><span>词义</span></div>
+          <div class="metric"><strong>4</strong><span>词库组</span></div>
+          <div class="metric"><strong>${allVocabItems().length}</strong><span>候选词</span></div>
         </div>
 
         <section>
@@ -942,17 +1282,17 @@ function renderHome() {
             <button class="ghost-button" data-action="toast" type="button">设置目标</button>
           </div>
           <div class="quick-grid">
-            <button class="quick-button" data-action="go" data-target="letter" type="button">
-              <strong>学字母</strong><span>全部字母组</span>
+            <button class="quick-button" data-action="go" data-target="vocab" type="button">
+              <strong>学词组</strong><span>当前第三单元</span>
             </button>
             <button class="quick-button" data-action="go" data-target="combo" type="button">
-              <strong>学组合</strong><span>当前第二单元</span>
+              <strong>复习组合</strong><span>第二单元</span>
             </button>
-            <button class="quick-button" data-action="go" data-target="comboRecognition" type="button">
-              <strong>辨认组合</strong><span>看转写选词形</span>
+            <button class="quick-button" data-action="go" data-target="vocabRecognition" type="button">
+              <strong>辨认词形</strong><span>只练预览词形</span>
             </button>
-            <button class="quick-button" data-action="go" data-target="comboKeyboard" type="button">
-              <strong>键盘训练</strong><span>输入组合</span>
+            <button class="quick-button" data-action="go" data-target="vocabKeyboard" type="button">
+              <strong>键盘训练</strong><span>输入词形</span>
             </button>
           </div>
         </section>
@@ -1030,7 +1370,7 @@ function renderLetterPills(items, activeId = "") {
 }
 
 function renderGroupCard(group) {
-  const action = group.kind === "combo" ? "open-combo-group" : "open-group";
+  const action = group.kind === "vocab" ? "open-vocab-group" : group.kind === "combo" ? "open-combo-group" : "open-group";
   const cardContent = `
     <div class="section-row">
       <strong>${group.title}</strong>
@@ -1795,6 +2135,286 @@ function renderComboComplete() {
   );
 }
 
+function renderVocabSelector(items, activeId) {
+  return items
+    .map(
+      (item) => `
+        <button
+          class="letter-pill button-pill ${item.id === activeId ? "active" : ""}"
+          data-action="select-vocab"
+          data-id="${item.id}"
+          type="button"
+        >
+          <span class="uyghur">${item.value}</span>
+          <small>${item.latin}</small>
+        </button>
+      `
+    )
+    .join("");
+}
+
+function renderAuditRows(item) {
+  const rows = [
+    ["审校状态", item.reviewStatus],
+    ["标准主词", item.standardNote],
+    ["变体备注", item.variantNote],
+    ["可接受答案", item.acceptableAnswer],
+    ["考核方式", item.testPolicy],
+    ["来源备注", item.sourceNote]
+  ];
+
+  return rows
+    .map(
+      ([label, value]) => `
+        <div class="audit-row">
+          <strong>${label}</strong>
+          <span>${value}</span>
+        </div>
+      `
+    )
+    .join("");
+}
+
+function renderVocabLesson() {
+  const group = currentVocabGroup();
+  const item = currentVocabItem();
+  const longWordClass = item.value.length > 8 ? "long-text" : "";
+
+  return screen(
+    `
+      ${topBar(
+        group.title,
+        "第三单元：基础词组与主题词",
+        "",
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack">
+        <article class="card review-card">
+          <div class="section-row">
+            <div>
+              <p class="caption">审校优先</p>
+              <h2 class="section-title unit-goal-text">${group.goal}</h2>
+            </div>
+            <span class="step-state">${group.status}</span>
+          </div>
+          <p class="muted">本单元先练词形和输入，中文含义只是预览。正式答案要等母语者审校后再锁定。</p>
+        </article>
+
+        <div class="alphabet-strip compact">
+          ${renderVocabSelector(group.items, item.id)}
+        </div>
+
+        <div class="letter-focus">
+          <div>
+            <div class="uyghur letter-big vocab-big ${longWordClass}">${item.value}</div>
+            <p class="caption">${item.theme} / ${item.latin}</p>
+          </div>
+        </div>
+
+        <article class="card">
+          <p class="caption">中文预览</p>
+          <h2 class="section-title">${item.meaning}</h2>
+          <p class="muted">${item.tip}</p>
+        </article>
+
+        <article class="card">
+          <p class="caption">拆开看</p>
+          <div class="combo-parts" aria-label="词形拆分">
+            ${renderComboParts(item)}
+          </div>
+        </article>
+
+        <article class="card">
+          <p class="caption">词库审校字段</p>
+          <div class="audit-grid">
+            ${renderAuditRows(item)}
+          </div>
+        </article>
+
+        <div class="action-grid">
+          <button class="secondary-button" data-action="go" data-target="vocabRecognition" type="button">
+            辨认
+          </button>
+          <button class="primary-button" data-action="go" data-target="vocabKeyboard" type="button">
+            键盘
+          </button>
+        </div>
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function renderVocabRecognition() {
+  const group = currentVocabGroup();
+  const item = currentVocabItem();
+  const choices = currentVocabItems();
+  const hasPicked = Boolean(state.selectedPicture);
+  const picked = choices.find((choice) => choice.id === state.selectedPicture);
+  const isCorrect = picked && picked.id === item.id;
+
+  return screen(
+    `
+      ${topBar(
+        "词形辨认",
+        group.title,
+        "",
+        `<button class="back-button" data-action="go" data-target="vocab" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack">
+        <article class="card review-card">
+          <p class="caption">选择正确词形</p>
+          <h2 class="section-title">请选择 ${item.latin} 的词形</h2>
+          <p class="muted">中文预览：${item.meaning}。${item.reviewStatus}，本题只确认词形。</p>
+        </article>
+        <div class="choice-grid">
+          ${choices
+            .map((choice) => {
+              const selected = state.selectedPicture === choice.id;
+              const correctChoice = choice.id === item.id;
+              const resultClass = selected ? (correctChoice ? "correct" : "wrong") : "";
+              return `
+                <button
+                  class="choice-card vocab-choice ${resultClass}"
+                  data-action="pick-vocab"
+                  data-id="${choice.id}"
+                  type="button"
+                >
+                  <span class="choice-art choice-art-wide uyghur">${choice.value}</span>
+                  <span>
+                    <strong>${choice.latin}</strong>
+                    <span class="caption">${choice.meaning} / ${choice.reviewStatus}</span>
+                  </span>
+                  <span class="step-state">${selected ? (correctChoice ? "正确" : "再想想") : "选择"}</span>
+                </button>
+              `;
+            })
+            .join("")}
+        </div>
+        ${
+          hasPicked
+            ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
+                isCorrect
+                  ? `答对了。这里确认的是 ${item.value} 的词形，不是最终词义审校。`
+                  : "这个不是当前目标词形。正式版会把易混词放入复习。"
+              }</div>`
+            : ""
+        }
+        <button class="primary-button" data-action="go" data-target="vocabKeyboard" type="button">
+          继续键盘
+        </button>
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function renderVocabKeyboard() {
+  const group = currentVocabGroup();
+  const item = currentVocabItem();
+  const isCorrect = state.keyboardValue === item.value;
+  const hasInput = state.keyboardValue.length > 0;
+
+  return screen(
+    `
+      ${topBar(
+        "词形键盘",
+        group.title,
+        "",
+        `<button class="back-button" data-action="go" data-target="vocab" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack">
+        <article class="card review-card">
+          <p class="caption">请输入这个词形</p>
+          <div class="section-row">
+            <strong class="uyghur">${item.value}</strong>
+            <span class="caption">${item.reviewStatus}</span>
+          </div>
+        </article>
+        <input
+          class="rtl-input uyghur"
+          value="${state.keyboardValue}"
+          aria-label="维吾尔语词形输入框"
+          readonly
+          dir="rtl"
+        />
+        <div class="practice-key-row" aria-label="本组词形快捷键">
+          ${group.items
+            .map(
+              (choice) => `
+                <button class="key-button uyghur" data-action="key" data-key="${choice.value}" type="button">
+                  ${choice.value}
+                </button>
+              `
+            )
+            .join("")}
+        </div>
+        <div class="practice-key-row" aria-label="当前词形拆分键">
+          ${item.parts
+            .map(
+              (part) => `
+                <button class="key-button uyghur" data-action="key" data-key="${part}" type="button">
+                  ${part}
+                </button>
+              `
+            )
+            .join("")}
+        </div>
+        <div class="tool-row">
+          <button class="secondary-button" data-action="backspace" type="button">删除</button>
+          <button class="secondary-button" data-action="clear-input" type="button">清空</button>
+        </div>
+        ${
+          hasInput
+            ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
+                isCorrect
+                  ? "输入正确。这个词形已完成本轮练习。"
+                  : `继续输入，目标词形是 ${item.value}。`
+              }</div>`
+            : `<div class="feedback">提示：可以直接点击 <span class="uyghur">${item.value}</span>，也可以按拆分键慢慢输入。</div>`
+        }
+        <button class="primary-button" data-action="go" data-target="vocabComplete" type="button">
+          完成这一组
+        </button>
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function renderVocabComplete() {
+  const group = currentVocabGroup();
+  const item = currentVocabItem();
+  const groupValues = group.items.map((choice) => choice.value).join(" ");
+
+  return screen(
+    `
+      ${topBar("第三单元完成", group.title)}
+      <section class="stack">
+        <article class="card review-card">
+          <p class="caption">本次练习</p>
+          <h2 class="screen-title">
+            <span class="uyghur">${groupValues}</span>
+          </h2>
+          <p class="muted">你辨认并输入了 ${item.value}。这个单元仍是审校前词库，后续要由母语者确认标准主词、变体和可考答案。</p>
+        </article>
+        <div class="metric-grid">
+          <div class="metric"><strong>${group.items.length}</strong><span>词形</span></div>
+          <div class="metric"><strong>1</strong><span>输入</span></div>
+          <div class="metric"><strong>审校</strong><span>含义</span></div>
+        </div>
+        <button class="primary-button" data-action="go" data-target="unit" type="button">
+          回到第三单元
+        </button>
+        <button class="secondary-button" data-action="go" data-target="learn" type="button">
+          学习路径
+        </button>
+      </section>
+    `,
+    "learn"
+  );
+}
+
 function renderLibrary() {
   return screen(
     `
@@ -1838,7 +2458,8 @@ function renderProfile() {
         </article>
         <div class="profile-row"><strong>已开放字母</strong><span>32 / 32</span></div>
         <div class="profile-row"><strong>已开放组合</strong><span>${allComboItems().length}</span></div>
-        <div class="profile-row"><strong>下一单元</strong><span>基础词组</span></div>
+        <div class="profile-row"><strong>候选词库</strong><span>${allVocabItems().length}</span></div>
+        <div class="profile-row"><strong>下一单元</strong><span>听说强化</span></div>
         <div class="profile-row"><strong>连续学习</strong><span>3 天</span></div>
         <button class="secondary-button" data-action="toast" type="button">学习提醒</button>
       </section>
@@ -1875,7 +2496,10 @@ document.addEventListener("click", (event) => {
     if (target === "combo") {
       state.selectedUnitId = "combos";
     }
-    if (["picture", "listening", "keyboard", "comboRecognition", "comboKeyboard"].includes(target)) {
+    if (target === "vocab") {
+      state.selectedUnitId = "basic-phrases";
+    }
+    if (["picture", "listening", "keyboard", "comboRecognition", "comboKeyboard", "vocabRecognition", "vocabKeyboard"].includes(target)) {
       resetPracticeState();
     }
     goTo(target);
@@ -1908,6 +2532,16 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (action === "open-vocab-group") {
+    const group = vocabGroups.find((item) => item.id === button.dataset.id) || vocabGroups[0];
+    state.selectedUnitId = "basic-phrases";
+    state.selectedVocabGroupId = group.id;
+    state.currentVocabItemId = group.items[0].id;
+    resetVocabPracticeState();
+    goTo("vocab");
+    return;
+  }
+
   if (action === "pick-picture") {
     state.selectedPicture = button.dataset.id;
     render();
@@ -1921,6 +2555,12 @@ document.addEventListener("click", (event) => {
   }
 
   if (action === "pick-combo") {
+    state.selectedPicture = button.dataset.id;
+    render();
+    return;
+  }
+
+  if (action === "pick-vocab") {
     state.selectedPicture = button.dataset.id;
     render();
     return;
@@ -1947,6 +2587,17 @@ document.addEventListener("click", (event) => {
     }
     state.currentComboItemId = button.dataset.id;
     resetComboPracticeState();
+    render();
+    return;
+  }
+
+  if (action === "select-vocab") {
+    const group = vocabGroupForItem(button.dataset.id);
+    if (group) {
+      state.selectedVocabGroupId = group.id;
+    }
+    state.currentVocabItemId = button.dataset.id;
+    resetVocabPracticeState();
     render();
     return;
   }
