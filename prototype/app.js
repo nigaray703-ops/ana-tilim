@@ -250,9 +250,10 @@ function screen(content, active = "home") {
   `;
 }
 
-function topBar(title, subtitle, action = "") {
+function topBar(title, subtitle, action = "", leading = "") {
   return `
     <header class="top-row">
+      ${leading}
       <div class="brand-lockup">
         <img class="brand-mark" src="./assets/logo.png" alt="Ana Tilim logo" />
         <div>
@@ -446,7 +447,8 @@ function renderUnitDetail() {
       ${topBar(
         unit.title,
         unit.subtitle,
-        `<button class="ghost-button" data-action="go" data-target="learn" type="button">返回</button>`
+        "",
+        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="返回">←</button>`
       )}
       <section class="stack">
         <article class="card">
