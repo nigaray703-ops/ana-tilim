@@ -26,6 +26,7 @@ const courseDataSources = Object.fromEntries(
 );
 const courseDataGuide = fs.readFileSync(courseDataGuidePath, "utf8");
 const appSource = fs.readFileSync("prototype/app.js", "utf8");
+const styleSource = fs.readFileSync("prototype/styles.css", "utf8");
 for (const phrase of [
   "prototype/course-data.js",
   "prototype/course-data/alphabet-data.js",
@@ -58,6 +59,10 @@ for (const globalName of [
 assert.ok(
   appSource.includes("window.ANA_TILIM_COURSE"),
   "app should read alphabet course content from the shared course data object"
+);
+assert.ok(
+  /\.alphabet-strip\s*\{[^}]*justify-content:\s*center;/s.test(styleSource),
+  "full alphabet directory should center wrapped letter pills"
 );
 assert.ok(courseDataSources["prototype/course-data/alphabet-data.js"].includes("alphabetGroups"), "unit one alphabet course data should live in the alphabet data file");
 assert.ok(courseDataSources["prototype/course-data/combo-data.js"].includes("comboGroups"), "unit two combo course data should live in the combo data file");
