@@ -1799,7 +1799,7 @@ function renderHome() {
             ${learningUnits
               .map((unit) => {
                 const [unitName, unitTopic] = unit.title.split("：");
-                return `<span><strong>${unitName}</strong><small>${unitTopic}</small></span>`;
+                return `<span><strong>${unitName}</strong><small> · ${unitTopic}</small></span>`;
               })
               .join("")}
           </div>
@@ -1836,22 +1836,22 @@ function renderHome() {
           </div>
           <div class="quick-grid">
             <button class="quick-button" data-action="go" data-target="writing" type="button">
-              <strong>练习听、说、写</strong><span>第四单元</span>
+              <strong>练习听、说、写</strong><span> · 第四单元</span>
             </button>
             <button class="quick-button" data-action="open-practice-group" data-id="listening-loop" type="button">
-              <strong>听音辨认</strong><span>音频占位</span>
+              <strong>听音辨认</strong><span> · 音频占位</span>
             </button>
             <button class="quick-button" data-action="open-practice-group" data-id="repeat-loop" type="button">
-              <strong>跟读练习</strong><span>先点完成</span>
+              <strong>跟读练习</strong><span> · 先点完成</span>
             </button>
             <button class="quick-button" data-action="open-practice-group" data-id="writing-loop" type="button">
-              <strong>书写输入</strong><span>描摹、键盘</span>
+              <strong>书写输入</strong><span> · 描摹、键盘</span>
             </button>
             <button class="quick-button" data-action="go" data-target="review" type="button">
-              <strong>审校看板</strong><span>回填状态</span>
+              <strong>审校看板</strong><span> · 回填状态</span>
             </button>
             <button class="quick-button" data-action="go" data-target="profile" type="button">
-              <strong>项目状态</strong><span>我的页面</span>
+              <strong>项目状态</strong><span> · 我的页面</span>
             </button>
           </div>
         </section>
