@@ -1184,6 +1184,103 @@ const learningUnits = [
   }
 ];
 
+const reviewStatusOptions = [
+  { id: "pending", label: "待审校", tone: "pending" },
+  { id: "approved", label: "通过", tone: "good" },
+  { id: "needs-edit", label: "需修改", tone: "bad" },
+  { id: "display-only", label: "只展示不考核", tone: "warn" },
+  { id: "variant", label: "变体保留", tone: "warn" },
+  { id: "second-review", label: "待二审", tone: "pending" }
+];
+
+const audioStatusOptions = [
+  { id: "audio-pending", label: "真人音频待录制" },
+  { id: "audio-recorded", label: "已录制" },
+  { id: "audio-connected", label: "已接入" }
+];
+
+const reviewFilters = [
+  { id: "all", label: "全部" },
+  { id: "pending", label: "待审校" },
+  { id: "needs-edit", label: "需修改" },
+  { id: "display-only", label: "只展示不考核" },
+  { id: "variant", label: "变体保留" },
+  { id: "family", label: "家庭重点" },
+  { id: "audio-pending", label: "音频待录" }
+];
+
+const reviewBaseItems = [
+  ...alphabetLetters.map((item, index) => ({
+    id: `letter-${index + 1}`,
+    unit: "第一单元",
+    kind: item.type,
+    theme: "认识字母",
+    value: item.letter,
+    latin: item.latin,
+    meaning: "字母",
+    reviewStatus: "pending",
+    examPolicy: "可练字母辨认；发音提示需审校后再进入正式听音题。",
+    audioStatus: "audio-pending",
+    priority: false,
+    question: "字母顺序、转写、发音提示和连接说明是否适合标准维吾尔语？"
+  })),
+  ...comboGroups.flatMap((group) =>
+    group.items.map((item) => {
+      const isFamily = group.id === "phrase-preview";
+      return {
+        id: `combo-${item.id}`,
+        unit: "第二单元",
+        kind: item.type,
+        theme: group.title,
+        value: item.value,
+        latin: item.latin,
+        meaning: item.meaning || "组合练习",
+        reviewStatus: isFamily ? "pending" : "display-only",
+        examPolicy: isFamily ? "正式考核前不设唯一答案。" : "只做组合、拆分和输入；不考词义。",
+        audioStatus: "audio-pending",
+        priority: isFamily,
+        question: isFamily ? "请确认标准主词、家庭口语、地区说法和可接受答案。" : "请确认组合是否适合新手练习，是否保持只展示不考核。"
+      };
+    })
+  ),
+  ...vocabGroups.flatMap((group) =>
+    group.items.map((item) => {
+      const isFamily = group.id === "family";
+      const isVariant = ["apa-family", "dada-family"].includes(item.id);
+      return {
+        id: `vocab-${item.id}`,
+        unit: "第三单元",
+        kind: "候选词条",
+        theme: group.title,
+        value: item.value,
+        latin: item.latin,
+        meaning: item.meaning,
+        reviewStatus: isVariant ? "variant" : "pending",
+        examPolicy: item.testPolicy,
+        audioStatus: "audio-pending",
+        priority: isFamily,
+        question: isFamily ? "家庭称呼必须确认标准主词、变体身份和是否可作为答案。" : `${item.standardNote} ${item.variantNote}`
+      };
+    })
+  ),
+  ...practiceGroups.flatMap((group) =>
+    group.items.map((item) => ({
+      id: `practice-${item.id}`,
+      unit: "第四单元",
+      kind: item.type,
+      theme: group.title,
+      value: item.value,
+      latin: item.latin,
+      meaning: item.label,
+      reviewStatus: "display-only",
+      examPolicy: "第四单元只复用前面内容做流程练习，不新增词义考核。",
+      audioStatus: "audio-pending",
+      priority: item.value === "ئانا" || item.value === "سىز",
+      question: item.hint
+    }))
+  )
+];
+
 const keyboardRows = [
   ["ق", "و", "ې", "ر", "ت"],
   ["ي", "ۇ", "ڭ", "ا", "س"],
@@ -1205,6 +1302,9 @@ const state = {
   currentPracticeItemId: "practice-listen-be",
   selectedPracticeGroupId: "listening-loop",
   practiceSpoken: false,
+  selectedReviewItemId: "vocab-ana-family",
+  reviewFilter: "all",
+  reviewOverrides: {},
   selectedUnitId: "letters",
   showGuide: true,
   favorite: false
@@ -1294,6 +1394,63 @@ function allPracticeItems() {
   return practiceGroups.flatMap((group) => group.items);
 }
 
+function reviewStatusById(statusId) {
+  return reviewStatusOptions.find((item) => item.id === statusId) || reviewStatusOptions[0];
+}
+
+function audioStatusById(statusId) {
+  return audioStatusOptions.find((item) => item.id === statusId) || audioStatusOptions[0];
+}
+
+function reviewItemsWithOverrides() {
+  return reviewBaseItems.map((item) => ({
+    ...item,
+    ...(state.reviewOverrides[item.id] || {})
+  }));
+}
+
+function filteredReviewItems() {
+  const items = reviewItemsWithOverrides();
+
+  if (state.reviewFilter === "all") {
+    return items;
+  }
+
+  if (state.reviewFilter === "family") {
+    return items.filter((item) => item.priority);
+  }
+
+  if (state.reviewFilter === "audio-pending") {
+    return items.filter((item) => item.audioStatus === "audio-pending");
+  }
+
+  return items.filter((item) => item.reviewStatus === state.reviewFilter);
+}
+
+function currentReviewItem() {
+  const items = reviewItemsWithOverrides();
+  return items.find((item) => item.id === state.selectedReviewItemId) || items[0];
+}
+
+function reviewCounts() {
+  const items = reviewItemsWithOverrides();
+
+  return {
+    total: items.length,
+    pending: items.filter((item) => item.reviewStatus === "pending").length,
+    needsEdit: items.filter((item) => item.reviewStatus === "needs-edit").length,
+    family: items.filter((item) => item.priority).length,
+    audioPending: items.filter((item) => item.audioStatus === "audio-pending").length
+  };
+}
+
+function updateReviewItem(itemId, patch) {
+  state.reviewOverrides[itemId] = {
+    ...(state.reviewOverrides[itemId] || {}),
+    ...patch
+  };
+}
+
 function resetPracticeState() {
   state.selectedPicture = "";
   state.selectedListening = "";
@@ -1341,6 +1498,7 @@ function render() {
     vocabComplete: renderVocabComplete,
     practiceSession: renderPracticeSession,
     practiceComplete: renderPracticeComplete,
+    review: renderReviewDashboard,
     library: renderLibrary,
     profile: renderProfile
   };
@@ -1443,6 +1601,8 @@ function renderWelcome() {
 }
 
 function renderHome() {
+  const counts = reviewCounts();
+
   return screen(
     `
       ${topBar("早上好", "今天继续 8 分钟就很好")}
@@ -1468,7 +1628,7 @@ function renderHome() {
         <div class="metric-grid" aria-label="今日学习概览">
           <div class="metric"><strong>3</strong><span>连续天数</span></div>
           <div class="metric"><strong>${practiceGroups.length}</strong><span>训练组</span></div>
-          <div class="metric"><strong>${allPracticeItems().length}</strong><span>复习项</span></div>
+          <div class="metric"><strong>${counts.pending}</strong><span>待审校</span></div>
         </div>
 
         <section>
@@ -1488,6 +1648,12 @@ function renderHome() {
             </button>
             <button class="quick-button" data-action="open-practice-group" data-id="writing-loop" type="button">
               <strong>书写输入</strong><span>描摹 + 键盘</span>
+            </button>
+            <button class="quick-button" data-action="go" data-target="review" type="button">
+              <strong>审校看板</strong><span>回填状态</span>
+            </button>
+            <button class="quick-button" data-action="go" data-target="profile" type="button">
+              <strong>项目状态</strong><span>我的页面</span>
             </button>
           </div>
         </section>
@@ -2919,6 +3085,152 @@ function renderPracticeComplete() {
   );
 }
 
+function renderReviewStatusBadge(statusId) {
+  const status = reviewStatusById(statusId);
+  return `<span class="review-badge ${status.tone}">${status.label}</span>`;
+}
+
+function renderReviewDashboard() {
+  const counts = reviewCounts();
+  const selected = currentReviewItem();
+  const filtered = filteredReviewItems();
+  const selectedStatus = reviewStatusById(selected.reviewStatus);
+  const selectedAudio = audioStatusById(selected.audioStatus);
+
+  return screen(
+    `
+      ${topBar(
+        "审校看板",
+        "回填 / 音频 / 重点项",
+        "",
+        `<button class="back-button" data-action="go" data-target="home" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack">
+        <article class="card review-card">
+          <div class="section-row">
+            <div>
+              <p class="caption">本地回填流程</p>
+              <h2 class="section-title unit-goal-text">先看哪些内容待审校，再把母语者反馈回填成统一状态。</h2>
+            </div>
+            <span class="step-state">草稿</span>
+          </div>
+          <p class="muted">这里的点击结果只保存在当前原型状态里。正式回填仍然要同步到审校表和课程文件。</p>
+        </article>
+
+        <div class="metric-grid review-metrics" aria-label="审校概览">
+          <div class="metric"><strong>${counts.pending}</strong><span>待审校</span></div>
+          <div class="metric"><strong>${counts.needsEdit}</strong><span>需修改</span></div>
+          <div class="metric"><strong>${counts.family}</strong><span>家庭重点</span></div>
+          <div class="metric"><strong>${counts.audioPending}</strong><span>音频待录</span></div>
+        </div>
+
+        <div class="review-filter-row" aria-label="审校筛选">
+          ${reviewFilters
+            .map(
+              (filter) => `
+                <button
+                  class="review-filter ${state.reviewFilter === filter.id ? "active" : ""}"
+                  data-action="set-review-filter"
+                  data-id="${filter.id}"
+                  type="button"
+                >
+                  ${filter.label}
+                </button>
+              `
+            )
+            .join("")}
+        </div>
+
+        <article class="card ${selected.priority ? "priority-review-card" : ""}">
+          <div class="section-row">
+            <div>
+              <p class="caption">${selected.unit} / ${selected.kind} / ${selected.theme}</p>
+              <h2 class="screen-title review-word"><span class="uyghur">${selected.value}</span></h2>
+              <p class="caption">${selected.latin} / ${selected.meaning}</p>
+            </div>
+            ${renderReviewStatusBadge(selected.reviewStatus)}
+          </div>
+          <div class="audit-grid">
+            <div class="audit-row"><strong>审校问题</strong><span>${selected.question}</span></div>
+            <div class="audit-row"><strong>考核方式</strong><span>${selected.examPolicy}</span></div>
+            <div class="audit-row"><strong>音频状态</strong><span>${selectedAudio.label}</span></div>
+            <div class="audit-row"><strong>重点标记</strong><span>${selected.priority ? "家庭 / 基础称呼重点项：不设唯一答案" : "普通审校项"}</span></div>
+          </div>
+        </article>
+
+        <article class="card">
+          <p class="caption">回填审校结果</p>
+          <div class="status-control-grid">
+            ${reviewStatusOptions
+              .map(
+                (status) => `
+                  <button
+                    class="status-control ${selected.reviewStatus === status.id ? "active" : ""} ${status.tone}"
+                    data-action="apply-review-status"
+                    data-id="${status.id}"
+                    type="button"
+                  >
+                    ${status.label}
+                  </button>
+                `
+              )
+              .join("")}
+          </div>
+        </article>
+
+        <article class="card">
+          <p class="caption">回填音频状态</p>
+          <div class="status-control-grid audio-controls">
+            ${audioStatusOptions
+              .map(
+                (status) => `
+                  <button
+                    class="status-control ${selected.audioStatus === status.id ? "active" : ""}"
+                    data-action="apply-audio-status"
+                    data-id="${status.id}"
+                    type="button"
+                  >
+                    ${status.label}
+                  </button>
+                `
+              )
+              .join("")}
+          </div>
+        </article>
+
+        <section class="stack">
+          <div class="section-row">
+            <h2 class="section-title">审校项目</h2>
+            <span class="caption">${filtered.length} / ${counts.total}</span>
+          </div>
+          <div class="review-item-list">
+            ${filtered
+              .map(
+                (item) => `
+                  <button
+                    class="review-item ${item.id === selected.id ? "active" : ""} ${item.priority ? "priority" : ""}"
+                    data-action="select-review-item"
+                    data-id="${item.id}"
+                    type="button"
+                  >
+                    <span class="uyghur">${item.value}</span>
+                    <span>
+                      <strong>${item.unit} · ${item.theme}</strong>
+                      <small>${item.latin} / ${item.meaning}</small>
+                    </span>
+                    ${renderReviewStatusBadge(item.reviewStatus)}
+                  </button>
+                `
+              )
+              .join("")}
+          </div>
+        </section>
+      </section>
+    `,
+    "profile"
+  );
+}
+
 function renderLibrary() {
   return screen(
     `
@@ -2952,6 +3264,8 @@ function renderLibrary() {
 }
 
 function renderProfile() {
+  const counts = reviewCounts();
+
   return screen(
     `
       ${topBar("我的", "本地学习记录示意")}
@@ -2964,8 +3278,11 @@ function renderProfile() {
         <div class="profile-row"><strong>已开放组合</strong><span>${allComboItems().length}</span></div>
         <div class="profile-row"><strong>候选词库</strong><span>${allVocabItems().length}</span></div>
         <div class="profile-row"><strong>强化训练</strong><span>${allPracticeItems().length}</span></div>
+        <div class="profile-row"><strong>待审校</strong><span>${counts.pending}</span></div>
+        <div class="profile-row"><strong>音频待录</strong><span>${counts.audioPending}</span></div>
         <div class="profile-row"><strong>下一步</strong><span>真人音频</span></div>
         <div class="profile-row"><strong>连续学习</strong><span>3 天</span></div>
+        <button class="primary-button" data-action="go" data-target="review" type="button">审校看板</button>
         <button class="secondary-button" data-action="toast" type="button">学习提醒</button>
       </section>
     `,
@@ -3090,6 +3407,16 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (action === "set-review-filter") {
+    state.reviewFilter = button.dataset.id;
+    const firstFilteredItem = filteredReviewItems()[0];
+    if (firstFilteredItem) {
+      state.selectedReviewItemId = firstFilteredItem.id;
+    }
+    render();
+    return;
+  }
+
   if (action === "select-letter") {
     const group = groupForLetter(button.dataset.id);
     if (group) {
@@ -3133,6 +3460,24 @@ document.addEventListener("click", (event) => {
     }
     state.currentPracticeItemId = button.dataset.id;
     resetPracticeSessionState();
+    render();
+    return;
+  }
+
+  if (action === "select-review-item") {
+    state.selectedReviewItemId = button.dataset.id;
+    render();
+    return;
+  }
+
+  if (action === "apply-review-status") {
+    updateReviewItem(state.selectedReviewItemId, { reviewStatus: button.dataset.id });
+    render();
+    return;
+  }
+
+  if (action === "apply-audio-status") {
+    updateReviewItem(state.selectedReviewItemId, { audioStatus: button.dataset.id });
     render();
     return;
   }
