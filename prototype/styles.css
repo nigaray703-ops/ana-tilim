@@ -844,6 +844,61 @@ button {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.writing-example-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.writing-example {
+  display: grid;
+  place-items: center;
+  min-height: 78px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.64);
+  text-align: center;
+}
+
+.writing-example span {
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.writing-example strong {
+  margin-top: 6px;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.writing-check-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.writing-check {
+  min-height: 42px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.writing-check.active {
+  border-color: rgba(21, 160, 132, 0.42);
+  background: var(--mint-soft);
+}
+
 .form-cell {
   display: grid;
   gap: 8px;
