@@ -32,6 +32,15 @@ assert.ok(
   appSource.includes("vocabGroups") && appSource.indexOf("vocabGroups") < appSource.indexOf("const alphabetAudioByLetterId"),
   "app should read unit three vocabulary content from the shared course data object"
 );
+assert.ok(courseDataSource.includes("practiceGroups"), "unit four practice course data should live in the shared data file");
+assert.ok(
+  !appSource.includes("const practiceGroups = ["),
+  "app should not define unit four practice content inline"
+);
+assert.ok(
+  appSource.includes("practiceGroups") && appSource.indexOf("practiceGroups") < appSource.indexOf("const alphabetAudioByLetterId"),
+  "app should read unit four practice content from the shared course data object"
+);
 assert.ok(
   indexHtml.indexOf("course-data.js") >= 0 && indexHtml.indexOf("course-data.js") < indexHtml.indexOf("app.js"),
   "course data should load before the app script"
