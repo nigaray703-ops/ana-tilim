@@ -586,17 +586,17 @@ function letters(ids) {
 }
 
 const alphabetGroups = [
-  { id: "dot-bone", title: "ب / پ / ت / ن", letters: letters(["be", "pe", "te", "nun"]), goal: "同类主体，点多点少都放一起比较", status: "当前" },
+  { id: "vowels-basic", title: "ئا / ئە", letters: letters(["aa", "ae"]), goal: "先认识最基础的词首元音入口", status: "可学习" },
+  { id: "dot-bone", title: "ب / پ / ت", letters: letters(["be", "pe", "te"]), goal: "同类主体，点多点少都放一起比较", status: "当前" },
   { id: "curved", title: "ج / چ / خ", letters: letters(["jim", "che", "khe"]), goal: "相似弯形，重点看点在上方还是下方", status: "可学习" },
   { id: "breakers", title: "د / ر / ز / ژ", letters: letters(["dal", "re", "ze", "zhe"]), goal: "理解这些字母后面通常不继续连接", status: "可学习" },
   { id: "teeth", title: "س / ش", letters: letters(["sin", "shin"]), goal: "区分无点齿形和三点齿形", status: "可学习" },
   { id: "round-dots", title: "غ / ف / ق", letters: letters(["ghayn", "fe", "qaf"]), goal: "先认形，发音以真人音频为准", status: "可学习" },
   { id: "k-family", title: "ك / گ / ڭ", letters: letters(["kaf", "gaf", "ng"]), goal: "区分 k、g、ng 的形态", status: "可学习" },
-  { id: "no-dot", title: "ل / م / ھ", letters: letters(["lam", "mim", "he"]), goal: "用整体轮廓区分无点字母", status: "可学习" },
-  { id: "tail", title: "ۋ / ي", letters: letters(["waw", "ye"]), goal: "区分不后连的 ۋ 和可连接的 ي", status: "可学习" },
-  { id: "vowels-basic", title: "元音 1：ئا / ئە", letters: letters(["aa", "ae"]), goal: "先认识最基础的词首元音入口", status: "可学习" },
-  { id: "vowels-round", title: "元音 2：ئو / ئۇ / ئۆ / ئۈ", letters: letters(["o", "u", "oe", "ue"]), goal: "圆唇元音放在一起听和认", status: "可学习" },
-  { id: "vowels-final", title: "元音 3：ئې / ئى", letters: letters(["ee", "ii"]), goal: "后段元音和 ي 继续区分", status: "可学习" }
+  { id: "no-dot", title: "ل / م", letters: letters(["lam", "mim"]), goal: "用整体轮廓区分无点字母", status: "可学习" },
+  { id: "nun-he", title: "ن / ھ", letters: letters(["nun", "he"]), goal: "按总表顺序认识 n 和 h", status: "可学习" },
+  { id: "vowels-round", title: "ئو / ئۇ / ئۆ / ئۈ", letters: letters(["o", "u", "oe", "ue"]), goal: "圆唇元音放在一起听和认", status: "可学习" },
+  { id: "tail", title: "ۋ / ئې / ئى / ي", letters: letters(["waw", "ee", "ii", "ye"]), goal: "按总表顺序区分后段常见字母", status: "可学习" }
 ];
 
 const alphabetAudioItems = [
