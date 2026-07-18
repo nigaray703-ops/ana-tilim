@@ -65,7 +65,7 @@ button {
 
 .view {
   min-height: 100svh;
-  padding: 18px 18px 96px;
+  padding: 16px 16px 92px;
 }
 
 .view.without-nav {
@@ -82,7 +82,7 @@ button {
 }
 
 .top-row {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .brand-lockup {
@@ -107,9 +107,9 @@ button {
 
 .brand-name {
   margin: 0;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 800;
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
 .brand-subtitle,
@@ -121,7 +121,7 @@ button {
 .brand-subtitle {
   margin: 3px 0 0;
   font-size: 12px;
-  line-height: 1.2;
+  line-height: 1.3;
 }
 
 .brand-name,
@@ -140,7 +140,8 @@ button {
 .primary-button,
 .secondary-button,
 .ghost-button {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .caption {
@@ -173,14 +174,14 @@ button {
 }
 
 .hero h1 {
-  font-size: 36px;
-  line-height: 1;
+  font-size: 32px;
+  line-height: 1.05;
 }
 
 .uyghur-title {
   margin: 12px 0 4px;
   direction: rtl;
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 700;
   line-height: 1.2;
   font-family: "Geeza Pro", "Al Bayan", "Noto Naskh Arabic", "Arial", sans-serif;
@@ -195,18 +196,18 @@ button {
 }
 
 .screen-title {
-  font-size: 28px;
-  line-height: 1.15;
+  font-size: 24px;
+  line-height: 1.2;
 }
 
 .section-title {
-  font-size: 18px;
-  line-height: 1.25;
+  font-size: 16px;
+  line-height: 1.35;
 }
 
 .unit-goal-text {
-  font-size: 15px;
-  line-height: 1.45;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .small-title {
@@ -229,8 +230,8 @@ button {
 }
 
 .card {
-  padding: 16px;
-  box-shadow: 0 10px 24px rgba(22, 38, 87, 0.08);
+  padding: 14px;
+  box-shadow: 0 8px 18px rgba(22, 38, 87, 0.07);
 }
 
 .card .section-row,
@@ -244,11 +245,11 @@ button {
 
 .stack {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .wide-gap {
-  gap: 18px;
+  gap: 14px;
 }
 
 .metric-grid {
@@ -262,14 +263,14 @@ button {
 }
 
 .metric {
-  min-height: 78px;
-  padding: 12px 10px;
+  min-height: 70px;
+  padding: 10px 9px;
 }
 
 .metric strong {
   display: block;
   margin-bottom: 4px;
-  font-size: 23px;
+  font-size: 20px;
   line-height: 1;
 }
 
@@ -312,8 +313,8 @@ button {
 .alphabet-strip {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 12px;
+  gap: 6px;
+  margin-top: 10px;
 }
 
 .alphabet-strip.compact {
@@ -324,9 +325,9 @@ button {
   display: inline-grid;
   grid-template-columns: auto;
   place-items: center;
-  min-width: 44px;
-  min-height: 46px;
-  padding: 7px 9px;
+  min-width: 42px;
+  min-height: 44px;
+  padding: 6px 8px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   color: var(--ink);
@@ -335,7 +336,7 @@ button {
 }
 
 .letter-pill .uyghur {
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 800;
   line-height: 1.05;
 }
@@ -357,8 +358,8 @@ button {
 
 .group-card {
   display: grid;
-  gap: 14px;
-  padding: 16px;
+  gap: 12px;
+  padding: 14px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--paper);
@@ -387,14 +388,14 @@ button {
 }
 
 .unit-goal-points {
-  margin-top: 14px;
+  margin-top: 12px;
 }
 
 .chip {
   display: flex;
   align-items: center;
-  min-height: 44px;
-  padding: 10px 12px;
+  min-height: 40px;
+  padding: 9px 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   color: var(--ink);
@@ -414,8 +415,8 @@ button {
 }
 
 .mini-unit-row span {
-  min-height: 44px;
-  padding: 9px;
+  min-height: 42px;
+  padding: 8px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.62);
@@ -425,13 +426,30 @@ button {
   line-height: 1.25;
 }
 
+.mini-unit-row strong,
+.mini-unit-row small {
+  display: block;
+  line-height: 1.25;
+}
+
+.mini-unit-row strong {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.mini-unit-row small {
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
 .action-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .quick-button {
-  min-height: 74px;
-  padding: 12px;
+  min-height: 68px;
+  padding: 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   color: var(--ink);
@@ -442,8 +460,8 @@ button {
 
 .quick-button strong {
   display: block;
-  margin-bottom: 5px;
-  font-size: 14px;
+  margin-bottom: 4px;
+  font-size: 13px;
 }
 
 .quick-button span {
@@ -468,8 +486,8 @@ button {
 .primary-button,
 .secondary-button {
   width: 100%;
-  min-height: 50px;
-  padding: 10px 16px;
+  min-height: 46px;
+  padding: 9px 14px;
   font-weight: 800;
   line-height: 1.25;
   white-space: normal;
@@ -494,8 +512,8 @@ button {
 
 .ghost-button,
 .icon-button {
-  min-height: 40px;
-  padding: 7px 12px;
+  min-height: 38px;
+  padding: 7px 10px;
   color: var(--ink);
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.64);
@@ -507,13 +525,13 @@ button {
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   padding: 0;
   color: var(--ink);
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.72);
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 900;
   line-height: 1;
 }
@@ -608,11 +626,11 @@ button {
 
 .lesson-step {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) minmax(44px, max-content);
+  grid-template-columns: 34px minmax(0, 1fr) minmax(44px, max-content);
   align-items: start;
-  gap: 12px;
-  min-height: 68px;
-  padding: 12px;
+  gap: 10px;
+  min-height: 64px;
+  padding: 10px;
 }
 
 .lesson-step strong,
@@ -627,8 +645,8 @@ button {
 .step-number {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: var(--radius);
   color: #fff;
   background: var(--teal);
@@ -637,7 +655,7 @@ button {
 
 .step-state {
   color: var(--mint);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   line-height: 1.2;
   max-width: 72px;
@@ -647,7 +665,7 @@ button {
 .letter-focus {
   display: grid;
   place-items: center;
-  min-height: 150px;
+  min-height: 132px;
   border-radius: var(--radius);
   color: var(--ink);
   background:
@@ -662,37 +680,37 @@ button {
 }
 
 .letter-big {
-  font-size: 88px;
+  font-size: 66px;
   font-weight: 800;
   line-height: 1;
 }
 
 .combo-big {
-  font-size: 74px;
+  font-size: 56px;
 }
 
 .vocab-big {
-  font-size: 58px;
-  line-height: 1.18;
+  font-size: 44px;
+  line-height: 1.22;
 }
 
 .vocab-big.long-text {
-  font-size: 34px;
-  line-height: 1.35;
+  font-size: 28px;
+  line-height: 1.38;
 }
 
 .practice-big {
-  font-size: 64px;
-  line-height: 1.12;
+  font-size: 48px;
+  line-height: 1.16;
 }
 
 .practice-big.long-text {
-  font-size: 34px;
-  line-height: 1.3;
+  font-size: 28px;
+  line-height: 1.35;
 }
 
 .word-big {
-  font-size: 52px;
+  font-size: 38px;
   font-weight: 800;
   line-height: 1.15;
 }
@@ -702,7 +720,7 @@ button {
 }
 
 .form-cell {
-  padding: 14px;
+  padding: 12px;
   text-align: center;
 }
 
@@ -715,7 +733,7 @@ button {
 
 .form-cell strong {
   display: block;
-  font-size: 34px;
+  font-size: 28px;
   line-height: 1.2;
 }
 
@@ -729,8 +747,8 @@ button {
 .combo-part {
   display: inline-grid;
   place-items: center;
-  min-width: 54px;
-  min-height: 54px;
+  min-width: 50px;
+  min-height: 50px;
   padding: 8px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -738,7 +756,7 @@ button {
 }
 
 .combo-part strong {
-  font-size: 26px;
+  font-size: 24px;
   line-height: 1;
 }
 
@@ -815,8 +833,8 @@ button {
 
 .review-word {
   margin: 4px 0;
-  font-size: 34px;
-  line-height: 1.2;
+  font-size: 28px;
+  line-height: 1.25;
 }
 
 .status-control-grid {
@@ -860,7 +878,7 @@ button {
 }
 
 .review-item > .uyghur {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 900;
   line-height: 1.1;
   text-align: center;
@@ -884,7 +902,7 @@ button {
 }
 
 .practice-target-card {
-  min-height: 138px;
+  min-height: 124px;
   text-align: center;
 }
 
@@ -897,7 +915,7 @@ button {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 180px;
+  min-height: 156px;
   overflow: hidden;
   border: 1px dashed rgba(22, 38, 87, 0.24);
   border-radius: var(--radius);
@@ -911,7 +929,7 @@ button {
   max-width: 100%;
   padding: 0 12px;
   color: rgba(22, 38, 87, 0.18);
-  font-size: clamp(58px, 18vw, 118px);
+  font-size: clamp(52px, 16vw, 98px);
   font-weight: 800;
   line-height: 1.05;
   overflow-wrap: anywhere;
@@ -932,8 +950,8 @@ button {
   gap: 10px;
   align-items: center;
   width: 100%;
-  min-height: 72px;
-  padding: 10px;
+  min-height: 66px;
+  padding: 9px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   color: var(--ink);
@@ -947,7 +965,7 @@ button {
 }
 
 .practice-review-item > .uyghur {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 900;
   line-height: 1.1;
   text-align: center;
@@ -1029,9 +1047,9 @@ button {
 .audio-strip {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
-  padding: 12px;
+  padding: 10px;
   border-radius: var(--radius);
   background: var(--teal-soft);
 }
@@ -1052,7 +1070,7 @@ button {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 230px;
+  min-height: 196px;
   overflow: hidden;
   border: 1px dashed rgba(22, 38, 87, 0.24);
   border-radius: var(--radius);
@@ -1064,7 +1082,7 @@ button {
 
 .drawing-pad .guide {
   color: rgba(22, 38, 87, 0.18);
-  font-size: 150px;
+  font-size: 104px;
   line-height: 1;
 }
 
@@ -1095,12 +1113,12 @@ button {
 
 .choice-card {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) minmax(44px, max-content);
+  grid-template-columns: 56px minmax(0, 1fr) minmax(44px, max-content);
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  min-height: 86px;
-  padding: 12px;
+  min-height: 76px;
+  padding: 10px;
   color: var(--ink);
   text-align: left;
 }
@@ -1117,25 +1135,25 @@ button {
 .choice-art {
   display: grid;
   place-items: center;
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius);
   background: var(--gold-soft);
   color: var(--ink);
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 900;
 }
 
 .vocab-choice {
-  grid-template-columns: minmax(88px, 112px) minmax(0, 1fr) minmax(44px, max-content);
+  grid-template-columns: minmax(78px, 102px) minmax(0, 1fr) minmax(44px, max-content);
 }
 
 .choice-art-wide {
   width: 100%;
   height: auto;
-  min-height: 64px;
-  padding: 8px;
-  font-size: 20px;
+  min-height: 56px;
+  padding: 7px;
+  font-size: 18px;
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
@@ -1151,11 +1169,11 @@ button {
 }
 
 .feedback {
-  padding: 12px;
+  padding: 10px;
   border-radius: var(--radius);
   color: var(--ink);
   background: var(--teal-soft);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -1169,15 +1187,15 @@ button {
 
 .rtl-input {
   width: 100%;
-  min-height: 66px;
-  padding: 12px 14px;
+  min-height: 56px;
+  padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   color: var(--ink);
   background: var(--paper);
   direction: rtl;
   text-align: right;
-  font-size: 30px;
+  font-size: 26px;
   font-weight: 800;
 }
 
@@ -1195,10 +1213,10 @@ button {
 }
 
 .key-button {
-  min-height: 50px;
+  min-height: 46px;
   color: var(--ink);
   background: var(--paper);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
 }
 
@@ -1215,8 +1233,8 @@ button {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  min-height: 58px;
-  padding: 12px;
+  min-height: 52px;
+  padding: 10px;
 }
 
 .word-row > span,

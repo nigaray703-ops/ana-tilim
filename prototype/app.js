@@ -694,10 +694,10 @@ const comboGroups = [
     goal: "只做词形预览：主词、变体和含义都要等待母语者审校",
     status: "待审校",
     items: [
-      { id: "ana-word", value: "ئانا", latin: "ana", type: "基础称呼预览", parts: ["ئا", "ن", "ا"], prompt: "ana", meaning: "妈妈 / 母亲", rule: "从 ئا 开始，再接 ن 和 ا。", hint: "先把它当作词形预览，不作为唯一答案。", review: "标准主词待母语者审校。" },
-      { id: "apa-word", value: "ئاپا", latin: "apa", type: "基础称呼预览", parts: ["ئا", "پ", "ا"], prompt: "apa", meaning: "妈妈 / 家庭称呼变体", rule: "从 ئا 开始，再接 پ 和 ا。", hint: "用户已提醒它可能也表示妈妈；正式身份需审校。", review: "变体/口语身份待母语者审校，不直接作为考核唯一答案。" },
-      { id: "ata-word", value: "ئاتا", latin: "ata", type: "基础称呼预览", parts: ["ئا", "ت", "ا"], prompt: "ata", meaning: "爸爸 / 父亲", rule: "从 ئا 开始，再接 ت 和 ا。", hint: "先认词形，正式标准答案需审校。", review: "标准主词待母语者审校。" },
-      { id: "dada-word", value: "دادا", latin: "dada", type: "基础称呼预览", parts: ["د", "ا", "د", "ا"], prompt: "dada", meaning: "爸爸 / 家庭称呼变体", rule: "د 后面通常不继续连接，所以中间会看到断开。", hint: "用户已提醒它可能也表示爸爸；正式身份需审校。", review: "变体/口语身份待母语者审校，不直接作为考核唯一答案。" }
+      { id: "ana-word", value: "ئانا", latin: "ana", type: "基础称呼预览", parts: ["ئا", "ن", "ا"], prompt: "ana", meaning: "妈妈、母亲", rule: "从 ئا 开始，再接 ن 和 ا。", hint: "先把它当作词形预览，不作为唯一答案。", review: "标准主词待母语者审校。" },
+      { id: "apa-word", value: "ئاپا", latin: "apa", type: "基础称呼预览", parts: ["ئا", "پ", "ا"], prompt: "apa", meaning: "妈妈、家庭称呼变体", rule: "从 ئا 开始，再接 پ 和 ا。", hint: "用户已提醒它可能也表示妈妈；正式身份需审校。", review: "变体/口语身份待母语者审校，不直接作为考核唯一答案。" },
+      { id: "ata-word", value: "ئاتا", latin: "ata", type: "基础称呼预览", parts: ["ئا", "ت", "ا"], prompt: "ata", meaning: "爸爸、父亲", rule: "从 ئا 开始，再接 ت 和 ا。", hint: "先认词形，正式标准答案需审校。", review: "标准主词待母语者审校。" },
+      { id: "dada-word", value: "دادا", latin: "dada", type: "基础称呼预览", parts: ["د", "ا", "د", "ا"], prompt: "dada", meaning: "爸爸、家庭称呼变体", rule: "د 后面通常不继续连接，所以中间会看到断开。", hint: "用户已提醒它可能也表示爸爸；正式身份需审校。", review: "变体/口语身份待母语者审校，不直接作为考核唯一答案。" }
     ]
   }
 ];
@@ -715,7 +715,7 @@ const vocabGroups = [
         id: "yaxshimusiz",
         value: "ياخشىمۇسىز",
         latin: "yaxshimusiz",
-        meaning: "你好 / 你好吗",
+        meaning: "你好、你好吗",
         theme: "问候",
         parts: ["ياخشى", "مۇ", "سىز"],
         standardNote: "候选标准问候词形，需母语者确认使用场景。",
@@ -724,7 +724,7 @@ const vocabGroups = [
         testPolicy: "暂不考中文含义，只做词形辨认和输入。",
         reviewStatus: "待母语者审校",
         sourceNote: "参考公开学习资料，进入项目审校队列。",
-        tip: "词形较长，先分成 ياخشى / مۇ / سىز 三块看。"
+        tip: "词形较长，先分成 ياخشى、مۇ、سىز 三块看。"
       },
       {
         id: "rahmat",
@@ -745,7 +745,7 @@ const vocabGroups = [
         id: "xosh",
         value: "خوش",
         latin: "xosh",
-        meaning: "再见 / 告别",
+        meaning: "再见、告别",
         theme: "问候",
         parts: ["خ", "و", "ش"],
         standardNote: "候选告别词，需确认使用范围。",
@@ -754,13 +754,13 @@ const vocabGroups = [
         testPolicy: "暂不考中文含义，只做词形辨认和输入。",
         reviewStatus: "待母语者审校",
         sourceNote: "参考公开学习资料，进入项目审校队列。",
-        tip: "这个词短，适合练 خ / و / ش 的连续识别。"
+        tip: "这个词短，适合练 خ、و、ش 的连续识别。"
       },
       {
         id: "assalamu",
         value: "ئەسسالامۇ ئەلەيكۇم",
         latin: "assalamu alaykum",
-        meaning: "问候语 / 愿平安",
+        meaning: "问候语、愿平安",
         theme: "问候",
         parts: ["ئەسسالامۇ", "ئەلەيكۇم"],
         standardNote: "候选礼貌问候，需确认教学说明和场景。",
@@ -776,7 +776,7 @@ const vocabGroups = [
   {
     id: "pronouns",
     kind: "vocab",
-    title: "我 / 你 / 他",
+    title: "我、你、他",
     letters: ["مەن", "سىز", "سەن", "ئۇ", "بىز"],
     goal: "认识最基础人称词形，并把礼貌和亲近说法分开",
     status: "待审校",
@@ -786,7 +786,7 @@ const vocabGroups = [
         value: "مەن",
         latin: "men",
         meaning: "我",
-        theme: "我 / 你 / 他",
+        theme: "我、你、他",
         parts: ["م", "ە", "ن"],
         standardNote: "候选标准人称词。",
         variantNote: "暂无变体备注，待审校。",
@@ -800,8 +800,8 @@ const vocabGroups = [
         id: "siz",
         value: "سىز",
         latin: "siz",
-        meaning: "你 / 您",
-        theme: "我 / 你 / 他",
+        meaning: "你、您",
+        theme: "我、你、他",
         parts: ["س", "ى", "ز"],
         standardNote: "候选礼貌/正式第二人称。",
         variantNote: "和 سەن 的关系要在正式词条里说明。",
@@ -816,7 +816,7 @@ const vocabGroups = [
         value: "سەن",
         latin: "sen",
         meaning: "你",
-        theme: "我 / 你 / 他",
+        theme: "我、你、他",
         parts: ["س", "ە", "ن"],
         standardNote: "候选亲近/非正式第二人称。",
         variantNote: "使用场景和礼貌程度需母语者确认。",
@@ -830,8 +830,8 @@ const vocabGroups = [
         id: "u-pronoun",
         value: "ئۇ",
         latin: "u",
-        meaning: "他 / 她 / 它",
-        theme: "我 / 你 / 他",
+        meaning: "他、她、它",
+        theme: "我、你、他",
         parts: ["ئ", "ۇ"],
         standardNote: "候选第三人称词。",
         variantNote: "中文他/她/它的区分不能直接套入维吾尔语，待审校说明。",
@@ -846,7 +846,7 @@ const vocabGroups = [
         value: "بىز",
         latin: "biz",
         meaning: "我们",
-        theme: "我 / 你 / 他",
+        theme: "我、你、他",
         parts: ["ب", "ى", "ز"],
         standardNote: "候选第一人称复数。",
         variantNote: "暂无变体备注，待审校。",
@@ -861,7 +861,7 @@ const vocabGroups = [
   {
     id: "family",
     kind: "vocab",
-    title: "家庭 / 基础称呼",
+    title: "家庭、基础称呼",
     letters: ["ئانا", "ئاپا", "ئاتا", "دادا"],
     goal: "把标准主词和家庭口语变体分开记录，不设唯一答案",
     status: "待审校",
@@ -870,8 +870,8 @@ const vocabGroups = [
         id: "ana-family",
         value: "ئانا",
         latin: "ana",
-        meaning: "妈妈 / 母亲",
-        theme: "家庭 / 基础称呼",
+        meaning: "妈妈、母亲",
+        theme: "家庭、基础称呼",
         parts: ["ئا", "ن", "ا"],
         standardNote: "候选标准主词，需确认。",
         variantNote: "和 ئاپا 的关系需母语者确认。",
@@ -885,8 +885,8 @@ const vocabGroups = [
         id: "apa-family",
         value: "ئاپا",
         latin: "apa",
-        meaning: "妈妈 / 家庭称呼变体",
-        theme: "家庭 / 基础称呼",
+        meaning: "妈妈、家庭称呼变体",
+        theme: "家庭、基础称呼",
         parts: ["ئا", "پ", "ا"],
         standardNote: "可能为家庭/口语称呼，需确认。",
         variantNote: "用户已提醒它也可表示妈妈。",
@@ -900,8 +900,8 @@ const vocabGroups = [
         id: "ata-family",
         value: "ئاتا",
         latin: "ata",
-        meaning: "爸爸 / 父亲",
-        theme: "家庭 / 基础称呼",
+        meaning: "爸爸、父亲",
+        theme: "家庭、基础称呼",
         parts: ["ئا", "ت", "ا"],
         standardNote: "候选标准主词，需确认。",
         variantNote: "和 دادا 的关系需母语者确认。",
@@ -915,8 +915,8 @@ const vocabGroups = [
         id: "dada-family",
         value: "دادا",
         latin: "dada",
-        meaning: "爸爸 / 家庭称呼变体",
-        theme: "家庭 / 基础称呼",
+        meaning: "爸爸、家庭称呼变体",
+        theme: "家庭、基础称呼",
         parts: ["د", "ا", "د", "ا"],
         standardNote: "可能为家庭/口语称呼，需确认。",
         variantNote: "用户已提醒它也可表示爸爸。",
@@ -1102,7 +1102,7 @@ const practiceGroups = [
     id: "writing-loop",
     kind: "practice",
     mode: "write",
-    title: "书写 / 键盘",
+    title: "书写、键盘",
     letters: ["ن", "مان", "ئانا"],
     goal: "先描摹，再用键盘输入同一个目标",
     status: "已开放",
@@ -1186,7 +1186,7 @@ const learningUnits = [
   {
     id: "letters",
     title: "第一单元：认识字母",
-    subtitle: "32 个字母 / 相似分组",
+    subtitle: "32 个字母，相似分组",
     status: "已完成",
     description: "先按截图顺序认识全部字母，学习时把看起来相似、容易混的字母放在一组。",
     bullets: ["认识字母形状", "区分点位和点数", "看四种形态", "练单字母键盘输入"],
@@ -1196,7 +1196,7 @@ const learningUnits = [
   {
     id: "combos",
     title: "第二单元：组合与词组入门",
-    subtitle: "字母连起来 / 词形预览",
+    subtitle: "字母连起来，词形预览",
     status: "已完成",
     description: "先做两字母和三字母组合，再加入少量基础称呼词形预览；含义和变体都标记为待母语者审校。",
     bullets: ["两字母组合", "三字母慢读", "词形预览", "键盘输入"],
@@ -1206,7 +1206,7 @@ const learningUnits = [
   {
     id: "basic-phrases",
     title: "第三单元：基础词组与主题词",
-    subtitle: "问候 / 人称 / 称呼 / 数字",
+    subtitle: "问候、人称、称呼、数字",
     status: "已完成",
     description: "进入真实词义前，先建立审校表：词形、中文预览、标准主词、变体和可考状态分开。",
     bullets: ["词库审校", "主题分组", "词形辨认", "键盘输入"],
@@ -1216,7 +1216,7 @@ const learningUnits = [
   {
     id: "practice",
     title: "第四单元：听说与书写强化",
-    subtitle: "听音 / 跟读 / 书写 / 复习",
+    subtitle: "听音、跟读、书写、复习",
     status: "进行中",
     description: "不加新词，把第一到三单元内容变成能听、能说、能写、能输入的复习闭环。",
     bullets: ["音频占位", "跟读确认", "描摹输入", "复习结果"],
@@ -1228,7 +1228,7 @@ const learningUnits = [
 const unitExperience = {
   letters: {
     recommended: "先复习第一单元字母分组，再进入组合。",
-    steps: ["认识相似字母组", "看四种写法", "做辨认 / 听音 / 键盘", "完成后进入组合"],
+    steps: ["认识相似字母组", "看四种写法", "做辨认、听音、键盘", "完成后进入组合"],
     reviewLabel: "复习本组",
     reviewTarget: "group",
     nextLabel: "进入第二单元",
@@ -1796,9 +1796,14 @@ function renderHome() {
           <h2 class="section-title">继续把四个单元串成一条复习线</h2>
           <p class="muted">${currentRecommendation.recommended}</p>
           <div class="mini-unit-row">
-            ${learningUnits.map((unit) => `<span>${unit.title.replace("：", "<br>")}</span>`).join("")}
+            ${learningUnits
+              .map((unit) => {
+                const [unitName, unitTopic] = unit.title.split("：");
+                return `<span><strong>${unitName}</strong><small>${unitTopic}</small></span>`;
+              })
+              .join("")}
           </div>
-          <p class="caption">音频提醒：字母音频路径已准备，当前仍是 AI 临时音频 / 真人音频待录制。</p>
+          <p class="caption">音频提醒：字母音频路径已准备；当前仍是 AI 临时音频，真人音频待录制。</p>
         </article>
 
         <article class="card">
@@ -1831,7 +1836,7 @@ function renderHome() {
           </div>
           <div class="quick-grid">
             <button class="quick-button" data-action="go" data-target="writing" type="button">
-              <strong>练听说写</strong><span>第四单元</span>
+              <strong>练习听、说、写</strong><span>第四单元</span>
             </button>
             <button class="quick-button" data-action="open-practice-group" data-id="listening-loop" type="button">
               <strong>听音辨认</strong><span>音频占位</span>
@@ -1840,7 +1845,7 @@ function renderHome() {
               <strong>跟读练习</strong><span>先点完成</span>
             </button>
             <button class="quick-button" data-action="open-practice-group" data-id="writing-loop" type="button">
-              <strong>书写输入</strong><span>描摹 + 键盘</span>
+              <strong>书写输入</strong><span>描摹、键盘</span>
             </button>
             <button class="quick-button" data-action="go" data-target="review" type="button">
               <strong>审校看板</strong><span>回填状态</span>
@@ -1859,7 +1864,7 @@ function renderHome() {
 function renderLearnPath() {
   return screen(
     `
-      ${topBar("学习单元", "先认识字母，再进入组合 / 词组")}
+      ${topBar("学习单元", "先认识字母，再进入组合、词组")}
       <section class="stack">
         <article class="card">
           <div class="section-row">
@@ -1869,7 +1874,7 @@ function renderLearnPath() {
             </div>
             <span class="step-state">待审校</span>
           </div>
-          <p class="muted">Ana Tilim 按截图顺序展示字母，学习时把相似字母放在一起。第二单元开始加入组合 / 词组。</p>
+          <p class="muted">Ana Tilim 按截图顺序展示字母，学习时把相似字母放在一起。第二单元开始加入组合、词组。</p>
           <div class="alphabet-strip" aria-label="完整字母目录">
             ${alphabetLetters
               .map(
@@ -1893,7 +1898,7 @@ function renderLearnPath() {
                   <span>
                     <strong>${unit.title}</strong>
                     <span class="caption">${unit.subtitle}</span>
-                    <span class="caption">${currentUnitExperience(unit.id).steps.join(" / ")}</span>
+                    <span class="caption">${currentUnitExperience(unit.id).steps.join("、")}</span>
                   </span>
                   <span class="step-state">${unit.status}</span>
                 </button>
@@ -2062,7 +2067,7 @@ function renderGroupLesson() {
         <div class="letter-focus">
           <div>
             <div class="uyghur letter-big">${letter.letter}</div>
-            <p class="caption">${letter.type} / ${letter.latin}</p>
+            <p class="caption">${letter.type}，${letter.latin}</p>
           </div>
         </div>
         <div class="audio-strip">
@@ -2220,7 +2225,7 @@ function renderPicturePractice() {
                   <span class="choice-art uyghur">${choice.letter}</span>
                   <span>
                     <strong>${choice.cue}</strong>
-                    <span class="caption">${choice.type} / ${choice.latin}</span>
+                    <span class="caption">${choice.type}，${choice.latin}</span>
                   </span>
                   <span class="step-state">${selected ? (correctChoice ? "正确" : "再想想") : "选择"}</span>
                 </button>
@@ -2293,7 +2298,7 @@ function renderListeningPractice() {
                   <span class="choice-art uyghur">${choice.letter}</span>
                   <span>
                     <strong class="uyghur">${choice.letter}</strong>
-                    <span class="caption">字母 / ${choice.latin}</span>
+                    <span class="caption">字母，${choice.latin}</span>
                   </span>
                   <span class="step-state">${selected ? (correctChoice ? "正确" : "再听") : "选择"}</span>
                 </button>
@@ -2393,7 +2398,7 @@ function renderKeyboardPractice() {
 function renderComplete() {
   const group = currentGroup();
   const letter = currentLetter();
-  const groupLetters = group.letters.map((item) => item.letter).join(" ");
+  const groupLetters = group.letters.map((item) => item.letter).join(" / ");
 
   return screen(
     `
@@ -2496,7 +2501,7 @@ function renderComboLesson() {
         <div class="letter-focus">
           <div>
             <div class="uyghur letter-big combo-big">${item.value}</div>
-            <p class="caption">${item.type} / ${item.latin}</p>
+            <p class="caption">${item.type}，${item.latin}</p>
           </div>
         </div>
 
@@ -2590,7 +2595,7 @@ function renderComboRecognition() {
                   <span class="choice-art uyghur">${choice.value}</span>
                   <span>
                     <strong>${choice.latin}</strong>
-                    <span class="caption">${choice.meaning ? `${choice.meaning} / 待审校` : choice.type}</span>
+                    <span class="caption">${choice.meaning ? `${choice.meaning}，待审校` : choice.type}</span>
                   </span>
                   <span class="step-state">${selected ? (correctChoice ? "正确" : "再想想") : "选择"}</span>
                 </button>
@@ -2702,7 +2707,7 @@ function renderComboKeyboard() {
 function renderComboComplete() {
   const group = currentComboGroup();
   const item = currentComboItem();
-  const groupValues = group.items.map((choice) => choice.value).join(" ");
+  const groupValues = group.items.map((choice) => choice.value).join(" / ");
 
   return screen(
     `
@@ -2810,7 +2815,7 @@ function renderVocabLesson() {
         <div class="letter-focus">
           <div>
             <div class="uyghur letter-big vocab-big ${longWordClass}">${item.value}</div>
-            <p class="caption">${item.theme} / ${item.latin}</p>
+            <p class="caption">${item.theme}，${item.latin}</p>
           </div>
         </div>
 
@@ -2886,7 +2891,7 @@ function renderVocabRecognition() {
                   <span class="choice-art choice-art-wide uyghur">${choice.value}</span>
                   <span>
                     <strong>${choice.latin}</strong>
-                    <span class="caption">${choice.meaning} / ${choice.reviewStatus}</span>
+                    <span class="caption">${choice.meaning}，${choice.reviewStatus}</span>
                   </span>
                   <span class="step-state">${selected ? (correctChoice ? "正确" : "再想想") : "选择"}</span>
                 </button>
@@ -2988,7 +2993,7 @@ function renderVocabKeyboard() {
 function renderVocabComplete() {
   const group = currentVocabGroup();
   const item = currentVocabItem();
-  const groupValues = group.items.map((choice) => choice.value).join(" ");
+  const groupValues = group.items.map((choice) => choice.value).join(" / ");
 
   return screen(
     `
@@ -3056,7 +3061,7 @@ function renderPracticeChoices(group, item) {
               <span class="choice-art choice-art-wide uyghur">${choice.value}</span>
               <span>
                 <strong>${choice.label}</strong>
-                <span class="caption">${choice.type} / ${choice.latin}</span>
+                <span class="caption">${choice.type}，${choice.latin}</span>
               </span>
               <span class="step-state">${selected ? (correctChoice ? "正确" : "再听") : "选择"}</span>
             </button>
@@ -3099,7 +3104,7 @@ function renderPracticeModeCard(group, item) {
         <p class="caption">跟读步骤</p>
         <div class="lesson-point-list">
           <div class="lesson-point"><strong>看词形</strong><span class="uyghur">${item.value}</span></div>
-          <div class="lesson-point"><strong>看提示</strong><span>${item.latin} / ${item.hint}</span></div>
+          <div class="lesson-point"><strong>看提示</strong><span>${item.latin}，${item.hint}</span></div>
           <div class="lesson-point"><strong>轻声跟读</strong><span>${item.audioStatus}，正式版会替换成真人音频。</span></div>
         </div>
       </article>
@@ -3263,7 +3268,7 @@ function renderPracticeSession() {
         <div class="letter-focus practice-target-card">
           <div>
             <div class="uyghur letter-big practice-big ${longWordClass}">${item.value}</div>
-            <p class="caption">${item.type} / ${item.latin}</p>
+            <p class="caption">${item.type}，${item.latin}</p>
           </div>
         </div>
 
@@ -3336,7 +3341,7 @@ function renderReviewDashboard() {
     `
       ${topBar(
         "审校看板",
-        "回填 / 音频 / 重点项",
+        "回填、音频、重点项",
         "",
         `<button class="back-button" data-action="go" data-target="home" type="button" aria-label="返回">←</button>`
       )}
@@ -3381,9 +3386,9 @@ function renderReviewDashboard() {
         <article class="card ${selected.priority ? "priority-review-card" : ""}">
           <div class="section-row">
             <div>
-              <p class="caption">${selected.unit} / ${selected.kind} / ${selected.theme}</p>
+              <p class="caption">${selected.unit}，${selected.kind}，${selected.theme}</p>
               <h2 class="screen-title review-word"><span class="uyghur">${selected.value}</span></h2>
-              <p class="caption">${selected.latin} / ${selected.meaning}</p>
+              <p class="caption">${selected.latin}，${selected.meaning}</p>
             </div>
             ${renderReviewStatusBadge(selected.reviewStatus)}
           </div>
@@ -3391,7 +3396,7 @@ function renderReviewDashboard() {
             <div class="audit-row"><strong>审校问题</strong><span>${selected.question}</span></div>
             <div class="audit-row"><strong>考核方式</strong><span>${selected.examPolicy}</span></div>
             <div class="audit-row"><strong>音频状态</strong><span>${selectedAudio.label}</span></div>
-            <div class="audit-row"><strong>重点标记</strong><span>${selected.priority ? "家庭 / 基础称呼重点项：不设唯一答案" : "普通审校项"}</span></div>
+            <div class="audit-row"><strong>重点标记</strong><span>${selected.priority ? "家庭、基础称呼重点项：不设唯一答案" : "普通审校项"}</span></div>
           </div>
         </article>
 
@@ -3453,7 +3458,7 @@ function renderReviewDashboard() {
                     <span class="uyghur">${item.value}</span>
                     <span>
                       <strong>${item.unit} · ${item.theme}</strong>
-                      <small>${item.latin} / ${item.meaning}</small>
+                      <small>${item.latin}，${item.meaning}</small>
                     </span>
                     ${renderReviewStatusBadge(item.reviewStatus)}
                   </button>
@@ -3479,7 +3484,7 @@ function renderLibrary() {
               <div class="word-row">
                 <span>
                   <strong class="uyghur">${letter.letter}</strong>
-                  <span class="caption">${letter.type} / ${letter.latin} / 待审校</span>
+                  <span class="caption">${letter.type}，${letter.latin}，待审校</span>
                 </span>
                 <button
                   class="ghost-button"

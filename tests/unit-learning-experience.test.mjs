@@ -81,6 +81,9 @@ includesAll(
   ["今日下一步", "继续学习", "AI 临时音频"],
   "home screen"
 );
+assert.ok(!app.innerHTML.includes("<br>"), "home screen should not force unit titles onto manual line breaks");
+assert.ok(!app.innerHTML.includes("AI 临时音频 / 真人音频待录制"), "home audio note should use readable punctuation");
+assert.ok(app.innerHTML.includes("<strong>第一单元</strong><small>认识字母</small>"), "home unit labels should use a compact two-level label");
 
 for (const unitId of ["letters", "combos", "basic-phrases", "practice"]) {
   includesAll(
@@ -89,6 +92,21 @@ for (const unitId of ["letters", "combos", "basic-phrases", "practice"]) {
     `${unitId} unit screen`
   );
 }
+
+includesAll(
+  renderState("state.screen = 'review'"),
+  ["审校看板", "回填、音频、重点项"],
+  "review dashboard"
+);
+assert.ok(!app.innerHTML.includes("回填 / 音频 / 重点项"), "review dashboard should use readable punctuation in the subtitle");
+assert.ok(!app.innerHTML.includes("家庭 / 基础称呼重点项"), "review priority note should avoid slash-separated Chinese words");
+
+includesAll(
+  renderState("state.screen = 'library'"),
+  ["字母库", "待审校"],
+  "letter library"
+);
+assert.ok(!app.innerHTML.includes(" / 待审校"), "letter library should separate labels with punctuation");
 
 includesAll(
   renderState("state.screen = 'group'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'"),
@@ -119,12 +137,14 @@ includesAll(
   ["复习本组", "进入第二单元"],
   "unit one complete"
 );
+assert.ok(app.innerHTML.includes("ب / پ"), "unit one completion should separate learned letters with punctuation");
 
 includesAll(
   renderState("state.screen = 'comboComplete'"),
   ["复习组合", "进入第三单元"],
   "unit two complete"
 );
+assert.ok(app.innerHTML.includes("با / پا"), "unit two completion should separate learned combinations with punctuation");
 
 includesAll(
   renderState("state.screen = 'vocabComplete'"),
