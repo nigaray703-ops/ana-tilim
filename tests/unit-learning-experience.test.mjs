@@ -14,6 +14,15 @@ assert.ok(
   appSource.includes("window.ANA_TILIM_COURSE"),
   "app should read alphabet course content from the shared course data object"
 );
+assert.ok(courseDataSource.includes("comboGroups"), "unit two combo course data should live in the shared data file");
+assert.ok(
+  !appSource.includes("const comboGroups = ["),
+  "app should not define unit two combo content inline"
+);
+assert.ok(
+  appSource.includes("comboGroups") && appSource.indexOf("comboGroups") < appSource.indexOf("const alphabetAudioByLetterId"),
+  "app should read unit two combo content from the shared course data object"
+);
 assert.ok(
   indexHtml.indexOf("course-data.js") >= 0 && indexHtml.indexOf("course-data.js") < indexHtml.indexOf("app.js"),
   "course data should load before the app script"
