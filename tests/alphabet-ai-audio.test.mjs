@@ -12,14 +12,41 @@ const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 const comboManifest = JSON.parse(fs.readFileSync(comboManifestPath, "utf8"));
 const vocabManifest = JSON.parse(fs.readFileSync(vocabManifestPath, "utf8"));
 const practiceManifest = JSON.parse(fs.readFileSync(practiceManifestPath, "utf8"));
+
+function loadCourseData() {
+  const dataContext = {
+    console,
+    window: {}
+  };
+  dataContext.globalThis = dataContext;
+  vm.createContext(dataContext);
+
+  for (const scriptPath of [
+    "prototype/course-data/alphabet-data.js",
+    "prototype/course-data/combo-data.js",
+    "prototype/course-data/vocab-data.js",
+    "prototype/course-data/practice-data.js",
+    "prototype/course-data.js"
+  ]) {
+    vm.runInContext(fs.readFileSync(scriptPath, "utf8"), dataContext, { filename: scriptPath });
+  }
+
+  return dataContext.window.ANA_TILIM_COURSE;
+}
+
+const courseData = loadCourseData();
+const comboItemCount = courseData.comboGroups.flatMap((group) => group.items).length;
+const vocabItemCount = courseData.vocabGroups.flatMap((group) => group.items).length;
+const practiceItemCount = courseData.practiceGroups.flatMap((group) => group.items).length;
+
 assert.equal(manifest.items.length, 32, "alphabet AI audio manifest should cover all 32 letters");
-assert.equal(comboManifest.items.length, 20, "combo AI audio manifest should cover all unit two items");
-assert.equal(vocabManifest.items.length, 18, "vocab AI audio manifest should cover all unit three items");
-assert.equal(practiceManifest.items.length, 12, "practice AI audio manifest should cover all unit four items");
+assert.equal(comboManifest.items.length, comboItemCount, "combo AI audio manifest should cover all unit two items");
+assert.equal(vocabManifest.items.length, vocabItemCount, "vocab AI audio manifest should cover all unit three items");
+assert.equal(practiceManifest.items.length, practiceItemCount, "practice AI audio manifest should cover all unit four items");
 assert.equal(new Set(manifest.items.map((item) => item.file)).size, 32, "audio filenames should be unique");
-assert.equal(new Set(comboManifest.items.map((item) => item.file)).size, 20, "combo audio filenames should be unique");
-assert.equal(new Set(vocabManifest.items.map((item) => item.file)).size, 18, "vocab audio filenames should be unique");
-assert.equal(new Set(practiceManifest.items.map((item) => item.file)).size, 12, "practice audio filenames should be unique");
+assert.equal(new Set(comboManifest.items.map((item) => item.file)).size, comboItemCount, "combo audio filenames should be unique");
+assert.equal(new Set(vocabManifest.items.map((item) => item.file)).size, vocabItemCount, "vocab audio filenames should be unique");
+assert.equal(new Set(practiceManifest.items.map((item) => item.file)).size, practiceItemCount, "practice audio filenames should be unique");
 assert.ok(
   manifest.items.every((item) => item.file.startsWith("ai_temp_letter_") && item.file.endsWith(".mp3")),
   "letter audio files should use the AI temporary mp3 naming rule"
