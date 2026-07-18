@@ -727,6 +727,16 @@ button {
     var(--paper);
 }
 
+.today-progress-card {
+  display: grid;
+  gap: 12px;
+}
+
+.today-progress-note {
+  margin-bottom: 6px;
+  line-height: 1.45;
+}
+
 .lesson-step {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr) minmax(44px, max-content);

@@ -203,12 +203,13 @@ assert.ok(!app.innerHTML.includes("<br>"), "welcome screen should not force the 
 
 includesAll(
   renderState("state.screen = 'home'"),
-  ["今日下一步", "继续学习", "AI 临时音频"],
+  ["今日进度", "第四单元 · 听说与书写", "继续学习", "today-progress-note"],
   "home screen"
 );
+assert.ok(!app.innerHTML.includes("今日下一步"), "home screen should remove the daily next-action explainer card");
+assert.ok(!app.innerHTML.includes("next-action-card"), "home screen should not render the removed next-action card");
 assert.ok(!app.innerHTML.includes("<br>"), "home screen should not force unit titles onto manual line breaks");
 assert.ok(!app.innerHTML.includes("AI 临时音频 / 真人音频待录制"), "home audio note should use readable punctuation");
-assert.ok(app.innerHTML.includes("<strong>第一单元</strong><small> · 认识字母</small>"), "home unit labels should use a compact one-line label");
 assert.ok(app.innerHTML.includes("<strong>听音辨认</strong><span> · AI 临时</span>"), "quick entry labels should stay readable on one line");
 
 includesAll(
