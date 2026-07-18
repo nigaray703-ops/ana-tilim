@@ -73,7 +73,10 @@ assert.ok(
 );
 const homeCenterStyle = styleSource.match(/^\.home-center\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
 assert.ok(homeCenterStyle.includes("width: min(100%, 390px);"), "home content should use a centered compact width");
+assert.ok(homeCenterStyle.includes("min-height: calc(100svh - 320px);"), "home content should sit near the visual page center, not low on the page");
 assert.ok(homeCenterStyle.includes("margin: 0 auto;"), "home content should be horizontally centered");
+assert.ok(homeCenterStyle.includes("align-content: center;"), "home content should sit in the middle of the home page without stretching");
+assert.ok(homeCenterStyle.includes("align-items: start;"), "home content should keep natural card heights while centered");
 const homeCenterChildStyle = styleSource.match(/^\.home-center > \*\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
 assert.ok(homeCenterChildStyle.includes("width: 100%;"), "home cards should fill the centered home column");
 const stepStateStyle = styleSource.match(/^\.step-state\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
