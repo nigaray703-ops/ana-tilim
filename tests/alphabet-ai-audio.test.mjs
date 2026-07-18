@@ -78,6 +78,7 @@ const context = {
 
 context.globalThis = context;
 vm.createContext(context);
+vm.runInContext(fs.readFileSync("prototype/course-data.js", "utf8"), context, { filename: "prototype/course-data.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
 vm.runInContext("state.screen = 'group'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'; render();", context);
 
