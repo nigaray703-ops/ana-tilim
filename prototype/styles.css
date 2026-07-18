@@ -587,6 +587,16 @@ button {
   line-height: 1.35;
 }
 
+.practice-big {
+  font-size: 64px;
+  line-height: 1.12;
+}
+
+.practice-big.long-text {
+  font-size: 34px;
+  line-height: 1.3;
+}
+
 .word-big {
   font-size: 52px;
   font-weight: 800;
@@ -647,6 +657,92 @@ button {
 .review-card {
   border-color: rgba(231, 185, 93, 0.34);
   background: var(--gold-soft);
+}
+
+.practice-target-card {
+  min-height: 138px;
+  text-align: center;
+}
+
+.practice-mode-card {
+  display: grid;
+  gap: 12px;
+}
+
+.practice-drawing-pad {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  overflow: hidden;
+  border: 1px dashed rgba(22, 38, 87, 0.24);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(transparent 49%, rgba(22, 38, 87, 0.08) 50%, transparent 51%),
+    linear-gradient(90deg, transparent 49%, rgba(22, 38, 87, 0.05) 50%, transparent 51%),
+    #fffef8;
+}
+
+.practice-drawing-pad .guide {
+  max-width: 100%;
+  padding: 0 12px;
+  color: rgba(22, 38, 87, 0.18);
+  font-size: clamp(58px, 18vw, 118px);
+  font-weight: 800;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.practice-drawing-pad.hide-guide .guide {
+  opacity: 0;
+}
+
+.practice-review-list {
+  display: grid;
+  gap: 8px;
+}
+
+.practice-review-item {
+  display: grid;
+  grid-template-columns: minmax(62px, 92px) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 72px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.72);
+  text-align: left;
+}
+
+.practice-review-item.active {
+  border-color: rgba(14, 155, 177, 0.40);
+  background: var(--teal-soft);
+}
+
+.practice-review-item > .uyghur {
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.practice-review-item span {
+  min-width: 0;
+}
+
+.practice-review-item strong,
+.practice-review-item small {
+  display: block;
+  line-height: 1.3;
+}
+
+.practice-review-item small {
+  margin-top: 4px;
+  color: var(--ink-soft);
+  font-size: 12px;
 }
 
 .audit-grid {
