@@ -3362,27 +3362,37 @@ function renderLibrary() {
     `
       ${topBar("字母库", "第一单元全部字母")}
       <section class="stack">
-        ${allUnitOneLetters()
-          .map(
-            (letter) => `
-              <div class="word-row">
-                <span>
-                  <strong class="uyghur">${letter.letter}</strong>
-                  <span class="caption">${letter.type}，${letter.latin}，待审校</span>
-                </span>
-                <button
-                  class="ghost-button"
-                  data-action="select-letter"
-                  data-id="${letter.id}"
-                  data-target="letter"
-                  type="button"
-                >
-                  学习
-                </button>
-              </div>
-            `
-          )
-          .join("")}
+        <article class="card compact-library-card">
+          <div class="section-row">
+            <div>
+              <p class="caption">完整字母表</p>
+              <h2 class="section-title">32 个字母</h2>
+            </div>
+            <span class="step-state">待审校</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="letter-library-grid" aria-label="字母库紧凑目录">
+            ${allUnitOneLetters()
+              .map(
+                (letter) => `
+                  <button
+                    class="letter-library-pill"
+                    data-action="select-letter"
+                    data-id="${letter.id}"
+                    data-target="letter"
+                    type="button"
+                    aria-label="${letter.latin}"
+                  >
+                    <span class="uyghur">${letter.letter}</span>
+                    <small>${letter.latin}</small>
+                  </button>
+                `
+              )
+              .join("")}
+          </div>
+        </article>
       </section>
     `,
     "library"
