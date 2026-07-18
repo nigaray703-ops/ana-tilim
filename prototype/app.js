@@ -1225,6 +1225,41 @@ const learningUnits = [
   }
 ];
 
+const unitExperience = {
+  letters: {
+    recommended: "先复习第一单元字母分组，再进入组合。",
+    steps: ["认识相似字母组", "看四种写法", "做辨认 / 听音 / 键盘", "完成后进入组合"],
+    reviewLabel: "复习本组",
+    reviewTarget: "group",
+    nextLabel: "进入第二单元",
+    nextUnitId: "combos"
+  },
+  combos: {
+    recommended: "把字母连起来，从右往左拆分组合。",
+    steps: ["看两字母组合", "拆开再合上", "做组合辨认", "完成后进入词形"],
+    reviewLabel: "复习组合",
+    reviewTarget: "combo",
+    nextLabel: "进入第三单元",
+    nextUnitId: "basic-phrases"
+  },
+  "basic-phrases": {
+    recommended: "只练词形，不急着把中文含义定死。",
+    steps: ["选择主题词组", "看审校字段", "做词形辨认", "完成后进入强化训练"],
+    reviewLabel: "复习词形",
+    reviewTarget: "vocab",
+    nextLabel: "进入第四单元",
+    nextUnitId: "practice"
+  },
+  practice: {
+    recommended: "不加新词，用听说写把前面内容走成闭环。",
+    steps: ["选择训练组", "完成一个目标", "查看本轮结果", "回到路径继续复习"],
+    reviewLabel: "再练一轮",
+    reviewTarget: "practiceSession",
+    nextLabel: "回到学习路径",
+    nextUnitId: "letters"
+  }
+};
+
 const reviewStatusOptions = [
   { id: "pending", label: "待审校", tone: "pending" },
   { id: "approved", label: "通过", tone: "good" },
@@ -1526,6 +1561,101 @@ function currentUnit() {
   return learningUnits.find((unit) => unit.id === state.selectedUnitId) || learningUnits[0];
 }
 
+function currentUnitExperience(unitId = currentUnit().id) {
+  return unitExperience[unitId] || unitExperience.letters;
+}
+
+function itemPosition(items, currentId) {
+  const index = Math.max(0, items.findIndex((item) => item.id === currentId));
+  const total = items.length;
+
+  return {
+    index,
+    total,
+    label: `${index + 1} / ${total}`,
+    previous: index > 0 ? items[index - 1] : null,
+    next: index < total - 1 ? items[index + 1] : null
+  };
+}
+
+function renderStepList(unitId) {
+  const experience = currentUnitExperience(unitId);
+
+  return `
+    <div class="step-list" aria-label="学习步骤">
+      ${experience.steps
+        .map(
+          (step, index) => `
+            <div class="step-item">
+              <span>${index + 1}</span>
+              <strong>${step}</strong>
+            </div>
+          `
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function renderItemProgress(label, description) {
+  return `
+    <div class="item-progress">
+      <span class="step-state">${label}</span>
+      <strong>${description}</strong>
+    </div>
+  `;
+}
+
+function renderAdjacentNav({ previous, next, action, previousLabel = "上一个", nextLabel = "下一个" }) {
+  return `
+    <div class="adjacent-nav" aria-label="前后切换">
+      <button
+        class="secondary-button"
+        data-action="${action}"
+        data-id="${previous ? previous.id : ""}"
+        type="button"
+        ${previous ? "" : "disabled"}
+      >
+        ${previousLabel}
+      </button>
+      <button
+        class="secondary-button"
+        data-action="${action}"
+        data-id="${next ? next.id : ""}"
+        type="button"
+        ${next ? "" : "disabled"}
+      >
+        ${nextLabel}
+      </button>
+    </div>
+  `;
+}
+
+function renderUnitNextActions(unitId, primaryClass = "primary-button") {
+  const experience = currentUnitExperience(unitId);
+  const nextUnit = learningUnits.find((unit) => unit.id === experience.nextUnitId);
+
+  return `
+    <article class="card next-action-card">
+      <p class="caption">完成后</p>
+      <div class="action-grid">
+        <button class="secondary-button" data-action="go" data-target="${experience.reviewTarget}" type="button">
+          ${experience.reviewLabel}
+        </button>
+        <button
+          class="${primaryClass}"
+          data-action="${nextUnit && unitId !== "practice" ? "open-unit" : "go"}"
+          data-id="${nextUnit && unitId !== "practice" ? nextUnit.id : ""}"
+          data-target="${unitId === "practice" ? "learn" : "unit"}"
+          type="button"
+        >
+          ${experience.nextLabel}
+        </button>
+      </div>
+    </article>
+  `;
+}
+
 function render() {
   const screens = {
     welcome: renderWelcome,
@@ -1654,12 +1784,23 @@ function renderWelcome() {
 
 function renderHome() {
   const counts = reviewCounts();
+  const currentRecommendation = currentUnitExperience("practice");
 
   return screen(
     `
       ${topBar("早上好", "今天继续 8 分钟就很好")}
 
       <section class="stack wide-gap">
+        <article class="card next-action-card">
+          <p class="caption">今日下一步</p>
+          <h2 class="section-title">继续把四个单元串成一条复习线</h2>
+          <p class="muted">${currentRecommendation.recommended}</p>
+          <div class="mini-unit-row">
+            ${learningUnits.map((unit) => `<span>${unit.title.replace("：", "<br>")}</span>`).join("")}
+          </div>
+          <p class="caption">音频提醒：字母音频路径已准备，当前仍是 AI 临时音频 / 真人音频待录制。</p>
+        </article>
+
         <article class="card">
           <div class="section-row">
             <div>
@@ -1752,6 +1893,7 @@ function renderLearnPath() {
                   <span>
                     <strong>${unit.title}</strong>
                     <span class="caption">${unit.subtitle}</span>
+                    <span class="caption">${currentUnitExperience(unit.id).steps.join(" / ")}</span>
                   </span>
                   <span class="step-state">${unit.status}</span>
                 </button>
@@ -1836,13 +1978,25 @@ function renderUnitDetail() {
           </div>
         </article>
 
+        <article class="card">
+          <div class="section-row">
+            <div>
+              <p class="caption">学习步骤</p>
+              <h2 class="section-title">按这个顺序走，不用一次学完</h2>
+            </div>
+            <span class="step-state">${unit.groups.length} 组</span>
+          </div>
+          ${renderStepList(unit.id)}
+        </article>
+
         <div class="path-list">
           ${unit.groups.map((group) => renderGroupCard(group)).join("")}
         </div>
 
         <button class="primary-button" data-action="go" data-target="${unit.actionTarget}" type="button">
-          进入这个单元
+          进入当前学习
         </button>
+        ${renderUnitNextActions(unit.id)}
       </section>
     `,
     "learn"
@@ -1853,6 +2007,7 @@ function renderGroupLesson() {
   const group = currentGroup();
   const letter = currentLetter();
   const audio = currentLetterAudio();
+  const position = itemPosition(currentGroupLetters(), letter.id);
 
   return screen(
     `
@@ -1896,6 +2051,13 @@ function renderGroupLesson() {
             )
             .join("")}
         </div>
+
+        ${renderItemProgress(position.label, "当前字母在本组的位置")}
+        ${renderAdjacentNav({
+          previous: position.previous,
+          next: position.next,
+          action: "select-adjacent-letter"
+        })}
 
         <div class="letter-focus">
           <div>
@@ -2071,7 +2233,7 @@ function renderPicturePractice() {
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
                   ? `答对了。${letter.letter} 的关键是 ${letter.cue}。`
-                  : "这个不是目标字母。正式版会把错误放入复习。"
+                  : `先别急，这个不是目标字母。可以回到 ${currentGroup().title} 再看点位。`
               }</div>`
             : ""
         }
@@ -2144,7 +2306,7 @@ function renderListeningPractice() {
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
                   ? "听对了。下一步用键盘输入这个字母。"
-                  : "这个读音不对应目标字母。可以再点播放按钮听一次。"
+                  : `可以再听一次，也可以回到 ${currentGroup().title} 复习相似字母。`
               }</div>`
             : ""
         }
@@ -2249,9 +2411,7 @@ function renderComplete() {
           <div class="metric"><strong>1</strong><span>辨认</span></div>
           <div class="metric"><strong>0</strong><span>错题</span></div>
         </div>
-        <button class="primary-button" data-action="go" data-target="learn" type="button">
-          再看学习路径
-        </button>
+        ${renderUnitNextActions("letters")}
         <button class="secondary-button" data-action="go" data-target="home" type="button">
           回到首页
         </button>
@@ -2295,6 +2455,7 @@ function renderComboParts(item) {
 function renderComboLesson() {
   const group = currentComboGroup();
   const item = currentComboItem();
+  const position = itemPosition(currentComboItems(), item.id);
 
   return screen(
     `
@@ -2325,6 +2486,13 @@ function renderComboLesson() {
           ${renderComboSelector(group.items, item.id)}
         </div>
 
+        ${renderItemProgress(position.label, "当前组合在本组的位置")}
+        ${renderAdjacentNav({
+          previous: position.previous,
+          next: position.next,
+          action: "select-adjacent-combo"
+        })}
+
         <div class="letter-focus">
           <div>
             <div class="uyghur letter-big combo-big">${item.value}</div>
@@ -2337,7 +2505,7 @@ function renderComboLesson() {
           <div class="combo-parts" aria-label="组合拆分">
             ${renderComboParts(item)}
           </div>
-          <p class="muted">${item.rule}</p>
+          <p class="muted">从右往左：${item.rule}</p>
         </article>
 
         ${
@@ -2435,7 +2603,7 @@ function renderComboRecognition() {
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
                   ? `答对了。${item.value} 现在只作为 ${item.type} 学习。`
-                  : "这个不是当前目标。先看转写提示，再回到组合。"
+                  : `先看转写提示，再回到 ${group.title} 复习拆分。`
               }</div>`
             : ""
         }
@@ -2552,9 +2720,7 @@ function renderComboComplete() {
           <div class="metric"><strong>1</strong><span>输入</span></div>
           <div class="metric"><strong>审校</strong><span>词义</span></div>
         </div>
-        <button class="primary-button" data-action="go" data-target="unit" type="button">
-          回到第二单元
-        </button>
+        ${renderUnitNextActions("combos")}
         <button class="secondary-button" data-action="go" data-target="learn" type="button">
           学习路径
         </button>
@@ -2608,6 +2774,7 @@ function renderVocabLesson() {
   const group = currentVocabGroup();
   const item = currentVocabItem();
   const longWordClass = item.value.length > 8 ? "long-text" : "";
+  const position = itemPosition(currentVocabItems(), item.id);
 
   return screen(
     `
@@ -2633,6 +2800,13 @@ function renderVocabLesson() {
           ${renderVocabSelector(group.items, item.id)}
         </div>
 
+        ${renderItemProgress(position.label, "当前词形在本主题的位置")}
+        ${renderAdjacentNav({
+          previous: position.previous,
+          next: position.next,
+          action: "select-adjacent-vocab"
+        })}
+
         <div class="letter-focus">
           <div>
             <div class="uyghur letter-big vocab-big ${longWordClass}">${item.value}</div>
@@ -2643,7 +2817,7 @@ function renderVocabLesson() {
         <article class="card">
           <p class="caption">中文预览</p>
           <h2 class="section-title">${item.meaning}</h2>
-          <p class="muted">${item.tip}</p>
+          <p class="muted">${item.tip} 现阶段只练词形，不设唯一答案。</p>
         </article>
 
         <article class="card">
@@ -2725,7 +2899,7 @@ function renderVocabRecognition() {
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
                   ? `答对了。这里确认的是 ${item.value} 的词形，不是最终词义审校。`
-                  : "这个不是当前目标词形。正式版会把易混词放入复习。"
+                  : `这个不是当前目标词形。现在只练词形，不考最终中文含义，可以回到 ${group.title} 再看一遍。`
               }</div>`
             : ""
         }
@@ -2832,9 +3006,7 @@ function renderVocabComplete() {
           <div class="metric"><strong>1</strong><span>输入</span></div>
           <div class="metric"><strong>审校</strong><span>含义</span></div>
         </div>
-        <button class="primary-button" data-action="go" data-target="unit" type="button">
-          回到第三单元
-        </button>
+        ${renderUnitNextActions("basic-phrases")}
         <button class="secondary-button" data-action="go" data-target="learn" type="button">
           学习路径
         </button>
@@ -2897,7 +3069,7 @@ function renderPracticeChoices(group, item) {
         ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
             isCorrect
               ? `辨认正确。本轮确认的是 ${item.value} 的词形。`
-              : "这个不是当前目标。真实音频上线后，这里会进入错题复习。"
+              : `这个不是当前目标。先回到 ${group.title} 看提示，真实音频上线后再做听音错题。`
           }</div>`
         : ""
     }
@@ -3141,12 +3313,7 @@ function renderPracticeComplete() {
             <div class="audit-row"><strong>备注</strong><span>${item.audioStatus}；正式版会接入错题和音频文件。</span></div>
           </div>
         </article>
-        <button class="primary-button" data-action="go" data-target="writing" type="button">
-          回到第四单元
-        </button>
-        <button class="secondary-button" data-action="go" data-target="learn" type="button">
-          学习路径
-        </button>
+        ${renderUnitNextActions("practice")}
       </section>
     `,
     "writing"
@@ -3523,6 +3690,20 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (action === "select-adjacent-letter") {
+    if (!button.dataset.id) {
+      return;
+    }
+    const group = groupForLetter(button.dataset.id);
+    if (group) {
+      state.selectedGroupId = group.id;
+    }
+    state.currentLetterId = button.dataset.id;
+    resetPracticeState();
+    render();
+    return;
+  }
+
   if (action === "select-combo") {
     const group = comboGroupForItem(button.dataset.id);
     if (group) {
@@ -3534,7 +3715,35 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (action === "select-adjacent-combo") {
+    if (!button.dataset.id) {
+      return;
+    }
+    const group = comboGroupForItem(button.dataset.id);
+    if (group) {
+      state.selectedComboGroupId = group.id;
+    }
+    state.currentComboItemId = button.dataset.id;
+    resetComboPracticeState();
+    render();
+    return;
+  }
+
   if (action === "select-vocab") {
+    const group = vocabGroupForItem(button.dataset.id);
+    if (group) {
+      state.selectedVocabGroupId = group.id;
+    }
+    state.currentVocabItemId = button.dataset.id;
+    resetVocabPracticeState();
+    render();
+    return;
+  }
+
+  if (action === "select-adjacent-vocab") {
+    if (!button.dataset.id) {
+      return;
+    }
     const group = vocabGroupForItem(button.dataset.id);
     if (group) {
       state.selectedVocabGroupId = group.id;
