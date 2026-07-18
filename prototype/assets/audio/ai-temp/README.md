@@ -13,23 +13,27 @@ Suggested filenames:
 
 ```text
 alphabet/ai_temp_letter_01_b.mp3
-ai_temp_letter_03_b.mp3
-ai_temp_combo_ba.mp3
-ai_temp_word_rahmat.mp3
-ai_temp_phrase_assalamu_alaykum.mp3
+combos/ai_temp_combo_ba.mp3
+vocab/ai_temp_vocab_rahmat.mp3
+practice/ai_temp_practice_listen_be.mp3
 ```
 
 Future app paths should look like:
 
 ```text
 ./assets/audio/ai-temp/alphabet/ai_temp_letter_01_b.mp3
-./assets/audio/ai-temp/ai_temp_word_rahmat.mp3
+./assets/audio/ai-temp/combos/ai_temp_combo_ba.mp3
+./assets/audio/ai-temp/vocab/ai_temp_vocab_rahmat.mp3
+./assets/audio/ai-temp/practice/ai_temp_practice_listen_be.mp3
 ```
 
-Unit 1 alphabet audio has its own package:
+Each unit has its own manifest:
 
 ```text
 prototype/assets/audio/ai-temp/alphabet/
 prototype/assets/audio/ai-temp/alphabet/manifest.json
+prototype/assets/audio/ai-temp/combos/manifest.json
+prototype/assets/audio/ai-temp/vocab/manifest.json
+prototype/assets/audio/ai-temp/practice/manifest.json
 audio-tools/generate-alphabet-ai-audio.mjs
 ```
