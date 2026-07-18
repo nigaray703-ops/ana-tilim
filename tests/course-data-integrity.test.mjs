@@ -227,9 +227,18 @@ for (const group of vocabGroups) {
   );
 }
 const numberSectionTitles = vocabGroupById.numbers.sections.map((section) => section.title);
-for (const title of ["1-10", "11-20", "整十数", "大数"]) {
+for (const title of ["1-10", "整十数", "大数"]) {
   assert.ok(numberSectionTitles.includes(title), `numbers should include ${title} section`);
 }
+assert.ok(!numberSectionTitles.includes("11-20"), "numbers should not include an 11-20 section");
+assert.ok(
+  !vocabGroupById.numbers.items.some((item) => /^十[一二三四五六七八九]$/.test(item.meaning)),
+  "numbers should remove 11-19 words"
+);
+assert.ok(
+  vocabGroupById.numbers.sections.some((section) => section.title === "整十数" && section.itemIds.includes("twenty")),
+  "twenty should move into the tens section"
+);
 assert.ok(
   vocabGroupById.numbers.items.some((item) => item.meaning.includes("亿")),
   "numbers should include a large-number word for 亿"

@@ -81,15 +81,6 @@ const vocabTopicDefinitions = [
       ["eight", "سەككىز", "sekkiz", "八", ["سە", "ك", "كىز"]],
       ["nine", "توققۇز", "toqquz", "九", ["تو", "ق", "قۇز"]],
       ["ten", "ئون", "on", "十", ["ئو", "ن"]],
-      ["eleven", "ئون بىر", "on bir", "十一"],
-      ["twelve", "ئون ئىككى", "on ikki", "十二"],
-      ["thirteen", "ئون ئۈچ", "on üch", "十三"],
-      ["fourteen", "ئون تۆت", "on töt", "十四"],
-      ["fifteen", "ئون بەش", "on besh", "十五"],
-      ["sixteen", "ئون ئالتە", "on alte", "十六"],
-      ["seventeen", "ئون يەتتە", "on yette", "十七"],
-      ["eighteen", "ئون سەككىز", "on sekkiz", "十八"],
-      ["nineteen", "ئون توققۇز", "on toqquz", "十九"],
       ["twenty", "يىگىرمە", "yigirme", "二十"],
       ["ten-tens", "ئون", "on", "十、整十数"],
       ["thirty", "ئوتتۇز", "ottuz", "三十"],
@@ -321,8 +312,7 @@ const vocabSectionDefinitions = {
   ],
   numbers: [
     ["one-to-ten", "1-10", ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]],
-    ["eleven-to-twenty", "11-20", ["eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"]],
-    ["tens", "整十数", ["ten-tens", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]],
+    ["tens", "整十数", ["ten-tens", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]],
     ["large", "大数", ["hundred", "thousand", "ten-thousand", "hundred-thousand", "million", "ten-million", "hundred-million", "billion"]]
   ],
   time: [

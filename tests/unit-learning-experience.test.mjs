@@ -338,9 +338,10 @@ assert.ok(!app.innerHTML.includes("中文预览"), "vocab lesson should avoid re
 
 includesAll(
   renderState("state.screen = 'vocab'; state.selectedVocabGroupId = 'numbers'; state.currentVocabItemId = 'one'"),
-  ["1-10", "11-20", "整十数", "大数", "ئون مىڭ", "يۈز مىليون"],
+  ["1-10", "整十数", "大数", "يىگىرمە", "ئون مىڭ", "يۈز مىليون"],
   "number vocabulary sections"
 );
+assert.ok(!app.innerHTML.includes("11-20"), "number vocabulary should not show the removed 11-20 section");
 includesAll(
   renderState("state.screen = 'vocab'; state.selectedVocabGroupId = 'time'; state.currentVocabItemId = 'bugun'"),
   ["基础时间", "星期", "月份", "دۈشەنبە", "يانۋار"],
