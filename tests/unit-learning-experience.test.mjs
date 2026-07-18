@@ -344,9 +344,11 @@ assert.ok(!app.innerHTML.includes("مەھمۇد قەشقىرى"), "famous quote 
 assert.ok(!app.innerHTML.includes("ئابدۇرېھىم ئۆتكۈر"), "famous quote directory should use Chinese names");
 includesAll(
   renderState("state.screen = 'unit'; state.selectedUnitId = 'uyghur-proverbs'"),
-  ["reading-topic-list", "بىلىم كۈچ", "ياخشى سۆز", "10 条", "→"],
+  ["reading-topic-list", "知识就是力量", "好话暖心", "10 条", "→"],
   "proverb unit topic directory"
 );
+assert.ok(!app.innerHTML.includes("بىلىم كۈچ"), "proverb directory should use Chinese titles");
+assert.ok(!app.innerHTML.includes("ياخشى سۆز"), "proverb directory should use Chinese titles");
 
 includesAll(
   renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'dialogue-theater'; state.selectedReadingGroupId = 'dialogue-greeting'"),
