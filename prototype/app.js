@@ -3131,9 +3131,6 @@ function renderPracticeModeCard(group, item) {
   }
 
   if (group.mode === "write") {
-    const checkedCount = writingCheckOptions.filter((check) => state.writingChecks.includes(check.id)).length;
-    const isComplete = checkedCount === writingCheckOptions.length;
-
     return `
       <article class="card practice-mode-card">
         <div class="section-row">
@@ -3151,14 +3148,7 @@ function renderPracticeModeCard(group, item) {
         hint: item.hint,
         mode: "word"
       })}
-      ${renderWritingComparison({
-        value: item.value,
-        parts: item.parts
-      })}
-      ${renderWritingSelfCheck()}
-      <div class="feedback ${isComplete ? "good" : ""}">
-        ${isComplete ? "书写自查完成。本轮书写练习可以查看结果。" : "写完后勾选自查项，再查看结果。"}
-      </div>
+      <div class="feedback">写完后可以清空重写，也可以直接查看结果。</div>
     `;
   }
 
@@ -3343,8 +3333,7 @@ function renderPracticeComplete() {
   const item = currentPracticeItem();
   const listened = group.mode === "listen" ? (state.selectedListening === item.id ? "已辨认" : "未选择") : "可选";
   const repeated = group.mode === "repeat" ? (state.practiceSpoken ? "已跟读" : "未跟读") : "可选";
-  const written =
-    group.mode === "write" && writingCheckOptions.every((check) => state.writingChecks.includes(check.id)) ? "已自查" : "可选";
+  const written = group.mode === "write" ? "已练习" : "可选";
   const typed = group.mode === "keyboard" ? (state.keyboardValue === item.value ? "已输入" : "未完成") : "可选";
 
   return screen(
@@ -3712,12 +3701,11 @@ document.addEventListener("click", (event) => {
     if (state.screen === "practiceSession" && target === "practiceComplete") {
       const group = currentPracticeGroup();
       const item = currentPracticeItem();
-      const writingComplete = writingCheckOptions.every((check) => state.writingChecks.includes(check.id));
       const completedPractice =
         group.mode === "review" ||
         (group.mode === "listen" && state.selectedListening === item.id) ||
         (group.mode === "repeat" && state.practiceSpoken) ||
-        (group.mode === "write" && writingComplete) ||
+        group.mode === "write" ||
         (group.mode === "keyboard" && state.keyboardValue === item.value);
 
       if (completedPractice) {
