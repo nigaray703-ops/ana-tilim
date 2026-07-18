@@ -23,6 +23,15 @@ assert.ok(
   appSource.includes("comboGroups") && appSource.indexOf("comboGroups") < appSource.indexOf("const alphabetAudioByLetterId"),
   "app should read unit two combo content from the shared course data object"
 );
+assert.ok(courseDataSource.includes("vocabGroups"), "unit three vocabulary course data should live in the shared data file");
+assert.ok(
+  !appSource.includes("const vocabGroups = ["),
+  "app should not define unit three vocabulary content inline"
+);
+assert.ok(
+  appSource.includes("vocabGroups") && appSource.indexOf("vocabGroups") < appSource.indexOf("const alphabetAudioByLetterId"),
+  "app should read unit three vocabulary content from the shared course data object"
+);
 assert.ok(
   indexHtml.indexOf("course-data.js") >= 0 && indexHtml.indexOf("course-data.js") < indexHtml.indexOf("app.js"),
   "course data should load before the app script"
