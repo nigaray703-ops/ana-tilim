@@ -3,9 +3,23 @@ import fs from "node:fs";
 import vm from "node:vm";
 
 const indexHtml = fs.readFileSync("prototype/index.html", "utf8");
+const courseDataGuidePath = "课程/00-课程数据编辑与审校说明.md";
 assert.ok(fs.existsSync("prototype/course-data.js"), "alphabet course data should live in a standalone data file");
+assert.ok(fs.existsSync(courseDataGuidePath), "course data editing guide should exist for non-technical review");
 const courseDataSource = fs.readFileSync("prototype/course-data.js", "utf8");
+const courseDataGuide = fs.readFileSync(courseDataGuidePath, "utf8");
 const appSource = fs.readFileSync("prototype/app.js", "utf8");
+for (const phrase of [
+  "prototype/course-data.js",
+  "alphabetGroups",
+  "comboGroups",
+  "vocabGroups",
+  "practiceGroups",
+  "待母语者审校",
+  "AI 临时音频"
+]) {
+  assert.ok(courseDataGuide.includes(phrase), `course data guide should mention ${phrase}`);
+}
 assert.ok(
   courseDataSource.includes("window.ANA_TILIM_COURSE"),
   "course data file should expose a stable window.ANA_TILIM_COURSE object"
