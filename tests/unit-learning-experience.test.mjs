@@ -337,9 +337,11 @@ includesAll(
 );
 includesAll(
   renderState("state.screen = 'unit'; state.selectedUnitId = 'famous-quotes'"),
-  ["reading-topic-list", "مەھمۇد قەشقىرى", "ئابدۇرېھىم ئۆتكۈر", "10 条", "→"],
+  ["reading-topic-list", "马赫穆德·喀什噶里", "阿不都热依木·吾提库尔", "10 条", "→"],
   "famous quote unit topic directory"
 );
+assert.ok(!app.innerHTML.includes("مەھمۇد قەشقىرى"), "famous quote directory should use Chinese names");
+assert.ok(!app.innerHTML.includes("ئابدۇرېھىم ئۆتكۈر"), "famous quote directory should use Chinese names");
 includesAll(
   renderState("state.screen = 'unit'; state.selectedUnitId = 'uyghur-proverbs'"),
   ["reading-topic-list", "بىلىم كۈچ", "ياخشى سۆز", "10 条", "→"],

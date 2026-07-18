@@ -156,70 +156,70 @@ const readingUnits = [
     groups: [
       {
         id: "quote-mahmud-kashgari",
-        title: "مەھمۇد قەشقىرى",
+        title: "马赫穆德·喀什噶里",
         items: [
           { id: "quote-mahmud-kashgari-line", value: "تىل بىر خەلقنى تونۇشنىڭ ئاچقۇچىدۇر.", meaning: "语言是了解一个民族的钥匙。", lesson: "学习母语，不只是学字和音，也是在认识自己的文化。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-yusuf-hajib",
-        title: "يۈسۈپ خاس ھاجىپ",
+        title: "玉素甫·哈斯·哈吉甫",
         items: [
           { id: "quote-yusuf-hajib-line", value: "بىلىم ئادەمنىڭ يولىنى يورۇتىدۇ.", meaning: "知识照亮人的道路。", lesson: "学习让人看清方向，也让日常生活更有力量。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-ahmet-yukneki",
-        title: "ئەخمەت يۈكنەكى",
+        title: "艾合买提·玉克乃克",
         items: [
           { id: "quote-ahmet-yukneki-line", value: "ئەدەب ئادەمنىڭ زىننىتىدۇر.", meaning: "礼貌是人的装饰。", lesson: "说话有礼，是语言学习里最早应该养成的习惯。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-molla-musa",
-        title: "موللا مۇسا سايرامى",
+        title: "毛拉·穆萨·赛拉米",
         items: [
           { id: "quote-molla-musa-line", value: "تارىخنى بىلگەن ئادەم ئۆزىنى ياخشىراق تونۇيدۇ.", meaning: "懂得历史的人，更能认识自己。", lesson: "文化学习不只看现在，也要慢慢了解来处。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-abdulkhaliq-uyghur",
-        title: "ئابدۇخالىق ئۇيغۇر",
+        title: "阿不都哈力克·维吾尔",
         items: [
           { id: "quote-abdulkhaliq-uyghur-line", value: "ئويغانغان كۆڭۈل ئۆگىنىشتىن توختىمايدۇ.", meaning: "醒来的心不会停止学习。", lesson: "保持学习的心，比一次学很多更重要。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-lutpulla-mutellip",
-        title: "لۇتپۇللا مۇتەللىپ",
+        title: "鲁特普拉·穆塔里甫",
         items: [
           { id: "quote-lutpulla-mutellip-line", value: "ياشلىق ئۈمىد بىلەن گۈزەل.", meaning: "青春因希望而美丽。", lesson: "语言学习也需要希望，一点一点坚持就会前进。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-abdurehim-otkur",
-        title: "ئابدۇرېھىم ئۆتكۈر",
+        title: "阿不都热依木·吾提库尔",
         items: [
           { id: "quote-abdurehim-otkur-line", value: "ئىز قالدۇرۇش ئۈچۈن قەدەم بېسىش كېرەك.", meaning: "想留下足迹，就要迈出脚步。", lesson: "每天完成一个小练习，就是给自己留下学习的足迹。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-zunun-qadiri",
-        title: "زۇنۇن قادىر",
+        title: "祖农·卡迪尔",
         items: [
           { id: "quote-zunun-qadiri-line", value: "ھېكايە ئادەمنىڭ كۆڭلىنى ئاچىدۇ.", meaning: "故事能打开人的心。", lesson: "读短故事能把词语放回生活里，更容易记住。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-zordun-sabir",
-        title: "زوردۇن سابىر",
+        title: "祖尔东·萨比尔",
         items: [
           { id: "quote-zordun-sabir-line", value: "كۈلكە ھەقىقەتنى يۇمشاق ئېيتىدۇ.", meaning: "笑声能温和地说出真实。", lesson: "语言不只表达意思，也表达态度和温度。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-teyipjan-eliyev",
-        title: "تېيىپجان ئېلىيوف",
+        title: "铁依甫江·艾力耶夫",
         items: [
           { id: "quote-teyipjan-eliyev-line", value: "شېئىر يۈرەكتىكى سۆزنى ئاڭلىتىدۇ.", meaning: "诗让心里的话被听见。", lesson: "以后学习诗句时，要先感受语气，再慢慢看词。", reviewStatus: "学习版译句，待来源审校" }
         ]
