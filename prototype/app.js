@@ -1987,6 +1987,78 @@ function itemMistakeFeedback(target, picked, label = "词形") {
   return `目标${label}是 ${target.value}，你选了 ${picked.value}。先对照转写：${target.latin}。`;
 }
 
+function keyboardGuideState(parts, targetValue, currentValue = state.keyboardValue) {
+  let remaining = currentValue;
+  let completeCount = 0;
+
+  for (const part of parts) {
+    if (!remaining.startsWith(part)) {
+      break;
+    }
+
+    completeCount += 1;
+    remaining = remaining.slice(part.length);
+  }
+
+  const isComplete = currentValue === targetValue;
+  const isOffTrack = currentValue.length > 0 && !targetValue.startsWith(currentValue);
+  const nextPart = isComplete || isOffTrack ? "" : parts[completeCount] || "";
+
+  return {
+    parts,
+    targetValue,
+    currentValue,
+    completeCount,
+    nextPart,
+    isComplete,
+    isOffTrack,
+    remainingCount: Math.max(parts.length - completeCount, 0)
+  };
+}
+
+function renderKeyboardGuide(parts, targetValue) {
+  const guide = keyboardGuideState(parts, targetValue);
+  const stepText = guide.isComplete
+    ? "已完成"
+    : guide.isOffTrack
+      ? "先删除错误部分"
+      : `第 ${guide.completeCount + 1} 步：点击 ${guide.nextPart}`;
+  const inputText = guide.currentValue ? `已输入 ${guide.currentValue}` : "已输入 未输入";
+  const countText = guide.isComplete ? "已完成" : `还差 ${guide.remainingCount} 键`;
+
+  return `
+    <article class="card keyboard-guide-card">
+      <div class="section-row">
+        <div>
+          <p class="caption">键盘步骤</p>
+          <h2 class="section-title">
+            <span class="uyghur">${parts.join(" → ")}</span>
+          </h2>
+        </div>
+        <span class="step-state">${countText}</span>
+      </div>
+      <div class="keyboard-guide-current">
+        <span>${inputText}</span>
+        <strong>${stepText}</strong>
+      </div>
+    </article>
+  `;
+}
+
+function guidedKeyClass(key, parts, targetValue) {
+  const guide = keyboardGuideState(parts, targetValue);
+
+  if (guide.nextPart && key === guide.nextPart) {
+    return "next-key";
+  }
+
+  if (guide.isComplete && key === targetValue) {
+    return "done-key";
+  }
+
+  return "";
+}
+
 function resetPracticeState() {
   state.selectedPicture = "";
   state.selectedListening = "";
@@ -2965,6 +3037,7 @@ function renderKeyboardPractice() {
   const letter = currentLetter();
   const isCorrect = state.keyboardValue === letter.letter;
   const hasInput = state.keyboardValue.length > 0;
+  const keyboardParts = [letter.letter];
 
   return screen(
     `
@@ -2989,11 +3062,12 @@ function renderKeyboardPractice() {
           readonly
           dir="rtl"
         />
+        ${renderKeyboardGuide(keyboardParts, letter.letter)}
         <div class="practice-key-row" aria-label="本组字母快捷键">
           ${currentGroupLetters()
             .map(
               (item) => `
-                <button class="key-button uyghur" data-action="key" data-key="${item.letter}" type="button">
+                <button class="key-button uyghur ${guidedKeyClass(item.letter, keyboardParts, letter.letter)}" data-action="key" data-key="${item.letter}" type="button">
                   ${item.letter}
                 </button>
               `
@@ -3005,7 +3079,7 @@ function renderKeyboardPractice() {
             .flat()
             .map(
               (key) => `
-                <button class="key-button uyghur" data-action="key" data-key="${key}" type="button">
+                <button class="key-button uyghur ${guidedKeyClass(key, keyboardParts, letter.letter)}" data-action="key" data-key="${key}" type="button">
                   ${key}
                 </button>
               `
@@ -3350,6 +3424,7 @@ function renderComboKeyboard() {
   const item = currentComboItem();
   const isCorrect = state.keyboardValue === item.value;
   const hasInput = state.keyboardValue.length > 0;
+  const keyboardParts = item.parts;
 
   return screen(
     `
@@ -3374,6 +3449,7 @@ function renderComboKeyboard() {
           readonly
           dir="rtl"
         />
+        ${renderKeyboardGuide(keyboardParts, item.value)}
         <div class="practice-key-row" aria-label="本组组合快捷键">
           ${group.items
             .map(
@@ -3389,7 +3465,7 @@ function renderComboKeyboard() {
           ${item.parts
             .map(
               (part) => `
-                <button class="key-button uyghur" data-action="key" data-key="${part}" type="button">
+                <button class="key-button uyghur ${guidedKeyClass(part, keyboardParts, item.value)}" data-action="key" data-key="${part}" type="button">
                   ${part}
                 </button>
               `
@@ -3401,7 +3477,7 @@ function renderComboKeyboard() {
             .flat()
             .map(
               (key) => `
-                <button class="key-button uyghur" data-action="key" data-key="${key}" type="button">
+                <button class="key-button uyghur ${guidedKeyClass(key, keyboardParts, item.value)}" data-action="key" data-key="${key}" type="button">
                   ${key}
                 </button>
               `
@@ -3666,6 +3742,7 @@ function renderVocabKeyboard() {
   const item = currentVocabItem();
   const isCorrect = state.keyboardValue === item.value;
   const hasInput = state.keyboardValue.length > 0;
+  const keyboardParts = item.parts;
 
   return screen(
     `
@@ -3690,6 +3767,7 @@ function renderVocabKeyboard() {
           readonly
           dir="rtl"
         />
+        ${renderKeyboardGuide(keyboardParts, item.value)}
         <div class="practice-key-row" aria-label="本组词形快捷键">
           ${group.items
             .map(
@@ -3705,7 +3783,7 @@ function renderVocabKeyboard() {
           ${item.parts
             .map(
               (part) => `
-                <button class="key-button uyghur" data-action="key" data-key="${part}" type="button">
+                <button class="key-button uyghur ${guidedKeyClass(part, keyboardParts, item.value)}" data-action="key" data-key="${part}" type="button">
                   ${part}
                 </button>
               `
@@ -3856,6 +3934,7 @@ function renderPracticeModeCard(group, item) {
   }
 
   if (group.mode === "write") {
+    const keyboardParts = item.parts;
     const inputKeys = [item.value, ...item.parts].filter((key, index, keys) => key && keys.indexOf(key) === index);
     const isCorrect = state.keyboardValue === item.value;
     const hasInput = state.keyboardValue.length > 0;
@@ -3877,11 +3956,12 @@ function renderPracticeModeCard(group, item) {
         readonly
         dir="rtl"
       />
+      ${renderKeyboardGuide(keyboardParts, item.value)}
       <div class="practice-key-row" aria-label="当前复习项快捷键">
         ${inputKeys
           .map(
             (key) => `
-              <button class="key-button uyghur" data-action="key" data-key="${key}" type="button">
+              <button class="key-button uyghur ${guidedKeyClass(key, keyboardParts, item.value)}" data-action="key" data-key="${key}" type="button">
                 ${key}
               </button>
             `
@@ -3893,7 +3973,7 @@ function renderPracticeModeCard(group, item) {
           .flat()
           .map(
             (key) => `
-              <button class="key-button uyghur" data-action="key" data-key="${key}" type="button">
+              <button class="key-button uyghur ${guidedKeyClass(key, keyboardParts, item.value)}" data-action="key" data-key="${key}" type="button">
                 ${key}
               </button>
             `

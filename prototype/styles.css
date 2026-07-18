@@ -1316,6 +1316,36 @@ button {
   background: var(--coral-soft);
 }
 
+.keyboard-guide-card .section-title {
+  margin-top: 2px;
+}
+
+.keyboard-guide-card .uyghur {
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.keyboard-guide-current {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 9px;
+  border: 1px solid rgba(14, 155, 177, 0.22);
+  border-radius: var(--radius);
+  background: var(--teal-soft);
+}
+
+.keyboard-guide-current span {
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.keyboard-guide-current strong {
+  font-size: 14px;
+  line-height: 1.35;
+}
+
 .rtl-input {
   width: 100%;
   min-height: 56px;
@@ -1349,6 +1379,16 @@ button {
   background: var(--paper);
   font-size: 20px;
   font-weight: 800;
+}
+
+.key-button.next-key {
+  border-color: rgba(230, 172, 79, 0.68);
+  background: rgba(255, 239, 205, 0.94);
+}
+
+.key-button.done-key {
+  border-color: rgba(21, 160, 132, 0.42);
+  background: var(--mint-soft);
 }
 
 .key-button.utility {
