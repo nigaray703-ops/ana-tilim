@@ -534,16 +534,22 @@ includesAll(
 
 includesAll(
   renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'writing-loop'; state.currentPracticeItemId = 'practice-write-ana'; state.keyboardValue = ''"),
-  ["手写板", "writing-canvas", "清空画布", "完成后评价", "点位正确"],
+  ["手写板", "writing-canvas", "清空画布"],
   "practice writing canvas"
 );
 assert.ok(!app.innerHTML.includes("键盘步骤"), "practice writing entry should not show keyboard steps");
+assert.ok(!app.innerHTML.includes("对比正确写法"), "practice writing entry should remove the duplicate comparison card");
+assert.ok(!app.innerHTML.includes("完成后评价"), "practice writing entry should remove the duplicate self-check card");
+clickDataset({ action: "go", target: "practiceComplete" });
+assert.equal(savedProgress().learningProgress.practice["writing-loop"].completed, true, "practice writing should complete from the result action");
 
 includesAll(
   renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'keyboard-loop'; state.currentPracticeItemId = 'practice-keyboard-ana'; state.keyboardValue = ''"),
   ["键盘步骤", "ئا → ن → ا", "点击 ئا", "还差 3 键"],
   "practice keyboard guide"
 );
+assert.ok(!app.innerHTML.includes("对比正确写法"), "practice keyboard entry should not show writing comparison");
+assert.ok(!app.innerHTML.includes("完成后评价"), "practice keyboard entry should not show writing self-check");
 
 includesAll(
   renderState("state.screen = 'vocabComplete'"),
