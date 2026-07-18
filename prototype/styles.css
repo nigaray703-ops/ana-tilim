@@ -235,11 +235,14 @@ button {
 }
 
 .hero-copy {
-  max-width: 330px;
+  max-width: min(100%, 380px);
   margin: 14px auto 24px;
   color: var(--ink-soft);
-  font-size: 15px;
-  line-height: 1.7;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .screen-title {

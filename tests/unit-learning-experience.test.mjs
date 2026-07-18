@@ -77,6 +77,13 @@ function clickDataset(dataset) {
 }
 
 includesAll(
+  renderState("state.screen = 'welcome'"),
+  ["从字母、发音、书写到键盘输入，一步一步学会自己的母语。", "开始学习"],
+  "welcome screen"
+);
+assert.ok(!app.innerHTML.includes("<br>"), "welcome screen should not force the hero copy onto manual line breaks");
+
+includesAll(
   renderState("state.screen = 'home'"),
   ["今日下一步", "继续学习", "AI 临时音频"],
   "home screen"
