@@ -769,12 +769,17 @@ button {
 }
 
 .step-state {
+  flex: 0 0 auto;
+  min-width: max-content;
   color: var(--mint);
   font-size: 11px;
   font-weight: 800;
   line-height: 1.2;
   max-width: none;
+  overflow: visible;
   text-align: right;
+  text-overflow: clip;
+  white-space: nowrap;
 }
 
 .letter-focus {

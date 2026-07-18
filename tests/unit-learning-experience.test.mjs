@@ -64,6 +64,10 @@ assert.ok(
   /\.alphabet-strip\s*\{[^}]*justify-content:\s*center;/s.test(styleSource),
   "full alphabet directory should center wrapped letter pills"
 );
+const stepStateStyle = styleSource.match(/^\.step-state\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
+for (const declaration of ["overflow: visible;", "text-overflow: clip;", "min-width: max-content;", "flex: 0 0 auto;"]) {
+  assert.ok(stepStateStyle.includes(declaration), `status labels should include ${declaration}`);
+}
 assert.ok(courseDataSources["prototype/course-data/alphabet-data.js"].includes("alphabetGroups"), "unit one alphabet course data should live in the alphabet data file");
 assert.ok(courseDataSources["prototype/course-data/combo-data.js"].includes("comboGroups"), "unit two combo course data should live in the combo data file");
 assert.ok(
