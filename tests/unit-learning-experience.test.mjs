@@ -83,7 +83,8 @@ includesAll(
 );
 assert.ok(!app.innerHTML.includes("<br>"), "home screen should not force unit titles onto manual line breaks");
 assert.ok(!app.innerHTML.includes("AI 临时音频 / 真人音频待录制"), "home audio note should use readable punctuation");
-assert.ok(app.innerHTML.includes("<strong>第一单元</strong><small>认识字母</small>"), "home unit labels should use a compact two-level label");
+assert.ok(app.innerHTML.includes("<strong>第一单元</strong><small> · 认识字母</small>"), "home unit labels should use a compact one-line label");
+assert.ok(app.innerHTML.includes("<strong>听音辨认</strong><span> · 音频占位</span>"), "quick entry labels should stay readable on one line");
 
 for (const unitId of ["letters", "combos", "basic-phrases", "practice"]) {
   includesAll(
