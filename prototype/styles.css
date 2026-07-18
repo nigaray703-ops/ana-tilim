@@ -204,6 +204,11 @@ button {
   line-height: 1.25;
 }
 
+.unit-goal-text {
+  font-size: 15px;
+  line-height: 1.45;
+}
+
 .small-title {
   margin: 0;
   font-size: 14px;
@@ -358,6 +363,10 @@ button {
 
 .chip-row {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.unit-goal-points {
+  margin-top: 14px;
 }
 
 .chip {

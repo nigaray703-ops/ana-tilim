@@ -455,11 +455,11 @@ function renderUnitDetail() {
           <div class="section-row">
             <div>
               <p class="caption">单元目标</p>
-              <h2 class="section-title">${unit.description}</h2>
+              <h2 class="section-title unit-goal-text">${unit.description}</h2>
             </div>
             <span class="step-state">${unit.status}</span>
           </div>
-          <div class="chip-row">
+          <div class="chip-row unit-goal-points">
             ${unit.bullets.map((point) => `<span class="chip">${point}</span>`).join("")}
           </div>
         </article>
