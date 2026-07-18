@@ -66,6 +66,11 @@ assert.ok(
 );
 const lessonStepStyle = styleSource.match(/^\.lesson-step\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
 assert.ok(lessonStepStyle.includes("align-items: center;"), "learning unit cards should center their content vertically");
+const letterLibraryGridStyle = styleSource.match(/^\.letter-library-grid\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
+assert.ok(
+  letterLibraryGridStyle.includes("grid-template-columns: repeat(4, minmax(0, 1fr));"),
+  "letter library should show four letters per row"
+);
 const stepStateStyle = styleSource.match(/^\.step-state\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
 for (const declaration of ["overflow: visible;", "text-overflow: clip;", "min-width: max-content;", "flex: 0 0 auto;"]) {
   assert.ok(stepStateStyle.includes(declaration), `status labels should include ${declaration}`);
@@ -280,10 +285,13 @@ assert.ok(!app.innerHTML.includes("家庭 / 基础称呼重点项"), "review pri
 
 includesAll(
   renderState("state.screen = 'library'"),
-  ["字母库", "待审校"],
+  ["字母库", "待审校", "letter-library-grid", "32 个字母"],
   "letter library"
 );
 assert.ok(!app.innerHTML.includes(" / 待审校"), "letter library should separate labels with punctuation");
+assert.ok(!app.innerHTML.includes("word-row"), "letter library should not render a tall row for every letter");
+assert.ok(!app.innerHTML.includes(">学习</button>"), "letter library should avoid repeated study buttons");
+assert.equal((app.innerHTML.match(/data-action="select-letter"/g) || []).length, 32, "letter library should keep all letters directly selectable");
 
 includesAll(
   renderState("state.screen = 'group'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'"),

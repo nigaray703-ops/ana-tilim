@@ -943,6 +943,41 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.compact-library-card {
+  padding: 12px 14px;
+}
+
+.letter-library-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.letter-library-pill {
+  display: grid;
+  place-items: center;
+  row-gap: 4px;
+  min-height: 56px;
+  padding: 7px 5px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.72);
+  text-align: center;
+}
+
+.letter-library-pill .uyghur {
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.letter-library-pill small {
+  color: var(--ink-soft);
+  font-size: 10px;
+  line-height: 1;
+}
+
 .letter-focus .uyghur,
 .drawing-pad .guide,
 .practice-drawing-pad .guide,
