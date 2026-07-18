@@ -306,8 +306,10 @@ button {
 
 .home-center {
   width: min(100%, 390px);
+  min-height: calc(100svh - 320px);
   margin: 0 auto;
-  justify-content: start;
+  align-content: center;
+  align-items: start;
 }
 
 .home-center > * {
