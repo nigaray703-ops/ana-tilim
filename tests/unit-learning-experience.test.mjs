@@ -2,6 +2,23 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
 
+const indexHtml = fs.readFileSync("prototype/index.html", "utf8");
+assert.ok(fs.existsSync("prototype/course-data.js"), "alphabet course data should live in a standalone data file");
+const courseDataSource = fs.readFileSync("prototype/course-data.js", "utf8");
+const appSource = fs.readFileSync("prototype/app.js", "utf8");
+assert.ok(
+  courseDataSource.includes("window.ANA_TILIM_COURSE"),
+  "course data file should expose a stable window.ANA_TILIM_COURSE object"
+);
+assert.ok(
+  appSource.includes("window.ANA_TILIM_COURSE"),
+  "app should read alphabet course content from the shared course data object"
+);
+assert.ok(
+  indexHtml.indexOf("course-data.js") >= 0 && indexHtml.indexOf("course-data.js") < indexHtml.indexOf("app.js"),
+  "course data should load before the app script"
+);
+
 function makeElement(id) {
   return {
     id,
@@ -63,6 +80,7 @@ const context = {
 
 context.globalThis = context;
 vm.createContext(context);
+vm.runInContext(fs.readFileSync("prototype/course-data.js", "utf8"), context, { filename: "prototype/course-data.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
 
 function renderState(script) {
