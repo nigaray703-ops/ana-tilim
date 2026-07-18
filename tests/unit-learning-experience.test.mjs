@@ -4,6 +4,7 @@ import vm from "node:vm";
 
 const indexHtml = fs.readFileSync("prototype/index.html", "utf8");
 const courseDataGuidePath = "课程/00-课程数据编辑与审校说明.md";
+const courseDataIntegrityTestPath = "tests/course-data-integrity.test.mjs";
 const courseDataAggregatorPath = "prototype/course-data.js";
 const courseDataScriptPaths = [
   "prototype/course-data/alphabet-data.js",
@@ -16,6 +17,7 @@ for (const scriptPath of courseDataScriptPaths) {
   assert.ok(fs.existsSync(scriptPath), `${scriptPath} should exist as a focused course data file`);
 }
 assert.ok(fs.existsSync(courseDataGuidePath), "course data editing guide should exist for non-technical review");
+assert.ok(fs.existsSync(courseDataIntegrityTestPath), "course data integrity checker should exist");
 const courseDataSource = fs.readFileSync(courseDataAggregatorPath, "utf8");
 const courseDataSources = Object.fromEntries(
   courseDataScriptPaths.map((scriptPath) => [scriptPath, fs.readFileSync(scriptPath, "utf8")])
@@ -32,6 +34,7 @@ for (const phrase of [
   "comboGroups",
   "vocabGroups",
   "practiceGroups",
+  "tests/course-data-integrity.test.mjs",
   "待母语者审校",
   "AI 临时音频"
 ]) {
