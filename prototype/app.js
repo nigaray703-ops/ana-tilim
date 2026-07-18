@@ -1789,7 +1789,7 @@ function markProgress(scope, id, step) {
     if (finishedSteps) {
       progress.completed = true;
     }
-  } else if (["recognition", "keyboard", "listen", "repeat", "write", "review", "completed"].includes(step)) {
+  } else if (["recognition", "keyboard", "build", "listen", "repeat", "write", "review", "completed"].includes(step)) {
     progress.completed = true;
   }
 }
@@ -1972,6 +1972,13 @@ function letterMistakeFeedback(target, picked) {
   return `目标是 ${target.letter}：${target.cue}；你选了 ${picked.letter}：${picked.cue}。先看点在上方还是下方，再看点数。`;
 }
 
+function oddLetterForCurrent() {
+  const choices = currentGroupLetters();
+  const index = Math.max(0, choices.findIndex((choice) => choice.id === currentLetter().id));
+
+  return choices[index + 1] || choices[index - 1] || choices[0];
+}
+
 function itemMistakeFeedback(target, picked, label = "词形") {
   if (!picked) {
     return `目标${label}是 ${target.value}，先看 ${target.latin} 的转写提示。`;
@@ -2129,10 +2136,13 @@ function render() {
     letterWriting: renderLetterWriting,
     picture: renderPicturePractice,
     listening: renderListeningPractice,
+    letterOdd: renderLetterOddPractice,
+    letterSound: renderLetterSoundChoice,
     keyboard: renderKeyboardPractice,
     complete: renderComplete,
     combo: renderComboLesson,
     comboRecognition: renderComboRecognition,
+    comboBuild: renderComboBuild,
     comboKeyboard: renderComboKeyboard,
     comboComplete: renderComboComplete,
     vocab: renderVocabLesson,
@@ -2616,6 +2626,12 @@ function renderGroupLesson() {
           <button class="secondary-button" data-action="go" data-target="picture" type="button">
             辨认
           </button>
+          <button class="secondary-button" data-action="go" data-target="letterOdd" type="button">
+            找不同
+          </button>
+          <button class="secondary-button" data-action="go" data-target="letterSound" type="button">
+            读音选择
+          </button>
           <button class="secondary-button" data-action="go" data-target="listening" type="button">
             听音
           </button>
@@ -2797,6 +2813,141 @@ function renderListeningPractice() {
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
                   ? "听对了。下一步用键盘输入这个字母。"
+                  : letterMistakeFeedback(letter, picked)
+              }</div>`
+            : ""
+        }
+        <button class="primary-button" data-action="go" data-target="keyboard" type="button">
+          继续键盘
+        </button>
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function renderLetterOddPractice() {
+  const letter = currentLetter();
+  const target = oddLetterForCurrent();
+  const choices = currentGroupLetters();
+  const hasPicked = Boolean(state.selectedPicture);
+  const picked = choices.find((choice) => choice.id === state.selectedPicture);
+  const isCorrect = picked && picked.id === target.id;
+
+  return screen(
+    `
+      ${topBar(
+        "找不同",
+        currentGroup().title,
+        "",
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack">
+        <article class="card">
+          <p class="caption">相似字母对比</p>
+          <h2 class="section-title">
+            目标 ${letter.letter}，找出：${target.cue}
+          </h2>
+          <p class="muted">先看点在上面还是下面，再看点数。这个题型专门练容易混的字母。</p>
+        </article>
+        <div class="choice-grid">
+          ${choices
+            .map((choice) => {
+              const selected = state.selectedPicture === choice.id;
+              const correctChoice = choice.id === target.id;
+              const resultClass = selected ? (correctChoice ? "correct" : "wrong") : "";
+              return `
+                <button
+                  class="choice-card ${resultClass}"
+                  data-action="pick-letter-odd"
+                  data-id="${choice.id}"
+                  type="button"
+                >
+                  <span class="choice-art uyghur">${choice.letter}</span>
+                  <span>
+                    <strong>${choice.cue}</strong>
+                    <span class="caption">${choice.type}，${choice.latin}</span>
+                  </span>
+                  <span class="step-state">${selected ? (correctChoice ? "正确" : "再看") : "选择"}</span>
+                </button>
+              `;
+            })
+            .join("")}
+        </div>
+        ${
+          hasPicked
+            ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
+                isCorrect
+                  ? `找对了：${target.letter} 是 ${target.cue}。`
+                  : letterMistakeFeedback(target, picked)
+              }</div>`
+            : ""
+        }
+        <button class="primary-button" data-action="go" data-target="letterSound" type="button">
+          继续读音选择
+        </button>
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function renderLetterSoundChoice() {
+  const letter = currentLetter();
+  const audio = currentLetterAudio();
+  const choices = currentGroupLetters();
+  const hasPicked = Boolean(state.selectedListening);
+  const picked = choices.find((choice) => choice.id === state.selectedListening);
+  const isCorrect = picked && picked.id === letter.id;
+
+  return screen(
+    `
+      ${topBar(
+        "读音选择",
+        currentGroup().title,
+        "",
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack">
+        ${renderAudioStrip({
+          audio,
+          label: letter.letter,
+          title: `播放或查看读音：${letter.latin}`,
+          hint: "音频未生成时，先用转写提示做读音选择练习。"
+        })}
+        <article class="card">
+          <p class="caption">选择正确字母</p>
+          <h2 class="section-title">哪一个读作 ${letter.latin}？</h2>
+        </article>
+        <div class="choice-grid">
+          ${choices
+            .map((choice) => {
+              const selected = state.selectedListening === choice.id;
+              const correctChoice = choice.id === letter.id;
+              const resultClass = selected ? (correctChoice ? "correct" : "wrong") : "";
+              return `
+                <button
+                  class="choice-card ${resultClass}"
+                  data-action="pick-letter-sound"
+                  data-id="${choice.id}"
+                  type="button"
+                >
+                  <span class="choice-art uyghur">${choice.letter}</span>
+                  <span>
+                    <strong>${choice.latin}</strong>
+                    <span class="caption">${choice.cue}</span>
+                  </span>
+                  <span class="step-state">${selected ? (correctChoice ? "正确" : "再听") : "选择"}</span>
+                </button>
+              `;
+            })
+            .join("")}
+        </div>
+        ${
+          hasPicked
+            ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
+                isCorrect
+                  ? `选对了：${letter.letter} 对应 ${letter.latin}。`
                   : letterMistakeFeedback(letter, picked)
               }</div>`
             : ""
@@ -3046,6 +3197,9 @@ function renderComboLesson() {
           <button class="secondary-button" data-action="go" data-target="comboRecognition" type="button">
             辨认
           </button>
+          <button class="secondary-button" data-action="go" data-target="comboBuild" type="button">
+            拼接
+          </button>
           <button class="primary-button" data-action="go" data-target="comboKeyboard" type="button">
             键盘
           </button>
@@ -3114,6 +3268,73 @@ function renderComboRecognition() {
                   : itemMistakeFeedback(item, picked, "组合")
               }</div>`
             : ""
+        }
+        <button class="primary-button" data-action="go" data-target="comboKeyboard" type="button">
+          继续键盘
+        </button>
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function renderComboBuild() {
+  const group = currentComboGroup();
+  const item = currentComboItem();
+  const hasInput = state.keyboardValue.length > 0;
+  const isCorrect = state.keyboardValue === item.value;
+  const isOffTrack = hasInput && !item.value.startsWith(state.keyboardValue);
+
+  return screen(
+    `
+      ${topBar(
+        "组合拼接",
+        group.title,
+        "",
+        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack">
+        <article class="card">
+          <p class="caption">从部分拼成整体</p>
+          <h2 class="section-title">
+            <span class="uyghur">${item.parts.join(" + ")}</span>
+          </h2>
+          <p class="muted">按顺序点击下面的部分，拼成 <span class="uyghur">${item.value}</span>。先理解结构，再进入键盘输入。</p>
+        </article>
+        <article class="card">
+          <p class="caption">当前拼接</p>
+          <div class="letter-focus compact-focus">
+            <div>
+              <div class="uyghur letter-big combo-big">${state.keyboardValue || "…"}</div>
+              <p class="caption">目标：${item.latin}</p>
+            </div>
+          </div>
+        </article>
+        <div class="practice-key-row" aria-label="组合拼接按钮">
+          ${item.parts
+            .map(
+              (part) => `
+                <button class="key-button uyghur" data-action="build-part" data-key="${part}" type="button">
+                  ${part}
+                </button>
+              `
+            )
+            .join("")}
+        </div>
+        <div class="tool-row">
+          <button class="secondary-button" data-action="backspace" type="button">删除</button>
+          <button class="secondary-button" data-action="clear-input" type="button">清空</button>
+        </div>
+        ${
+          hasInput
+            ? `<div class="feedback ${isCorrect ? "good" : isOffTrack ? "bad" : ""}">${
+                isCorrect
+                  ? `拼接正确：${item.value}。`
+                  : isOffTrack
+                    ? itemMistakeFeedback(item, { value: state.keyboardValue }, "组合")
+                    : `继续拼接，目标是 ${item.value}。`
+              }</div>`
+            : `<div class="feedback">先点 <span class="uyghur">${item.parts[0]}</span>，再继续点后面的部分。</div>`
         }
         <button class="primary-button" data-action="go" data-target="comboKeyboard" type="button">
           继续键盘
@@ -4210,7 +4431,7 @@ document.addEventListener("click", (event) => {
     if (target === "writing") {
       state.selectedUnitId = "practice";
     }
-    if (["picture", "listening", "keyboard", "comboRecognition", "comboKeyboard", "vocabRecognition", "vocabKeyboard", "letterWriting"].includes(target)) {
+    if (["picture", "listening", "keyboard", "letterOdd", "letterSound", "comboRecognition", "comboBuild", "comboKeyboard", "vocabRecognition", "vocabKeyboard", "letterWriting"].includes(target)) {
       resetPracticeState();
     }
     goTo(target);
@@ -4289,6 +4510,32 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (action === "pick-letter-odd") {
+    state.selectedPicture = button.dataset.id;
+    const target = oddLetterForCurrent();
+    const picked = currentGroupLetters().find((choice) => choice.id === button.dataset.id);
+    if (picked && picked.id === target.id) {
+      markCurrentLetterRecognition();
+    } else if (picked) {
+      recordLetterMistake("letter", target, picked);
+    }
+    render();
+    return;
+  }
+
+  if (action === "pick-letter-sound") {
+    state.selectedListening = button.dataset.id;
+    const target = currentLetter();
+    const picked = currentGroupLetters().find((choice) => choice.id === button.dataset.id);
+    if (picked && picked.id === target.id) {
+      markCurrentLetterRecognition();
+    } else if (picked) {
+      recordLetterMistake("letter", target, picked);
+    }
+    render();
+    return;
+  }
+
   if (action === "pick-combo") {
     state.selectedPicture = button.dataset.id;
     const target = currentComboItem();
@@ -4323,6 +4570,18 @@ document.addEventListener("click", (event) => {
       markProgress("practice", state.selectedPracticeGroupId, "listen");
     } else if (picked) {
       recordItemMistake("practice", target, picked, "第四单元错题");
+    }
+    render();
+    return;
+  }
+
+  if (action === "build-part") {
+    state.keyboardValue += button.dataset.key;
+    const target = currentComboItem();
+    if (state.keyboardValue === target.value) {
+      markProgress("combos", state.selectedComboGroupId, "build");
+    } else if (!target.value.startsWith(state.keyboardValue)) {
+      recordItemMistake("combo", target, { id: "build", value: state.keyboardValue, latin: "拼接" }, "第二单元拼接错题");
     }
     render();
     return;
