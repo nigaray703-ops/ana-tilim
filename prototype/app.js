@@ -1598,7 +1598,7 @@ function renderVocabTopicCard(group, action = "open-vocab-group") {
 
 function readingGroupCountLabel(unit, group) {
   if (unit.readingKind === "quote" || unit.readingKind === "proverb") {
-    return "1 条";
+    return `${group.items.length} 条`;
   }
   return `${group.items.length} 句`;
 }
@@ -2998,7 +2998,6 @@ function renderReadingLine(unit, item) {
       <article class="card reading-line reading-feature-line">
         <div class="uyghur reading-value">${item.value}</div>
         <p class="reading-meaning">${item.meaning}</p>
-        <p class="reading-lesson">${item.lesson}</p>
         <p class="caption">${item.reviewStatus}</p>
       </article>
     `;
@@ -3028,6 +3027,14 @@ function renderReadingLesson() {
         `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
       )}
       <section class="stack">
+        ${
+          unit.readingKind === "quote" && group.intro
+            ? `<article class="card reading-intro-card">
+                <p class="caption">人物介绍</p>
+                <p class="reading-intro-text">${group.intro}</p>
+              </article>`
+            : ""
+        }
         <div class="reading-list ${unit.readingKind}">
           ${group.items.map((item) => renderReadingLine(unit, item)).join("")}
         </div>

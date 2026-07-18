@@ -151,77 +151,107 @@ const readingUnits = [
     kind: "reading",
     readingKind: "quote",
     title: "第七单元：名人名言",
-    subtitle: "10 条维吾尔族文化名人学习短句",
+    subtitle: "10 位名人，每位 3 条学习句",
     status: "待来源审校",
     groups: [
       {
         id: "quote-mahmud-kashgari",
         title: "马赫穆德·喀什噶里",
+        intro: "11 世纪语言学家，《突厥语大词典》的作者，常被视为突厥语言文化的重要记录者。",
         items: [
-          { id: "quote-mahmud-kashgari-line", value: "تىل بىر خەلقنى تونۇشنىڭ ئاچقۇچىدۇر.", meaning: "语言是了解一个民族的钥匙。", lesson: "学习母语，不只是学字和音，也是在认识自己的文化。", reviewStatus: "学习版译句，待来源审校" }
+          { id: "quote-mahmud-kashgari-line-1", value: "تىل بىر خەلقنى تونۇشنىڭ ئاچقۇچىدۇر.", meaning: "语言是了解一个民族的钥匙。", lesson: "学习母语，也是在认识自己的文化。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-mahmud-kashgari-line-2", value: "لۇغەت خەلقنىڭ ئەسلىمىسىنى ساقلايدۇ.", meaning: "词典也能保存民族的记忆。", lesson: "词语记录生活，也记录来处。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-mahmud-kashgari-line-3", value: "تىل ئۆگىنىش دۇنيانى كۆرۈشنى ئۆگىنىشتۇر.", meaning: "学习语言，就是学习看世界的方法。", lesson: "语言会改变我们理解世界的方式。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-yusuf-hajib",
         title: "玉素甫·哈斯·哈吉甫",
+        intro: "11 世纪思想家、诗人，《福乐智慧》的作者，作品重视知识、品德和治理智慧。",
         items: [
-          { id: "quote-yusuf-hajib-line", value: "بىلىم ئادەمنىڭ يولىنى يورۇتىدۇ.", meaning: "知识照亮人的道路。", lesson: "学习让人看清方向，也让日常生活更有力量。", reviewStatus: "学习版译句，待来源审校" }
+          { id: "quote-yusuf-hajib-line-1", value: "بىلىم ئادەمنىڭ يولىنى يورۇتىدۇ.", meaning: "知识照亮人的道路。", lesson: "学习让人看清方向。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-yusuf-hajib-line-2", value: "ياخشى سۆز كۆڭۈلنى يورۇتىدۇ.", meaning: "好话能照亮人的心。", lesson: "语言也能带来温度。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-yusuf-hajib-line-3", value: "ئەقىل بىلەن يول تاپىلىدۇ.", meaning: "有智慧，才能找到路。", lesson: "做选择时要先思考。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-ahmet-yukneki",
         title: "艾合买提·玉克乃克",
+        intro: "中世纪文学人物，《真理的入门》常与他的名字联系在一起，作品重视礼仪和道德。",
         items: [
-          { id: "quote-ahmet-yukneki-line", value: "ئەدەب ئادەمنىڭ زىننىتىدۇر.", meaning: "礼貌是人的装饰。", lesson: "说话有礼，是语言学习里最早应该养成的习惯。", reviewStatus: "学习版译句，待来源审校" }
+          { id: "quote-ahmet-yukneki-line-1", value: "ئەدەب ئادەمنىڭ زىننىتىدۇر.", meaning: "礼貌是人的装饰。", lesson: "说话有礼，是语言学习的重要习惯。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-ahmet-yukneki-line-2", value: "ياخشى خۇلق ئادەمنى گۈزەل قىلىدۇ.", meaning: "好的品行让人更美。", lesson: "语言和品行常常连在一起。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-ahmet-yukneki-line-3", value: "نادانلىق يولنى قاراڭغۇ قىلىدۇ.", meaning: "无知会让道路变暗。", lesson: "学习能让人少走弯路。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-molla-musa",
         title: "毛拉·穆萨·赛拉米",
+        intro: "近代历史书写者，常被提到与新疆地方史、文化记录相关。",
         items: [
-          { id: "quote-molla-musa-line", value: "تارىخنى بىلگەن ئادەم ئۆزىنى ياخشىراق تونۇيدۇ.", meaning: "懂得历史的人，更能认识自己。", lesson: "文化学习不只看现在，也要慢慢了解来处。", reviewStatus: "学习版译句，待来源审校" }
+          { id: "quote-molla-musa-line-1", value: "تارىخنى بىلگەن ئادەم ئۆزىنى ياخشىراق تونۇيدۇ.", meaning: "懂得历史的人，更能认识自己。", lesson: "了解来处，才能看清自己。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-molla-musa-line-2", value: "يېزىلغان سۆز ئۇنتۇلغان ئىشنى ساقلايدۇ.", meaning: "写下来的话能保存被遗忘的事。", lesson: "记录能保护记忆。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-molla-musa-line-3", value: "ئۆتكەننى بىلىش بۈگۈنگە ياردەم بېرىدۇ.", meaning: "了解过去，会帮助今天。", lesson: "历史能给现在提供参照。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-abdulkhaliq-uyghur",
         title: "阿不都哈力克·维吾尔",
+        intro: "20 世纪维吾尔诗人，作品常与觉醒、学习和青年精神联系在一起。",
         items: [
-          { id: "quote-abdulkhaliq-uyghur-line", value: "ئويغانغان كۆڭۈل ئۆگىنىشتىن توختىمايدۇ.", meaning: "醒来的心不会停止学习。", lesson: "保持学习的心，比一次学很多更重要。", reviewStatus: "学习版译句，待来源审校" }
+          { id: "quote-abdulkhaliq-uyghur-line-1", value: "ئويغانغان كۆڭۈل ئۆگىنىشتىن توختىمايدۇ.", meaning: "醒来的心不会停止学习。", lesson: "学习贵在一直向前。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-abdulkhaliq-uyghur-line-2", value: "ياشلارنىڭ يولى بىلىم بىلەن ئېچىلىدۇ.", meaning: "青年的路靠知识打开。", lesson: "年轻时学习，会给未来打基础。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-abdulkhaliq-uyghur-line-3", value: "ئانا تىل كۆڭۈلنى ئويغىتىدۇ.", meaning: "母语能唤醒内心。", lesson: "母语学习也关乎身份记忆。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-lutpulla-mutellip",
         title: "鲁特普拉·穆塔里甫",
+        intro: "20 世纪维吾尔诗人，常被记住为年轻、有激情的文学人物。",
         items: [
-          { id: "quote-lutpulla-mutellip-line", value: "ياشلىق ئۈمىد بىلەن گۈزەل.", meaning: "青春因希望而美丽。", lesson: "语言学习也需要希望，一点一点坚持就会前进。", reviewStatus: "学习版译句，待来源审校" }
+          { id: "quote-lutpulla-mutellip-line-1", value: "ياشلىق ئۈمىد بىلەن گۈزەل.", meaning: "青春因希望而美丽。", lesson: "学习也需要希望。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-lutpulla-mutellip-line-2", value: "يۈرەكتىكى ئوت سۆزگە ئايلىنىدۇ.", meaning: "心里的火会变成语言。", lesson: "表达来自真实的情感。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-lutpulla-mutellip-line-3", value: "ۋەتەننى سۆيگەن ئادەم تىلىنىمۇ سۆيىدۇ.", meaning: "热爱家园的人，也会热爱自己的语言。", lesson: "语言和情感常常相连。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-abdurehim-otkur",
         title: "阿不都热依木·吾提库尔",
+        intro: "现代维吾尔作家、诗人，作品常与历史记忆、足迹和文化传承联系在一起。",
         items: [
-          { id: "quote-abdurehim-otkur-line", value: "ئىز قالدۇرۇش ئۈچۈن قەدەم بېسىش كېرەك.", meaning: "想留下足迹，就要迈出脚步。", lesson: "每天完成一个小练习，就是给自己留下学习的足迹。", reviewStatus: "学习版译句，待来源审校" }
+          { id: "quote-abdurehim-otkur-line-1", value: "ئىز قالدۇرۇش ئۈچۈن قەدەم بېسىش كېرەك.", meaning: "想留下足迹，就要迈出脚步。", lesson: "每天练一点，也是在留下足迹。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-abdurehim-otkur-line-2", value: "ھەر قەدەم بىر يولنىڭ باشلىنىشى.", meaning: "每一步都是一条路的开始。", lesson: "小进步也值得认真对待。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-abdurehim-otkur-line-3", value: "ئەسلىمە يوقالمىسا، يولمۇ يوقالمايدۇ.", meaning: "记忆不丢，路就不会丢。", lesson: "文化记忆会给人方向。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-zunun-qadiri",
         title: "祖农·卡迪尔",
+        intro: "现代维吾尔作家，作品常与小说、戏剧和日常生活叙事联系在一起。",
         items: [
-          { id: "quote-zunun-qadiri-line", value: "ھېكايە ئادەمنىڭ كۆڭلىنى ئاچىدۇ.", meaning: "故事能打开人的心。", lesson: "读短故事能把词语放回生活里，更容易记住。", reviewStatus: "学习版译句，待来源审校" }
+          { id: "quote-zunun-qadiri-line-1", value: "ھېكايە ئادەمنىڭ كۆڭلىنى ئاچىدۇ.", meaning: "故事能打开人的心。", lesson: "故事能把词语放回生活。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-zunun-qadiri-line-2", value: "كىچىك ئادەمنىڭ تۇرمۇشىمۇ چوڭ مەنىگە ئىگە.", meaning: "普通人的生活也有大的意义。", lesson: "日常生活值得被表达。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-zunun-qadiri-line-3", value: "سەھنە ئادەمنىڭ ئاۋازىنى ئاڭلىتىدۇ.", meaning: "舞台能让人的声音被听见。", lesson: "表达需要被看见和听见。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-zordun-sabir",
         title: "祖尔东·萨比尔",
+        intro: "现代维吾尔作家，常以小说和幽默、生活观察被读者记住。",
         items: [
-          { id: "quote-zordun-sabir-line", value: "كۈلكە ھەقىقەتنى يۇمشاق ئېيتىدۇ.", meaning: "笑声能温和地说出真实。", lesson: "语言不只表达意思，也表达态度和温度。", reviewStatus: "学习版译句，待来源审校" }
+          { id: "quote-zordun-sabir-line-1", value: "كۈلكە ھەقىقەتنى يۇمشاق ئېيتىدۇ.", meaning: "笑声能温和地说出真实。", lesson: "幽默也能表达认真。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-zordun-sabir-line-2", value: "تۇرمۇشنى كۆزىتىش يازغۇچىنىڭ دەرسى.", meaning: "观察生活，是作家的课堂。", lesson: "语言从生活里来。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-zordun-sabir-line-3", value: "ئاددىي سۆز چوڭ مەنىنى كۆتۈرىدۇ.", meaning: "简单的话也能承载大的意思。", lesson: "简单表达也可以有力量。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
         id: "quote-teyipjan-eliyev",
         title: "铁依甫江·艾力耶夫",
+        intro: "现代维吾尔诗人，常与诗歌、抒情和文学教育联系在一起。",
         items: [
-          { id: "quote-teyipjan-eliyev-line", value: "شېئىر يۈرەكتىكى سۆزنى ئاڭلىتىدۇ.", meaning: "诗让心里的话被听见。", lesson: "以后学习诗句时，要先感受语气，再慢慢看词。", reviewStatus: "学习版译句，待来源审校" }
+          { id: "quote-teyipjan-eliyev-line-1", value: "شېئىر يۈرەكتىكى سۆزنى ئاڭلىتىدۇ.", meaning: "诗让心里的话被听见。", lesson: "诗歌适合先感受语气。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-teyipjan-eliyev-line-2", value: "گۈزەل سۆز كۆڭۈلگە گۈل تىكىدۇ.", meaning: "美好的话会在心里种花。", lesson: "好语言能留下美感。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-teyipjan-eliyev-line-3", value: "شېئىر تىلنىڭ ناخشىسىدۇر.", meaning: "诗是语言的歌。", lesson: "诗歌让语言更有声音。", reviewStatus: "学习版译句，待来源审校" }
         ]
       }
     ]
@@ -231,77 +261,97 @@ const readingUnits = [
     kind: "reading",
     readingKind: "proverb",
     title: "第八单元：维吾尔谚语",
-    subtitle: "10 条常见智慧短句",
+    subtitle: "10 个主题，每组 3 条智慧短句",
     status: "待母语者审校",
     groups: [
       {
         id: "proverb-bilim-kuch",
         title: "知识就是力量",
         items: [
-          { id: "proverb-bilim-kuch-line", value: "بىلىم كۈچ.", meaning: "知识就是力量。", lesson: "学习越扎实，做事越有底气。", reviewStatus: "待母语者审校" }
+          { id: "proverb-bilim-kuch-line-1", value: "بىلىم كۈچ.", meaning: "知识就是力量。", lesson: "学习越扎实，做事越有底气。", reviewStatus: "待母语者审校" },
+          { id: "proverb-bilim-kuch-line-2", value: "ئۆگەنگەن نەرسە يوقاپ كەتمەيدۇ.", meaning: "学到的东西不会丢。", lesson: "真正掌握的知识会留下来。", reviewStatus: "待母语者审校" },
+          { id: "proverb-bilim-kuch-line-3", value: "ئۆگەنمىگەن ئادەمنىڭ يولى تارىيىدۇ.", meaning: "不学的人，路会变窄。", lesson: "学习能给人生更多选择。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-yaxshi-soz",
         title: "好话暖心",
         items: [
-          { id: "proverb-yaxshi-soz-line", value: "ياخشى سۆز جان ئوزۇقى.", meaning: "好话是心灵的食粮。", lesson: "温和的话能让人舒服，也能让关系更近。", reviewStatus: "待母语者审校" }
+          { id: "proverb-yaxshi-soz-line-1", value: "ياخشى سۆز جان ئوزۇقى.", meaning: "好话是心灵的食粮。", lesson: "温和的话能让人舒服。", reviewStatus: "待母语者审校" },
+          { id: "proverb-yaxshi-soz-line-2", value: "ياخشى گەپ يۈرەكنى ئىللىتىدۇ.", meaning: "好话能暖人心。", lesson: "说话方式会影响关系。", reviewStatus: "待母语者审校" },
+          { id: "proverb-yaxshi-soz-line-3", value: "تىلدىكى شېرىنلىك كۆڭۈلگە بارىدۇ.", meaning: "话里的甜，会走进心里。", lesson: "礼貌表达更容易被接受。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-aqil",
         title: "智慧不看年龄",
         items: [
-          { id: "proverb-aqil-line", value: "ئەقىل ياشتا ئەمەس، باشتا.", meaning: "智慧不在年龄，而在头脑。", lesson: "不要只看年纪，真正重要的是思考和判断。", reviewStatus: "待母语者审校" }
+          { id: "proverb-aqil-line-1", value: "ئەقىل ياشتا ئەمەس، باشتا.", meaning: "智慧不在年龄，而在头脑。", lesson: "重要的是思考和判断。", reviewStatus: "待母语者审校" },
+          { id: "proverb-aqil-line-2", value: "ئەقىللىق ئادەم ئالدىنى ئويلايدۇ.", meaning: "聪明人会提前思考。", lesson: "先想清楚，再行动。", reviewStatus: "待母语者审校" },
+          { id: "proverb-aqil-line-3", value: "سۆزنى ئويلاپ سۆزلە.", meaning: "说话前先想一想。", lesson: "谨慎说话能减少误会。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-birlik",
         title: "团结有力量",
         items: [
-          { id: "proverb-birlik-line", value: "بىرلىك بار يەردە كۈچ بار.", meaning: "有团结的地方就有力量。", lesson: "一起做事时，互相配合比单打独斗更强。", reviewStatus: "待母语者审校" }
+          { id: "proverb-birlik-line-1", value: "بىرلىك بار يەردە كۈچ بار.", meaning: "有团结的地方就有力量。", lesson: "合作比单打独斗更强。", reviewStatus: "待母语者审校" },
+          { id: "proverb-birlik-line-2", value: "يالغۇز قولدىن ئاۋاز چىقماس.", meaning: "一只手拍不响。", lesson: "很多事需要一起完成。", reviewStatus: "待母语者审校" },
+          { id: "proverb-birlik-line-3", value: "كۆپنىڭ كۈچى كۆپ.", meaning: "人多力量大。", lesson: "集体能带来更大的力量。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-emgek",
         title: "劳动受尊敬",
         items: [
-          { id: "proverb-emgek-line", value: "ئەمگەك قىلغان ئەزىز.", meaning: "劳动的人值得尊敬。", lesson: "努力和付出本身就有价值。", reviewStatus: "待母语者审校" }
+          { id: "proverb-emgek-line-1", value: "ئەمگەك قىلغان ئەزىز.", meaning: "劳动的人值得尊敬。", lesson: "努力和付出本身就有价值。", reviewStatus: "待母语者审校" },
+          { id: "proverb-emgek-line-2", value: "ئەمگەك مېۋىسى تاتلىق.", meaning: "劳动的果实是甜的。", lesson: "付出之后才会有收获。", reviewStatus: "待母语者审校" },
+          { id: "proverb-emgek-line-3", value: "تېرىقماي ھوسۇل بولماس.", meaning: "不播种，就没有收成。", lesson: "结果来自前面的努力。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-dost",
         title: "朋友见真心",
         items: [
-          { id: "proverb-dost-line", value: "دوست قىيىن كۈندە بىلىنەر.", meaning: "朋友在困难时才看得出来。", lesson: "真正的朋友会在需要时出现。", reviewStatus: "待母语者审校" }
+          { id: "proverb-dost-line-1", value: "دوست قىيىن كۈندە بىلىنەر.", meaning: "朋友在困难时才看得出来。", lesson: "真正的朋友会在需要时出现。", reviewStatus: "待母语者审校" },
+          { id: "proverb-dost-line-2", value: "ياخشى دوست يولدا قالدۇرماس.", meaning: "好朋友不会把你丢在路上。", lesson: "朋友之间要互相扶持。", reviewStatus: "待母语者审校" },
+          { id: "proverb-dost-line-3", value: "دوست سۆزى ئاچچىق بولسىمۇ پايدىلىق.", meaning: "朋友的话即使苦，也有益。", lesson: "真诚提醒有时不一定顺耳。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-kitap",
         title: "书是知识源泉",
         items: [
-          { id: "proverb-kitap-line", value: "كىتاب بىلىمنىڭ بۇلىقى.", meaning: "书是知识的泉源。", lesson: "多读书，会不断得到新的知识。", reviewStatus: "待母语者审校" }
+          { id: "proverb-kitap-line-1", value: "كىتاب بىلىمنىڭ بۇلىقى.", meaning: "书是知识的泉源。", lesson: "读书能不断得到新知识。", reviewStatus: "待母语者审校" },
+          { id: "proverb-kitap-line-2", value: "كىتاب ئوقۇغان كۆپ بىلىدۇ.", meaning: "读书的人知道得多。", lesson: "阅读会扩展见识。", reviewStatus: "待母语者审校" },
+          { id: "proverb-kitap-line-3", value: "كىتاب ئادەمنىڭ جىمجىت دوستى.", meaning: "书是人的安静朋友。", lesson: "书会陪人慢慢成长。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-sabr",
         title: "耐心有回报",
         items: [
-          { id: "proverb-sabr-line", value: "سەۋرنىڭ ئاخىرى ئالتۇن.", meaning: "耐心的最后是金子。", lesson: "坚持到最后，常常会得到好的结果。", reviewStatus: "待母语者审校" }
+          { id: "proverb-sabr-line-1", value: "سەۋرنىڭ ئاخىرى ئالتۇن.", meaning: "耐心的最后是金子。", lesson: "坚持常常会得到好结果。", reviewStatus: "待母语者审校" },
+          { id: "proverb-sabr-line-2", value: "سەۋر قىلغان يەتكەن.", meaning: "有耐心的人能到达。", lesson: "慢慢来，也能走到目标。", reviewStatus: "待母语者审校" },
+          { id: "proverb-sabr-line-3", value: "ئالدىرىغان ئىش پۈتمەس.", meaning: "太着急，事情反而做不好。", lesson: "急躁会影响结果。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-ana-til",
         title: "母语连着心",
         items: [
-          { id: "proverb-ana-til-line", value: "ئانا تىل جان تىلى.", meaning: "母语是心灵的语言。", lesson: "母语连接家庭、记忆和身份。", reviewStatus: "待母语者审校" }
+          { id: "proverb-ana-til-line-1", value: "ئانا تىل جان تىلى.", meaning: "母语是心灵的语言。", lesson: "母语连接家庭、记忆和身份。", reviewStatus: "待母语者审校" },
+          { id: "proverb-ana-til-line-2", value: "ئانا تىلىنى بىلگەن ئۆزىنى بىلىدۇ.", meaning: "懂母语的人，更懂自己。", lesson: "语言也会帮助人认识身份。", reviewStatus: "待母语者审校" },
+          { id: "proverb-ana-til-line-3", value: "تىل بار يەردە ئەسلىمە بار.", meaning: "有语言的地方，就有记忆。", lesson: "语言保存着生活痕迹。", reviewStatus: "待母语者审校" }
         ]
       },
       {
         id: "proverb-qaduwq",
         title: "饮水不忘源",
         items: [
-          { id: "proverb-qaduwq-line", value: "سۇ ئىچكەن قۇدۇقنى ئۇنتۇما.", meaning: "不要忘记喝过水的井。", lesson: "得到帮助后，要记得感恩来源。", reviewStatus: "待母语者审校" }
+          { id: "proverb-qaduwq-line-1", value: "سۇ ئىچكەن قۇدۇقنى ئۇنتۇما.", meaning: "不要忘记喝过水的井。", lesson: "得到帮助后，要记得来源。", reviewStatus: "待母语者审校" },
+          { id: "proverb-qaduwq-line-2", value: "ياخشىلىقنى ئۇنتۇما.", meaning: "不要忘记别人的好。", lesson: "感恩会让关系更长久。", reviewStatus: "待母语者审校" },
+          { id: "proverb-qaduwq-line-3", value: "رەھمەت ئېيتقان كۆڭۈل يېقىنلىشىدۇ.", meaning: "会说谢谢，心就会更近。", lesson: "感谢是一种很重要的表达。", reviewStatus: "待母语者审校" }
         ]
       }
     ]

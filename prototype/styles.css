@@ -1404,8 +1404,7 @@ button {
   text-align: center;
 }
 
-.reading-meaning,
-.reading-lesson {
+.reading-meaning {
   margin: 8px 0 0;
   color: var(--ink);
   font-size: 13px;
@@ -1413,8 +1412,11 @@ button {
   text-align: center;
 }
 
-.reading-lesson {
+.reading-intro-text {
+  margin: 6px 0 0;
   color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 .practice-review-item {

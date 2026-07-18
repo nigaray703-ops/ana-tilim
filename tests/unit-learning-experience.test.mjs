@@ -337,14 +337,14 @@ includesAll(
 );
 includesAll(
   renderState("state.screen = 'unit'; state.selectedUnitId = 'famous-quotes'"),
-  ["reading-topic-list", "马赫穆德·喀什噶里", "阿不都热依木·吾提库尔", "10 条", "→"],
+  ["reading-topic-list", "马赫穆德·喀什噶里", "阿不都热依木·吾提库尔", "10 位", "3 条", "→"],
   "famous quote unit topic directory"
 );
 assert.ok(!app.innerHTML.includes("مەھمۇد قەشقىرى"), "famous quote directory should use Chinese names");
 assert.ok(!app.innerHTML.includes("ئابدۇرېھىم ئۆتكۈر"), "famous quote directory should use Chinese names");
 includesAll(
   renderState("state.screen = 'unit'; state.selectedUnitId = 'uyghur-proverbs'"),
-  ["reading-topic-list", "知识就是力量", "好话暖心", "10 条", "→"],
+  ["reading-topic-list", "知识就是力量", "好话暖心", "10 个主题", "3 条", "→"],
   "proverb unit topic directory"
 );
 assert.ok(!app.innerHTML.includes("بىلىم كۈچ"), "proverb directory should use Chinese titles");
@@ -362,14 +362,16 @@ includesAll(
 );
 includesAll(
   renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'famous-quotes'; state.selectedReadingGroupId = 'quote-mahmud-kashgari'"),
-  ["名人名言", "reading-meaning", "reading-lesson", "待来源审校", "语言是了解一个民族的钥匙。"],
+  ["名人名言", "人物介绍", "11 世纪", "reading-meaning", "待来源审校", "语言是了解一个民族的钥匙。", "词典也能保存民族的记忆。", "学习语言，就是学习看世界的方法。"],
   "famous quote reading lesson"
 );
+assert.ok(!app.innerHTML.includes("reading-lesson"), "famous quote reading lesson should not show the meaning/lesson section");
 includesAll(
   renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'uyghur-proverbs'; state.selectedReadingGroupId = 'proverb-bilim-kuch'"),
-  ["维吾尔谚语", "reading-meaning", "reading-lesson", "知识就是力量。"],
+  ["维吾尔谚语", "reading-meaning", "知识就是力量。", "学到的东西不会丢。", "不学的人，路会变窄。"],
   "proverb reading lesson"
 );
+assert.ok(!app.innerHTML.includes("reading-lesson"), "proverb reading lesson should not show the meaning/lesson section");
 
 includesAll(
   renderState("state.screen = 'review'"),

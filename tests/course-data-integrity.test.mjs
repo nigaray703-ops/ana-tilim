@@ -198,6 +198,15 @@ for (const group of [...dialogueUnit.groups, ...storyUnit.groups, ...quoteUnit.g
   assertList(group.items, `reading group ${group.id} items`);
 }
 
+for (const group of quoteUnit.groups) {
+  assertText(group.intro, `quote group ${group.id}.intro`);
+  assert.equal(group.items.length, 3, `quote group ${group.id} should include three short quotes`);
+}
+
+for (const group of proverbUnit.groups) {
+  assert.equal(group.items.length, 3, `proverb group ${group.id} should include three short proverbs`);
+}
+
 for (const group of dialogueUnit.groups) {
   assert.ok(group.items.length >= 4 && group.items.length <= 6, `dialogue ${group.id} should stay very short`);
   for (const item of group.items) {
