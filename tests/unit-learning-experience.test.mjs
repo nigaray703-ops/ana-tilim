@@ -11,7 +11,8 @@ const courseDataScriptPaths = [
   "prototype/course-data/alphabet-data.js",
   "prototype/course-data/combo-data.js",
   "prototype/course-data/vocab-data.js",
-  "prototype/course-data/practice-data.js"
+  "prototype/course-data/practice-data.js",
+  "prototype/course-data/reading-data.js"
 ];
 assert.ok(fs.existsSync(courseDataAggregatorPath), "course data aggregator should exist");
 for (const scriptPath of courseDataScriptPaths) {
@@ -33,10 +34,12 @@ for (const phrase of [
   "prototype/course-data/combo-data.js",
   "prototype/course-data/vocab-data.js",
   "prototype/course-data/practice-data.js",
+  "prototype/course-data/reading-data.js",
   "alphabetGroups",
   "comboGroups",
   "vocabGroups",
   "practiceGroups",
+  "readingUnits",
   "tests/course-data-integrity.test.mjs",
   "scripts/check-project.mjs",
   "待母语者审校",
@@ -52,7 +55,8 @@ for (const globalName of [
   "window.ANA_TILIM_ALPHABET",
   "window.ANA_TILIM_COMBOS",
   "window.ANA_TILIM_VOCAB",
-  "window.ANA_TILIM_PRACTICE"
+  "window.ANA_TILIM_PRACTICE",
+  "window.ANA_TILIM_READING"
 ]) {
   assert.ok(courseDataSource.includes(globalName), `course data aggregator should read ${globalName}`);
 }
@@ -111,6 +115,11 @@ assert.ok(
 assert.ok(
   appSource.includes("practiceGroups") && appSource.indexOf("practiceGroups") < appSource.indexOf("const alphabetAudioByLetterId"),
   "app should read unit four practice content from the shared course data object"
+);
+assert.ok(courseDataSources["prototype/course-data/reading-data.js"].includes("readingUnits"), "reading course data should live in the reading data file");
+assert.ok(
+  appSource.includes("readingUnits") && appSource.indexOf("readingUnits") < appSource.indexOf("const alphabetAudioByLetterId"),
+  "app should read reading content from the shared course data object"
 );
 assert.ok(appSource.includes('["writing", "练习"'), "bottom navigation should label the practice area as 练习");
 assert.ok(!appSource.includes('["writing", "书写"'), "bottom navigation should not label the full practice area as 书写");
@@ -260,8 +269,16 @@ for (const uyghurPreview of ["ب", "با", "مەن", "رەھمەت", "ئانا"]
 
 includesAll(
   renderState("state.screen = 'learn'"),
-  ["第三单元：听说与书写强化", "第四单元：日常用语与词汇", "问候、人称代词、称呼、数字、动物"],
-  "learning path after unit swap"
+  [
+    "第三单元：听说与书写强化",
+    "第四单元：日常用语与词汇",
+    "第五单元：对话小剧场",
+    "第六单元：小故事",
+    "第七单元：名人名言",
+    "第八单元：维吾尔谚语",
+    "问候、人称代词、称呼、数字、动物"
+  ],
+  "learning path with reading units"
 );
 assert.ok(!app.innerHTML.includes("基础词组与主题词"), "learning path should not show the removed vocabulary title");
 assert.ok(!app.innerHTML.includes("选择训练组、完成一个目标、查看本轮结果"), "learning unit cards should not show the full step explanation");
@@ -307,6 +324,47 @@ includesAll(
 );
 assert.ok(!app.innerHTML.includes("ياخشىمۇسىز"), "vocab unit directory should not expand word pills");
 assert.ok(!app.innerHTML.includes("先认识最常见"), "vocab unit directory should keep copy concise");
+includesAll(
+  renderState("state.screen = 'unit'; state.selectedUnitId = 'dialogue-theater'"),
+  ["reading-topic-list", "早上见面", "买东西", "问路", "→"],
+  "dialogue unit topic directory"
+);
+includesAll(
+  renderState("state.screen = 'unit'; state.selectedUnitId = 'short-stories'"),
+  ["reading-topic-list", "我的一天", "去市场", "我的母语", "→"],
+  "short story unit topic directory"
+);
+includesAll(
+  renderState("state.screen = 'unit'; state.selectedUnitId = 'famous-quotes'"),
+  ["reading-topic-list", "مەھمۇد قەشقىرى", "ئابدۇرېھىم ئۆتكۈر", "10 条", "→"],
+  "famous quote unit topic directory"
+);
+includesAll(
+  renderState("state.screen = 'unit'; state.selectedUnitId = 'uyghur-proverbs'"),
+  ["reading-topic-list", "بىلىم كۈچ", "ياخشى سۆز", "10 条", "→"],
+  "proverb unit topic directory"
+);
+
+includesAll(
+  renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'dialogue-theater'; state.selectedReadingGroupId = 'dialogue-greeting'"),
+  ["早上见面", "reading-line", "ياخشىمۇسىز؟", "你好，你好吗？"],
+  "dialogue reading lesson"
+);
+includesAll(
+  renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'short-stories'; state.selectedReadingGroupId = 'story-my-day'"),
+  ["我的一天", "reading-line", "مەن ئەتىگەندە ئورنىمدىن تۇرىمەن.", "我早上起床。"],
+  "short story reading lesson"
+);
+includesAll(
+  renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'famous-quotes'; state.selectedReadingGroupId = 'quote-mahmud-kashgari'"),
+  ["名人名言", "reading-meaning", "reading-lesson", "待来源审校", "语言是了解一个民族的钥匙。"],
+  "famous quote reading lesson"
+);
+includesAll(
+  renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'uyghur-proverbs'; state.selectedReadingGroupId = 'proverb-bilim-kuch'"),
+  ["维吾尔谚语", "reading-meaning", "reading-lesson", "知识就是力量。"],
+  "proverb reading lesson"
+);
 
 includesAll(
   renderState("state.screen = 'review'"),
@@ -481,7 +539,7 @@ includesAll(
 
 includesAll(
   renderState("state.screen = 'vocabComplete'"),
-  ["下一步建议", "复习主题词", "回到学习路径"],
+  ["下一步建议", "复习主题词", "进入第五单元"],
   "unit four vocabulary complete"
 );
 

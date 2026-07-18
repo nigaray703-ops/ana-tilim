@@ -26,6 +26,7 @@ function loadCourseData() {
     "prototype/course-data/combo-data.js",
     "prototype/course-data/vocab-data.js",
     "prototype/course-data/practice-data.js",
+    "prototype/course-data/reading-data.js",
     "prototype/course-data.js"
   ]) {
     vm.runInContext(fs.readFileSync(scriptPath, "utf8"), dataContext, { filename: scriptPath });
@@ -109,7 +110,8 @@ for (const scriptPath of [
   "prototype/course-data/alphabet-data.js",
   "prototype/course-data/combo-data.js",
   "prototype/course-data/vocab-data.js",
-  "prototype/course-data/practice-data.js"
+  "prototype/course-data/practice-data.js",
+  "prototype/course-data/reading-data.js"
 ]) {
   vm.runInContext(fs.readFileSync(scriptPath, "utf8"), context, { filename: scriptPath });
 }

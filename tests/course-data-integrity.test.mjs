@@ -7,6 +7,7 @@ const courseDataScriptPaths = [
   "prototype/course-data/combo-data.js",
   "prototype/course-data/vocab-data.js",
   "prototype/course-data/practice-data.js",
+  "prototype/course-data/reading-data.js",
   "prototype/course-data.js"
 ];
 
@@ -31,7 +32,8 @@ const {
   alphabetAudioItems,
   comboGroups,
   vocabGroups,
-  practiceGroups
+  practiceGroups,
+  readingUnits
 } = courseData;
 
 function assertText(value, label) {
@@ -77,6 +79,22 @@ function assertGroupShape(groups, label) {
       `${label} group ${group.id} display list should match item count`
     );
   }
+}
+
+function assertReadingUnit({ id, title, minGroups, maxGroups, expectedKind }) {
+  const unit = readingUnits.find((item) => item.id === id);
+  assert.ok(unit, `reading unit ${id} should exist`);
+  assertText(unit.title, `reading unit ${id} title`);
+  assert.ok(unit.title.includes(title), `reading unit ${id} should be titled ${title}`);
+  assert.equal(unit.kind, "reading", `reading unit ${id} should use reading kind`);
+  assert.equal(unit.readingKind, expectedKind, `reading unit ${id} should use ${expectedKind} reading kind`);
+  assertList(unit.groups, `reading unit ${id} groups`);
+  assert.ok(
+    unit.groups.length >= minGroups && unit.groups.length <= maxGroups,
+    `reading unit ${id} should include ${minGroups} to ${maxGroups} groups`
+  );
+  assertUnique(unit.groups.map((group) => group.id), `reading unit ${id} group ids`);
+  return unit;
 }
 
 function assertManifestMatches(manifestPath, courseItems, label) {
@@ -146,19 +164,61 @@ for (const audioItem of alphabetAudioItems) {
 assertGroupShape(comboGroups, "combo");
 assertGroupShape(vocabGroups, "vocab");
 assertGroupShape(practiceGroups, "practice");
+assertList(readingUnits, "reading units");
+assert.equal(readingUnits.length, 4, "reading course should add units five through eight");
 
 const comboItems = flattenGroupItems(comboGroups);
 const vocabItems = flattenGroupItems(vocabGroups);
 const practiceItems = flattenGroupItems(practiceGroups);
+const readingItems = readingUnits.flatMap((unit) =>
+  unit.groups.flatMap((group) => group.items.map((item) => ({ ...item, unitId: unit.id, groupId: group.id, readingKind: unit.readingKind })))
+);
 assertUnique(comboItems.map((item) => item.id), "combo item ids");
 assertUnique(vocabItems.map((item) => item.id), "vocab item ids");
 assertUnique(practiceItems.map((item) => item.id), "practice item ids");
+assertUnique(readingItems.map((item) => item.id), "reading item ids");
 assertUnique(
-  [...Object.values(letterDetails).map((letter) => letter.id), ...comboItems, ...vocabItems, ...practiceItems].map(
+  [...Object.values(letterDetails).map((letter) => letter.id), ...comboItems, ...vocabItems, ...practiceItems, ...readingItems].map(
     (item) => (typeof item === "string" ? item : item.id)
   ),
   "all learning item ids"
 );
+
+const dialogueUnit = assertReadingUnit({ id: "dialogue-theater", title: "对话小剧场", minGroups: 5, maxGroups: 8, expectedKind: "dialogue" });
+const storyUnit = assertReadingUnit({ id: "short-stories", title: "小故事", minGroups: 5, maxGroups: 8, expectedKind: "story" });
+const quoteUnit = assertReadingUnit({ id: "famous-quotes", title: "名人名言", minGroups: 10, maxGroups: 10, expectedKind: "quote" });
+const proverbUnit = assertReadingUnit({ id: "uyghur-proverbs", title: "维吾尔谚语", minGroups: 10, maxGroups: 10, expectedKind: "proverb" });
+
+for (const group of [...dialogueUnit.groups, ...storyUnit.groups, ...quoteUnit.groups, ...proverbUnit.groups]) {
+  assertText(group.id, `reading group ${group.id} id`);
+  assertText(group.title, `reading group ${group.id} title`);
+  assertList(group.items, `reading group ${group.id} items`);
+}
+
+for (const group of dialogueUnit.groups) {
+  assert.ok(group.items.length >= 4 && group.items.length <= 6, `dialogue ${group.id} should stay very short`);
+  for (const item of group.items) {
+    for (const field of ["id", "speaker", "value", "meaning"]) {
+      assertText(item[field], `dialogue item ${item.id}.${field}`);
+    }
+  }
+}
+
+for (const group of storyUnit.groups) {
+  assert.ok(group.items.length >= 5 && group.items.length <= 8, `story ${group.id} should stay very short`);
+  for (const item of group.items) {
+    for (const field of ["id", "value", "meaning"]) {
+      assertText(item[field], `story item ${item.id}.${field}`);
+    }
+  }
+}
+
+for (const item of [...quoteUnit.groups, ...proverbUnit.groups].flatMap((group) => group.items)) {
+  for (const field of ["id", "value", "meaning", "lesson"]) {
+    assertText(item[field], `quote/proverb item ${item.id}.${field}`);
+  }
+  assertText(item.reviewStatus, `quote/proverb item ${item.id}.reviewStatus`);
+}
 
 const vocabGroupById = Object.fromEntries(vocabGroups.map((group) => [group.id, group]));
 
