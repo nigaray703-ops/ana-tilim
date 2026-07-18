@@ -226,7 +226,7 @@ assert.ok(app.innerHTML.includes("<strong>听音辨认</strong><span> · AI 临�
 
 includesAll(
   renderState("state.screen = 'learn'"),
-  ["第三单元：听说与书写强化", "第四单元：日常用语与词汇", "问候、人称、家庭、数字、动物、蔬菜"],
+  ["第三单元：听说与书写强化", "第四单元：日常用语与词汇", "问候、人称代词、称呼、数字、动物"],
   "learning path after unit swap"
 );
 assert.ok(!app.innerHTML.includes("基础词组与主题词"), "learning path should not show the removed vocabulary title");
@@ -255,13 +255,20 @@ includesAll(
   "home progress map"
 );
 
-for (const unitId of ["letters", "combos", "practice", "basic-phrases"]) {
+for (const unitId of ["letters", "combos", "practice"]) {
   includesAll(
     renderState(`state.screen = 'unit'; state.selectedUnitId = '${unitId}'`),
     ["学习步骤", "进入当前学习"],
     `${unitId} unit screen`
   );
 }
+includesAll(
+  renderState("state.screen = 'unit'; state.selectedUnitId = 'basic-phrases'"),
+  ["vocab-topic-list", "问候", "人称代词", "称呼", "数字", "动物", "→"],
+  "vocab unit topic directory"
+);
+assert.ok(!app.innerHTML.includes("ياخشىمۇسىز"), "vocab unit directory should not expand word pills");
+assert.ok(!app.innerHTML.includes("先认识最常见"), "vocab unit directory should keep copy concise");
 
 includesAll(
   renderState("state.screen = 'review'"),
@@ -326,6 +333,8 @@ includesAll(
   ["第四单元：日常用语与词汇", "本课词汇", "vocab-row-list", "ئانا", "ana", "妈妈、母亲", "不设唯一答案"],
   "vocab lesson"
 );
+assert.ok(!app.innerHTML.includes("letter-focus"), "vocab lesson should not use the old large focus card");
+assert.ok(!app.innerHTML.includes("中文预览"), "vocab lesson should avoid repeated explanation cards");
 assert.ok(!app.innerHTML.includes("词库审校字段"), "learning mode should hide audit-only vocabulary fields");
 clickDataset({ action: "set-app-mode", mode: "audit" });
 includesAll(

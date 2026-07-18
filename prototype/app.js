@@ -103,9 +103,9 @@ const learningUnits = [
   {
     id: "basic-phrases",
     title: "第四单元：日常用语与词汇",
-    subtitle: "问候、人称、家庭、数字、动物、蔬菜",
+    subtitle: "问候、人称代词、称呼、数字、动物等",
     status: "待审校",
-    description: "参考常见语言学习软件的入门主题，把日常用语和基础词汇拆成多个小课，一课一主题。",
+    description: "选择一个常用主题，点进去再一行一行学习词形。",
     bullets: ["主题小课", "一行一词", "词形辨认", "键盘输入"],
     groups: vocabGroups,
     actionTarget: "vocab"
@@ -1410,6 +1410,10 @@ function renderLetterPills(items, activeId = "") {
 
 function renderGroupCard(group) {
   const action = group.kind === "practice" ? "open-practice-group" : group.kind === "vocab" ? "open-vocab-group" : group.kind === "combo" ? "open-combo-group" : "open-group";
+  if (group.kind === "vocab") {
+    return renderVocabTopicCard(group, action);
+  }
+
   const cardContent = `
     <div class="section-row">
       <strong>${group.title}</strong>
@@ -1437,8 +1441,49 @@ function renderGroupCard(group) {
   `;
 }
 
+function renderVocabTopicCard(group, action = "open-vocab-group") {
+  return `
+    <button
+      class="vocab-topic-row"
+      data-action="${action}"
+      data-id="${group.id}"
+      type="button"
+      aria-label="进入${group.title}"
+    >
+      <span>
+        <strong>${group.title}</strong>
+        <small>${group.items.length} 个词</small>
+      </span>
+      <span class="topic-arrow" aria-hidden="true">→</span>
+    </button>
+  `;
+}
+
+function renderVocabUnitDetail(unit) {
+  return screen(
+    `
+      ${topBar(
+        unit.title,
+        unit.subtitle,
+        "",
+        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack">
+        <div class="vocab-topic-list">
+          ${unit.groups.map((group) => renderVocabTopicCard(group)).join("")}
+        </div>
+      </section>
+    `,
+    "learn"
+  );
+}
+
 function renderUnitDetail() {
   const unit = currentUnit();
+
+  if (unit.id === "basic-phrases") {
+    return renderVocabUnitDetail(unit);
+  }
 
   return screen(
     `
@@ -2475,8 +2520,6 @@ function renderVocabRows(items, activeId) {
     <div class="vocab-row-list" aria-label="本课词汇">
       ${items
         .map((item) => {
-          const status = item.reviewStatus.replace("待母语者审校", "待审校");
-
           return `
             <button
               class="vocab-row ${item.id === activeId ? "active" : ""}"
@@ -2490,7 +2533,6 @@ function renderVocabRows(items, activeId) {
                 <strong>${item.latin}</strong>
                 <small>${item.meaning}</small>
               </span>
-              <span class="step-state">${status}</span>
             </button>
           `;
         })
@@ -2525,7 +2567,6 @@ function renderVocabLesson() {
   const group = currentVocabGroup();
   const item = currentVocabItem();
   const audio = currentVocabAudio();
-  const longWordClass = item.value.length > 8 ? "long-text" : "";
   const position = itemPosition(currentVocabItems(), item.id);
 
   return screen(
@@ -2537,7 +2578,7 @@ function renderVocabLesson() {
         `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
       )}
       <section class="stack">
-        <article class="card ${isAuditMode() ? "review-card" : ""}">
+        <article class="card vocab-lesson-card ${isAuditMode() ? "review-card" : ""}">
           <div class="section-row">
             <div>
               <p class="caption">${isAuditMode() ? "审校优先" : "本课词汇"}</p>
@@ -2548,47 +2589,9 @@ function renderVocabLesson() {
           <p class="muted compact-note">${
             isAuditMode()
               ? "中文含义只是预览，正式答案等审校后再锁定。"
-              : "点一行进入当前词，再做辨认或键盘。"
+              : "点一行选择词；中文仅预览，不设唯一答案。"
           }</p>
-        </article>
-
-        <article class="card">
-          <p class="caption">本课词汇</p>
           ${renderVocabRows(group.items, item.id)}
-        </article>
-
-        ${renderItemProgress(position.label, "当前词形在本主题的位置")}
-        ${renderAdjacentNav({
-          previous: position.previous,
-          next: position.next,
-          action: "select-adjacent-vocab"
-        })}
-
-        <div class="letter-focus">
-          <div>
-            <div class="uyghur letter-big vocab-big ${longWordClass}">${item.value}</div>
-            <p class="caption">${item.theme}，${item.latin}</p>
-          </div>
-        </div>
-
-        ${renderAudioStrip({
-          audio,
-          label: item.value,
-          title: `播放：${item.latin}`,
-          hint: "词形发音仍需母语者审听。"
-        })}
-
-        <article class="card">
-          <p class="caption">中文预览</p>
-          <h2 class="section-title">${item.meaning}</h2>
-          <p class="muted">${item.tip} 现阶段只练词形，不设唯一答案。</p>
-        </article>
-
-        <article class="card">
-          <p class="caption">拆开看</p>
-          <div class="combo-parts" aria-label="词形拆分">
-            ${renderComboParts(item)}
-          </div>
         </article>
 
         ${
@@ -2602,7 +2605,21 @@ function renderVocabLesson() {
             : ""
         }
 
-        <div class="action-grid">
+        <div class="item-progress">
+          <span class="step-state">${position.label}</span>
+          <strong>当前：${item.latin} · ${item.meaning}</strong>
+        </div>
+
+        <div class="action-grid vocab-action-grid">
+          <button
+            class="secondary-button"
+            data-action="play-audio"
+            data-audio-src="${audio ? audio.outputPath : ""}"
+            data-audio-label="${item.value}"
+            type="button"
+          >
+            听
+          </button>
           <button class="secondary-button" data-action="go" data-target="vocabRecognition" type="button">
             辨认
           </button>
