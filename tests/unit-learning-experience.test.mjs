@@ -236,7 +236,9 @@ clickDataset({ action: "pick-picture", id: "be" });
 clickDataset({ action: "go", target: "listening" });
 clickDataset({ action: "pick-listening", id: "be" });
 clickDataset({ action: "go", target: "keyboard" });
+includesAll(app.innerHTML, ["键盘步骤", "第 1 步", "点击 ب", "还差 1 键"], "letter keyboard guide");
 clickDataset({ action: "key", key: "ب" });
+includesAll(app.innerHTML, ["已完成", "完成课程"], "completed letter keyboard guide");
 clickDataset({ action: "go", target: "complete" });
 includesAll(app.innerHTML, ["闭环完成", "4 / 4"], "completed letter loop");
 assert.equal(savedProgress().learningProgress.letters["dot-bone"].completed, true, "completed loop should be saved locally");
@@ -255,6 +257,26 @@ includesAll(
   "unit two complete"
 );
 assert.ok(app.innerHTML.includes("با / پا"), "unit two completion should separate learned combinations with punctuation");
+
+includesAll(
+  renderState("state.screen = 'comboKeyboard'; state.selectedComboGroupId = 'open-a'; state.currentComboItemId = 'ba'; state.keyboardValue = ''"),
+  ["键盘步骤", "ب → ا", "点击 ب", "还差 2 键"],
+  "combo keyboard guide"
+);
+clickDataset({ action: "key", key: "ب" });
+includesAll(app.innerHTML, ["第 2 步", "点击 ا", "已输入 ب"], "combo keyboard guide after first key");
+
+includesAll(
+  renderState("state.screen = 'vocabKeyboard'; state.selectedVocabGroupId = 'family'; state.currentVocabItemId = 'ana-family'; state.keyboardValue = ''"),
+  ["键盘步骤", "ئا → ن → ا", "点击 ئا", "还差 3 键"],
+  "vocab keyboard guide"
+);
+
+includesAll(
+  renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'writing-loop'; state.currentPracticeItemId = 'practice-write-ana'; state.keyboardValue = ''"),
+  ["键盘步骤", "ئا → ن → ا", "点击 ئا", "还差 3 键"],
+  "practice writing keyboard guide"
+);
 
 includesAll(
   renderState("state.screen = 'vocabComplete'"),
