@@ -40,6 +40,11 @@ const checks = [
     args: ["--check", "prototype/course-data/practice-data.js"]
   },
   {
+    label: "syntax: reading data",
+    command: node,
+    args: ["--check", "prototype/course-data/reading-data.js"]
+  },
+  {
     label: "test: course data integrity",
     command: node,
     args: ["tests/course-data-integrity.test.mjs"]

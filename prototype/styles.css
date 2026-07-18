@@ -489,13 +489,15 @@ button {
   background: rgba(255, 255, 255, 0.58);
 }
 
-.vocab-topic-list {
+.vocab-topic-list,
+.reading-topic-list {
   display: grid;
   gap: 8px;
 }
 
 .vocab-topic-row,
-.practice-topic-row {
+.practice-topic-row,
+.reading-topic-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 28px;
   align-items: center;
@@ -514,18 +516,22 @@ button {
 .vocab-topic-row strong,
 .vocab-topic-row small,
 .practice-topic-row strong,
-.practice-topic-row small {
+.practice-topic-row small,
+.reading-topic-row strong,
+.reading-topic-row small {
   display: block;
   line-height: 1.25;
 }
 
 .vocab-topic-row strong,
-.practice-topic-row strong {
+.practice-topic-row strong,
+.reading-topic-row strong {
   font-size: 16px;
 }
 
 .vocab-topic-row small,
-.practice-topic-row small {
+.practice-topic-row small,
+.reading-topic-row small {
   margin-top: 3px;
   color: var(--ink-soft);
   font-size: 11px;
@@ -1355,6 +1361,60 @@ button {
 .practice-review-list {
   display: grid;
   gap: 8px;
+}
+
+.reading-list {
+  display: grid;
+  gap: 10px;
+}
+
+.reading-line {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.reading-list.story .reading-line,
+.reading-list.quote .reading-line,
+.reading-list.proverb .reading-line {
+  grid-template-columns: 1fr;
+}
+
+.speaker-badge {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius);
+  color: #fff;
+  background: var(--teal);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.reading-value {
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.reading-meaning,
+.reading-lesson {
+  margin: 8px 0 0;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.reading-lesson {
+  color: var(--ink-soft);
 }
 
 .practice-review-item {

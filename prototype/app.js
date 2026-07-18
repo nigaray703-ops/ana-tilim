@@ -4,7 +4,7 @@ if (!courseData) {
   throw new Error("Ana Tilim course data failed to load.");
 }
 
-const { alphabetLetters, letterDetails, alphabetGroups, alphabetAudioItems, comboGroups, vocabGroups, practiceGroups } = courseData;
+const { alphabetLetters, letterDetails, alphabetGroups, alphabetAudioItems, comboGroups, vocabGroups, practiceGroups, readingUnits } = courseData;
 const alphabetAudioByLetterId = Object.fromEntries(alphabetAudioItems.map((item) => [item.letterId, item]));
 
 function safeAudioId(id) {
@@ -109,7 +109,11 @@ const learningUnits = [
     bullets: ["主题小课", "一行一词", "词形辨认", "键盘输入"],
     groups: vocabGroups,
     actionTarget: "vocab"
-  }
+  },
+  ...readingUnits.map((unit) => ({
+    ...unit,
+    actionTarget: "reading"
+  }))
 ];
 
 const unitExperience = {
@@ -142,6 +146,38 @@ const unitExperience = {
     steps: ["选择主题小课", "一行一行看词", "做词形辨认", "完成键盘输入"],
     reviewLabel: "复习主题词",
     reviewTarget: "vocab",
+    nextLabel: "进入第五单元",
+    nextUnitId: "dialogue-theater"
+  },
+  "dialogue-theater": {
+    recommended: "读很短的双人日常对话。",
+    steps: ["选择对话", "一句一句读", "看中文翻译"],
+    reviewLabel: "复习对话",
+    reviewTarget: "reading",
+    nextLabel: "进入第六单元",
+    nextUnitId: "short-stories"
+  },
+  "short-stories": {
+    recommended: "读很短的小故事。",
+    steps: ["选择故事", "一句一句读", "看中文翻译"],
+    reviewLabel: "复习故事",
+    reviewTarget: "reading",
+    nextLabel: "进入第七单元",
+    nextUnitId: "famous-quotes"
+  },
+  "famous-quotes": {
+    recommended: "看名人短句，先按待审校学习版阅读。",
+    steps: ["选择人物", "读短句", "看含义"],
+    reviewLabel: "复习名言",
+    reviewTarget: "reading",
+    nextLabel: "进入第八单元",
+    nextUnitId: "uyghur-proverbs"
+  },
+  "uyghur-proverbs": {
+    recommended: "看常见谚语，理解背后的意思。",
+    steps: ["选择谚语", "读原文", "看含义"],
+    reviewLabel: "复习谚语",
+    reviewTarget: "reading",
     nextLabel: "回到学习路径",
     nextUnitId: "letters",
     nextTarget: "learn"
@@ -278,6 +314,8 @@ const state = {
   selectedVocabGroupId: "greetings",
   currentPracticeItemId: "practice-listen-be",
   selectedPracticeGroupId: "listening-loop",
+  selectedReadingUnitId: "dialogue-theater",
+  selectedReadingGroupId: "dialogue-greeting",
   practiceSpoken: false,
   writingChecks: [],
   selectedReviewItemId: "vocab-ana-family",
@@ -333,6 +371,8 @@ function hydrateLocalProgress() {
       "selectedVocabGroupId",
       "currentPracticeItemId",
       "selectedPracticeGroupId",
+      "selectedReadingUnitId",
+      "selectedReadingGroupId",
       "selectedReviewItemId",
       "reviewFilter",
       "selectedUnitId"
@@ -390,6 +430,8 @@ function saveLocalProgress() {
     selectedVocabGroupId: state.selectedVocabGroupId,
     currentPracticeItemId: state.currentPracticeItemId,
     selectedPracticeGroupId: state.selectedPracticeGroupId,
+    selectedReadingUnitId: state.selectedReadingUnitId,
+    selectedReadingGroupId: state.selectedReadingGroupId,
     selectedReviewItemId: state.selectedReviewItemId,
     reviewFilter: state.reviewFilter,
     selectedUnitId: state.selectedUnitId,
@@ -518,6 +560,19 @@ function practiceGroupForItem(itemId) {
 
 function allPracticeItems() {
   return practiceGroups.flatMap((group) => group.items);
+}
+
+function currentReadingUnit() {
+  return readingUnits.find((unit) => unit.id === state.selectedReadingUnitId) || readingUnits[0];
+}
+
+function readingUnitForGroup(groupId) {
+  return readingUnits.find((unit) => unit.groups.some((group) => group.id === groupId)) || readingUnits[0];
+}
+
+function currentReadingGroup() {
+  const unit = currentReadingUnit();
+  return unit.groups.find((group) => group.id === state.selectedReadingGroupId) || unit.groups[0];
 }
 
 function audioForMistake(mistake) {
@@ -1248,6 +1303,7 @@ function render() {
     vocabRecognition: renderVocabRecognition,
     vocabKeyboard: renderVocabKeyboard,
     vocabComplete: renderVocabComplete,
+    reading: renderReadingLesson,
     practiceSession: renderPracticeSession,
     practiceComplete: renderPracticeComplete,
     review: renderReviewDashboard,
@@ -1539,6 +1595,32 @@ function renderVocabTopicCard(group, action = "open-vocab-group") {
   `;
 }
 
+function readingGroupCountLabel(unit, group) {
+  if (unit.readingKind === "quote" || unit.readingKind === "proverb") {
+    return "1 条";
+  }
+  return `${group.items.length} 句`;
+}
+
+function renderReadingTopicCard(unit, group) {
+  return `
+    <button
+      class="reading-topic-row"
+      data-action="open-reading-group"
+      data-unit-id="${unit.id}"
+      data-id="${group.id}"
+      type="button"
+      aria-label="进入${group.title}"
+    >
+      <span>
+        <strong>${group.title}</strong>
+        <small>${readingGroupCountLabel(unit, group)}</small>
+      </span>
+      <span class="topic-arrow" aria-hidden="true">→</span>
+    </button>
+  `;
+}
+
 function renderVocabUnitDetail(unit) {
   return screen(
     `
@@ -1558,11 +1640,34 @@ function renderVocabUnitDetail(unit) {
   );
 }
 
+function renderReadingUnitDetail(unit) {
+  return screen(
+    `
+      ${topBar(
+        unit.title,
+        unit.subtitle,
+        "",
+        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack">
+        <div class="reading-topic-list">
+          ${unit.groups.map((group) => renderReadingTopicCard(unit, group)).join("")}
+        </div>
+      </section>
+    `,
+    "learn"
+  );
+}
+
 function renderUnitDetail() {
   const unit = currentUnit();
 
   if (unit.id === "basic-phrases") {
     return renderVocabUnitDetail(unit);
+  }
+
+  if (unit.kind === "reading") {
+    return renderReadingUnitDetail(unit);
   }
 
   return screen(
@@ -2886,6 +2991,54 @@ function renderVocabComplete() {
   );
 }
 
+function renderReadingLine(unit, item) {
+  if (unit.readingKind === "quote" || unit.readingKind === "proverb") {
+    return `
+      <article class="card reading-line reading-feature-line">
+        <div class="uyghur reading-value">${item.value}</div>
+        <p class="reading-meaning">${item.meaning}</p>
+        <p class="reading-lesson">${item.lesson}</p>
+        <p class="caption">${item.reviewStatus}</p>
+      </article>
+    `;
+  }
+
+  return `
+    <article class="reading-line">
+      ${item.speaker ? `<span class="speaker-badge">${item.speaker}</span>` : ""}
+      <div>
+        <div class="uyghur reading-value">${item.value}</div>
+        <p class="reading-meaning">${item.meaning}</p>
+      </div>
+    </article>
+  `;
+}
+
+function renderReadingLesson() {
+  const unit = currentReadingUnit();
+  const group = currentReadingGroup();
+
+  return screen(
+    `
+      ${topBar(
+        group.title,
+        unit.title,
+        "",
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack">
+        <div class="reading-list ${unit.readingKind}">
+          ${group.items.map((item) => renderReadingLine(unit, item)).join("")}
+        </div>
+        <button class="secondary-button" data-action="go" data-target="unit" type="button">
+          返回小课
+        </button>
+      </section>
+    `,
+    "learn"
+  );
+}
+
 function renderPracticeSelector(items, activeId) {
   return items
     .map(
@@ -3573,6 +3726,11 @@ document.addEventListener("click", (event) => {
 
   if (action === "open-unit") {
     state.selectedUnitId = button.dataset.id;
+    const unit = learningUnits.find((item) => item.id === button.dataset.id);
+    if (unit?.kind === "reading") {
+      state.selectedReadingUnitId = unit.id;
+      state.selectedReadingGroupId = unit.groups[0]?.id || state.selectedReadingGroupId;
+    }
     goTo("unit");
     return;
   }
@@ -3614,6 +3772,16 @@ document.addEventListener("click", (event) => {
     state.currentPracticeItemId = group.items[0].id;
     resetPracticeSessionState();
     goTo("practiceSession");
+    return;
+  }
+
+  if (action === "open-reading-group") {
+    const unit = readingUnits.find((item) => item.id === button.dataset.unitId) || readingUnitForGroup(button.dataset.id);
+    const group = unit.groups.find((item) => item.id === button.dataset.id) || unit.groups[0];
+    state.selectedUnitId = unit.id;
+    state.selectedReadingUnitId = unit.id;
+    state.selectedReadingGroupId = group.id;
+    goTo("reading");
     return;
   }
 
