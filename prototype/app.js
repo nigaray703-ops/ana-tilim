@@ -1195,8 +1195,10 @@ const reviewStatusOptions = [
 
 const audioStatusOptions = [
   { id: "audio-pending", label: "真人音频待录制" },
-  { id: "audio-recorded", label: "已录制" },
-  { id: "audio-connected", label: "已接入" }
+  { id: "audio-ai-temp", label: "AI 临时音频" },
+  { id: "audio-recorded", label: "真人音频已录制" },
+  { id: "audio-connected", label: "真人音频已接入" },
+  { id: "audio-rerecord", label: "需重新录制" }
 ];
 
 const reviewFilters = [
@@ -1206,7 +1208,9 @@ const reviewFilters = [
   { id: "display-only", label: "只展示不考核" },
   { id: "variant", label: "变体保留" },
   { id: "family", label: "家庭重点" },
-  { id: "audio-pending", label: "音频待录" }
+  { id: "audio-pending", label: "音频待录" },
+  { id: "audio-ai-temp", label: "AI 音频" },
+  { id: "audio-rerecord", label: "需重录" }
 ];
 
 const reviewBaseItems = [
@@ -1420,8 +1424,8 @@ function filteredReviewItems() {
     return items.filter((item) => item.priority);
   }
 
-  if (state.reviewFilter === "audio-pending") {
-    return items.filter((item) => item.audioStatus === "audio-pending");
+  if (state.reviewFilter.startsWith("audio-")) {
+    return items.filter((item) => item.audioStatus === state.reviewFilter);
   }
 
   return items.filter((item) => item.reviewStatus === state.reviewFilter);
@@ -1440,7 +1444,9 @@ function reviewCounts() {
     pending: items.filter((item) => item.reviewStatus === "pending").length,
     needsEdit: items.filter((item) => item.reviewStatus === "needs-edit").length,
     family: items.filter((item) => item.priority).length,
-    audioPending: items.filter((item) => item.audioStatus === "audio-pending").length
+    audioPending: items.filter((item) => item.audioStatus === "audio-pending").length,
+    aiTemp: items.filter((item) => item.audioStatus === "audio-ai-temp").length,
+    needsRerecord: items.filter((item) => item.audioStatus === "audio-rerecord").length
   };
 }
 
@@ -3121,7 +3127,9 @@ function renderReviewDashboard() {
           <div class="metric"><strong>${counts.pending}</strong><span>待审校</span></div>
           <div class="metric"><strong>${counts.needsEdit}</strong><span>需修改</span></div>
           <div class="metric"><strong>${counts.family}</strong><span>家庭重点</span></div>
+          <div class="metric"><strong>${counts.aiTemp}</strong><span>AI 临时</span></div>
           <div class="metric"><strong>${counts.audioPending}</strong><span>音频待录</span></div>
+          <div class="metric"><strong>${counts.needsRerecord}</strong><span>需重录</span></div>
         </div>
 
         <div class="review-filter-row" aria-label="审校筛选">
@@ -3279,6 +3287,7 @@ function renderProfile() {
         <div class="profile-row"><strong>候选词库</strong><span>${allVocabItems().length}</span></div>
         <div class="profile-row"><strong>强化训练</strong><span>${allPracticeItems().length}</span></div>
         <div class="profile-row"><strong>待审校</strong><span>${counts.pending}</span></div>
+        <div class="profile-row"><strong>AI 临时音频</strong><span>${counts.aiTemp}</span></div>
         <div class="profile-row"><strong>音频待录</strong><span>${counts.audioPending}</span></div>
         <div class="profile-row"><strong>下一步</strong><span>真人音频</span></div>
         <div class="profile-row"><strong>连续学习</strong><span>3 天</span></div>
