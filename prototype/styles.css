@@ -477,6 +477,53 @@ button {
   background: rgba(255, 255, 255, 0.58);
 }
 
+.vocab-topic-list {
+  display: grid;
+  gap: 8px;
+}
+
+.vocab-topic-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 54px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: var(--paper);
+  text-align: left;
+  box-shadow: 0 8px 18px rgba(22, 38, 87, 0.06);
+}
+
+.vocab-topic-row strong,
+.vocab-topic-row small {
+  display: block;
+  line-height: 1.25;
+}
+
+.vocab-topic-row strong {
+  font-size: 16px;
+}
+
+.vocab-topic-row small {
+  margin-top: 3px;
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
+.topic-arrow {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: var(--ink-soft);
+  font-size: 20px;
+  font-weight: 900;
+}
+
 .chip-row {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -818,7 +865,7 @@ button {
 
 .vocab-row {
   display: grid;
-  grid-template-columns: minmax(76px, 1fr) minmax(94px, 1.2fr) minmax(46px, max-content);
+  grid-template-columns: minmax(84px, 1fr) minmax(120px, 1.35fr);
   align-items: center;
   gap: 10px;
   width: 100%;
@@ -864,6 +911,10 @@ button {
   margin-top: 4px;
   color: var(--ink-soft);
   font-size: 11px;
+}
+
+.vocab-action-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .letter-focus .uyghur,

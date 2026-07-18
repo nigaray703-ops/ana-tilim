@@ -203,6 +203,13 @@ assertVocabTopic({
   minItems: 6,
   requiredMeanings: ["番茄", "洋葱", "土豆", "胡萝卜", "大蒜", "黄瓜"]
 });
+assert.ok(vocabGroups.length >= 10 && vocabGroups.length <= 15, "vocab should include 10 to 15 compact daily topics");
+for (const group of vocabGroups) {
+  assert.ok(
+    group.items.length >= 15 && group.items.length <= 20,
+    `vocab group ${group.id} should include 15 to 20 words`
+  );
+}
 
 for (const item of comboItems) {
   for (const field of ["id", "value", "latin", "type", "prompt", "rule", "hint", "review"]) {

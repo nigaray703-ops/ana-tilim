@@ -1,12 +1,12 @@
 {
-  "title": "Ana Tilim Unit 3 Vocabulary AI Temporary Audio",
+  "title": "Ana Tilim Unit 4 Vocabulary AI Temporary Audio",
   "status": "ready_for_generation",
   "outputDirectory": "./assets/audio/ai-temp/vocab/",
   "model": "gpt-4o-mini-tts",
   "voice": "shimmer",
   "responseFormat": "mp3",
   "speed": 0.88,
-  "instructions": "Use a clear adult female voice. Pronounce only the target Standard Uyghur word or phrase. Do not say Chinese, English, explanations, numbering, punctuation, or extra words. Say the target once, pause briefly, then repeat it once. Third-unit meanings are learning previews until reviewed by a standard Uyghur speaker.",
+  "instructions": "Use a clear adult female voice. Pronounce only the target Standard Uyghur word or phrase. Do not say Chinese, English, explanations, numbering, punctuation, or extra words. Say the target once, pause briefly, then repeat it once. Fourth-unit meanings are learning previews until reviewed by a standard Uyghur speaker.",
   "items": [
     {
       "order": 1,
@@ -30,6 +30,16 @@
     },
     {
       "order": 3,
+      "id": "kop-rahmat",
+      "groupId": "greetings",
+      "value": "كۆپ رەھمەت",
+      "latin": "köp rehmet",
+      "file": "ai_temp_vocab_kop_rahmat.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_kop_rahmat.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 4,
       "id": "xosh",
       "groupId": "greetings",
       "value": "خوش",
@@ -39,17 +49,117 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 4,
+      "order": 5,
+      "id": "hayr",
+      "groupId": "greetings",
+      "value": "خەير",
+      "latin": "xeyr",
+      "file": "ai_temp_vocab_hayr.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_hayr.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 6,
       "id": "assalamu",
       "groupId": "greetings",
       "value": "ئەسسالامۇ ئەلەيكۇم",
-      "latin": "assalamu alaykum",
+      "latin": "assalamu eleykum",
       "file": "ai_temp_vocab_assalamu.mp3",
       "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_assalamu.mp3",
       "reviewStatus": "待审听"
     },
     {
-      "order": 5,
+      "order": 7,
+      "id": "waalaykum",
+      "groupId": "greetings",
+      "value": "ۋەئەلەيكۇم ئەسسالام",
+      "latin": "we eleykum essalam",
+      "file": "ai_temp_vocab_waalaykum.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_waalaykum.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 8,
+      "id": "xush-keldingiz",
+      "groupId": "greetings",
+      "value": "خۇش كەلدىڭىز",
+      "latin": "xush keldingiz",
+      "file": "ai_temp_vocab_xush_keldingiz.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_xush_keldingiz.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 9,
+      "id": "marhaba",
+      "groupId": "greetings",
+      "value": "مەرھابا",
+      "latin": "merhaba",
+      "file": "ai_temp_vocab_marhaba.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_marhaba.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 10,
+      "id": "kechurung",
+      "groupId": "greetings",
+      "value": "كەچۈرۈڭ",
+      "latin": "kechürüng",
+      "file": "ai_temp_vocab_kechurung.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_kechurung.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 11,
+      "id": "yaxshi",
+      "groupId": "greetings",
+      "value": "ياخشى",
+      "latin": "yaxshi",
+      "file": "ai_temp_vocab_yaxshi.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_yaxshi.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 12,
+      "id": "qandaq",
+      "groupId": "greetings",
+      "value": "قانداق",
+      "latin": "qandaq",
+      "file": "ai_temp_vocab_qandaq.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_qandaq.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 13,
+      "id": "xeyirlik-etigen",
+      "groupId": "greetings",
+      "value": "خەيرلىك ئەتىگەن",
+      "latin": "xeyirlik etigen",
+      "file": "ai_temp_vocab_xeyirlik_etigen.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_xeyirlik_etigen.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 14,
+      "id": "xeyirlik-kech",
+      "groupId": "greetings",
+      "value": "خەيرلىك كەچ",
+      "latin": "xeyirlik kech",
+      "file": "ai_temp_vocab_xeyirlik_kech.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_xeyirlik_kech.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 15,
+      "id": "korushkunche",
+      "groupId": "greetings",
+      "value": "كۆرۈشكۈنچە",
+      "latin": "körüshkünche",
+      "file": "ai_temp_vocab_korushkunche.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_korushkunche.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 16,
       "id": "men",
       "groupId": "pronouns",
       "value": "مەن",
@@ -59,17 +169,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 6,
-      "id": "siz",
-      "groupId": "pronouns",
-      "value": "سىز",
-      "latin": "siz",
-      "file": "ai_temp_vocab_siz.mp3",
-      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_siz.mp3",
-      "reviewStatus": "待审听"
-    },
-    {
-      "order": 7,
+      "order": 17,
       "id": "sen",
       "groupId": "pronouns",
       "value": "سەن",
@@ -79,7 +179,17 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 8,
+      "order": 18,
+      "id": "siz",
+      "groupId": "pronouns",
+      "value": "سىز",
+      "latin": "siz",
+      "file": "ai_temp_vocab_siz.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_siz.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 19,
       "id": "u-pronoun",
       "groupId": "pronouns",
       "value": "ئۇ",
@@ -89,7 +199,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 9,
+      "order": 20,
       "id": "biz",
       "groupId": "pronouns",
       "value": "بىز",
@@ -99,7 +209,107 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 10,
+      "order": 21,
+      "id": "ular",
+      "groupId": "pronouns",
+      "value": "ئۇلار",
+      "latin": "ular",
+      "file": "ai_temp_vocab_ular.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_ular.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 22,
+      "id": "bu",
+      "groupId": "pronouns",
+      "value": "بۇ",
+      "latin": "bu",
+      "file": "ai_temp_vocab_bu.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_bu.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 23,
+      "id": "shu",
+      "groupId": "pronouns",
+      "value": "شۇ",
+      "latin": "shu",
+      "file": "ai_temp_vocab_shu.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_shu.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 24,
+      "id": "mening",
+      "groupId": "pronouns",
+      "value": "مېنىڭ",
+      "latin": "mëning",
+      "file": "ai_temp_vocab_mening.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_mening.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 25,
+      "id": "sening",
+      "groupId": "pronouns",
+      "value": "سېنىڭ",
+      "latin": "sëning",
+      "file": "ai_temp_vocab_sening.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_sening.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 26,
+      "id": "sizning",
+      "groupId": "pronouns",
+      "value": "سىزنىڭ",
+      "latin": "sizning",
+      "file": "ai_temp_vocab_sizning.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_sizning.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 27,
+      "id": "uning",
+      "groupId": "pronouns",
+      "value": "ئۇنىڭ",
+      "latin": "uning",
+      "file": "ai_temp_vocab_uning.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_uning.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 28,
+      "id": "bizning",
+      "groupId": "pronouns",
+      "value": "بىزنىڭ",
+      "latin": "bizning",
+      "file": "ai_temp_vocab_bizning.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_bizning.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 29,
+      "id": "kim",
+      "groupId": "pronouns",
+      "value": "كىم",
+      "latin": "kim",
+      "file": "ai_temp_vocab_kim.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_kim.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 30,
+      "id": "nime",
+      "groupId": "pronouns",
+      "value": "نېمە",
+      "latin": "nëme",
+      "file": "ai_temp_vocab_nime.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_nime.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 31,
       "id": "ana-family",
       "groupId": "family",
       "value": "ئانا",
@@ -109,7 +319,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 11,
+      "order": 32,
       "id": "apa-family",
       "groupId": "family",
       "value": "ئاپا",
@@ -119,7 +329,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 12,
+      "order": 33,
       "id": "ata-family",
       "groupId": "family",
       "value": "ئاتا",
@@ -129,7 +339,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 13,
+      "order": 34,
       "id": "dada-family",
       "groupId": "family",
       "value": "دادا",
@@ -139,7 +349,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 14,
+      "order": 35,
       "id": "aile-family",
       "groupId": "family",
       "value": "ئائىلە",
@@ -149,7 +359,17 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 15,
+      "order": 36,
+      "id": "bala-family",
+      "groupId": "family",
+      "value": "بالا",
+      "latin": "bala",
+      "file": "ai_temp_vocab_bala_family.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_bala_family.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 37,
       "id": "oghul-family",
       "groupId": "family",
       "value": "ئوغۇل",
@@ -159,7 +379,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 16,
+      "order": 38,
       "id": "qiz-family",
       "groupId": "family",
       "value": "قىز",
@@ -169,7 +389,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 17,
+      "order": 39,
       "id": "aka-family",
       "groupId": "family",
       "value": "ئاكا",
@@ -179,7 +399,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 18,
+      "order": 40,
       "id": "inim-family",
       "groupId": "family",
       "value": "ئىنىم",
@@ -189,7 +409,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 19,
+      "order": 41,
       "id": "singil-family",
       "groupId": "family",
       "value": "سىڭىل",
@@ -199,7 +419,47 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 20,
+      "order": 42,
+      "id": "acha-family",
+      "groupId": "family",
+      "value": "ئاچا",
+      "latin": "acha",
+      "file": "ai_temp_vocab_acha_family.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_acha_family.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 43,
+      "id": "chong-ata-family",
+      "groupId": "family",
+      "value": "چوڭ ئاتا",
+      "latin": "chong ata",
+      "file": "ai_temp_vocab_chong_ata_family.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_chong_ata_family.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 44,
+      "id": "chong-ana-family",
+      "groupId": "family",
+      "value": "چوڭ ئانا",
+      "latin": "chong ana",
+      "file": "ai_temp_vocab_chong_ana_family.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_chong_ana_family.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 45,
+      "id": "dost-family",
+      "groupId": "family",
+      "value": "دوست",
+      "latin": "dost",
+      "file": "ai_temp_vocab_dost_family.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_dost_family.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 46,
       "id": "one",
       "groupId": "numbers",
       "value": "بىر",
@@ -209,7 +469,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 21,
+      "order": 47,
       "id": "two",
       "groupId": "numbers",
       "value": "ئىككى",
@@ -219,7 +479,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 22,
+      "order": 48,
       "id": "three",
       "groupId": "numbers",
       "value": "ئۈچ",
@@ -229,7 +489,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 23,
+      "order": 49,
       "id": "four",
       "groupId": "numbers",
       "value": "تۆت",
@@ -239,7 +499,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 24,
+      "order": 50,
       "id": "five",
       "groupId": "numbers",
       "value": "بەش",
@@ -249,37 +509,37 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 25,
+      "order": 51,
       "id": "six",
       "groupId": "numbers",
       "value": "ئالتە",
-      "latin": "altë",
+      "latin": "alte",
       "file": "ai_temp_vocab_six.mp3",
       "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_six.mp3",
       "reviewStatus": "待审听"
     },
     {
-      "order": 26,
+      "order": 52,
       "id": "seven",
       "groupId": "numbers",
       "value": "يەتتە",
-      "latin": "yettë",
+      "latin": "yette",
       "file": "ai_temp_vocab_seven.mp3",
       "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_seven.mp3",
       "reviewStatus": "待审听"
     },
     {
-      "order": 27,
+      "order": 53,
       "id": "eight",
       "groupId": "numbers",
       "value": "سەككىز",
-      "latin": "sakkiz",
+      "latin": "sekkiz",
       "file": "ai_temp_vocab_eight.mp3",
       "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_eight.mp3",
       "reviewStatus": "待审听"
     },
     {
-      "order": 28,
+      "order": 54,
       "id": "nine",
       "groupId": "numbers",
       "value": "توققۇز",
@@ -289,7 +549,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 29,
+      "order": 55,
       "id": "ten",
       "groupId": "numbers",
       "value": "ئون",
@@ -299,77 +559,557 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 30,
-      "id": "it-animal",
-      "groupId": "animals",
-      "value": "ئىت",
-      "latin": "it",
-      "file": "ai_temp_vocab_it_animal.mp3",
-      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_it_animal.mp3",
+      "order": 56,
+      "id": "eleven",
+      "groupId": "numbers",
+      "value": "ئون بىر",
+      "latin": "on bir",
+      "file": "ai_temp_vocab_eleven.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_eleven.mp3",
       "reviewStatus": "待审听"
     },
     {
-      "order": 31,
-      "id": "mushuk-animal",
-      "groupId": "animals",
-      "value": "مۈشۈك",
-      "latin": "müshük",
-      "file": "ai_temp_vocab_mushuk_animal.mp3",
-      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_mushuk_animal.mp3",
+      "order": 57,
+      "id": "twelve",
+      "groupId": "numbers",
+      "value": "ئون ئىككى",
+      "latin": "on ikki",
+      "file": "ai_temp_vocab_twelve.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_twelve.mp3",
       "reviewStatus": "待审听"
     },
     {
-      "order": 32,
-      "id": "beliq-animal",
-      "groupId": "animals",
+      "order": 58,
+      "id": "thirteen",
+      "groupId": "numbers",
+      "value": "ئون ئۈچ",
+      "latin": "on üch",
+      "file": "ai_temp_vocab_thirteen.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_thirteen.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 59,
+      "id": "fourteen",
+      "groupId": "numbers",
+      "value": "ئون تۆت",
+      "latin": "on töt",
+      "file": "ai_temp_vocab_fourteen.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_fourteen.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 60,
+      "id": "fifteen",
+      "groupId": "numbers",
+      "value": "ئون بەش",
+      "latin": "on besh",
+      "file": "ai_temp_vocab_fifteen.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_fifteen.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 61,
+      "id": "sixteen",
+      "groupId": "numbers",
+      "value": "ئون ئالتە",
+      "latin": "on alte",
+      "file": "ai_temp_vocab_sixteen.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_sixteen.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 62,
+      "id": "seventeen",
+      "groupId": "numbers",
+      "value": "ئون يەتتە",
+      "latin": "on yette",
+      "file": "ai_temp_vocab_seventeen.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_seventeen.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 63,
+      "id": "eighteen",
+      "groupId": "numbers",
+      "value": "ئون سەككىز",
+      "latin": "on sekkiz",
+      "file": "ai_temp_vocab_eighteen.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_eighteen.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 64,
+      "id": "nineteen",
+      "groupId": "numbers",
+      "value": "ئون توققۇز",
+      "latin": "on toqquz",
+      "file": "ai_temp_vocab_nineteen.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_nineteen.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 65,
+      "id": "twenty",
+      "groupId": "numbers",
+      "value": "يىگىرمە",
+      "latin": "yigirme",
+      "file": "ai_temp_vocab_twenty.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_twenty.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 66,
+      "id": "bugun",
+      "groupId": "time",
+      "value": "بۈگۈن",
+      "latin": "bügün",
+      "file": "ai_temp_vocab_bugun.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_bugun.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 67,
+      "id": "ete",
+      "groupId": "time",
+      "value": "ئەتە",
+      "latin": "ete",
+      "file": "ai_temp_vocab_ete.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_ete.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 68,
+      "id": "tunugun",
+      "groupId": "time",
+      "value": "تۈنۈگۈن",
+      "latin": "tünügün",
+      "file": "ai_temp_vocab_tunugun.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_tunugun.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 69,
+      "id": "hazir",
+      "groupId": "time",
+      "value": "ھازىر",
+      "latin": "hazir",
+      "file": "ai_temp_vocab_hazir.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_hazir.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 70,
+      "id": "waqit",
+      "groupId": "time",
+      "value": "ۋاقىت",
+      "latin": "waqit",
+      "file": "ai_temp_vocab_waqit.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_waqit.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 71,
+      "id": "kun",
+      "groupId": "time",
+      "value": "كۈن",
+      "latin": "kün",
+      "file": "ai_temp_vocab_kun.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_kun.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 72,
+      "id": "hepte",
+      "groupId": "time",
+      "value": "ھەپتە",
+      "latin": "hepte",
+      "file": "ai_temp_vocab_hepte.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_hepte.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 73,
+      "id": "ay-time",
+      "groupId": "time",
+      "value": "ئاي",
+      "latin": "ay",
+      "file": "ai_temp_vocab_ay_time.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_ay_time.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 74,
+      "id": "yil",
+      "groupId": "time",
+      "value": "يىل",
+      "latin": "yil",
+      "file": "ai_temp_vocab_yil.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_yil.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 75,
+      "id": "etigen",
+      "groupId": "time",
+      "value": "ئەتىگەن",
+      "latin": "etigen",
+      "file": "ai_temp_vocab_etigen.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_etigen.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 76,
+      "id": "chush",
+      "groupId": "time",
+      "value": "چۈش",
+      "latin": "chüsh",
+      "file": "ai_temp_vocab_chush.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_chush.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 77,
+      "id": "kech",
+      "groupId": "time",
+      "value": "كەچ",
+      "latin": "kech",
+      "file": "ai_temp_vocab_kech.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_kech.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 78,
+      "id": "keche",
+      "groupId": "time",
+      "value": "كېچە",
+      "latin": "këche",
+      "file": "ai_temp_vocab_keche.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_keche.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 79,
+      "id": "dushenbe",
+      "groupId": "time",
+      "value": "دۈشەنبە",
+      "latin": "düshenbe",
+      "file": "ai_temp_vocab_dushenbe.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_dushenbe.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 80,
+      "id": "jume",
+      "groupId": "time",
+      "value": "جۈمە",
+      "latin": "jüme",
+      "file": "ai_temp_vocab_jume.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_jume.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 81,
+      "id": "bash-body",
+      "groupId": "body",
+      "value": "باش",
+      "latin": "bash",
+      "file": "ai_temp_vocab_bash_body.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_bash_body.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 82,
+      "id": "koz-body",
+      "groupId": "body",
+      "value": "كۆز",
+      "latin": "köz",
+      "file": "ai_temp_vocab_koz_body.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_koz_body.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 83,
+      "id": "qulaq-body",
+      "groupId": "body",
+      "value": "قۇلاق",
+      "latin": "qulaq",
+      "file": "ai_temp_vocab_qulaq_body.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_qulaq_body.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 84,
+      "id": "burun-body",
+      "groupId": "body",
+      "value": "بۇرۇن",
+      "latin": "burun",
+      "file": "ai_temp_vocab_burun_body.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_burun_body.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 85,
+      "id": "eghiz-body",
+      "groupId": "body",
+      "value": "ئېغىز",
+      "latin": "ëghiz",
+      "file": "ai_temp_vocab_eghiz_body.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_eghiz_body.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 86,
+      "id": "qol-body",
+      "groupId": "body",
+      "value": "قول",
+      "latin": "qol",
+      "file": "ai_temp_vocab_qol_body.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_qol_body.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 87,
+      "id": "put-body",
+      "groupId": "body",
+      "value": "پۇت",
+      "latin": "put",
+      "file": "ai_temp_vocab_put_body.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_put_body.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 88,
+      "id": "yurek-body",
+      "groupId": "body",
+      "value": "يۈرەك",
+      "latin": "yürek",
+      "file": "ai_temp_vocab_yurek_body.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_yurek_body.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 89,
+      "id": "boyun-body",
+      "groupId": "body",
+      "value": "بويۇن",
+      "latin": "boyun",
+      "file": "ai_temp_vocab_boyun_body.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_boyun_body.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 90,
+      "id": "arqa-body",
+      "groupId": "body",
+      "value": "ئارقا",
+      "latin": "arqa",
+      "file": "ai_temp_vocab_arqa_body.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_arqa_body.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 91,
+      "id": "chish-body",
+      "groupId": "body",
+      "value": "چىش",
+      "latin": "chish",
+      "file": "ai_temp_vocab_chish_body.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_chish_body.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 92,
+      "id": "til-body",
+      "groupId": "body",
+      "value": "تىل",
+      "latin": "til",
+      "file": "ai_temp_vocab_til_body.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_til_body.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 93,
+      "id": "chach-body",
+      "groupId": "body",
+      "value": "چاچ",
+      "latin": "chach",
+      "file": "ai_temp_vocab_chach_body.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_chach_body.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 94,
+      "id": "qorsaq-body",
+      "groupId": "body",
+      "value": "قورساق",
+      "latin": "qorsaq",
+      "file": "ai_temp_vocab_qorsaq_body.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_qorsaq_body.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 95,
+      "id": "yuz-body",
+      "groupId": "body",
+      "value": "يۈز",
+      "latin": "yüz",
+      "file": "ai_temp_vocab_yuz_body.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_yuz_body.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 96,
+      "id": "nan-food",
+      "groupId": "food",
+      "value": "نان",
+      "latin": "nan",
+      "file": "ai_temp_vocab_nan_food.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_nan_food.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 97,
+      "id": "su-food",
+      "groupId": "food",
+      "value": "سۇ",
+      "latin": "su",
+      "file": "ai_temp_vocab_su_food.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_su_food.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 98,
+      "id": "chay-food",
+      "groupId": "food",
+      "value": "چاي",
+      "latin": "chay",
+      "file": "ai_temp_vocab_chay_food.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_chay_food.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 99,
+      "id": "gosh-food",
+      "groupId": "food",
+      "value": "گۆش",
+      "latin": "gösh",
+      "file": "ai_temp_vocab_gosh_food.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_gosh_food.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 100,
+      "id": "polu-food",
+      "groupId": "food",
+      "value": "پولۇ",
+      "latin": "polu",
+      "file": "ai_temp_vocab_polu_food.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_polu_food.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 101,
+      "id": "mewe-food",
+      "groupId": "food",
+      "value": "مېۋە",
+      "latin": "mëwe",
+      "file": "ai_temp_vocab_mewe_food.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_mewe_food.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 102,
+      "id": "tuz-food",
+      "groupId": "food",
+      "value": "تۇز",
+      "latin": "tuz",
+      "file": "ai_temp_vocab_tuz_food.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_tuz_food.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 103,
+      "id": "sheker-food",
+      "groupId": "food",
+      "value": "شېكەر",
+      "latin": "shëker",
+      "file": "ai_temp_vocab_sheker_food.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_sheker_food.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 104,
+      "id": "may-food",
+      "groupId": "food",
+      "value": "ماي",
+      "latin": "may",
+      "file": "ai_temp_vocab_may_food.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_may_food.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 105,
+      "id": "sut-food",
+      "groupId": "food",
+      "value": "سۈت",
+      "latin": "süt",
+      "file": "ai_temp_vocab_sut_food.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_sut_food.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 106,
+      "id": "tuxum-food",
+      "groupId": "food",
+      "value": "تۇخۇم",
+      "latin": "tuxum",
+      "file": "ai_temp_vocab_tuxum_food.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_tuxum_food.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 107,
+      "id": "guruch-food",
+      "groupId": "food",
+      "value": "گۈرۈچ",
+      "latin": "gürüch",
+      "file": "ai_temp_vocab_guruch_food.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_guruch_food.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 108,
+      "id": "shorpa-food",
+      "groupId": "food",
+      "value": "شورپا",
+      "latin": "shorpa",
+      "file": "ai_temp_vocab_shorpa_food.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_shorpa_food.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 109,
+      "id": "qetiq-food",
+      "groupId": "food",
+      "value": "قېتىق",
+      "latin": "qëtiq",
+      "file": "ai_temp_vocab_qetiq_food.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_qetiq_food.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 110,
+      "id": "beliq-food",
+      "groupId": "food",
       "value": "بېلىق",
       "latin": "bëliq",
-      "file": "ai_temp_vocab_beliq_animal.mp3",
-      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_beliq_animal.mp3",
+      "file": "ai_temp_vocab_beliq_food.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_beliq_food.mp3",
       "reviewStatus": "待审听"
     },
     {
-      "order": 33,
-      "id": "qush-animal",
-      "groupId": "animals",
-      "value": "قۇش",
-      "latin": "qush",
-      "file": "ai_temp_vocab_qush_animal.mp3",
-      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_qush_animal.mp3",
-      "reviewStatus": "待审听"
-    },
-    {
-      "order": 34,
-      "id": "kala-animal",
-      "groupId": "animals",
-      "value": "كالا",
-      "latin": "kala",
-      "file": "ai_temp_vocab_kala_animal.mp3",
-      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_kala_animal.mp3",
-      "reviewStatus": "待审听"
-    },
-    {
-      "order": 35,
-      "id": "qoy-animal",
-      "groupId": "animals",
-      "value": "قوي",
-      "latin": "qoy",
-      "file": "ai_temp_vocab_qoy_animal.mp3",
-      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_qoy_animal.mp3",
-      "reviewStatus": "待审听"
-    },
-    {
-      "order": 36,
-      "id": "toxu-animal",
-      "groupId": "animals",
-      "value": "توخۇ",
-      "latin": "toxu",
-      "file": "ai_temp_vocab_toxu_animal.mp3",
-      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_toxu_animal.mp3",
-      "reviewStatus": "待审听"
-    },
-    {
-      "order": 37,
+      "order": 111,
       "id": "pemidur-vegetable",
       "groupId": "vegetables",
       "value": "پەمىدۇر",
@@ -379,7 +1119,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 38,
+      "order": 112,
       "id": "piyaz-vegetable",
       "groupId": "vegetables",
       "value": "پىياز",
@@ -389,7 +1129,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 39,
+      "order": 113,
       "id": "yangyu-vegetable",
       "groupId": "vegetables",
       "value": "ياڭيۇ",
@@ -399,7 +1139,17 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 40,
+      "order": 114,
+      "id": "berengge-vegetable",
+      "groupId": "vegetables",
+      "value": "بەرەڭگە",
+      "latin": "berengge",
+      "file": "ai_temp_vocab_berengge_vegetable.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_berengge_vegetable.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 115,
       "id": "sewze-vegetable",
       "groupId": "vegetables",
       "value": "سەۋزە",
@@ -409,7 +1159,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 41,
+      "order": 116,
       "id": "samsaq-vegetable",
       "groupId": "vegetables",
       "value": "سامساق",
@@ -419,13 +1169,693 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 42,
+      "order": 117,
       "id": "terxemek-vegetable",
       "groupId": "vegetables",
       "value": "تەرخەمەك",
       "latin": "terxemek",
       "file": "ai_temp_vocab_terxemek_vegetable.mp3",
       "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_terxemek_vegetable.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 118,
+      "id": "kawa-vegetable",
+      "groupId": "vegetables",
+      "value": "كاۋا",
+      "latin": "kawa",
+      "file": "ai_temp_vocab_kawa_vegetable.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_kawa_vegetable.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 119,
+      "id": "laza-vegetable",
+      "groupId": "vegetables",
+      "value": "لازا",
+      "latin": "laza",
+      "file": "ai_temp_vocab_laza_vegetable.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_laza_vegetable.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 120,
+      "id": "koktat-vegetable",
+      "groupId": "vegetables",
+      "value": "كۆكتات",
+      "latin": "köktat",
+      "file": "ai_temp_vocab_koktat_vegetable.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_koktat_vegetable.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 121,
+      "id": "yesiwilek-vegetable",
+      "groupId": "vegetables",
+      "value": "يېسىۋىلەك",
+      "latin": "yësiwilek",
+      "file": "ai_temp_vocab_yesiwilek_vegetable.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_yesiwilek_vegetable.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 122,
+      "id": "palek-vegetable",
+      "groupId": "vegetables",
+      "value": "پالەك",
+      "latin": "palek",
+      "file": "ai_temp_vocab_palek_vegetable.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_palek_vegetable.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 123,
+      "id": "chamghur-vegetable",
+      "groupId": "vegetables",
+      "value": "چامغۇر",
+      "latin": "chamghur",
+      "file": "ai_temp_vocab_chamghur_vegetable.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_chamghur_vegetable.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 124,
+      "id": "badamjan-vegetable",
+      "groupId": "vegetables",
+      "value": "بادامجان",
+      "latin": "badamjan",
+      "file": "ai_temp_vocab_badamjan_vegetable.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_badamjan_vegetable.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 125,
+      "id": "qizilmuch-vegetable",
+      "groupId": "vegetables",
+      "value": "قىزىلمۇچ",
+      "latin": "qizilmuch",
+      "file": "ai_temp_vocab_qizilmuch_vegetable.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_qizilmuch_vegetable.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 126,
+      "id": "it-animal",
+      "groupId": "animals",
+      "value": "ئىت",
+      "latin": "it",
+      "file": "ai_temp_vocab_it_animal.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_it_animal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 127,
+      "id": "mushuk-animal",
+      "groupId": "animals",
+      "value": "مۈشۈك",
+      "latin": "müshük",
+      "file": "ai_temp_vocab_mushuk_animal.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_mushuk_animal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 128,
+      "id": "beliq-animal",
+      "groupId": "animals",
+      "value": "بېلىق",
+      "latin": "bëliq",
+      "file": "ai_temp_vocab_beliq_animal.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_beliq_animal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 129,
+      "id": "qush-animal",
+      "groupId": "animals",
+      "value": "قۇش",
+      "latin": "qush",
+      "file": "ai_temp_vocab_qush_animal.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_qush_animal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 130,
+      "id": "kala-animal",
+      "groupId": "animals",
+      "value": "كالا",
+      "latin": "kala",
+      "file": "ai_temp_vocab_kala_animal.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_kala_animal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 131,
+      "id": "qoy-animal",
+      "groupId": "animals",
+      "value": "قوي",
+      "latin": "qoy",
+      "file": "ai_temp_vocab_qoy_animal.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_qoy_animal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 132,
+      "id": "toxu-animal",
+      "groupId": "animals",
+      "value": "توخۇ",
+      "latin": "toxu",
+      "file": "ai_temp_vocab_toxu_animal.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_toxu_animal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 133,
+      "id": "at-animal",
+      "groupId": "animals",
+      "value": "ئات",
+      "latin": "at",
+      "file": "ai_temp_vocab_at_animal.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_at_animal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 134,
+      "id": "toge-animal",
+      "groupId": "animals",
+      "value": "تۆگە",
+      "latin": "töge",
+      "file": "ai_temp_vocab_toge_animal.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_toge_animal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 135,
+      "id": "bore-animal",
+      "groupId": "animals",
+      "value": "بۆرە",
+      "latin": "böre",
+      "file": "ai_temp_vocab_bore_animal.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_bore_animal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 136,
+      "id": "burkut-animal",
+      "groupId": "animals",
+      "value": "بۈركۈت",
+      "latin": "bürküt",
+      "file": "ai_temp_vocab_burkut_animal.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_burkut_animal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 137,
+      "id": "ochke-animal",
+      "groupId": "animals",
+      "value": "ئۆچكە",
+      "latin": "öchke",
+      "file": "ai_temp_vocab_ochke_animal.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_ochke_animal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 138,
+      "id": "chashqan-animal",
+      "groupId": "animals",
+      "value": "چاشقان",
+      "latin": "chashqan",
+      "file": "ai_temp_vocab_chashqan_animal.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_chashqan_animal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 139,
+      "id": "toshqan-animal",
+      "groupId": "animals",
+      "value": "توشقان",
+      "latin": "toshqan",
+      "file": "ai_temp_vocab_toshqan_animal.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_toshqan_animal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 140,
+      "id": "yilan-animal",
+      "groupId": "animals",
+      "value": "يىلان",
+      "latin": "yilan",
+      "file": "ai_temp_vocab_yilan_animal.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_yilan_animal.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 141,
+      "id": "oy-home",
+      "groupId": "home",
+      "value": "ئۆي",
+      "latin": "öy",
+      "file": "ai_temp_vocab_oy_home.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_oy_home.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 142,
+      "id": "ishik-home",
+      "groupId": "home",
+      "value": "ئىشىك",
+      "latin": "ishik",
+      "file": "ai_temp_vocab_ishik_home.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_ishik_home.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 143,
+      "id": "dereze-home",
+      "groupId": "home",
+      "value": "دەرىزە",
+      "latin": "derize",
+      "file": "ai_temp_vocab_dereze_home.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_dereze_home.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 144,
+      "id": "stol-home",
+      "groupId": "home",
+      "value": "ستول",
+      "latin": "stol",
+      "file": "ai_temp_vocab_stol_home.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_stol_home.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 145,
+      "id": "kitab-home",
+      "groupId": "home",
+      "value": "كىتاب",
+      "latin": "kitab",
+      "file": "ai_temp_vocab_kitab_home.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_kitab_home.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 146,
+      "id": "orunduq-home",
+      "groupId": "home",
+      "value": "ئورۇندۇق",
+      "latin": "orunduq",
+      "file": "ai_temp_vocab_orunduq_home.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_orunduq_home.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 147,
+      "id": "kariwat-home",
+      "groupId": "home",
+      "value": "كارىۋات",
+      "latin": "kariwat",
+      "file": "ai_temp_vocab_kariwat_home.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_kariwat_home.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 148,
+      "id": "chiragh-home",
+      "groupId": "home",
+      "value": "چىراغ",
+      "latin": "chiragh",
+      "file": "ai_temp_vocab_chiragh_home.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_chiragh_home.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 149,
+      "id": "qelem-home",
+      "groupId": "home",
+      "value": "قەلەم",
+      "latin": "qelem",
+      "file": "ai_temp_vocab_qelem_home.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_qelem_home.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 150,
+      "id": "depter-home",
+      "groupId": "home",
+      "value": "دەپتەر",
+      "latin": "depter",
+      "file": "ai_temp_vocab_depter_home.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_depter_home.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 151,
+      "id": "somka-home",
+      "groupId": "home",
+      "value": "سومكا",
+      "latin": "somka",
+      "file": "ai_temp_vocab_somka_home.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_somka_home.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 152,
+      "id": "telefon-home",
+      "groupId": "home",
+      "value": "تېلېفون",
+      "latin": "telefon",
+      "file": "ai_temp_vocab_telefon_home.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_telefon_home.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 153,
+      "id": "achquch-home",
+      "groupId": "home",
+      "value": "ئاچقۇچ",
+      "latin": "achquch",
+      "file": "ai_temp_vocab_achquch_home.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_achquch_home.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 154,
+      "id": "saet-home",
+      "groupId": "home",
+      "value": "سائەت",
+      "latin": "saet",
+      "file": "ai_temp_vocab_saet_home.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_saet_home.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 155,
+      "id": "pul-home",
+      "groupId": "home",
+      "value": "پۇل",
+      "latin": "pul",
+      "file": "ai_temp_vocab_pul_home.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_pul_home.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 156,
+      "id": "qizil-color",
+      "groupId": "colors",
+      "value": "قىزىل",
+      "latin": "qizil",
+      "file": "ai_temp_vocab_qizil_color.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_qizil_color.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 157,
+      "id": "kok-color",
+      "groupId": "colors",
+      "value": "كۆك",
+      "latin": "kök",
+      "file": "ai_temp_vocab_kok_color.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_kok_color.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 158,
+      "id": "yeshil-color",
+      "groupId": "colors",
+      "value": "يېشىل",
+      "latin": "yëshil",
+      "file": "ai_temp_vocab_yeshil_color.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_yeshil_color.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 159,
+      "id": "seriq-color",
+      "groupId": "colors",
+      "value": "سېرىق",
+      "latin": "sëriq",
+      "file": "ai_temp_vocab_seriq_color.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_seriq_color.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 160,
+      "id": "qara-color",
+      "groupId": "colors",
+      "value": "قارا",
+      "latin": "qara",
+      "file": "ai_temp_vocab_qara_color.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_qara_color.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 161,
+      "id": "aq-color",
+      "groupId": "colors",
+      "value": "ئاق",
+      "latin": "aq",
+      "file": "ai_temp_vocab_aq_color.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_aq_color.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 162,
+      "id": "toq-seriq-color",
+      "groupId": "colors",
+      "value": "توق سېرىق",
+      "latin": "toq sëriq",
+      "file": "ai_temp_vocab_toq_seriq_color.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_toq_seriq_color.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 163,
+      "id": "binepshe-color",
+      "groupId": "colors",
+      "value": "بىنەپشە",
+      "latin": "binepshe",
+      "file": "ai_temp_vocab_binepshe_color.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_binepshe_color.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 164,
+      "id": "qongur-color",
+      "groupId": "colors",
+      "value": "قوڭۇر",
+      "latin": "qongur",
+      "file": "ai_temp_vocab_qongur_color.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_qongur_color.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 165,
+      "id": "kulreng-color",
+      "groupId": "colors",
+      "value": "كۈلرەڭ",
+      "latin": "külreng",
+      "file": "ai_temp_vocab_kulreng_color.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_kulreng_color.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 166,
+      "id": "altun-color",
+      "groupId": "colors",
+      "value": "ئالتۇن",
+      "latin": "altun",
+      "file": "ai_temp_vocab_altun_color.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_altun_color.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 167,
+      "id": "kumush-color",
+      "groupId": "colors",
+      "value": "كۈمۈش",
+      "latin": "kümüsh",
+      "file": "ai_temp_vocab_kumush_color.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_kumush_color.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 168,
+      "id": "halreng-color",
+      "groupId": "colors",
+      "value": "ھالرەڭ",
+      "latin": "halreng",
+      "file": "ai_temp_vocab_halreng_color.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_halreng_color.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 169,
+      "id": "sus-kok-color",
+      "groupId": "colors",
+      "value": "سۇس كۆك",
+      "latin": "sus kök",
+      "file": "ai_temp_vocab_sus_kok_color.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_sus_kok_color.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 170,
+      "id": "qeniq-kok-color",
+      "groupId": "colors",
+      "value": "قېنىق كۆك",
+      "latin": "qëniq kök",
+      "file": "ai_temp_vocab_qeniq_kok_color.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_qeniq_kok_color.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 171,
+      "id": "kelish-action",
+      "groupId": "actions",
+      "value": "كېلىش",
+      "latin": "këlish",
+      "file": "ai_temp_vocab_kelish_action.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_kelish_action.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 172,
+      "id": "ketish-action",
+      "groupId": "actions",
+      "value": "كېتىش",
+      "latin": "këtish",
+      "file": "ai_temp_vocab_ketish_action.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_ketish_action.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 173,
+      "id": "oqush-action",
+      "groupId": "actions",
+      "value": "ئوقۇش",
+      "latin": "oqush",
+      "file": "ai_temp_vocab_oqush_action.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_oqush_action.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 174,
+      "id": "yezish-action",
+      "groupId": "actions",
+      "value": "يېزىش",
+      "latin": "yëzish",
+      "file": "ai_temp_vocab_yezish_action.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_yezish_action.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 175,
+      "id": "korush-action",
+      "groupId": "actions",
+      "value": "كۆرۈش",
+      "latin": "körüsh",
+      "file": "ai_temp_vocab_korush_action.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_korush_action.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 176,
+      "id": "anglash-action",
+      "groupId": "actions",
+      "value": "ئاڭلاش",
+      "latin": "anglash",
+      "file": "ai_temp_vocab_anglash_action.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_anglash_action.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 177,
+      "id": "sozlesh-action",
+      "groupId": "actions",
+      "value": "سۆزلەش",
+      "latin": "sözlesh",
+      "file": "ai_temp_vocab_sozlesh_action.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_sozlesh_action.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 178,
+      "id": "yeyish-action",
+      "groupId": "actions",
+      "value": "يېيىش",
+      "latin": "yëyish",
+      "file": "ai_temp_vocab_yeyish_action.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_yeyish_action.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 179,
+      "id": "ichish-action",
+      "groupId": "actions",
+      "value": "ئىچىش",
+      "latin": "ichish",
+      "file": "ai_temp_vocab_ichish_action.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_ichish_action.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 180,
+      "id": "berish-action",
+      "groupId": "actions",
+      "value": "بېرىش",
+      "latin": "bërish",
+      "file": "ai_temp_vocab_berish_action.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_berish_action.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 181,
+      "id": "elish-action",
+      "groupId": "actions",
+      "value": "ئېلىش",
+      "latin": "ëlish",
+      "file": "ai_temp_vocab_elish_action.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_elish_action.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 182,
+      "id": "echish-action",
+      "groupId": "actions",
+      "value": "ئېچىش",
+      "latin": "ëchish",
+      "file": "ai_temp_vocab_echish_action.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_echish_action.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 183,
+      "id": "taqash-action",
+      "groupId": "actions",
+      "value": "تاقاش",
+      "latin": "taqash",
+      "file": "ai_temp_vocab_taqash_action.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_taqash_action.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 184,
+      "id": "olturush-action",
+      "groupId": "actions",
+      "value": "ئولتۇرۇش",
+      "latin": "olturush",
+      "file": "ai_temp_vocab_olturush_action.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_olturush_action.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 185,
+      "id": "bilish-action",
+      "groupId": "actions",
+      "value": "بىلىش",
+      "latin": "bilish",
+      "file": "ai_temp_vocab_bilish_action.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_bilish_action.mp3",
       "reviewStatus": "待审听"
     }
   ]
