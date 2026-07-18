@@ -100,6 +100,36 @@
     },
     {
       "order": 10,
+      "id": "practice-keyboard-nun",
+      "groupId": "keyboard-loop",
+      "value": "ن",
+      "latin": "n",
+      "file": "ai_temp_practice_keyboard_nun.mp3",
+      "outputPath": "./assets/audio/ai-temp/practice/ai_temp_practice_keyboard_nun.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 11,
+      "id": "practice-keyboard-man",
+      "groupId": "keyboard-loop",
+      "value": "مان",
+      "latin": "man",
+      "file": "ai_temp_practice_keyboard_man.mp3",
+      "outputPath": "./assets/audio/ai-temp/practice/ai_temp_practice_keyboard_man.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 12,
+      "id": "practice-keyboard-ana",
+      "groupId": "keyboard-loop",
+      "value": "ئانا",
+      "latin": "ana",
+      "file": "ai_temp_practice_keyboard_ana.mp3",
+      "outputPath": "./assets/audio/ai-temp/practice/ai_temp_practice_keyboard_ana.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 13,
       "id": "practice-review-sin",
       "groupId": "review-loop",
       "value": "س",
@@ -109,7 +139,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 11,
+      "order": 14,
       "id": "practice-review-siz",
       "groupId": "review-loop",
       "value": "سىز",
@@ -119,7 +149,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 12,
+      "order": 15,
       "id": "practice-review-five",
       "groupId": "review-loop",
       "value": "بەش",
