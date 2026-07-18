@@ -260,9 +260,10 @@ assert.ok(!app.innerHTML.includes("AI 临时音频 / 真人音频待录制"), "h
 
 includesAll(
   renderState("state.screen = 'writing'"),
-  ["练习中心", "强化训练", "本地错题", "practice-topic-row", "听音辨认", "跟读练习", "书写、键盘", "错题复习"],
+  ["练习中心", "强化训练", "本地错题", "practice-topic-row", "听音辨认", "跟读练习", "书写", "键盘", "错题复习"],
   "practice hub"
 );
+assert.ok(!app.innerHTML.includes("书写、键盘"), "practice hub should split writing and keyboard into separate entries");
 for (const uyghurPreview of ["ب", "با", "مەن", "رەھمەت", "ئانا"]) {
   assert.ok(!app.innerHTML.includes(uyghurPreview), `practice hub should not show Uyghur preview ${uyghurPreview}`);
 }
@@ -304,7 +305,7 @@ includesAll(
       attempts: 1
     }];
   `),
-  ["今日进度", "2 / 31", "需要复习 1 个", "继续错题复习"],
+  ["今日进度", "2 / 32", "需要复习 1 个", "继续错题复习"],
   "home progress summary"
 );
 assert.ok(!app.innerHTML.includes("学习地图"), "home screen should not show the learning map");
@@ -533,8 +534,15 @@ includesAll(
 
 includesAll(
   renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'writing-loop'; state.currentPracticeItemId = 'practice-write-ana'; state.keyboardValue = ''"),
-  ["手写板", "writing-canvas", "清空画布", "键盘步骤", "ئا → ن → ا", "点击 ئا", "还差 3 键"],
-  "practice writing canvas and keyboard guide"
+  ["手写板", "writing-canvas", "清空画布", "完成后评价", "点位正确"],
+  "practice writing canvas"
+);
+assert.ok(!app.innerHTML.includes("键盘步骤"), "practice writing entry should not show keyboard steps");
+
+includesAll(
+  renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'keyboard-loop'; state.currentPracticeItemId = 'practice-keyboard-ana'; state.keyboardValue = ''"),
+  ["键盘步骤", "ئا → ن → ا", "点击 ئا", "还差 3 键"],
+  "practice keyboard guide"
 );
 
 includesAll(

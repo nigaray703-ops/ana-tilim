@@ -164,6 +164,9 @@ for (const audioItem of alphabetAudioItems) {
 assertGroupShape(comboGroups, "combo");
 assertGroupShape(vocabGroups, "vocab");
 assertGroupShape(practiceGroups, "practice");
+assert.ok(practiceGroups.some((group) => group.mode === "write" && group.title === "书写"), "practice groups should include a standalone writing entry");
+assert.ok(practiceGroups.some((group) => group.mode === "keyboard" && group.title === "键盘"), "practice groups should include a standalone keyboard entry");
+assert.ok(!practiceGroups.some((group) => group.title.includes("书写、键盘")), "practice groups should not combine writing and keyboard in one title");
 assertList(readingUnits, "reading units");
 assert.equal(readingUnits.length, 4, "reading course should add units five through eight");
 

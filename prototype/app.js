@@ -1555,7 +1555,8 @@ function renderGroupCard(group) {
 function practiceTopicLabel(group) {
   if (group.mode === "listen") return "听音选择";
   if (group.mode === "repeat") return "跟读确认";
-  if (group.mode === "write") return "书写、键盘";
+  if (group.mode === "write") return "手写板";
+  if (group.mode === "keyboard") return "键盘输入";
   return "错题回看";
 }
 
@@ -3130,10 +3131,8 @@ function renderPracticeModeCard(group, item) {
   }
 
   if (group.mode === "write") {
-    const keyboardParts = item.parts;
-    const inputKeys = [item.value, ...item.parts].filter((key, index, keys) => key && keys.indexOf(key) === index);
-    const isCorrect = state.keyboardValue === item.value;
-    const hasInput = state.keyboardValue.length > 0;
+    const checkedCount = writingCheckOptions.filter((check) => state.writingChecks.includes(check.id)).length;
+    const isComplete = checkedCount === writingCheckOptions.length;
 
     return `
       <article class="card practice-mode-card">
@@ -3156,6 +3155,20 @@ function renderPracticeModeCard(group, item) {
         value: item.value,
         parts: item.parts
       })}
+      ${renderWritingSelfCheck()}
+      <div class="feedback ${isComplete ? "good" : ""}">
+        ${isComplete ? "书写自查完成。本轮书写练习可以查看结果。" : "写完后勾选自查项，再查看结果。"}
+      </div>
+    `;
+  }
+
+  if (group.mode === "keyboard") {
+    const keyboardParts = item.parts;
+    const inputKeys = [item.value, ...item.parts].filter((key, index, keys) => key && keys.indexOf(key) === index);
+    const isCorrect = state.keyboardValue === item.value;
+    const hasInput = state.keyboardValue.length > 0;
+
+    return `
       <input
         class="rtl-input uyghur"
         value="${state.keyboardValue}"
@@ -3163,7 +3176,6 @@ function renderPracticeModeCard(group, item) {
         readonly
         dir="rtl"
       />
-      ${renderWritingSelfCheck()}
       ${renderKeyboardGuide(keyboardParts, item.value)}
       <div class="practice-key-row" aria-label="当前复习项快捷键">
         ${inputKeys
@@ -3193,7 +3205,7 @@ function renderPracticeModeCard(group, item) {
       ${
         hasInput
           ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
-              isCorrect ? "输入正确。本轮书写和键盘练习完成。" : `继续输入，目标是 ${item.value}。`
+              isCorrect ? "输入正确。本轮键盘练习完成。" : `继续输入，目标是 ${item.value}。`
             }</div>`
           : `<div class="feedback">提示：可以先点完整词形 <span class="uyghur">${item.value}</span>，再逐步练拆分键。</div>`
       }
@@ -3331,7 +3343,9 @@ function renderPracticeComplete() {
   const item = currentPracticeItem();
   const listened = group.mode === "listen" ? (state.selectedListening === item.id ? "已辨认" : "未选择") : "可选";
   const repeated = group.mode === "repeat" ? (state.practiceSpoken ? "已跟读" : "未跟读") : "可选";
-  const typed = group.mode === "write" ? (state.keyboardValue === item.value ? "已输入" : "未完成") : "可选";
+  const written =
+    group.mode === "write" && writingCheckOptions.every((check) => state.writingChecks.includes(check.id)) ? "已自查" : "可选";
+  const typed = group.mode === "keyboard" ? (state.keyboardValue === item.value ? "已输入" : "未完成") : "可选";
 
   return screen(
     `
@@ -3352,6 +3366,7 @@ function renderPracticeComplete() {
           <div class="audit-grid">
             <div class="audit-row"><strong>听音</strong><span>${listened}</span></div>
             <div class="audit-row"><strong>跟读</strong><span>${repeated}</span></div>
+            <div class="audit-row"><strong>书写</strong><span>${written}</span></div>
             <div class="audit-row"><strong>键盘</strong><span>${typed}</span></div>
             <div class="audit-row"><strong>备注</strong><span>${item.audioStatus}；正式版会替换为审听后的真人音频。</span></div>
           </div>
@@ -3697,11 +3712,13 @@ document.addEventListener("click", (event) => {
     if (state.screen === "practiceSession" && target === "practiceComplete") {
       const group = currentPracticeGroup();
       const item = currentPracticeItem();
+      const writingComplete = writingCheckOptions.every((check) => state.writingChecks.includes(check.id));
       const completedPractice =
         group.mode === "review" ||
         (group.mode === "listen" && state.selectedListening === item.id) ||
         (group.mode === "repeat" && state.practiceSpoken) ||
-        (group.mode === "write" && state.keyboardValue === item.value);
+        (group.mode === "write" && writingComplete) ||
+        (group.mode === "keyboard" && state.keyboardValue === item.value);
 
       if (completedPractice) {
         markProgress("practice", state.selectedPracticeGroupId, group.mode);
@@ -4021,8 +4038,8 @@ document.addEventListener("click", (event) => {
     if (state.screen === "vocabKeyboard" && state.keyboardValue === currentVocabItem().value) {
       markProgress("vocab", state.selectedVocabGroupId, "keyboard");
     }
-    if (state.screen === "practiceSession" && currentPracticeGroup().mode === "write" && state.keyboardValue === currentPracticeItem().value) {
-      markProgress("practice", state.selectedPracticeGroupId, "write");
+    if (state.screen === "practiceSession" && currentPracticeGroup().mode === "keyboard" && state.keyboardValue === currentPracticeItem().value) {
+      markProgress("practice", state.selectedPracticeGroupId, "keyboard");
     }
     render();
     return;
@@ -4057,6 +4074,13 @@ document.addEventListener("click", (event) => {
       state.writingChecks = state.writingChecks.filter((item) => item !== checkId);
     } else {
       state.writingChecks = [...state.writingChecks, checkId].slice(0, writingCheckOptions.length);
+    }
+    if (
+      state.screen === "practiceSession" &&
+      currentPracticeGroup().mode === "write" &&
+      writingCheckOptions.every((item) => state.writingChecks.includes(item.id))
+    ) {
+      markProgress("practice", state.selectedPracticeGroupId, "write");
     }
     render();
     return;

@@ -86,9 +86,9 @@ const practiceGroups = [
     id: "writing-loop",
     kind: "practice",
     mode: "write",
-    title: "书写、键盘",
+    title: "书写",
     letters: ["ن", "مان", "ئانا"],
-    goal: "先描摹，再用键盘输入同一个目标",
+    goal: "在手写板描摹，再做自查",
     status: "已开放",
     items: [
       {
@@ -118,6 +118,47 @@ const practiceGroups = [
         latin: "ana",
         label: "称呼词形预览",
         hint: "家庭称呼不设唯一答案，先练 ئانا 的词形。",
+        parts: ["ئا", "ن", "ا"],
+        audioStatus: "AI 临时音频，真人音频待录制"
+      }
+    ]
+  },
+  {
+    id: "keyboard-loop",
+    kind: "practice",
+    mode: "keyboard",
+    title: "键盘",
+    letters: ["ن", "مان", "ئانا"],
+    goal: "按顺序输入目标字母或词形",
+    status: "已开放",
+    items: [
+      {
+        id: "practice-keyboard-nun",
+        type: "字母",
+        value: "ن",
+        latin: "n",
+        label: "第一单元字母",
+        hint: "上方一个点，先练完整输入，再练拆分键。",
+        parts: ["ن"],
+        audioStatus: "AI 临时音频，真人音频待录制"
+      },
+      {
+        id: "practice-keyboard-man",
+        type: "组合",
+        value: "مان",
+        latin: "man",
+        label: "第二单元三字母慢读",
+        hint: "م + ا + ن，按顺序输入每一个部分。",
+        parts: ["م", "ا", "ن"],
+        audioStatus: "AI 临时音频，真人音频待录制"
+      },
+      {
+        id: "practice-keyboard-ana",
+        type: "词形",
+        value: "ئانا",
+        latin: "ana",
+        label: "称呼词形预览",
+        hint: "先点完整词形，再按 ئا、ن、ا 的顺序输入。",
         parts: ["ئا", "ن", "ا"],
         audioStatus: "AI 临时音频，真人音频待录制"
       }
