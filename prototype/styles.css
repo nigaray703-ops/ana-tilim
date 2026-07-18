@@ -301,7 +301,10 @@ button {
 .form-grid,
 .practice-key-row,
 .keyboard-grid,
-.choice-grid {
+.choice-grid,
+.step-list,
+.mini-unit-row,
+.adjacent-nav {
   display: grid;
   gap: 10px;
 }
@@ -405,6 +408,23 @@ button {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.mini-unit-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 12px 0;
+}
+
+.mini-unit-row span {
+  min-height: 44px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--ink-soft);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
 .action-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -467,6 +487,11 @@ button {
   background: var(--paper);
 }
 
+.secondary-button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
 .ghost-button,
 .icon-button {
   min-height: 40px;
@@ -514,6 +539,71 @@ button {
 .path-list {
   display: grid;
   gap: 10px;
+}
+
+.step-list {
+  margin-top: 12px;
+}
+
+.step-item {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.64);
+}
+
+.step-item span {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius);
+  color: #fff;
+  background: var(--teal);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.step-item strong {
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.item-progress {
+  display: grid;
+  grid-template-columns: minmax(52px, max-content) minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(14, 155, 177, 0.22);
+  border-radius: var(--radius);
+  background: rgba(223, 246, 247, 0.72);
+}
+
+.item-progress .step-state {
+  max-width: none;
+  text-align: left;
+}
+
+.item-progress strong {
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.adjacent-nav {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.next-action-card {
+  background:
+    linear-gradient(180deg, rgba(223, 246, 247, 0.78), rgba(255, 255, 255, 0.9)),
+    var(--paper);
 }
 
 .lesson-step {
