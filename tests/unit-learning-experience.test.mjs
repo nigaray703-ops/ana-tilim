@@ -330,11 +330,22 @@ assert.equal(savedProgress().learningProgress.combos["open-a"].completed, true, 
 
 includesAll(
   renderState("state.screen = 'vocab'; state.selectedVocabGroupId = 'family'; state.currentVocabItemId = 'ana-family'"),
-  ["第四单元：日常用语与词汇", "本课词汇", "vocab-row-list", "ئانا", "ana", "妈妈、母亲", "不设唯一答案"],
+  ["第四单元：日常用语与词汇", "本课词汇", "vocab-subgroup", "ئانا", "ana", "妈妈、母亲", "不设唯一答案"],
   "vocab lesson"
 );
 assert.ok(!app.innerHTML.includes("letter-focus"), "vocab lesson should not use the old large focus card");
 assert.ok(!app.innerHTML.includes("中文预览"), "vocab lesson should avoid repeated explanation cards");
+
+includesAll(
+  renderState("state.screen = 'vocab'; state.selectedVocabGroupId = 'numbers'; state.currentVocabItemId = 'one'"),
+  ["1-10", "11-20", "整十数", "大数", "ئون مىڭ", "يۈز مىليون"],
+  "number vocabulary sections"
+);
+includesAll(
+  renderState("state.screen = 'vocab'; state.selectedVocabGroupId = 'time'; state.currentVocabItemId = 'bugun'"),
+  ["基础时间", "星期", "月份", "دۈشەنبە", "يانۋار"],
+  "time vocabulary sections"
+);
 assert.ok(!app.innerHTML.includes("词库审校字段"), "learning mode should hide audit-only vocabulary fields");
 clickDataset({ action: "set-app-mode", mode: "audit" });
 includesAll(

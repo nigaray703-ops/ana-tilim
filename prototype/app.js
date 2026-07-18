@@ -467,6 +467,22 @@ function currentVocabItem() {
   return currentVocabItems().find((item) => item.id === state.currentVocabItemId) || currentVocabItems()[0];
 }
 
+function currentVocabSection() {
+  const group = currentVocabGroup();
+  const itemId = currentVocabItem().id;
+  return group.sections?.find((section) => section.itemIds.includes(itemId)) || group.sections?.[0] || null;
+}
+
+function currentVocabSectionItems() {
+  const group = currentVocabGroup();
+  const section = currentVocabSection();
+  if (!section) {
+    return group.items;
+  }
+  const itemsById = Object.fromEntries(group.items.map((item) => [item.id, item]));
+  return section.itemIds.map((itemId) => itemsById[itemId]).filter(Boolean);
+}
+
 function currentVocabAudio() {
   return vocabAudioByItemId[currentVocabItem().id] || null;
 }
@@ -2515,28 +2531,47 @@ function renderVocabSelector(items, activeId) {
     .join("");
 }
 
-function renderVocabRows(items, activeId) {
+function renderVocabRow(item, activeId) {
+  return `
+    <button
+      class="vocab-row ${item.id === activeId ? "active" : ""}"
+      data-action="select-vocab"
+      data-id="${item.id}"
+      type="button"
+      ${item.id === activeId ? `aria-current="true"` : ""}
+    >
+      <span class="uyghur">${item.value}</span>
+      <span class="vocab-row-main">
+        <strong>${item.latin}</strong>
+        <small>${item.meaning}</small>
+      </span>
+    </button>
+  `;
+}
+
+function renderVocabRows(group, activeId) {
+  const itemsById = Object.fromEntries(group.items.map((item) => [item.id, item]));
+
   return `
     <div class="vocab-row-list" aria-label="本课词汇">
-      ${items
-        .map((item) => {
-          return `
-            <button
-              class="vocab-row ${item.id === activeId ? "active" : ""}"
-              data-action="select-vocab"
-              data-id="${item.id}"
-              type="button"
-              ${item.id === activeId ? `aria-current="true"` : ""}
-            >
-              <span class="uyghur">${item.value}</span>
-              <span class="vocab-row-main">
-                <strong>${item.latin}</strong>
-                <small>${item.meaning}</small>
-              </span>
-            </button>
-          `;
-        })
-        .join("")}
+      ${
+        group.sections?.length
+          ? group.sections
+              .map((section) => {
+                const sectionItems = section.itemIds.map((itemId) => itemsById[itemId]).filter(Boolean);
+                return `
+                  <section class="vocab-subgroup">
+                    <div class="vocab-subgroup-title">
+                      <strong>${section.title}</strong>
+                      <small>${sectionItems.length} 个词</small>
+                    </div>
+                    ${sectionItems.map((item) => renderVocabRow(item, activeId)).join("")}
+                  </section>
+                `;
+              })
+              .join("")
+          : group.items.map((item) => renderVocabRow(item, activeId)).join("")
+      }
     </div>
   `;
 }
@@ -2567,7 +2602,9 @@ function renderVocabLesson() {
   const group = currentVocabGroup();
   const item = currentVocabItem();
   const audio = currentVocabAudio();
-  const position = itemPosition(currentVocabItems(), item.id);
+  const section = currentVocabSection();
+  const sectionItems = currentVocabSectionItems();
+  const position = itemPosition(sectionItems, item.id);
 
   return screen(
     `
@@ -2583,6 +2620,7 @@ function renderVocabLesson() {
             <div>
               <p class="caption">${isAuditMode() ? "审校优先" : "本课词汇"}</p>
               <h2 class="section-title unit-goal-text">${group.title} · ${group.items.length} 个词</h2>
+              ${section ? `<p class="caption">${section.title}</p>` : ""}
             </div>
             <span class="step-state">${group.status}</span>
           </div>
@@ -2591,7 +2629,7 @@ function renderVocabLesson() {
               ? "中文含义只是预览，正式答案等审校后再锁定。"
               : "点一行选择词；中文仅预览，不设唯一答案。"
           }</p>
-          ${renderVocabRows(group.items, item.id)}
+          ${renderVocabRows(group, item.id)}
         </article>
 
         ${
@@ -2636,7 +2674,7 @@ function renderVocabLesson() {
 function renderVocabRecognition() {
   const group = currentVocabGroup();
   const item = currentVocabItem();
-  const choices = currentVocabItems();
+  const choices = currentVocabSectionItems();
   const hasPicked = Boolean(state.selectedPicture);
   const picked = choices.find((choice) => choice.id === state.selectedPicture);
   const isCorrect = picked && picked.id === item.id;
@@ -2704,6 +2742,7 @@ function renderVocabRecognition() {
 function renderVocabKeyboard() {
   const group = currentVocabGroup();
   const item = currentVocabItem();
+  const sectionItems = currentVocabSectionItems();
   const isCorrect = state.keyboardValue === item.value;
   const hasInput = state.keyboardValue.length > 0;
   const keyboardParts = item.parts;
@@ -2733,7 +2772,7 @@ function renderVocabKeyboard() {
         />
         ${renderKeyboardGuide(keyboardParts, item.value)}
         <div class="practice-key-row" aria-label="本组词形快捷键">
-          ${group.items
+          ${sectionItems
             .map(
               (choice) => `
                 <button class="key-button uyghur" data-action="key" data-key="${choice.value}" type="button">
@@ -2779,7 +2818,9 @@ function renderVocabKeyboard() {
 function renderVocabComplete() {
   const group = currentVocabGroup();
   const item = currentVocabItem();
-  const groupValues = group.items.map((choice) => choice.value).join(" / ");
+  const section = currentVocabSection();
+  const sectionItems = currentVocabSectionItems();
+  const groupValues = sectionItems.map((choice) => choice.value).join(" / ");
 
   return screen(
     `
@@ -2793,7 +2834,7 @@ function renderVocabComplete() {
           <p class="muted">你辨认并输入了 ${item.value}。这些主题词仍在审校前词库里，后续要由母语者确认标准主词、变体和可考答案。</p>
         </article>
         <div class="metric-grid">
-          <div class="metric"><strong>${group.items.length}</strong><span>词形</span></div>
+          <div class="metric"><strong>${sectionItems.length}</strong><span>${section ? section.title : "词形"}</span></div>
           <div class="metric"><strong>1</strong><span>输入</span></div>
           <div class="metric"><strong>审校</strong><span>含义</span></div>
         </div>

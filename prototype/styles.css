@@ -859,8 +859,34 @@ button {
 
 .vocab-row-list {
   display: grid;
-  gap: 8px;
+  gap: 12px;
   margin-top: 10px;
+}
+
+.vocab-subgroup {
+  display: grid;
+  gap: 8px;
+}
+
+.vocab-subgroup-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 2px 0;
+}
+
+.vocab-subgroup-title strong {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.vocab-subgroup-title small {
+  flex: 0 0 auto;
+  color: var(--ink-soft);
+  font-size: 10px;
+  line-height: 1.2;
 }
 
 .vocab-row {

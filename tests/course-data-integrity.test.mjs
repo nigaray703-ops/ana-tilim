@@ -206,9 +206,37 @@ assertVocabTopic({
 assert.ok(vocabGroups.length >= 10 && vocabGroups.length <= 15, "vocab should include 10 to 15 compact daily topics");
 for (const group of vocabGroups) {
   assert.ok(
-    group.items.length >= 15 && group.items.length <= 20,
-    `vocab group ${group.id} should include 15 to 20 words`
+    group.items.length >= 15 && group.items.length <= 45,
+    `vocab group ${group.id} should include at least 15 words without becoming too large`
   );
+  assertList(group.sections, `vocab group ${group.id} sections`);
+  assert.ok(group.sections.length >= 2, `vocab group ${group.id} should be divided into smaller sections`);
+
+  const sectionItemIds = group.sections.flatMap((section) => {
+    assertText(section.id, `vocab group ${group.id} section id`);
+    assertText(section.title, `vocab group ${group.id} section title`);
+    assertList(section.itemIds, `vocab group ${group.id} section item ids`);
+    return section.itemIds;
+  });
+
+  assertUnique(sectionItemIds, `vocab group ${group.id} section item ids`);
+  assert.equal(
+    [...sectionItemIds].sort().join("|"),
+    group.items.map((item) => item.id).sort().join("|"),
+    `vocab group ${group.id} sections should cover every word exactly once`
+  );
+}
+const numberSectionTitles = vocabGroupById.numbers.sections.map((section) => section.title);
+for (const title of ["1-10", "11-20", "整十数", "大数"]) {
+  assert.ok(numberSectionTitles.includes(title), `numbers should include ${title} section`);
+}
+assert.ok(
+  vocabGroupById.numbers.items.some((item) => item.meaning.includes("亿")),
+  "numbers should include a large-number word for 亿"
+);
+const timeSectionTitles = vocabGroupById.time.sections.map((section) => section.title);
+for (const title of ["基础时间", "星期", "月份"]) {
+  assert.ok(timeSectionTitles.includes(title), `time should include ${title} section`);
 }
 
 for (const item of comboItems) {

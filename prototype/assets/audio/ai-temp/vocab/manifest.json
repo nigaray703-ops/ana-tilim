@@ -660,6 +660,166 @@
     },
     {
       "order": 66,
+      "id": "ten-tens",
+      "groupId": "numbers",
+      "value": "ئون",
+      "latin": "on",
+      "file": "ai_temp_vocab_ten_tens.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_ten_tens.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 67,
+      "id": "thirty",
+      "groupId": "numbers",
+      "value": "ئوتتۇز",
+      "latin": "ottuz",
+      "file": "ai_temp_vocab_thirty.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_thirty.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 68,
+      "id": "forty",
+      "groupId": "numbers",
+      "value": "قىرىق",
+      "latin": "qiriq",
+      "file": "ai_temp_vocab_forty.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_forty.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 69,
+      "id": "fifty",
+      "groupId": "numbers",
+      "value": "ئەللىك",
+      "latin": "ellik",
+      "file": "ai_temp_vocab_fifty.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_fifty.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 70,
+      "id": "sixty",
+      "groupId": "numbers",
+      "value": "ئاتمىش",
+      "latin": "atmish",
+      "file": "ai_temp_vocab_sixty.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_sixty.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 71,
+      "id": "seventy",
+      "groupId": "numbers",
+      "value": "يەتمىش",
+      "latin": "yetmish",
+      "file": "ai_temp_vocab_seventy.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_seventy.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 72,
+      "id": "eighty",
+      "groupId": "numbers",
+      "value": "سەكسەن",
+      "latin": "seksen",
+      "file": "ai_temp_vocab_eighty.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_eighty.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 73,
+      "id": "ninety",
+      "groupId": "numbers",
+      "value": "توقسان",
+      "latin": "toqsan",
+      "file": "ai_temp_vocab_ninety.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_ninety.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 74,
+      "id": "hundred",
+      "groupId": "numbers",
+      "value": "يۈز",
+      "latin": "yüz",
+      "file": "ai_temp_vocab_hundred.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_hundred.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 75,
+      "id": "thousand",
+      "groupId": "numbers",
+      "value": "مىڭ",
+      "latin": "ming",
+      "file": "ai_temp_vocab_thousand.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_thousand.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 76,
+      "id": "ten-thousand",
+      "groupId": "numbers",
+      "value": "ئون مىڭ",
+      "latin": "on ming",
+      "file": "ai_temp_vocab_ten_thousand.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_ten_thousand.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 77,
+      "id": "hundred-thousand",
+      "groupId": "numbers",
+      "value": "يۈز مىڭ",
+      "latin": "yüz ming",
+      "file": "ai_temp_vocab_hundred_thousand.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_hundred_thousand.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 78,
+      "id": "million",
+      "groupId": "numbers",
+      "value": "بىر مىليون",
+      "latin": "bir milyon",
+      "file": "ai_temp_vocab_million.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_million.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 79,
+      "id": "ten-million",
+      "groupId": "numbers",
+      "value": "ئون مىليون",
+      "latin": "on milyon",
+      "file": "ai_temp_vocab_ten_million.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_ten_million.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 80,
+      "id": "hundred-million",
+      "groupId": "numbers",
+      "value": "يۈز مىليون",
+      "latin": "yüz milyon",
+      "file": "ai_temp_vocab_hundred_million.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_hundred_million.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 81,
+      "id": "billion",
+      "groupId": "numbers",
+      "value": "بىر مىليارد",
+      "latin": "bir milyard",
+      "file": "ai_temp_vocab_billion.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_billion.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 82,
       "id": "bugun",
       "groupId": "time",
       "value": "بۈگۈن",
@@ -669,7 +829,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 67,
+      "order": 83,
       "id": "ete",
       "groupId": "time",
       "value": "ئەتە",
@@ -679,7 +839,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 68,
+      "order": 84,
       "id": "tunugun",
       "groupId": "time",
       "value": "تۈنۈگۈن",
@@ -689,7 +849,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 69,
+      "order": 85,
       "id": "hazir",
       "groupId": "time",
       "value": "ھازىر",
@@ -699,7 +859,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 70,
+      "order": 86,
       "id": "waqit",
       "groupId": "time",
       "value": "ۋاقىت",
@@ -709,7 +869,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 71,
+      "order": 87,
       "id": "kun",
       "groupId": "time",
       "value": "كۈن",
@@ -719,7 +879,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 72,
+      "order": 88,
       "id": "hepte",
       "groupId": "time",
       "value": "ھەپتە",
@@ -729,7 +889,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 73,
+      "order": 89,
       "id": "ay-time",
       "groupId": "time",
       "value": "ئاي",
@@ -739,7 +899,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 74,
+      "order": 90,
       "id": "yil",
       "groupId": "time",
       "value": "يىل",
@@ -749,7 +909,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 75,
+      "order": 91,
       "id": "etigen",
       "groupId": "time",
       "value": "ئەتىگەن",
@@ -759,7 +919,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 76,
+      "order": 92,
       "id": "chush",
       "groupId": "time",
       "value": "چۈش",
@@ -769,7 +929,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 77,
+      "order": 93,
       "id": "kech",
       "groupId": "time",
       "value": "كەچ",
@@ -779,7 +939,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 78,
+      "order": 94,
       "id": "keche",
       "groupId": "time",
       "value": "كېچە",
@@ -789,7 +949,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 79,
+      "order": 95,
       "id": "dushenbe",
       "groupId": "time",
       "value": "دۈشەنبە",
@@ -799,7 +959,37 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 80,
+      "order": 96,
+      "id": "seshenbe",
+      "groupId": "time",
+      "value": "سەيشەنبە",
+      "latin": "seyshenbe",
+      "file": "ai_temp_vocab_seshenbe.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_seshenbe.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 97,
+      "id": "charshenbe",
+      "groupId": "time",
+      "value": "چارشەنبە",
+      "latin": "charshenbe",
+      "file": "ai_temp_vocab_charshenbe.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_charshenbe.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 98,
+      "id": "peyshenbe",
+      "groupId": "time",
+      "value": "پەيشەنبە",
+      "latin": "peyshenbe",
+      "file": "ai_temp_vocab_peyshenbe.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_peyshenbe.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 99,
       "id": "jume",
       "groupId": "time",
       "value": "جۈمە",
@@ -809,7 +999,147 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 81,
+      "order": 100,
+      "id": "shenbe",
+      "groupId": "time",
+      "value": "شەنبە",
+      "latin": "shenbe",
+      "file": "ai_temp_vocab_shenbe.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_shenbe.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 101,
+      "id": "yekshembe",
+      "groupId": "time",
+      "value": "يەكشەنبە",
+      "latin": "yekshembe",
+      "file": "ai_temp_vocab_yekshembe.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_yekshembe.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 102,
+      "id": "yanwar",
+      "groupId": "time",
+      "value": "يانۋار",
+      "latin": "yanwar",
+      "file": "ai_temp_vocab_yanwar.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_yanwar.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 103,
+      "id": "fewral",
+      "groupId": "time",
+      "value": "فېۋرال",
+      "latin": "fëwral",
+      "file": "ai_temp_vocab_fewral.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_fewral.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 104,
+      "id": "mart",
+      "groupId": "time",
+      "value": "مارت",
+      "latin": "mart",
+      "file": "ai_temp_vocab_mart.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_mart.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 105,
+      "id": "aprel",
+      "groupId": "time",
+      "value": "ئاپرېل",
+      "latin": "aprël",
+      "file": "ai_temp_vocab_aprel.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_aprel.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 106,
+      "id": "may-month",
+      "groupId": "time",
+      "value": "ماي",
+      "latin": "may",
+      "file": "ai_temp_vocab_may_month.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_may_month.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 107,
+      "id": "iyun",
+      "groupId": "time",
+      "value": "ئىيۇن",
+      "latin": "iyun",
+      "file": "ai_temp_vocab_iyun.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_iyun.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 108,
+      "id": "iyul",
+      "groupId": "time",
+      "value": "ئىيۇل",
+      "latin": "iyul",
+      "file": "ai_temp_vocab_iyul.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_iyul.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 109,
+      "id": "awghust",
+      "groupId": "time",
+      "value": "ئاۋغۇست",
+      "latin": "awghust",
+      "file": "ai_temp_vocab_awghust.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_awghust.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 110,
+      "id": "sentyabr",
+      "groupId": "time",
+      "value": "سېنتەبىر",
+      "latin": "sentyabir",
+      "file": "ai_temp_vocab_sentyabr.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_sentyabr.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 111,
+      "id": "oktyabr",
+      "groupId": "time",
+      "value": "ئۆكتەبىر",
+      "latin": "öktyabir",
+      "file": "ai_temp_vocab_oktyabr.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_oktyabr.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 112,
+      "id": "noyabr",
+      "groupId": "time",
+      "value": "نويابىر",
+      "latin": "noyabir",
+      "file": "ai_temp_vocab_noyabr.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_noyabr.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 113,
+      "id": "dekabr",
+      "groupId": "time",
+      "value": "دېكابىر",
+      "latin": "dëkabir",
+      "file": "ai_temp_vocab_dekabr.mp3",
+      "outputPath": "./assets/audio/ai-temp/vocab/ai_temp_vocab_dekabr.mp3",
+      "reviewStatus": "待审听"
+    },
+    {
+      "order": 114,
       "id": "bash-body",
       "groupId": "body",
       "value": "باش",
@@ -819,7 +1149,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 82,
+      "order": 115,
       "id": "koz-body",
       "groupId": "body",
       "value": "كۆز",
@@ -829,7 +1159,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 83,
+      "order": 116,
       "id": "qulaq-body",
       "groupId": "body",
       "value": "قۇلاق",
@@ -839,7 +1169,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 84,
+      "order": 117,
       "id": "burun-body",
       "groupId": "body",
       "value": "بۇرۇن",
@@ -849,7 +1179,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 85,
+      "order": 118,
       "id": "eghiz-body",
       "groupId": "body",
       "value": "ئېغىز",
@@ -859,7 +1189,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 86,
+      "order": 119,
       "id": "qol-body",
       "groupId": "body",
       "value": "قول",
@@ -869,7 +1199,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 87,
+      "order": 120,
       "id": "put-body",
       "groupId": "body",
       "value": "پۇت",
@@ -879,7 +1209,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 88,
+      "order": 121,
       "id": "yurek-body",
       "groupId": "body",
       "value": "يۈرەك",
@@ -889,7 +1219,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 89,
+      "order": 122,
       "id": "boyun-body",
       "groupId": "body",
       "value": "بويۇن",
@@ -899,7 +1229,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 90,
+      "order": 123,
       "id": "arqa-body",
       "groupId": "body",
       "value": "ئارقا",
@@ -909,7 +1239,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 91,
+      "order": 124,
       "id": "chish-body",
       "groupId": "body",
       "value": "چىش",
@@ -919,7 +1249,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 92,
+      "order": 125,
       "id": "til-body",
       "groupId": "body",
       "value": "تىل",
@@ -929,7 +1259,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 93,
+      "order": 126,
       "id": "chach-body",
       "groupId": "body",
       "value": "چاچ",
@@ -939,7 +1269,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 94,
+      "order": 127,
       "id": "qorsaq-body",
       "groupId": "body",
       "value": "قورساق",
@@ -949,7 +1279,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 95,
+      "order": 128,
       "id": "yuz-body",
       "groupId": "body",
       "value": "يۈز",
@@ -959,7 +1289,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 96,
+      "order": 129,
       "id": "nan-food",
       "groupId": "food",
       "value": "نان",
@@ -969,7 +1299,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 97,
+      "order": 130,
       "id": "su-food",
       "groupId": "food",
       "value": "سۇ",
@@ -979,7 +1309,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 98,
+      "order": 131,
       "id": "chay-food",
       "groupId": "food",
       "value": "چاي",
@@ -989,7 +1319,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 99,
+      "order": 132,
       "id": "gosh-food",
       "groupId": "food",
       "value": "گۆش",
@@ -999,7 +1329,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 100,
+      "order": 133,
       "id": "polu-food",
       "groupId": "food",
       "value": "پولۇ",
@@ -1009,7 +1339,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 101,
+      "order": 134,
       "id": "mewe-food",
       "groupId": "food",
       "value": "مېۋە",
@@ -1019,7 +1349,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 102,
+      "order": 135,
       "id": "tuz-food",
       "groupId": "food",
       "value": "تۇز",
@@ -1029,7 +1359,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 103,
+      "order": 136,
       "id": "sheker-food",
       "groupId": "food",
       "value": "شېكەر",
@@ -1039,7 +1369,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 104,
+      "order": 137,
       "id": "may-food",
       "groupId": "food",
       "value": "ماي",
@@ -1049,7 +1379,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 105,
+      "order": 138,
       "id": "sut-food",
       "groupId": "food",
       "value": "سۈت",
@@ -1059,7 +1389,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 106,
+      "order": 139,
       "id": "tuxum-food",
       "groupId": "food",
       "value": "تۇخۇم",
@@ -1069,7 +1399,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 107,
+      "order": 140,
       "id": "guruch-food",
       "groupId": "food",
       "value": "گۈرۈچ",
@@ -1079,7 +1409,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 108,
+      "order": 141,
       "id": "shorpa-food",
       "groupId": "food",
       "value": "شورپا",
@@ -1089,7 +1419,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 109,
+      "order": 142,
       "id": "qetiq-food",
       "groupId": "food",
       "value": "قېتىق",
@@ -1099,7 +1429,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 110,
+      "order": 143,
       "id": "beliq-food",
       "groupId": "food",
       "value": "بېلىق",
@@ -1109,7 +1439,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 111,
+      "order": 144,
       "id": "pemidur-vegetable",
       "groupId": "vegetables",
       "value": "پەمىدۇر",
@@ -1119,7 +1449,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 112,
+      "order": 145,
       "id": "piyaz-vegetable",
       "groupId": "vegetables",
       "value": "پىياز",
@@ -1129,7 +1459,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 113,
+      "order": 146,
       "id": "yangyu-vegetable",
       "groupId": "vegetables",
       "value": "ياڭيۇ",
@@ -1139,7 +1469,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 114,
+      "order": 147,
       "id": "berengge-vegetable",
       "groupId": "vegetables",
       "value": "بەرەڭگە",
@@ -1149,7 +1479,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 115,
+      "order": 148,
       "id": "sewze-vegetable",
       "groupId": "vegetables",
       "value": "سەۋزە",
@@ -1159,7 +1489,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 116,
+      "order": 149,
       "id": "samsaq-vegetable",
       "groupId": "vegetables",
       "value": "سامساق",
@@ -1169,7 +1499,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 117,
+      "order": 150,
       "id": "terxemek-vegetable",
       "groupId": "vegetables",
       "value": "تەرخەمەك",
@@ -1179,7 +1509,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 118,
+      "order": 151,
       "id": "kawa-vegetable",
       "groupId": "vegetables",
       "value": "كاۋا",
@@ -1189,7 +1519,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 119,
+      "order": 152,
       "id": "laza-vegetable",
       "groupId": "vegetables",
       "value": "لازا",
@@ -1199,7 +1529,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 120,
+      "order": 153,
       "id": "koktat-vegetable",
       "groupId": "vegetables",
       "value": "كۆكتات",
@@ -1209,7 +1539,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 121,
+      "order": 154,
       "id": "yesiwilek-vegetable",
       "groupId": "vegetables",
       "value": "يېسىۋىلەك",
@@ -1219,7 +1549,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 122,
+      "order": 155,
       "id": "palek-vegetable",
       "groupId": "vegetables",
       "value": "پالەك",
@@ -1229,7 +1559,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 123,
+      "order": 156,
       "id": "chamghur-vegetable",
       "groupId": "vegetables",
       "value": "چامغۇر",
@@ -1239,7 +1569,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 124,
+      "order": 157,
       "id": "badamjan-vegetable",
       "groupId": "vegetables",
       "value": "بادامجان",
@@ -1249,7 +1579,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 125,
+      "order": 158,
       "id": "qizilmuch-vegetable",
       "groupId": "vegetables",
       "value": "قىزىلمۇچ",
@@ -1259,7 +1589,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 126,
+      "order": 159,
       "id": "it-animal",
       "groupId": "animals",
       "value": "ئىت",
@@ -1269,7 +1599,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 127,
+      "order": 160,
       "id": "mushuk-animal",
       "groupId": "animals",
       "value": "مۈشۈك",
@@ -1279,7 +1609,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 128,
+      "order": 161,
       "id": "beliq-animal",
       "groupId": "animals",
       "value": "بېلىق",
@@ -1289,7 +1619,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 129,
+      "order": 162,
       "id": "qush-animal",
       "groupId": "animals",
       "value": "قۇش",
@@ -1299,7 +1629,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 130,
+      "order": 163,
       "id": "kala-animal",
       "groupId": "animals",
       "value": "كالا",
@@ -1309,7 +1639,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 131,
+      "order": 164,
       "id": "qoy-animal",
       "groupId": "animals",
       "value": "قوي",
@@ -1319,7 +1649,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 132,
+      "order": 165,
       "id": "toxu-animal",
       "groupId": "animals",
       "value": "توخۇ",
@@ -1329,7 +1659,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 133,
+      "order": 166,
       "id": "at-animal",
       "groupId": "animals",
       "value": "ئات",
@@ -1339,7 +1669,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 134,
+      "order": 167,
       "id": "toge-animal",
       "groupId": "animals",
       "value": "تۆگە",
@@ -1349,7 +1679,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 135,
+      "order": 168,
       "id": "bore-animal",
       "groupId": "animals",
       "value": "بۆرە",
@@ -1359,7 +1689,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 136,
+      "order": 169,
       "id": "burkut-animal",
       "groupId": "animals",
       "value": "بۈركۈت",
@@ -1369,7 +1699,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 137,
+      "order": 170,
       "id": "ochke-animal",
       "groupId": "animals",
       "value": "ئۆچكە",
@@ -1379,7 +1709,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 138,
+      "order": 171,
       "id": "chashqan-animal",
       "groupId": "animals",
       "value": "چاشقان",
@@ -1389,7 +1719,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 139,
+      "order": 172,
       "id": "toshqan-animal",
       "groupId": "animals",
       "value": "توشقان",
@@ -1399,7 +1729,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 140,
+      "order": 173,
       "id": "yilan-animal",
       "groupId": "animals",
       "value": "يىلان",
@@ -1409,7 +1739,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 141,
+      "order": 174,
       "id": "oy-home",
       "groupId": "home",
       "value": "ئۆي",
@@ -1419,7 +1749,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 142,
+      "order": 175,
       "id": "ishik-home",
       "groupId": "home",
       "value": "ئىشىك",
@@ -1429,7 +1759,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 143,
+      "order": 176,
       "id": "dereze-home",
       "groupId": "home",
       "value": "دەرىزە",
@@ -1439,7 +1769,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 144,
+      "order": 177,
       "id": "stol-home",
       "groupId": "home",
       "value": "ستول",
@@ -1449,7 +1779,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 145,
+      "order": 178,
       "id": "kitab-home",
       "groupId": "home",
       "value": "كىتاب",
@@ -1459,7 +1789,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 146,
+      "order": 179,
       "id": "orunduq-home",
       "groupId": "home",
       "value": "ئورۇندۇق",
@@ -1469,7 +1799,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 147,
+      "order": 180,
       "id": "kariwat-home",
       "groupId": "home",
       "value": "كارىۋات",
@@ -1479,7 +1809,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 148,
+      "order": 181,
       "id": "chiragh-home",
       "groupId": "home",
       "value": "چىراغ",
@@ -1489,7 +1819,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 149,
+      "order": 182,
       "id": "qelem-home",
       "groupId": "home",
       "value": "قەلەم",
@@ -1499,7 +1829,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 150,
+      "order": 183,
       "id": "depter-home",
       "groupId": "home",
       "value": "دەپتەر",
@@ -1509,7 +1839,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 151,
+      "order": 184,
       "id": "somka-home",
       "groupId": "home",
       "value": "سومكا",
@@ -1519,7 +1849,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 152,
+      "order": 185,
       "id": "telefon-home",
       "groupId": "home",
       "value": "تېلېفون",
@@ -1529,7 +1859,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 153,
+      "order": 186,
       "id": "achquch-home",
       "groupId": "home",
       "value": "ئاچقۇچ",
@@ -1539,7 +1869,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 154,
+      "order": 187,
       "id": "saet-home",
       "groupId": "home",
       "value": "سائەت",
@@ -1549,7 +1879,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 155,
+      "order": 188,
       "id": "pul-home",
       "groupId": "home",
       "value": "پۇل",
@@ -1559,7 +1889,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 156,
+      "order": 189,
       "id": "qizil-color",
       "groupId": "colors",
       "value": "قىزىل",
@@ -1569,7 +1899,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 157,
+      "order": 190,
       "id": "kok-color",
       "groupId": "colors",
       "value": "كۆك",
@@ -1579,7 +1909,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 158,
+      "order": 191,
       "id": "yeshil-color",
       "groupId": "colors",
       "value": "يېشىل",
@@ -1589,7 +1919,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 159,
+      "order": 192,
       "id": "seriq-color",
       "groupId": "colors",
       "value": "سېرىق",
@@ -1599,7 +1929,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 160,
+      "order": 193,
       "id": "qara-color",
       "groupId": "colors",
       "value": "قارا",
@@ -1609,7 +1939,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 161,
+      "order": 194,
       "id": "aq-color",
       "groupId": "colors",
       "value": "ئاق",
@@ -1619,7 +1949,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 162,
+      "order": 195,
       "id": "toq-seriq-color",
       "groupId": "colors",
       "value": "توق سېرىق",
@@ -1629,7 +1959,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 163,
+      "order": 196,
       "id": "binepshe-color",
       "groupId": "colors",
       "value": "بىنەپشە",
@@ -1639,7 +1969,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 164,
+      "order": 197,
       "id": "qongur-color",
       "groupId": "colors",
       "value": "قوڭۇر",
@@ -1649,7 +1979,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 165,
+      "order": 198,
       "id": "kulreng-color",
       "groupId": "colors",
       "value": "كۈلرەڭ",
@@ -1659,7 +1989,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 166,
+      "order": 199,
       "id": "altun-color",
       "groupId": "colors",
       "value": "ئالتۇن",
@@ -1669,7 +1999,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 167,
+      "order": 200,
       "id": "kumush-color",
       "groupId": "colors",
       "value": "كۈمۈش",
@@ -1679,7 +2009,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 168,
+      "order": 201,
       "id": "halreng-color",
       "groupId": "colors",
       "value": "ھالرەڭ",
@@ -1689,7 +2019,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 169,
+      "order": 202,
       "id": "sus-kok-color",
       "groupId": "colors",
       "value": "سۇس كۆك",
@@ -1699,7 +2029,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 170,
+      "order": 203,
       "id": "qeniq-kok-color",
       "groupId": "colors",
       "value": "قېنىق كۆك",
@@ -1709,7 +2039,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 171,
+      "order": 204,
       "id": "kelish-action",
       "groupId": "actions",
       "value": "كېلىش",
@@ -1719,7 +2049,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 172,
+      "order": 205,
       "id": "ketish-action",
       "groupId": "actions",
       "value": "كېتىش",
@@ -1729,7 +2059,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 173,
+      "order": 206,
       "id": "oqush-action",
       "groupId": "actions",
       "value": "ئوقۇش",
@@ -1739,7 +2069,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 174,
+      "order": 207,
       "id": "yezish-action",
       "groupId": "actions",
       "value": "يېزىش",
@@ -1749,7 +2079,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 175,
+      "order": 208,
       "id": "korush-action",
       "groupId": "actions",
       "value": "كۆرۈش",
@@ -1759,7 +2089,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 176,
+      "order": 209,
       "id": "anglash-action",
       "groupId": "actions",
       "value": "ئاڭلاش",
@@ -1769,7 +2099,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 177,
+      "order": 210,
       "id": "sozlesh-action",
       "groupId": "actions",
       "value": "سۆزلەش",
@@ -1779,7 +2109,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 178,
+      "order": 211,
       "id": "yeyish-action",
       "groupId": "actions",
       "value": "يېيىش",
@@ -1789,7 +2119,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 179,
+      "order": 212,
       "id": "ichish-action",
       "groupId": "actions",
       "value": "ئىچىش",
@@ -1799,7 +2129,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 180,
+      "order": 213,
       "id": "berish-action",
       "groupId": "actions",
       "value": "بېرىش",
@@ -1809,7 +2139,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 181,
+      "order": 214,
       "id": "elish-action",
       "groupId": "actions",
       "value": "ئېلىش",
@@ -1819,7 +2149,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 182,
+      "order": 215,
       "id": "echish-action",
       "groupId": "actions",
       "value": "ئېچىش",
@@ -1829,7 +2159,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 183,
+      "order": 216,
       "id": "taqash-action",
       "groupId": "actions",
       "value": "تاقاش",
@@ -1839,7 +2169,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 184,
+      "order": 217,
       "id": "olturush-action",
       "groupId": "actions",
       "value": "ئولتۇرۇش",
@@ -1849,7 +2179,7 @@
       "reviewStatus": "待审听"
     },
     {
-      "order": 185,
+      "order": 218,
       "id": "bilish-action",
       "groupId": "actions",
       "value": "بىلىش",
