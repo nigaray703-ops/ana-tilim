@@ -1808,6 +1808,57 @@ function markCurrentLetterKeyboardIfCorrect() {
   }
 }
 
+function countCompleted(scope) {
+  return Object.values(state.learningProgress[scope] || {}).filter((item) => item && item.completed).length;
+}
+
+function unitProgressSummaries() {
+  return [
+    { unit: "第一单元", label: "字母闭环", completed: countCompleted("letters"), total: alphabetGroups.length },
+    { unit: "第二单元", label: "组合输入", completed: countCompleted("combos"), total: comboGroups.length },
+    { unit: "第三单元", label: "词形输入", completed: countCompleted("vocab"), total: vocabGroups.length },
+    { unit: "第四单元", label: "强化训练", completed: countCompleted("practice"), total: practiceGroups.length }
+  ];
+}
+
+function totalLearningProgress() {
+  const summaries = unitProgressSummaries();
+  const completed = summaries.reduce((sum, item) => sum + item.completed, 0);
+  const total = summaries.reduce((sum, item) => sum + item.total, 0);
+  const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  return { summaries, completed, total, percent };
+}
+
+function renderLearningMap(summaries) {
+  return `
+    <article class="card learning-map-card">
+      <div class="section-row">
+        <div>
+          <p class="caption">学习地图</p>
+          <h2 class="section-title">按单元一步一步往前走</h2>
+        </div>
+        <span class="step-state">${summaries.reduce((sum, item) => sum + item.completed, 0)} / ${summaries.reduce((sum, item) => sum + item.total, 0)}</span>
+      </div>
+      <div class="learning-map-list">
+        ${summaries
+          .map(
+            (item) => `
+              <div class="learning-map-row">
+                <span>
+                  <strong>${item.unit}</strong>
+                  <small>${item.label}</small>
+                </span>
+                <span class="step-state">${item.completed} / ${item.total}</span>
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+    </article>
+  `;
+}
+
 function letterLoopProgress(groupId = state.selectedGroupId) {
   const progress = ensureProgress("letters", groupId);
   const completeCount = letterLoopSteps.filter((step) => progress[step.id]).length;
@@ -1872,7 +1923,7 @@ function mistakeReviewItems() {
     value: mistake.value,
     latin: mistake.latin,
     label: mistake.source,
-    hint: `${mistake.note} 错 ${mistake.attempts} 次。`,
+    hint: `${mistake.note} ${mistake.help || ""} 错 ${mistake.attempts} 次。`,
     parts: [mistake.value],
     audio: audioForMistake(mistake),
     audioStatus: "复习错题"
@@ -1888,7 +1939,8 @@ function recordLetterMistake(kind, target, picked) {
     value: target.letter,
     latin: target.latin,
     source: "第一单元错题",
-    note: picked ? `把 ${picked.letter} 选成了 ${target.letter}` : `需要复习 ${target.letter}`
+    note: picked ? `目标是 ${target.letter}，你选了 ${picked.letter}` : `需要复习 ${target.letter}`,
+    help: picked ? `目标线索：${target.cue}；你选的线索：${picked.cue}。看下方点数。` : target.cue
   });
 }
 
@@ -1907,8 +1959,25 @@ function recordItemMistake(kind, target, picked, source) {
     value: target.value,
     latin: target.latin,
     source,
-    note: picked ? `把 ${picked.value} 选成了 ${target.value}` : `需要复习 ${target.value}`
+    note: picked ? `目标是 ${target.value}，你选了 ${picked.value}` : `需要复习 ${target.value}`,
+    help: target.hint || target.tip || target.rule || "先看词形，再看转写提示。"
   });
+}
+
+function letterMistakeFeedback(target, picked) {
+  if (!picked) {
+    return `目标是 ${target.letter}，线索是 ${target.cue}。`;
+  }
+
+  return `目标是 ${target.letter}：${target.cue}；你选了 ${picked.letter}：${picked.cue}。先看点在上方还是下方，再看点数。`;
+}
+
+function itemMistakeFeedback(target, picked, label = "词形") {
+  if (!picked) {
+    return `目标${label}是 ${target.value}，先看 ${target.latin} 的转写提示。`;
+  }
+
+  return `目标${label}是 ${target.value}，你选了 ${picked.value}。先对照转写：${target.latin}。`;
 }
 
 function resetPracticeState() {
@@ -2029,7 +2098,7 @@ function renderUnitNextActions(unitId, primaryClass = "primary-button") {
 
   return `
     <article class="card next-action-card">
-      <p class="caption">完成后</p>
+      <p class="caption">下一步建议</p>
       <div class="action-grid">
         <button class="secondary-button" data-action="go" data-target="${experience.reviewTarget}" type="button">
           ${experience.reviewLabel}
@@ -2178,6 +2247,25 @@ function renderWelcome() {
 function renderHome() {
   const counts = reviewCounts();
   const currentRecommendation = currentUnitExperience("practice");
+  const progress = totalLearningProgress();
+  const hasMistakes = state.mistakes.length > 0;
+  const nextAction = hasMistakes
+    ? {
+        title: "先复习本轮错题",
+        detail: `需要复习 ${state.mistakes.length} 个`,
+        button: "继续错题复习",
+        action: "open-practice-group",
+        id: "review-loop",
+        target: ""
+      }
+    : {
+        title: "继续把四个单元串成一条复习线",
+        detail: currentRecommendation.recommended,
+        button: "继续学习",
+        action: "go",
+        id: "",
+        target: "writing"
+      };
 
   return screen(
     `
@@ -2186,8 +2274,8 @@ function renderHome() {
       <section class="stack wide-gap">
         <article class="card next-action-card">
           <p class="caption">今日下一步</p>
-          <h2 class="section-title">继续把四个单元串成一条复习线</h2>
-          <p class="muted">${currentRecommendation.recommended}</p>
+          <h2 class="section-title">${nextAction.title}</h2>
+          <p class="muted">${nextAction.detail}</p>
           <div class="mini-unit-row">
             ${learningUnits
               .map((unit) => {
@@ -2208,17 +2296,25 @@ function renderHome() {
             <span class="step-state">进行中</span>
           </div>
           <div class="progress-track" aria-hidden="true">
-            <div class="progress-fill" style="--value: 30%"></div>
+            <div class="progress-fill" style="--value: ${progress.percent}%"></div>
           </div>
           <p class="caption">不加新词，先把字母、组合和候选词形放进听音、跟读、书写和复习闭环。</p>
-          <button class="primary-button" data-action="go" data-target="writing" type="button">
-            继续学习
+          <button
+            class="primary-button"
+            data-action="${nextAction.action}"
+            data-id="${nextAction.id}"
+            data-target="${nextAction.target}"
+            type="button"
+          >
+            ${nextAction.button}
           </button>
         </article>
 
+        ${renderLearningMap(progress.summaries)}
+
         <div class="metric-grid" aria-label="今日学习概览">
-          <div class="metric"><strong>3</strong><span>连续天数</span></div>
-          <div class="metric"><strong>${practiceGroups.length}</strong><span>训练组</span></div>
+          <div class="metric"><strong>${progress.completed} / ${progress.total}</strong><span>总进度</span></div>
+          <div class="metric"><strong>${state.mistakes.length}</strong><span>本地错题</span></div>
           <div class="metric"><strong>${counts.pending}</strong><span>待审校</span></div>
         </div>
 
@@ -2239,6 +2335,9 @@ function renderHome() {
             </button>
             <button class="quick-button" data-action="open-practice-group" data-id="writing-loop" type="button">
               <strong>书写输入</strong><span> · 描摹、键盘</span>
+            </button>
+            <button class="quick-button" data-action="open-practice-group" data-id="review-loop" type="button">
+              <strong>继续错题复习</strong><span> · 本地记录</span>
             </button>
             <button class="quick-button" data-action="set-app-mode" data-mode="audit" data-target="review" type="button">
               <strong>审校看板</strong><span> · 回填状态</span>
@@ -2625,7 +2724,7 @@ function renderPicturePractice() {
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
                   ? `答对了。${letter.letter} 的关键是 ${letter.cue}。`
-                  : `先别急，这个不是目标字母。可以回到 ${currentGroup().title} 再看点位。`
+                  : letterMistakeFeedback(letter, picked)
               }</div>`
             : ""
         }
@@ -2698,7 +2797,7 @@ function renderListeningPractice() {
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
                   ? "听对了。下一步用键盘输入这个字母。"
-                  : `可以再听一次，也可以回到 ${currentGroup().title} 复习相似字母。`
+                  : letterMistakeFeedback(letter, picked)
               }</div>`
             : ""
         }
@@ -3012,7 +3111,7 @@ function renderComboRecognition() {
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
                   ? `答对了。${item.value} 现在只作为 ${item.type} 学习。`
-                  : `先看转写提示，再回到 ${group.title} 复习拆分。`
+                  : itemMistakeFeedback(item, picked, "组合")
               }</div>`
             : ""
         }
@@ -3328,7 +3427,7 @@ function renderVocabRecognition() {
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
                   ? `答对了。这里确认的是 ${item.value} 的词形，不是最终词义审校。`
-                  : `这个不是当前目标词形。现在只练词形，不考最终中文含义，可以回到 ${group.title} 再看一遍。`
+                  : itemMistakeFeedback(item, picked, "词形")
               }</div>`
             : ""
         }
@@ -3498,7 +3597,7 @@ function renderPracticeChoices(group, item) {
         ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
             isCorrect
               ? `辨认正确。本轮确认的是 ${item.value} 的词形。`
-              : `这个不是当前目标。先回到 ${group.title} 看提示，真实音频上线后再做听音错题。`
+              : itemMistakeFeedback(item, picked, "练习目标")
           }</div>`
         : ""
     }

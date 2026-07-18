@@ -188,6 +188,8 @@ button {
 .review-item small,
 .practice-review-item strong,
 .practice-review-item small,
+.learning-map-row strong,
+.learning-map-row small,
 .word-row .caption,
 .profile-row > span,
 .key-button.utility,
@@ -344,6 +346,44 @@ button {
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--teal), var(--gold));
+}
+
+.learning-map-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.learning-map-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 46px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.learning-map-row span:first-child {
+  min-width: 0;
+}
+
+.learning-map-row strong,
+.learning-map-row small {
+  display: block;
+  line-height: 1.25;
+}
+
+.learning-map-row strong {
+  font-size: 13px;
+}
+
+.learning-map-row small {
+  margin-top: 3px;
+  color: var(--ink-soft);
+  font-size: 11px;
 }
 
 .chip-row,

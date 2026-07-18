@@ -110,6 +110,29 @@ assert.ok(!app.innerHTML.includes("AI 临时音频 / 真人音频待录制"), "h
 assert.ok(app.innerHTML.includes("<strong>第一单元</strong><small> · 认识字母</small>"), "home unit labels should use a compact one-line label");
 assert.ok(app.innerHTML.includes("<strong>听音辨认</strong><span> · AI 临时</span>"), "quick entry labels should stay readable on one line");
 
+includesAll(
+  renderState(`
+    state.screen = 'home';
+    state.learningProgress.letters = { 'dot-bone': { completed: true } };
+    state.learningProgress.practice = { 'listening-loop': { completed: true } };
+    state.mistakes = [{
+      key: 'letter:be',
+      kind: 'letter',
+      kindLabel: '字母',
+      targetId: 'be',
+      pickedId: 'pe',
+      value: 'ب',
+      latin: 'b',
+      source: '第一单元错题',
+      note: '目标是 ب，你选了 پ',
+      help: '看下方点数。',
+      attempts: 1
+    }];
+  `),
+  ["学习地图", "1 / 11", "1 / 4", "需要复习 1 个", "继续错题复习"],
+  "home progress map"
+);
+
 for (const unitId of ["letters", "combos", "basic-phrases", "practice"]) {
   includesAll(
     renderState(`state.screen = 'unit'; state.selectedUnitId = '${unitId}'`),
@@ -170,8 +193,13 @@ clickDataset({ action: "pick-picture", id: "pe" });
 let mistakeSummary = vm.runInContext("state.mistakes.map((item) => item.targetId).join(',')", context);
 assert.equal(mistakeSummary, "be", "wrong letter choice should create a review item");
 includesAll(
+  app.innerHTML,
+  ["目标是 ب", "你选了 پ", "下方一个点", "下方三个点"],
+  "letter mistake explanation"
+);
+includesAll(
   renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'review-loop'; state.currentPracticeItemId = 'practice-review-sin'"),
-  ["本轮错题", "ب"],
+  ["本轮错题", "ب", "目标是 ب", "看下方点数"],
   "dynamic mistake review"
 );
 
@@ -189,27 +217,27 @@ assert.equal(savedProgress().mistakes.length, 1, "mistakes should be saved local
 
 includesAll(
   renderState("state.screen = 'complete'"),
-  ["复习本组", "进入第二单元"],
+  ["下一步建议", "复习本组", "进入第二单元"],
   "unit one complete"
 );
 assert.ok(app.innerHTML.includes("ب / پ"), "unit one completion should separate learned letters with punctuation");
 
 includesAll(
   renderState("state.screen = 'comboComplete'"),
-  ["复习组合", "进入第三单元"],
+  ["下一步建议", "复习组合", "进入第三单元"],
   "unit two complete"
 );
 assert.ok(app.innerHTML.includes("با / پا"), "unit two completion should separate learned combinations with punctuation");
 
 includesAll(
   renderState("state.screen = 'vocabComplete'"),
-  ["复习词形", "进入第四单元"],
+  ["下一步建议", "复习词形", "进入第四单元"],
   "unit three complete"
 );
 
 includesAll(
   renderState("state.screen = 'practiceComplete'"),
-  ["再练一轮", "回到学习路径"],
+  ["下一步建议", "再练一轮", "回到学习路径"],
   "unit four complete"
 );
 
