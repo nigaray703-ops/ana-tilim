@@ -1,17 +1,3 @@
-const course = {
-  letter: "ب",
-  forms: [
-    { label: "独立", value: "ب" },
-    { label: "词首", value: "بـ" },
-    { label: "词中", value: "ـبـ" },
-    { label: "词尾", value: "ـب" }
-  ],
-  word: "ب",
-  meaning: "下方一个点",
-  transliteration: "b",
-  theme: "第一单元 / 认识字母"
-};
-
 const alphabetLetters = [
   { letter: "ئا", latin: "a", type: "元音" },
   { letter: "ئە", latin: "e", type: "元音" },
@@ -47,16 +33,569 @@ const alphabetLetters = [
   { letter: "ي", latin: "y", type: "辅音" }
 ];
 
+const letterDetails = {
+  be: {
+    id: "be",
+    letter: "ب",
+    latin: "b",
+    type: "辅音",
+    cue: "下方一个点",
+    forms: [
+      { label: "独立", value: "ب" },
+      { label: "词首", value: "بـ" },
+      { label: "词中", value: "ـبـ" },
+      { label: "词尾", value: "ـب" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为 b；正式版以真人音频为准。",
+    writingHint: "主体像平稳的弧线，点在下方。",
+    example: "和 پ、ت、ن 放在一起看时，ب 的关键是下方一个点。"
+  },
+  pe: {
+    id: "pe",
+    letter: "پ",
+    latin: "p",
+    type: "辅音",
+    cue: "下方三个点",
+    forms: [
+      { label: "独立", value: "پ" },
+      { label: "词首", value: "پـ" },
+      { label: "词中", value: "ـپـ" },
+      { label: "词尾", value: "ـپ" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为 p；正式版以真人音频为准。",
+    writingHint: "主体和 ب 很像，关键是下方三个点。",
+    example: "和 ب 对比时，پ 的不同点是下方三个点。"
+  },
+  te: {
+    id: "te",
+    letter: "ت",
+    latin: "t",
+    type: "辅音",
+    cue: "上方两个点",
+    forms: [
+      { label: "独立", value: "ت" },
+      { label: "词首", value: "تـ" },
+      { label: "词中", value: "ـتـ" },
+      { label: "词尾", value: "ـت" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为 t；正式版以真人音频为准。",
+    writingHint: "主体相似，关键是上方两个点。",
+    example: "和 ن 对比时，ت 是上方两个点。"
+  },
+  nun: {
+    id: "nun",
+    letter: "ن",
+    latin: "n",
+    type: "辅音",
+    cue: "上方一个点",
+    forms: [
+      { label: "独立", value: "ن" },
+      { label: "词首", value: "نـ" },
+      { label: "词中", value: "ـنـ" },
+      { label: "词尾", value: "ـن" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为 n；正式版以真人音频为准。",
+    writingHint: "主体相似，关键是上方一个点。",
+    example: "和 ت 对比时，ن 是上方一个点。"
+  },
+  jim: {
+    id: "jim",
+    letter: "ج",
+    latin: "j",
+    type: "辅音",
+    cue: "弯形，下方一个点",
+    forms: [
+      { label: "独立", value: "ج" },
+      { label: "词首", value: "جـ" },
+      { label: "词中", value: "ـجـ" },
+      { label: "词尾", value: "ـج" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为 j；正式版以真人音频为准。",
+    writingHint: "先看弯形主体，再确认下方一个点。",
+    example: "ج、چ、خ 的主体很像，先靠点的位置和数量区分。"
+  },
+  che: {
+    id: "che",
+    letter: "چ",
+    latin: "ch",
+    type: "辅音",
+    cue: "弯形，下方三个点",
+    forms: [
+      { label: "独立", value: "چ" },
+      { label: "词首", value: "چـ" },
+      { label: "词中", value: "ـچـ" },
+      { label: "词尾", value: "ـچ" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为 ch；正式版以真人音频为准。",
+    writingHint: "弯形主体和 ج 相近，关键是下方三个点。",
+    example: "چ 和 ج 的主要区别是下方点的数量。"
+  },
+  khe: {
+    id: "khe",
+    letter: "خ",
+    latin: "x",
+    type: "辅音",
+    cue: "弯形，上方一个点",
+    forms: [
+      { label: "独立", value: "خ" },
+      { label: "词首", value: "خـ" },
+      { label: "词中", value: "ـخـ" },
+      { label: "词尾", value: "ـخ" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "发音较难，先听真人音频；不要用中文强行精确对应。",
+    writingHint: "弯形主体上方一个点，点不能放到下方。",
+    example: "خ 和 ج、چ 同组学习，重点看点在上面。"
+  },
+  dal: {
+    id: "dal",
+    letter: "د",
+    latin: "d",
+    type: "辅音",
+    cue: "短形，无点",
+    forms: [
+      { label: "独立", value: "د" },
+      { label: "词首", value: "د" },
+      { label: "词中", value: "ـد" },
+      { label: "词尾", value: "ـد" }
+    ],
+    connection: "可以接收前面连接，但后面通常不继续连接。",
+    soundHint: "可先接近理解为 d；正式版以真人音频为准。",
+    writingHint: "重点看短形轮廓，以及后面不继续连接。",
+    example: "这一组要记住：看到断开不一定是写错。"
+  },
+  re: {
+    id: "re",
+    letter: "ر",
+    latin: "r",
+    type: "辅音",
+    cue: "弧形，无点",
+    forms: [
+      { label: "独立", value: "ر" },
+      { label: "词首", value: "ر" },
+      { label: "词中", value: "ـر" },
+      { label: "词尾", value: "ـر" }
+    ],
+    connection: "可以接收前面连接，但后面通常不继续连接。",
+    soundHint: "可先接近理解为 r；正式版以真人音频为准。",
+    writingHint: "用弧形轮廓和 د 区分。",
+    example: "ر 后面通常不继续连接，所以后面的字母会重新开始。"
+  },
+  ze: {
+    id: "ze",
+    letter: "ز",
+    latin: "z",
+    type: "辅音",
+    cue: "弧形，上方一个点",
+    forms: [
+      { label: "独立", value: "ز" },
+      { label: "词首", value: "ز" },
+      { label: "词中", value: "ـز" },
+      { label: "词尾", value: "ـز" }
+    ],
+    connection: "可以接收前面连接，但后面通常不继续连接。",
+    soundHint: "可先接近理解为 z；正式版以真人音频为准。",
+    writingHint: "先看 ر 的弧形，再加上方一点。",
+    example: "ز 和 ر 很像，关键是上方一个点。"
+  },
+  zhe: {
+    id: "zhe",
+    letter: "ژ",
+    latin: "zh",
+    type: "辅音",
+    cue: "弧形，上方三个点",
+    forms: [
+      { label: "独立", value: "ژ" },
+      { label: "词首", value: "ژ" },
+      { label: "词中", value: "ـژ" },
+      { label: "词尾", value: "ـژ" }
+    ],
+    connection: "可以接收前面连接，但后面通常不继续连接。",
+    soundHint: "可先接近理解为 zh；正式版以真人音频为准。",
+    writingHint: "和 ز 同类，关键是上方三个点。",
+    example: "ژ 和 ز 放在一起学，点的数量是关键。"
+  },
+  sin: {
+    id: "sin",
+    letter: "س",
+    latin: "s",
+    type: "辅音",
+    cue: "连续齿形，无点",
+    forms: [
+      { label: "独立", value: "س" },
+      { label: "词首", value: "سـ" },
+      { label: "词中", value: "ـسـ" },
+      { label: "词尾", value: "ـس" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为 s；正式版以真人音频为准。",
+    writingHint: "注意连续齿形，不要写成一条直线。",
+    example: "س 没有点，ش 有上方三个点。"
+  },
+  shin: {
+    id: "shin",
+    letter: "ش",
+    latin: "sh",
+    type: "辅音",
+    cue: "连续齿形，上方三个点",
+    forms: [
+      { label: "独立", value: "ش" },
+      { label: "词首", value: "شـ" },
+      { label: "词中", value: "ـشـ" },
+      { label: "词尾", value: "ـش" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为 sh；正式版以真人音频为准。",
+    writingHint: "先写齿形，再确认上方三个点。",
+    example: "ش 和 س 的主体相似，三点决定身份。"
+  },
+  ghayn: {
+    id: "ghayn",
+    letter: "غ",
+    latin: "gh",
+    type: "辅音",
+    cue: "圆形，上方一个点",
+    forms: [
+      { label: "独立", value: "غ" },
+      { label: "词首", value: "غـ" },
+      { label: "词中", value: "ـغـ" },
+      { label: "词尾", value: "ـغ" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "发音较难，第一单元先认形，正式版以真人音频为准。",
+    writingHint: "注意圆形结构和上方一点。",
+    example: "غ、ف、ق 都有圆形感，先慢慢区分轮廓。"
+  },
+  fe: {
+    id: "fe",
+    letter: "ف",
+    latin: "f",
+    type: "辅音",
+    cue: "较小圆形，上方一个点",
+    forms: [
+      { label: "独立", value: "ف" },
+      { label: "词首", value: "فـ" },
+      { label: "词中", value: "ـفـ" },
+      { label: "词尾", value: "ـف" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为 f；正式版以真人音频为准。",
+    writingHint: "上方一点和圆形轮廓都要看。",
+    example: "ف 和 ق 可通过点数、整体大小和形态一起区分。"
+  },
+  qaf: {
+    id: "qaf",
+    letter: "ق",
+    latin: "q",
+    type: "辅音",
+    cue: "圆形，上方两个点",
+    forms: [
+      { label: "独立", value: "ق" },
+      { label: "词首", value: "قـ" },
+      { label: "词中", value: "ـقـ" },
+      { label: "词尾", value: "ـق" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "发音较难，第一单元先认形，正式版以真人音频为准。",
+    writingHint: "注意上方两个点和圆形收笔。",
+    example: "ق 的上方两个点是这一组里的重要线索。"
+  },
+  kaf: {
+    id: "kaf",
+    letter: "ك",
+    latin: "k",
+    type: "辅音",
+    cue: "k 系基础形",
+    forms: [
+      { label: "独立", value: "ك" },
+      { label: "词首", value: "كـ" },
+      { label: "词中", value: "ـكـ" },
+      { label: "词尾", value: "ـك" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为 k；正式版以真人音频为准。",
+    writingHint: "先认识 k 系基础形，再和 گ、ڭ 比较。",
+    example: "ك 是这一组的基础参照。"
+  },
+  gaf: {
+    id: "gaf",
+    letter: "گ",
+    latin: "g",
+    type: "辅音",
+    cue: "k 系加线形",
+    forms: [
+      { label: "独立", value: "گ" },
+      { label: "词首", value: "گـ" },
+      { label: "词中", value: "ـگـ" },
+      { label: "词尾", value: "ـگ" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为 g；正式版以真人音频为准。",
+    writingHint: "和 ك 相近，重点看多出的标记。",
+    example: "گ 和 ك 相似，所以放在一组比较。"
+  },
+  ng: {
+    id: "ng",
+    letter: "ڭ",
+    latin: "ng",
+    type: "辅音",
+    cue: "k 系鼻音形",
+    forms: [
+      { label: "独立", value: "ڭ" },
+      { label: "词首", value: "ڭـ" },
+      { label: "词中", value: "ـڭـ" },
+      { label: "词尾", value: "ـڭ" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "ng 音需要多听真人音频，第一单元先认字母。",
+    writingHint: "和 ك、گ 形态相近，注意专属标记。",
+    example: "ڭ 对新手比较陌生，先把它放在 k 系里认形。"
+  },
+  lam: {
+    id: "lam",
+    letter: "ل",
+    latin: "l",
+    type: "辅音",
+    cue: "无点竖形",
+    forms: [
+      { label: "独立", value: "ل" },
+      { label: "词首", value: "لـ" },
+      { label: "词中", value: "ـلـ" },
+      { label: "词尾", value: "ـل" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为 l；正式版以真人音频为准。",
+    writingHint: "注意竖线高度和下方收笔。",
+    example: "ل、م、ھ 都没有点，先看整体轮廓。"
+  },
+  mim: {
+    id: "mim",
+    letter: "م",
+    latin: "m",
+    type: "辅音",
+    cue: "无点圆形",
+    forms: [
+      { label: "独立", value: "م" },
+      { label: "词首", value: "مـ" },
+      { label: "词中", value: "ـمـ" },
+      { label: "词尾", value: "ـم" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为 m；正式版以真人音频为准。",
+    writingHint: "注意圆形部分和连接线的位置。",
+    example: "م 的明显圆形可以帮助它和 ل、ھ 区分。"
+  },
+  he: {
+    id: "he",
+    letter: "ھ",
+    latin: "h",
+    type: "辅音",
+    cue: "无点开口形",
+    forms: [
+      { label: "独立", value: "ھ" },
+      { label: "词首", value: "ھـ" },
+      { label: "词中", value: "ـھـ" },
+      { label: "词尾", value: "ـھ" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为 h；正式版以真人音频为准。",
+    writingHint: "先看开口形和连接形，不要和 م 的圆形混淆。",
+    example: "ھ 无点，但轮廓和 ل、م 不一样。"
+  },
+  waw: {
+    id: "waw",
+    letter: "ۋ",
+    latin: "w / v",
+    type: "辅音",
+    cue: "圆形，后面通常不继续连接",
+    forms: [
+      { label: "独立", value: "ۋ" },
+      { label: "词首", value: "ۋ" },
+      { label: "词中", value: "ـۋ" },
+      { label: "词尾", value: "ـۋ" }
+    ],
+    connection: "可以接收前面连接，但后面通常不继续连接。",
+    soundHint: "可先接近理解为 w/v；正式版以真人音频为准。",
+    writingHint: "注意它后面通常不继续连接。",
+    example: "ۋ 和 ي 都在后段常见，先区分连接规则。"
+  },
+  ye: {
+    id: "ye",
+    letter: "ي",
+    latin: "y",
+    type: "辅音",
+    cue: "下方两个点，可连接",
+    forms: [
+      { label: "独立", value: "ي" },
+      { label: "词首", value: "يـ" },
+      { label: "词中", value: "ـيـ" },
+      { label: "词尾", value: "ـي" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为 y；正式版以真人音频为准。",
+    writingHint: "注意下方两个点和可连接形。",
+    example: "ي 后续还会和 ئى 继续对比。"
+  },
+  aa: {
+    id: "aa",
+    letter: "ئا",
+    latin: "a",
+    type: "元音",
+    cue: "ئ + ا",
+    forms: [
+      { label: "独立", value: "ئا" },
+      { label: "词首", value: "ئا" },
+      { label: "词中", value: "ـا" },
+      { label: "词尾", value: "ـا" }
+    ],
+    connection: "可以接收前面连接，但后面通常不继续连接。",
+    soundHint: "先接近理解为开口 a；正式版以真人音频为准。",
+    writingHint: "先认识 ئ 和 ا 的组合，不急着讲完 ئ 的所有用法。",
+    example: "元音组统一认识 ئ 和元音符号。"
+  },
+  ae: {
+    id: "ae",
+    letter: "ئە",
+    latin: "e",
+    type: "元音",
+    cue: "ئ + ە",
+    forms: [
+      { label: "独立", value: "ئە" },
+      { label: "词首", value: "ئە" },
+      { label: "词中", value: "ـە" },
+      { label: "词尾", value: "ـە" }
+    ],
+    connection: "可以接收前面连接，但后面通常不继续连接。",
+    soundHint: "先接近理解为 e；正式版以真人音频为准。",
+    writingHint: "重点看它和 ئا 的差别。",
+    example: "ئە 和 ئا 都是词首元音入口，形态符号不同。"
+  },
+  o: {
+    id: "o",
+    letter: "ئو",
+    latin: "o",
+    type: "元音",
+    cue: "ئ + و",
+    forms: [
+      { label: "独立", value: "ئو" },
+      { label: "词首", value: "ئو" },
+      { label: "词中", value: "ـو" },
+      { label: "词尾", value: "ـو" }
+    ],
+    connection: "可以接收前面连接，但后面通常不继续连接。",
+    soundHint: "圆唇元音，正式版以真人音频为准。",
+    writingHint: "先看 ئ 后面的 و。",
+    example: "ئو、ئۇ、ئۆ、ئۈ 一起听和认。"
+  },
+  u: {
+    id: "u",
+    letter: "ئۇ",
+    latin: "u",
+    type: "元音",
+    cue: "ئ + ۇ",
+    forms: [
+      { label: "独立", value: "ئۇ" },
+      { label: "词首", value: "ئۇ" },
+      { label: "词中", value: "ـۇ" },
+      { label: "词尾", value: "ـۇ" }
+    ],
+    connection: "可以接收前面连接，但后面通常不继续连接。",
+    soundHint: "圆唇元音，正式版以真人音频为准。",
+    writingHint: "先看 ئ 后面的 ۇ。",
+    example: "ئۇ 和 ئو 视觉接近，要配音频慢慢区分。"
+  },
+  oe: {
+    id: "oe",
+    letter: "ئۆ",
+    latin: "ö",
+    type: "元音",
+    cue: "ئ + ۆ",
+    forms: [
+      { label: "独立", value: "ئۆ" },
+      { label: "词首", value: "ئۆ" },
+      { label: "词中", value: "ـۆ" },
+      { label: "词尾", value: "ـۆ" }
+    ],
+    connection: "可以接收前面连接，但后面通常不继续连接。",
+    soundHint: "圆唇元音，正式版以真人音频为准。",
+    writingHint: "先看 ئ 后面的 ۆ。",
+    example: "ئۆ 和 ئۈ 都要配合真人音频学习。"
+  },
+  ue: {
+    id: "ue",
+    letter: "ئۈ",
+    latin: "ü",
+    type: "元音",
+    cue: "ئ + ۈ",
+    forms: [
+      { label: "独立", value: "ئۈ" },
+      { label: "词首", value: "ئۈ" },
+      { label: "词中", value: "ـۈ" },
+      { label: "词尾", value: "ـۈ" }
+    ],
+    connection: "可以接收前面连接，但后面通常不继续连接。",
+    soundHint: "圆唇元音，正式版以真人音频为准。",
+    writingHint: "先看 ئ 后面的 ۈ。",
+    example: "ئۈ 和 ئۇ 视觉接近，先认符号，再听音。"
+  },
+  ee: {
+    id: "ee",
+    letter: "ئې",
+    latin: "ë",
+    type: "元音",
+    cue: "ئ + ې",
+    forms: [
+      { label: "独立", value: "ئې" },
+      { label: "词首", value: "ئې" },
+      { label: "词中", value: "ـې" },
+      { label: "词尾", value: "ـې" }
+    ],
+    connection: "可以接收前面连接，但后面通常不继续连接。",
+    soundHint: "正式版以真人音频为准。",
+    writingHint: "先看 ئ 后面的 ې。",
+    example: "ئې 放在元音组里统一学习。"
+  },
+  ii: {
+    id: "ii",
+    letter: "ئى",
+    latin: "i",
+    type: "元音",
+    cue: "ئ + ى",
+    forms: [
+      { label: "独立", value: "ئى" },
+      { label: "词首", value: "ئى" },
+      { label: "词中", value: "ـى" },
+      { label: "词尾", value: "ـى" }
+    ],
+    connection: "可以接收前面连接，但后面通常不继续连接。",
+    soundHint: "正式版以真人音频为准。",
+    writingHint: "要和 ي 继续对比：ئى 是元音入口，ي 是辅音。",
+    example: "ئى 和 ي 很容易混，第一单元先认身份。"
+  }
+};
+
+function letters(ids) {
+  return ids.map((id) => letterDetails[id]);
+}
+
 const alphabetGroups = [
-  { title: "ب / پ / ت / ن", letters: ["ب", "پ", "ت", "ن"], goal: "同类主体，点多点少都放一起比较", status: "当前" },
-  { title: "ج / چ / خ", letters: ["ج", "چ", "خ"], goal: "相似弯形，重点看点在上方还是下方", status: "下一组" },
-  { title: "د / ر / ز / ژ", letters: ["د", "ر", "ز", "ژ"], goal: "理解这些字母后面通常不继续连接", status: "待学习" },
-  { title: "س / ش", letters: ["س", "ش"], goal: "区分无点齿形和三点齿形", status: "待学习" },
-  { title: "غ / ف / ق", letters: ["غ", "ف", "ق"], goal: "先认形，发音以真人音频为准", status: "待学习" },
-  { title: "ك / گ / ڭ", letters: ["ك", "گ", "ڭ"], goal: "区分 k、g、ng 的形态", status: "待学习" },
-  { title: "ل / م / ھ", letters: ["ل", "م", "ھ"], goal: "用整体轮廓区分无点字母", status: "待学习" },
-  { title: "ۋ / ي", letters: ["ۋ", "ي"], goal: "区分不后连的 ۋ 和可连接的 ي", status: "待学习" },
-  { title: "元音组", letters: ["ئا", "ئە", "ئو", "ئۇ", "ئۆ", "ئۈ", "ئې", "ئى"], goal: "统一认识 ئ 和元音符号", status: "待学习" }
+  { id: "dot-bone", title: "ب / پ / ت / ن", letters: letters(["be", "pe", "te", "nun"]), goal: "同类主体，点多点少都放一起比较", status: "当前" },
+  { id: "curved", title: "ج / چ / خ", letters: letters(["jim", "che", "khe"]), goal: "相似弯形，重点看点在上方还是下方", status: "可学习" },
+  { id: "breakers", title: "د / ر / ز / ژ", letters: letters(["dal", "re", "ze", "zhe"]), goal: "理解这些字母后面通常不继续连接", status: "可学习" },
+  { id: "teeth", title: "س / ش", letters: letters(["sin", "shin"]), goal: "区分无点齿形和三点齿形", status: "可学习" },
+  { id: "round-dots", title: "غ / ف / ق", letters: letters(["ghayn", "fe", "qaf"]), goal: "先认形，发音以真人音频为准", status: "可学习" },
+  { id: "k-family", title: "ك / گ / ڭ", letters: letters(["kaf", "gaf", "ng"]), goal: "区分 k、g、ng 的形态", status: "可学习" },
+  { id: "no-dot", title: "ل / م / ھ", letters: letters(["lam", "mim", "he"]), goal: "用整体轮廓区分无点字母", status: "可学习" },
+  { id: "tail", title: "ۋ / ي", letters: letters(["waw", "ye"]), goal: "区分不后连的 ۋ 和可连接的 ي", status: "可学习" },
+  { id: "vowels-basic", title: "元音 1：ئا / ئە", letters: letters(["aa", "ae"]), goal: "先认识最基础的词首元音入口", status: "可学习" },
+  { id: "vowels-round", title: "元音 2：ئو / ئۇ / ئۆ / ئۈ", letters: letters(["o", "u", "oe", "ue"]), goal: "圆唇元音放在一起听和认", status: "可学习" },
+  { id: "vowels-final", title: "元音 3：ئې / ئى", letters: letters(["ee", "ii"]), goal: "后段元音和 ي 继续区分", status: "可学习" }
 ];
 
 const learningUnits = [
@@ -111,86 +650,6 @@ const learningUnits = [
   }
 ];
 
-const firstGroupLetters = [
-  {
-    id: "be",
-    letter: "ب",
-    latin: "b",
-    type: "辅音",
-    forms: [
-      { label: "独立", value: "ب" },
-      { label: "词首", value: "بـ" },
-      { label: "词中", value: "ـبـ" },
-      { label: "词尾", value: "ـب" }
-    ],
-    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
-    soundHint: "可先接近理解为英语 b 或汉语拼音里不送气的 b。",
-    writingHint: "主体像平稳的弧线，点在下方；第一版描摹先从 ب 开始。",
-    example: "和 پ、ت、ن 放在一起看时，ب 的关键是下方一个点。"
-  },
-  {
-    id: "pe",
-    letter: "پ",
-    latin: "p",
-    type: "辅音",
-    forms: [
-      { label: "独立", value: "پ" },
-      { label: "词首", value: "پـ" },
-      { label: "词中", value: "ـپـ" },
-      { label: "词尾", value: "ـپ" }
-    ],
-    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
-    soundHint: "可先接近理解为 p；正式版以真人音频为准。",
-    writingHint: "主体和 ب 很像，关键是下方三个点。",
-    example: "和 ب 对比时，پ 的不同点是下方三个点。"
-  },
-  {
-    id: "te",
-    letter: "ت",
-    latin: "t",
-    type: "辅音",
-    forms: [
-      { label: "独立", value: "ت" },
-      { label: "词首", value: "تـ" },
-      { label: "词中", value: "ـتـ" },
-      { label: "词尾", value: "ـت" }
-    ],
-    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
-    soundHint: "可先接近理解为 t；正式版以真人音频为准。",
-    writingHint: "主体相似，关键是上方两个点。",
-    example: "和 ن 对比时，ت 是上方两个点。"
-  },
-  {
-    id: "nun",
-    letter: "ن",
-    latin: "n",
-    type: "辅音",
-    forms: [
-      { label: "独立", value: "ن" },
-      { label: "词首", value: "نـ" },
-      { label: "词中", value: "ـنـ" },
-      { label: "词尾", value: "ـن" }
-    ],
-    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
-    soundHint: "可先接近理解为 n；正式版以真人音频为准。",
-    writingHint: "主体相似，关键是上方一个点。",
-    example: "和 ت 对比时，ن 是上方一个点。"
-  }
-];
-
-const pictureChoices = [
-  { id: "be", title: "下方一个点", uyghur: "ب", art: "ب", correct: true },
-  { id: "pe", title: "下方三个点", uyghur: "پ", art: "پ", correct: false },
-  { id: "te", title: "上方两个点", uyghur: "ت", art: "ت", correct: false },
-  { id: "nun", title: "上方一个点", uyghur: "ن", art: "ن", correct: false }
-];
-
-const listeningChoices = [
-  { id: "be", title: "ب", meta: "字母 / b", correct: true },
-  { id: "pe", title: "پ", meta: "字母 / p", correct: false },
-  { id: "te", title: "ت", meta: "字母 / t", correct: false }
-];
-
 const keyboardRows = [
   ["ق", "و", "ې", "ر", "ت"],
   ["ي", "ۇ", "ڭ", "ا", "س"],
@@ -204,6 +663,7 @@ const state = {
   selectedListening: "",
   keyboardValue: "",
   currentLetterId: "be",
+  selectedGroupId: "dot-bone",
   selectedUnitId: "letters",
   showGuide: true,
   favorite: false
@@ -214,7 +674,29 @@ const toast = document.querySelector("#toast");
 let toastTimer = null;
 
 function currentLetter() {
-  return firstGroupLetters.find((letter) => letter.id === state.currentLetterId) || firstGroupLetters[0];
+  return currentGroupLetters().find((letter) => letter.id === state.currentLetterId) || currentGroupLetters()[0];
+}
+
+function currentGroup() {
+  return alphabetGroups.find((group) => group.id === state.selectedGroupId) || alphabetGroups[0];
+}
+
+function currentGroupLetters() {
+  return currentGroup().letters;
+}
+
+function allUnitOneLetters() {
+  return alphabetGroups.flatMap((group) => group.letters);
+}
+
+function groupForLetter(letterId) {
+  return alphabetGroups.find((group) => group.letters.some((letter) => letter.id === letterId));
+}
+
+function resetPracticeState() {
+  state.selectedPicture = "";
+  state.selectedListening = "";
+  state.keyboardValue = "";
 }
 
 function currentUnit() {
@@ -227,7 +709,8 @@ function render() {
     home: renderHome,
     learn: renderLearnPath,
     unit: renderUnitDetail,
-    letter: renderLetter,
+    letter: renderGroupLesson,
+    group: renderGroupLesson,
     writing: renderWriting,
     picture: renderPicturePractice,
     listening: renderListeningPractice,
@@ -346,12 +829,12 @@ function renderHome() {
               <p class="caption">今日进度</p>
               <h2 class="section-title">第一单元 · 认识字母</h2>
             </div>
-            <span class="step-state">52%</span>
+            <span class="step-state">已开放</span>
           </div>
           <div class="progress-track" aria-hidden="true">
-            <div class="progress-fill" style="--value: 52%"></div>
+            <div class="progress-fill" style="--value: 100%"></div>
           </div>
-          <p class="caption">继续学习 ب、پ、ت、ن；先把相似字母放在一起认，第二单元再加入词组。</p>
+          <p class="caption">第一单元 11 个相似字母组已放好；先认完整字母，第二单元再加入词组。</p>
           <button class="primary-button" data-action="go" data-target="learn" type="button">
             继续学习
           </button>
@@ -370,10 +853,10 @@ function renderHome() {
           </div>
           <div class="quick-grid">
             <button class="quick-button" data-action="go" data-target="letter" type="button">
-              <strong>学字母</strong><span>当前课 ب پ ت ن</span>
+              <strong>学字母</strong><span>全部字母组</span>
             </button>
             <button class="quick-button" data-action="go" data-target="writing" type="button">
-              <strong>练书写</strong><span>描摹 ب</span>
+              <strong>练书写</strong><span>跟随当前字母</span>
             </button>
             <button class="quick-button" data-action="go" data-target="listening" type="button">
               <strong>听发音</strong><span>辨认字母</span>
@@ -439,6 +922,51 @@ function renderLearnPath() {
   );
 }
 
+function renderLetterPills(items, activeId = "") {
+  return items
+    .map((item) => {
+      const letter = typeof item === "string" ? item : item.letter;
+      const latin = typeof item === "string" ? "" : item.latin;
+      const id = typeof item === "string" ? "" : item.id;
+
+      return `
+        <span class="letter-pill ${id && id === activeId ? "active" : ""}">
+          <span class="uyghur">${letter}</span>
+          ${latin ? `<small>${latin}</small>` : ""}
+        </span>
+      `;
+    })
+    .join("");
+}
+
+function renderGroupCard(group) {
+  const cardContent = `
+    <div class="section-row">
+      <strong>${group.title}</strong>
+      <span class="step-state">${group.status}</span>
+    </div>
+    <p class="caption">${group.goal}</p>
+    <div class="alphabet-strip compact">
+      ${renderLetterPills(group.letters)}
+    </div>
+  `;
+
+  if (!group.id) {
+    return `<article class="group-card">${cardContent}</article>`;
+  }
+
+  return `
+    <button
+      class="group-card group-card-button"
+      data-action="open-group"
+      data-id="${group.id}"
+      type="button"
+    >
+      ${cardContent}
+    </button>
+  `;
+}
+
 function renderUnitDetail() {
   const unit = currentUnit();
 
@@ -465,24 +993,7 @@ function renderUnitDetail() {
         </article>
 
         <div class="path-list">
-          ${unit.groups
-            .map(
-              (group) => `
-                <article class="group-card">
-                  <div class="section-row">
-                    <strong>${group.title}</strong>
-                    <span class="step-state">${group.status}</span>
-                  </div>
-                  <p class="caption">${group.goal}</p>
-                  <div class="alphabet-strip compact">
-                    ${group.letters
-                      .map((letter) => `<span class="letter-pill"><span class="uyghur">${letter}</span></span>`)
-                      .join("")}
-                  </div>
-                </article>
-              `
-            )
-            .join("")}
+          ${unit.groups.map((group) => renderGroupCard(group)).join("")}
         </div>
 
         <button class="primary-button" data-action="go" data-target="${unit.actionTarget}" type="button">
@@ -494,19 +1005,37 @@ function renderUnitDetail() {
   );
 }
 
-function renderLetter() {
+function renderGroupLesson() {
+  const group = currentGroup();
   const letter = currentLetter();
 
   return screen(
     `
       ${topBar(
-        "字母学习",
-        "第一单元：ب、پ、ت、ن",
-        `<button class="icon-button" data-action="toggle-favorite" type="button" aria-label="收藏">${state.favorite ? "★" : "☆"}</button>`
+        group.title,
+        "第一单元：认识字母",
+        `<button class="icon-button" data-action="toggle-favorite" type="button" aria-label="收藏">${state.favorite ? "★" : "☆"}</button>`,
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
       )}
       <section class="stack">
+        <article class="card">
+          <div class="section-row">
+            <div>
+              <p class="caption">本组目标</p>
+              <h2 class="section-title unit-goal-text">${group.goal}</h2>
+            </div>
+            <span class="step-state">${group.status}</span>
+          </div>
+          <div class="chip-row unit-goal-points">
+            <span class="chip">先认整体形状</span>
+            <span class="chip">再看点位和点数</span>
+            <span class="chip">比较四种写法</span>
+            <span class="chip">只练单个字母</span>
+          </div>
+        </article>
+
         <div class="alphabet-strip compact">
-          ${firstGroupLetters
+          ${currentGroupLetters()
             .map(
               (item) => `
                 <button
@@ -549,26 +1078,46 @@ function renderLetter() {
             .join("")}
         </div>
         <article class="card">
-          <p class="caption">连接规则</p>
-          <h2 class="section-title">${letter.connection}</h2>
-        </article>
-        <article class="card">
-          <p class="caption">书写提示</p>
-          <p class="muted">${letter.writingHint}</p>
+          <p class="caption">学习小点</p>
+          <div class="lesson-point-list">
+            <div class="lesson-point">
+              <strong>认形</strong>
+              <span>${letter.cue}</span>
+            </div>
+            <div class="lesson-point">
+              <strong>连接</strong>
+              <span>${letter.connection}</span>
+            </div>
+            <div class="lesson-point">
+              <strong>书写</strong>
+              <span>${letter.writingHint}</span>
+            </div>
+          </div>
         </article>
         <article class="card">
           <p class="caption">点位对比</p>
           <div class="section-row">
-            <strong class="uyghur word-big">${course.word}</strong>
+            <strong class="uyghur word-big">${letter.letter}</strong>
             <div>
               <strong>先认字母，不急着学词组</strong>
               <p class="caption">${letter.example}</p>
             </div>
           </div>
         </article>
-        <button class="primary-button" data-action="go" data-target="writing" type="button">
-          继续：描摹 ب
-        </button>
+        <div class="action-grid">
+          <button class="secondary-button" data-action="go" data-target="writing" type="button">
+            描摹
+          </button>
+          <button class="secondary-button" data-action="go" data-target="picture" type="button">
+            辨认
+          </button>
+          <button class="secondary-button" data-action="go" data-target="listening" type="button">
+            听音
+          </button>
+          <button class="primary-button" data-action="go" data-target="keyboard" type="button">
+            键盘
+          </button>
+        </div>
       </section>
     `,
     "learn"
@@ -576,15 +1125,22 @@ function renderLetter() {
 }
 
 function renderWriting() {
+  const letter = currentLetter();
+
   return screen(
     `
-      ${topBar("书写练习", "先描摹，再自己写")}
+      ${topBar(
+        "书写练习",
+        "先描摹，再自己写",
+        "",
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+      )}
       <section class="stack">
         <article class="card">
           <div class="section-row">
             <div>
               <p class="caption">目标字母</p>
-              <h2 class="section-title">描摹 <span class="uyghur">${course.letter}</span></h2>
+              <h2 class="section-title">描摹 <span class="uyghur">${letter.letter}</span></h2>
             </div>
             <button class="ghost-button" data-action="toggle-guide" type="button">
               ${state.showGuide ? "隐藏参考" : "显示参考"}
@@ -592,7 +1148,7 @@ function renderWriting() {
           </div>
         </article>
         <div class="drawing-pad ${state.showGuide ? "" : "hide-guide"}" aria-label="书写画布示意">
-          <span class="uyghur guide">${course.letter}</span>
+          <span class="uyghur guide">${letter.letter}</span>
           <span class="stroke-line" aria-hidden="true"></span>
         </div>
         <div class="tool-row">
@@ -601,7 +1157,7 @@ function renderWriting() {
           <button class="secondary-button" data-action="toast" type="button">重做</button>
         </div>
         <div class="feedback">
-          第一版先用 ب 演示主体弧线和下方点位；后续再扩展 ئا、ل 和更多字母。
+          ${letter.writingHint}
         </div>
         <button class="primary-button" data-action="go" data-target="picture" type="button">
           完成描摹
@@ -613,24 +1169,33 @@ function renderWriting() {
 }
 
 function renderPicturePractice() {
+  const letter = currentLetter();
+  const choices = currentGroupLetters();
   const hasPicked = Boolean(state.selectedPicture);
-  const picked = pictureChoices.find((choice) => choice.id === state.selectedPicture);
+  const picked = choices.find((choice) => choice.id === state.selectedPicture);
+  const isCorrect = picked && picked.id === letter.id;
 
   return screen(
     `
-      ${topBar("点位辨认", "先看相似字母，不急着学词义")}
+      ${topBar(
+        "点位辨认",
+        currentGroup().title,
+        "",
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+      )}
       <section class="stack">
         <article class="card">
           <p class="caption">选择正确字母</p>
           <h2 class="section-title">
-            哪一个是 <span class="uyghur">${course.word}</span>：下方一个点？
+            哪一个符合：${letter.cue}？
           </h2>
         </article>
         <div class="choice-grid">
-          ${pictureChoices
+          ${choices
             .map((choice) => {
               const selected = state.selectedPicture === choice.id;
-              const resultClass = selected ? (choice.correct ? "correct" : "wrong") : "";
+              const correctChoice = choice.id === letter.id;
+              const resultClass = selected ? (correctChoice ? "correct" : "wrong") : "";
               return `
                 <button
                   class="choice-card ${resultClass}"
@@ -638,12 +1203,12 @@ function renderPicturePractice() {
                   data-id="${choice.id}"
                   type="button"
                 >
-                  <span class="choice-art uyghur">${choice.art}</span>
+                  <span class="choice-art uyghur">${choice.letter}</span>
                   <span>
-                    <strong>${choice.title}</strong>
-                    <span class="caption uyghur">${choice.uyghur}</span>
+                    <strong>${choice.cue}</strong>
+                    <span class="caption">${choice.type} / ${choice.latin}</span>
                   </span>
-                  <span class="step-state">${selected ? (choice.correct ? "正确" : "再想想") : "选择"}</span>
+                  <span class="step-state">${selected ? (correctChoice ? "正确" : "再想想") : "选择"}</span>
                 </button>
               `;
             })
@@ -651,9 +1216,9 @@ function renderPicturePractice() {
         </div>
         ${
           hasPicked
-            ? `<div class="feedback ${picked.correct ? "good" : "bad"}">${
-                picked.correct
-                  ? "答对了。ب 的关键是下方一个点。"
+            ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
+                isCorrect
+                  ? `答对了。${letter.letter} 的关键是 ${letter.cue}。`
                   : "这个不是目标字母。正式版会把错误放入复习。"
               }</div>`
             : ""
@@ -668,25 +1233,34 @@ function renderPicturePractice() {
 }
 
 function renderListeningPractice() {
+  const letter = currentLetter();
+  const choices = currentGroupLetters();
   const hasPicked = Boolean(state.selectedListening);
-  const picked = listeningChoices.find((choice) => choice.id === state.selectedListening);
+  const picked = choices.find((choice) => choice.id === state.selectedListening);
+  const isCorrect = picked && picked.id === letter.id;
 
   return screen(
     `
-      ${topBar("听音选择", "听标准音后选择字母")}
+      ${topBar(
+        "听音选择",
+        currentGroup().title,
+        "",
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+      )}
       <section class="stack">
         <div class="audio-strip">
           <button class="play-dot" data-action="toast" type="button" aria-label="播放发音">听</button>
           <div>
-            <strong>播放：${course.transliteration}</strong>
-            <p class="caption">正式版会播放真人音频，可慢速和循环。</p>
+            <strong>播放：${letter.latin}</strong>
+            <p class="caption">${letter.soundHint}</p>
           </div>
         </div>
         <div class="choice-grid">
-          ${listeningChoices
+          ${choices
             .map((choice) => {
               const selected = state.selectedListening === choice.id;
-              const resultClass = selected ? (choice.correct ? "correct" : "wrong") : "";
+              const correctChoice = choice.id === letter.id;
+              const resultClass = selected ? (correctChoice ? "correct" : "wrong") : "";
               return `
                 <button
                   class="choice-card ${resultClass}"
@@ -694,12 +1268,12 @@ function renderListeningPractice() {
                   data-id="${choice.id}"
                   type="button"
                 >
-                  <span class="choice-art uyghur">${choice.title}</span>
+                  <span class="choice-art uyghur">${choice.letter}</span>
                   <span>
-                    <strong class="uyghur">${choice.title}</strong>
-                    <span class="caption">${choice.meta}</span>
+                    <strong class="uyghur">${choice.letter}</strong>
+                    <span class="caption">字母 / ${choice.latin}</span>
                   </span>
-                  <span class="step-state">${selected ? (choice.correct ? "正确" : "再听") : "选择"}</span>
+                  <span class="step-state">${selected ? (correctChoice ? "正确" : "再听") : "选择"}</span>
                 </button>
               `;
             })
@@ -707,8 +1281,8 @@ function renderListeningPractice() {
         </div>
         ${
           hasPicked
-            ? `<div class="feedback ${picked.correct ? "good" : "bad"}">${
-                picked.correct
+            ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
+                isCorrect
                   ? "听对了。下一步用键盘输入这个字母。"
                   : "这个读音不对应目标字母。可以再点播放按钮听一次。"
               }</div>`
@@ -724,18 +1298,24 @@ function renderListeningPractice() {
 }
 
 function renderKeyboardPractice() {
-  const isCorrect = state.keyboardValue === course.word;
+  const letter = currentLetter();
+  const isCorrect = state.keyboardValue === letter.letter;
   const hasInput = state.keyboardValue.length > 0;
 
   return screen(
     `
-      ${topBar("键盘输入", "用内置键盘输入维吾尔语")}
+      ${topBar(
+        "键盘输入",
+        currentGroup().title,
+        "",
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+      )}
       <section class="stack">
         <article class="card">
           <p class="caption">请输入这个字母</p>
           <div class="section-row">
-            <strong>${course.meaning}</strong>
-            <span class="caption">${course.transliteration}</span>
+            <strong class="uyghur">${letter.letter}</strong>
+            <span class="caption">${letter.latin}</span>
           </div>
         </article>
         <input
@@ -745,6 +1325,17 @@ function renderKeyboardPractice() {
           readonly
           dir="rtl"
         />
+        <div class="practice-key-row" aria-label="本组字母快捷键">
+          ${currentGroupLetters()
+            .map(
+              (item) => `
+                <button class="key-button uyghur" data-action="key" data-key="${item.letter}" type="button">
+                  ${item.letter}
+                </button>
+              `
+            )
+            .join("")}
+        </div>
         <div class="keyboard-grid" aria-label="维吾尔语虚拟键盘">
           ${keyboardRows
             .flat()
@@ -764,9 +1355,9 @@ function renderKeyboardPractice() {
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
                   ? "输入正确。你已经完成这条学习闭环。"
-                  : "继续输入，目标字母是 ب。"
+                  : `继续输入，目标字母是 ${letter.letter}。`
               }</div>`
-            : `<div class="feedback">提示：点击 ب。</div>`
+            : `<div class="feedback">提示：点击 <span class="uyghur">${letter.letter}</span>。</div>`
         }
         <button class="primary-button" data-action="go" data-target="complete" type="button">
           完成课程
@@ -778,6 +1369,10 @@ function renderKeyboardPractice() {
 }
 
 function renderComplete() {
+  const group = currentGroup();
+  const letter = currentLetter();
+  const groupLetters = group.letters.map((item) => item.letter).join(" ");
+
   return screen(
     `
       ${topBar("课程完成", "第一条学习闭环走通了")}
@@ -785,12 +1380,12 @@ function renderComplete() {
         <article class="card">
           <p class="caption">本次学会</p>
           <h2 class="screen-title">
-            第一单元 <span class="uyghur">ب پ ت ن</span>
+            <span class="uyghur">${groupLetters}</span>
           </h2>
-          <p class="muted">你看了当前相似组字母、描摹了 ب、完成点位辨认，并用键盘输入了 ب。</p>
+          <p class="muted">你看了当前相似组字母、描摹了 ${letter.letter}、完成辨认，并用键盘输入了 ${letter.letter}。</p>
         </article>
         <div class="metric-grid">
-          <div class="metric"><strong>4</strong><span>字母</span></div>
+          <div class="metric"><strong>${group.letters.length}</strong><span>字母</span></div>
           <div class="metric"><strong>1</strong><span>辨认</span></div>
           <div class="metric"><strong>0</strong><span>错题</span></div>
         </div>
@@ -809,9 +1404,9 @@ function renderComplete() {
 function renderLibrary() {
   return screen(
     `
-      ${topBar("字母库", "先作为字母库示意")}
+      ${topBar("字母库", "第一单元全部字母")}
       <section class="stack">
-        ${firstGroupLetters
+        ${allUnitOneLetters()
           .map(
             (letter) => `
               <div class="word-row">
@@ -847,7 +1442,7 @@ function renderProfile() {
           <h2 class="section-title">Ana Tilim 学习者</h2>
           <p class="muted">第一版不需要登录，进度保存在本地。这个页面先展示未来个人中心的样子。</p>
         </article>
-        <div class="profile-row"><strong>已学字母</strong><span>4 / 32</span></div>
+        <div class="profile-row"><strong>已开放字母</strong><span>32 / 32</span></div>
         <div class="profile-row"><strong>下一单元</strong><span>组合 / 词组</span></div>
         <div class="profile-row"><strong>连续学习</strong><span>3 天</span></div>
         <button class="secondary-button" data-action="toast" type="button">学习提醒</button>
@@ -881,13 +1476,27 @@ document.addEventListener("click", (event) => {
   const action = button.dataset.action;
 
   if (action === "go") {
-    goTo(button.dataset.target);
+    const target = button.dataset.target;
+    if (["picture", "listening", "keyboard"].includes(target)) {
+      resetPracticeState();
+    }
+    goTo(target);
     return;
   }
 
   if (action === "open-unit") {
     state.selectedUnitId = button.dataset.id;
     goTo("unit");
+    return;
+  }
+
+  if (action === "open-group") {
+    const group = alphabetGroups.find((item) => item.id === button.dataset.id) || alphabetGroups[0];
+    state.selectedUnitId = "letters";
+    state.selectedGroupId = group.id;
+    state.currentLetterId = group.letters[0].id;
+    resetPracticeState();
+    goTo("group");
     return;
   }
 
@@ -904,7 +1513,12 @@ document.addEventListener("click", (event) => {
   }
 
   if (action === "select-letter") {
+    const group = groupForLetter(button.dataset.id);
+    if (group) {
+      state.selectedGroupId = group.id;
+    }
     state.currentLetterId = button.dataset.id;
+    resetPracticeState();
     if (button.dataset.target) {
       state.screen = button.dataset.target;
     }
