@@ -424,7 +424,8 @@ function currentGroupLetters() {
 }
 
 function allUnitOneLetters() {
-  return alphabetGroups.flatMap((group) => group.letters);
+  const detailByLetter = Object.fromEntries(Object.values(letterDetails).map((letter) => [`${letter.letter}|${letter.latin}`, letter]));
+  return alphabetLetters.map((letter) => detailByLetter[`${letter.letter}|${letter.latin}`]).filter(Boolean);
 }
 
 function groupForLetter(letterId) {
@@ -962,6 +963,15 @@ function renderWritingComparison({ value, parts, forms = [] }) {
   `;
 }
 
+function renderWritingCanvas(value, label = "手写板") {
+  return `
+    <div class="writing-pad ${state.showGuide ? "" : "hide-guide"}" aria-label="${label}">
+      <span class="uyghur guide">${value}</span>
+      <canvas class="writing-canvas" data-writing-canvas width="640" height="360"></canvas>
+    </div>
+  `;
+}
+
 function renderWritingSelfCheck() {
   const checkedCount = writingCheckOptions.filter((item) => state.writingChecks.includes(item.id)).length;
 
@@ -1133,6 +1143,86 @@ function renderUnitNextActions(unitId, primaryClass = "primary-button") {
   `;
 }
 
+function initializeWritingCanvases() {
+  if (!document.querySelectorAll) {
+    return;
+  }
+
+  document.querySelectorAll("[data-writing-canvas]").forEach((canvas) => {
+    const context = canvas.getContext && canvas.getContext("2d");
+    if (!context || !canvas.getBoundingClientRect) {
+      return;
+    }
+
+    const ratio = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const width = Math.max(1, Math.floor(rect.width * ratio));
+    const height = Math.max(1, Math.floor(rect.height * ratio));
+    canvas.width = width;
+    canvas.height = height;
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.lineWidth = 8;
+    context.strokeStyle = "#162657";
+
+    let isDrawing = false;
+
+    function pointFor(event) {
+      const bounds = canvas.getBoundingClientRect();
+      return {
+        x: event.clientX - bounds.left,
+        y: event.clientY - bounds.top
+      };
+    }
+
+    canvas.addEventListener("pointerdown", (event) => {
+      const point = pointFor(event);
+      isDrawing = true;
+      canvas.setPointerCapture?.(event.pointerId);
+      context.beginPath();
+      context.moveTo(point.x, point.y);
+      event.preventDefault();
+    });
+
+    canvas.addEventListener("pointermove", (event) => {
+      if (!isDrawing) {
+        return;
+      }
+      const point = pointFor(event);
+      context.lineTo(point.x, point.y);
+      context.stroke();
+      event.preventDefault();
+    });
+
+    function finishDrawing(event) {
+      if (!isDrawing) {
+        return;
+      }
+      isDrawing = false;
+      canvas.releasePointerCapture?.(event.pointerId);
+      context.closePath();
+    }
+
+    canvas.addEventListener("pointerup", finishDrawing);
+    canvas.addEventListener("pointercancel", finishDrawing);
+    canvas.addEventListener("pointerleave", finishDrawing);
+  });
+}
+
+function clearWritingCanvases() {
+  if (!document.querySelectorAll) {
+    return;
+  }
+
+  document.querySelectorAll("[data-writing-canvas]").forEach((canvas) => {
+    const context = canvas.getContext && canvas.getContext("2d");
+    if (context) {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  });
+}
+
 function render() {
   const screens = {
     welcome: renderWelcome,
@@ -1167,6 +1257,7 @@ function render() {
 
   const screenRenderer = screens[state.screen] || renderHome;
   app.innerHTML = screenRenderer();
+  initializeWritingCanvases();
   saveLocalProgress();
 }
 
@@ -1198,9 +1289,9 @@ function topBar(title, subtitle, action = "", leading = "") {
 function bottomNav(active) {
   const items = [
     ["home", "首页", iconHome()],
-    ["learn", "学习", iconBook()],
-    ["writing", "书写", iconPen()],
     ["library", "字母", iconLibrary()],
+    ["learn", "学习", iconBook()],
+    ["writing", "练习", iconPen()],
     ["profile", "我的", iconUser()]
   ];
 
@@ -1290,7 +1381,7 @@ function renderHome() {
     `
       ${topBar("早上好", "今天继续 8 分钟就很好")}
 
-      <section class="stack wide-gap">
+      <section class="stack wide-gap home-center">
         <article class="card today-progress-card">
           <div class="section-row">
             <div>
@@ -1314,43 +1405,12 @@ function renderHome() {
           </button>
         </article>
 
-        ${renderLearningMap(progress.summaries)}
-
         <div class="metric-grid" aria-label="今日学习概览">
           <div class="metric"><strong>${progress.completed} / ${progress.total}</strong><span>总进度</span></div>
           <div class="metric"><strong>${state.mistakes.length}</strong><span>本地错题</span></div>
           <div class="metric"><strong>${counts.pending}</strong><span>待审校</span></div>
         </div>
 
-        <section>
-          <div class="section-row">
-            <h2 class="section-title">快速入口</h2>
-            <button class="ghost-button" data-action="toast" type="button">设置目标</button>
-          </div>
-          <div class="quick-grid">
-            <button class="quick-button" data-action="go" data-target="writing" type="button">
-              <strong>练习听、说、写</strong><span> · 第三单元</span>
-            </button>
-            <button class="quick-button" data-action="open-practice-group" data-id="listening-loop" type="button">
-              <strong>听音辨认</strong><span> · AI 临时</span>
-            </button>
-            <button class="quick-button" data-action="open-practice-group" data-id="repeat-loop" type="button">
-              <strong>跟读练习</strong><span> · 先点完成</span>
-            </button>
-            <button class="quick-button" data-action="open-practice-group" data-id="writing-loop" type="button">
-              <strong>书写输入</strong><span> · 描摹、键盘</span>
-            </button>
-            <button class="quick-button" data-action="open-practice-group" data-id="review-loop" type="button">
-              <strong>继续错题复习</strong><span> · 本地记录</span>
-            </button>
-            <button class="quick-button" data-action="set-app-mode" data-mode="audit" data-target="review" type="button">
-              <strong>审校看板</strong><span> · 回填状态</span>
-            </button>
-            <button class="quick-button" data-action="go" data-target="profile" type="button">
-              <strong>项目状态</strong><span> · 我的页面</span>
-            </button>
-          </div>
-        </section>
       </section>
     `,
     "home"
@@ -1362,29 +1422,6 @@ function renderLearnPath() {
     `
       ${topBar("学习单元", "先认识字母，再进入组合、听说写和主题词")}
       <section class="stack">
-        <article class="card">
-          <div class="section-row">
-            <div>
-              <p class="caption">完整阶段</p>
-              <h2 class="screen-title">${alphabetLetters.length} 个字母</h2>
-            </div>
-            <span class="step-state">待审校</span>
-          </div>
-          <p class="muted">Ana Tilim 按截图顺序展示字母，学习时把相似字母放在一起。第二单元加入组合，第四单元进入日常主题词。</p>
-          <div class="alphabet-strip" aria-label="完整字母目录">
-            ${alphabetLetters
-              .map(
-                (item, index) => `
-                  <span class="letter-pill ${["ب", "پ", "ت", "ن"].includes(item.letter) ? "active" : ""}">
-                    <span class="uyghur">${item.letter}</span>
-                    <small>${item.latin}</small>
-                  </span>
-                `
-              )
-              .join("")}
-          </div>
-        </article>
-
         <div class="path-list">
           ${learningUnits
             .map(
@@ -1426,6 +1463,9 @@ function renderLetterPills(items, activeId = "") {
 
 function renderGroupCard(group) {
   const action = group.kind === "practice" ? "open-practice-group" : group.kind === "vocab" ? "open-vocab-group" : group.kind === "combo" ? "open-combo-group" : "open-group";
+  if (group.kind === "practice") {
+    return renderPracticeTopicCard(group, action);
+  }
   if (group.kind === "vocab") {
     return renderVocabTopicCard(group, action);
   }
@@ -1435,7 +1475,6 @@ function renderGroupCard(group) {
       <strong>${group.title}</strong>
       <span class="step-state">${group.status}</span>
     </div>
-    <p class="caption">${group.goal}</p>
     <div class="alphabet-strip compact">
       ${renderLetterPills(group.letters)}
     </div>
@@ -1453,6 +1492,31 @@ function renderGroupCard(group) {
       type="button"
     >
       ${cardContent}
+    </button>
+  `;
+}
+
+function practiceTopicLabel(group) {
+  if (group.mode === "listen") return "听音选择";
+  if (group.mode === "repeat") return "跟读确认";
+  if (group.mode === "write") return "书写、键盘";
+  return "错题回看";
+}
+
+function renderPracticeTopicCard(group, action = "open-practice-group") {
+  return `
+    <button
+      class="practice-topic-row"
+      data-action="${action}"
+      data-id="${group.id}"
+      type="button"
+      aria-label="进入${group.title}"
+    >
+      <span>
+        <strong>${group.title}</strong>
+        <small>${practiceTopicLabel(group)}</small>
+      </span>
+      <span class="topic-arrow" aria-hidden="true">→</span>
     </button>
   `;
 }
@@ -1510,30 +1574,6 @@ function renderUnitDetail() {
         `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="返回">←</button>`
       )}
       <section class="stack">
-        <article class="card">
-          <div class="section-row">
-            <div>
-              <p class="caption">单元目标</p>
-              <h2 class="section-title unit-goal-text">${unit.description}</h2>
-            </div>
-            <span class="step-state">${unit.status}</span>
-          </div>
-          <div class="chip-row unit-goal-points">
-            ${unit.bullets.map((point) => `<span class="chip">${point}</span>`).join("")}
-          </div>
-        </article>
-
-        <article class="card">
-          <div class="section-row">
-            <div>
-              <p class="caption">学习步骤</p>
-              <h2 class="section-title">按这个顺序走，不用一次学完</h2>
-            </div>
-            <span class="step-state">${unit.groups.length} 组</span>
-          </div>
-          ${renderStepList(unit.id)}
-        </article>
-
         <div class="path-list">
           ${unit.groups.map((group) => renderGroupCard(group)).join("")}
         </div>
@@ -1712,19 +1752,17 @@ function renderLetterWriting() {
           hint: letter.writingHint,
           mode: "letter"
         })}
-        <div class="drawing-pad ${state.showGuide ? "" : "hide-guide"}" aria-label="书写画布示意">
-          <span class="uyghur guide">${letter.letter}</span>
-          <span class="stroke-line" aria-hidden="true"></span>
-        </div>
+        ${renderWritingCanvas(letter.letter, "字母手写板")}
         ${renderWritingComparison({
           value: letter.letter,
           parts: [letter.letter],
           forms: letter.forms
         })}
         <div class="tool-row">
-          <button class="secondary-button" data-action="toast" type="button">撤销</button>
-          <button class="secondary-button" data-action="toast" type="button">清除</button>
-          <button class="secondary-button" data-action="toast" type="button">重做</button>
+          <button class="secondary-button" data-action="clear-canvas" type="button">清空画布</button>
+          <button class="secondary-button" data-action="toggle-guide" type="button">
+            ${state.showGuide ? "隐藏参考" : "显示参考"}
+          </button>
         </div>
         ${renderWritingSelfCheck()}
         <div class="feedback">
@@ -2946,10 +2984,11 @@ function renderPracticeModeCard(group, item) {
 
     return `
       <article class="card practice-mode-card">
-        <p class="caption">先描摹，再输入</p>
-        <div class="practice-drawing-pad ${state.showGuide ? "" : "hide-guide"}" aria-label="第三单元书写画布示意">
-          <span class="uyghur guide">${item.value}</span>
+        <div class="section-row">
+          <p class="caption">手写板</p>
+          <button class="ghost-button" data-action="clear-canvas" type="button">清空画布</button>
         </div>
+        ${renderWritingCanvas(item.value, "第三单元手写板")}
         <button class="ghost-button" data-action="toggle-guide" type="button">
           ${state.showGuide ? "隐藏参考" : "显示参考"}
         </button>
@@ -3045,29 +3084,20 @@ function renderPracticeModeCard(group, item) {
 }
 
 function renderPracticeHub() {
+  const completedPracticeGroups = countCompleted("practice");
+
   return screen(
     `
-      ${topBar("听说与书写强化", "第三单元：复习闭环")}
+      ${topBar("练习中心", "听、说、写、错题复习")}
       <section class="stack">
-        <article class="card review-card">
-          <div class="section-row">
-            <div>
-              <p class="caption">本单元原则</p>
-              <h2 class="section-title unit-goal-text">先复习字母和组合，把听、跟读、书写、键盘连起来。</h2>
-            </div>
-            <span class="step-state">进行中</span>
-          </div>
-          <p class="muted">真实音频还没录制，所以听音和跟读先做流程；正式日常词汇放在第四单元继续审校。</p>
-        </article>
-
         <div class="metric-grid" aria-label="第三单元概览">
-          <div class="metric"><strong>${practiceGroups.length}</strong><span>训练组</span></div>
+          <div class="metric"><strong>${completedPracticeGroups} / ${practiceGroups.length}</strong><span>强化训练</span></div>
           <div class="metric"><strong>${allPracticeItems().length}</strong><span>复习项</span></div>
           <div class="metric"><strong>${state.mistakes.length}</strong><span>本地错题</span></div>
         </div>
 
         <div class="path-list">
-          ${practiceGroups.map((group) => renderGroupCard(group)).join("")}
+          ${practiceGroups.map((group) => renderPracticeTopicCard(group)).join("")}
         </div>
 
         <button class="secondary-button" data-action="go" data-target="learn" type="button">
@@ -3402,7 +3432,6 @@ function renderLibrary() {
 function renderProfile() {
   const counts = reviewCounts();
   const completedLetterGroups = Object.values(state.learningProgress.letters).filter((item) => item.completed).length;
-  const completedPracticeGroups = Object.values(state.learningProgress.practice).filter((item) => item.completed).length;
 
   return screen(
     `
@@ -3416,8 +3445,6 @@ function renderProfile() {
         <div class="profile-row"><strong>字母闭环</strong><span>${completedLetterGroups} / ${alphabetGroups.length}</span></div>
         <div class="profile-row"><strong>已开放组合</strong><span>${allComboItems().length}</span></div>
         <div class="profile-row"><strong>候选词库</strong><span>${allVocabItems().length}</span></div>
-        <div class="profile-row"><strong>强化训练</strong><span>${completedPracticeGroups} / ${practiceGroups.length}</span></div>
-        <div class="profile-row"><strong>本地错题</strong><span>${state.mistakes.length}</span></div>
         <div class="profile-row"><strong>待审校</strong><span>${counts.pending}</span></div>
         <div class="profile-row"><strong>AI 临时音频</strong><span>${counts.aiTemp}</span></div>
         <div class="profile-row"><strong>音频待录</strong><span>${counts.audioPending}</span></div>
@@ -3842,6 +3869,11 @@ document.addEventListener("click", (event) => {
   if (action === "clear-input") {
     state.keyboardValue = "";
     render();
+    return;
+  }
+
+  if (action === "clear-canvas") {
+    clearWritingCanvases();
     return;
   }
 

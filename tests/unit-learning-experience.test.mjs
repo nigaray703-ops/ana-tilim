@@ -71,6 +71,11 @@ assert.ok(
   letterLibraryGridStyle.includes("grid-template-columns: repeat(4, minmax(0, 1fr));"),
   "letter library should show four letters per row"
 );
+const homeCenterStyle = styleSource.match(/^\.home-center\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
+assert.ok(homeCenterStyle.includes("width: min(100%, 390px);"), "home content should use a centered compact width");
+assert.ok(homeCenterStyle.includes("margin: 0 auto;"), "home content should be horizontally centered");
+const homeCenterChildStyle = styleSource.match(/^\.home-center > \*\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
+assert.ok(homeCenterChildStyle.includes("width: 100%;"), "home cards should fill the centered home column");
 const stepStateStyle = styleSource.match(/^\.step-state\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
 for (const declaration of ["overflow: visible;", "text-overflow: clip;", "min-width: max-content;", "flex: 0 0 auto;"]) {
   assert.ok(stepStateStyle.includes(declaration), `status labels should include ${declaration}`);
@@ -104,6 +109,10 @@ assert.ok(
   appSource.includes("practiceGroups") && appSource.indexOf("practiceGroups") < appSource.indexOf("const alphabetAudioByLetterId"),
   "app should read unit four practice content from the shared course data object"
 );
+assert.ok(appSource.includes('["writing", "练习"'), "bottom navigation should label the practice area as 练习");
+assert.ok(!appSource.includes('["writing", "书写"'), "bottom navigation should not label the full practice area as 书写");
+assert.ok(appSource.includes("pointerdown"), "writing canvas should support direct pointer writing");
+assert.ok(appSource.includes("clear-canvas"), "writing canvas should include a real clear action");
 const htmlScriptOrder = [...courseDataScriptPaths, courseDataAggregatorPath, "prototype/app.js"].map((scriptPath) =>
   scriptPath.replace("prototype/", "./")
 );
@@ -220,14 +229,31 @@ assert.ok(!app.innerHTML.includes("<br>"), "welcome screen should not force the 
 
 includesAll(
   renderState("state.screen = 'home'"),
-  ["今日进度", "第三单元 · 听说与书写", "继续学习", "today-progress-note"],
+  ["今日进度", "第三单元 · 听说与书写", "继续学习", "today-progress-note", "home-center"],
   "home screen"
 );
+const bottomNavHtml = app.innerHTML.match(/<nav class="bottom-nav"[\s\S]*?<\/nav>/)?.[0] || "";
+let lastNavPosition = -1;
+for (const target of ["home", "library", "learn", "writing", "profile"]) {
+  const position = bottomNavHtml.indexOf(`data-target="${target}"`, lastNavPosition + 1);
+  assert.ok(position > lastNavPosition, `bottom navigation should place ${target} in the requested order`);
+  lastNavPosition = position;
+}
 assert.ok(!app.innerHTML.includes("今日下一步"), "home screen should remove the daily next-action explainer card");
 assert.ok(!app.innerHTML.includes("next-action-card"), "home screen should not render the removed next-action card");
+assert.ok(!app.innerHTML.includes("快速入口"), "home screen should remove the quick entry section");
+assert.ok(!app.innerHTML.includes("quick-grid"), "home screen should not render quick entry buttons");
 assert.ok(!app.innerHTML.includes("<br>"), "home screen should not force unit titles onto manual line breaks");
 assert.ok(!app.innerHTML.includes("AI 临时音频 / 真人音频待录制"), "home audio note should use readable punctuation");
-assert.ok(app.innerHTML.includes("<strong>听音辨认</strong><span> · AI 临时</span>"), "quick entry labels should stay readable on one line");
+
+includesAll(
+  renderState("state.screen = 'writing'"),
+  ["练习中心", "强化训练", "本地错题", "practice-topic-row", "听音辨认", "跟读练习", "书写、键盘", "错题复习"],
+  "practice hub"
+);
+for (const uyghurPreview of ["ب", "با", "مەن", "رەھمەت", "ئانا"]) {
+  assert.ok(!app.innerHTML.includes(uyghurPreview), `practice hub should not show Uyghur preview ${uyghurPreview}`);
+}
 
 includesAll(
   renderState("state.screen = 'learn'"),
@@ -236,6 +262,8 @@ includesAll(
 );
 assert.ok(!app.innerHTML.includes("基础词组与主题词"), "learning path should not show the removed vocabulary title");
 assert.ok(!app.innerHTML.includes("选择训练组、完成一个目标、查看本轮结果"), "learning unit cards should not show the full step explanation");
+assert.ok(!app.innerHTML.includes("完整字母目录"), "learning path should not duplicate the full alphabet table");
+assert.ok(!app.innerHTML.includes("alphabet-strip"), "learning path should keep the large alphabet table in the alphabet tab only");
 
 includesAll(
   renderState(`
@@ -256,16 +284,18 @@ includesAll(
       attempts: 1
     }];
   `),
-  ["学习地图", "1 / 11", "1 / 4", "需要复习 1 个", "继续错题复习"],
-  "home progress map"
+  ["今日进度", "2 / 31", "需要复习 1 个", "继续错题复习"],
+  "home progress summary"
 );
+assert.ok(!app.innerHTML.includes("学习地图"), "home screen should not show the learning map");
+assert.ok(!app.innerHTML.includes("learning-map-card"), "home screen should remove the learning map card");
 
 for (const unitId of ["letters", "combos", "practice"]) {
-  includesAll(
-    renderState(`state.screen = 'unit'; state.selectedUnitId = '${unitId}'`),
-    ["学习步骤", "进入当前学习"],
-    `${unitId} unit screen`
-  );
+  renderState(`state.screen = 'unit'; state.selectedUnitId = '${unitId}'`);
+  assert.ok(!app.innerHTML.includes("单元目标"), `${unitId} unit screen should not show the unit goal block`);
+  assert.ok(!app.innerHTML.includes("学习步骤"), `${unitId} unit screen should not show the learning steps block`);
+  assert.ok(!app.innerHTML.includes("按这个顺序走"), `${unitId} unit screen should remove optional step copy`);
+  assert.ok(app.innerHTML.includes("path-list"), `${unitId} unit screen should keep the lesson entry list`);
 }
 includesAll(
   renderState("state.screen = 'unit'; state.selectedUnitId = 'basic-phrases'"),
@@ -283,6 +313,10 @@ includesAll(
 assert.ok(!app.innerHTML.includes("回填 / 音频 / 重点项"), "review dashboard should use readable punctuation in the subtitle");
 assert.ok(!app.innerHTML.includes("家庭 / 基础称呼重点项"), "review priority note should avoid slash-separated Chinese words");
 
+renderState("state.screen = 'profile'");
+assert.ok(!app.innerHTML.includes("<strong>强化训练</strong>"), "profile should move practice progress into the practice tab");
+assert.ok(!app.innerHTML.includes("<strong>本地错题</strong>"), "profile should move local mistakes into the practice tab");
+
 includesAll(
   renderState("state.screen = 'library'"),
   ["字母库", "待审校", "letter-library-grid", "32 个字母"],
@@ -292,10 +326,16 @@ assert.ok(!app.innerHTML.includes(" / 待审校"), "letter library should separa
 assert.ok(!app.innerHTML.includes("word-row"), "letter library should not render a tall row for every letter");
 assert.ok(!app.innerHTML.includes(">学习</button>"), "letter library should avoid repeated study buttons");
 assert.equal((app.innerHTML.match(/data-action="select-letter"/g) || []).length, 32, "letter library should keep all letters directly selectable");
+let lastAlphabetPosition = -1;
+for (const letter of ["ئا", "ئە", "ب", "پ", "ت", "ج", "چ", "خ", "د", "ر", "ز", "ژ", "س", "ش", "غ", "ف", "ق", "ك", "گ", "ڭ", "ل", "م", "ن", "ھ", "ئو", "ئۇ", "ئۆ", "ئۈ", "ۋ", "ئې", "ئى", "ي"]) {
+  const position = app.innerHTML.indexOf(`<span class="uyghur">${letter}</span>`, lastAlphabetPosition + 1);
+  assert.ok(position > lastAlphabetPosition, `letter library should place ${letter} in screenshot order`);
+  lastAlphabetPosition = position;
+}
 
 includesAll(
   renderState("state.screen = 'group'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'"),
-  ["1 / 4", "上一个", "下一个", "AI 临时音频", "找不同", "读音选择"],
+  ["1 / 3", "上一个", "下一个", "AI 临时音频", "找不同", "读音选择"],
   "letter lesson"
 );
 clickDataset({ action: "select-adjacent-letter", id: "pe" });
@@ -384,7 +424,7 @@ includesAll(
 renderState("state.screen = 'letterWriting'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'");
 includesAll(
   app.innerHTML,
-  ["书写步骤", "起笔", "方向", "对比正确写法", "完成后评价", "点位正确"],
+  ["书写步骤", "writing-canvas", "清空画布", "起笔", "方向", "对比正确写法", "完成后评价", "点位正确"],
   "letter writing coach"
 );
 clickDataset({ action: "toggle-writing-check", id: "dots" });
@@ -432,8 +472,8 @@ includesAll(
 
 includesAll(
   renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'writing-loop'; state.currentPracticeItemId = 'practice-write-ana'; state.keyboardValue = ''"),
-  ["书写步骤", "拆分描摹", "完成后评价", "键盘步骤", "ئا → ن → ا", "点击 ئا", "还差 3 键"],
-  "practice writing keyboard guide"
+  ["手写板", "writing-canvas", "清空画布", "键盘步骤", "ئا → ن → ا", "点击 ئا", "还差 3 键"],
+  "practice writing canvas and keyboard guide"
 );
 
 includesAll(
