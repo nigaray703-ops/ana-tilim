@@ -292,8 +292,10 @@ button {
 }
 
 .chip-row,
+.action-grid,
 .quick-grid,
 .form-grid,
+.practice-key-row,
 .keyboard-grid,
 .choice-grid {
   display: grid;
@@ -356,6 +358,18 @@ button {
   box-shadow: 0 10px 24px rgba(22, 38, 87, 0.08);
 }
 
+.group-card-button {
+  width: 100%;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+
+.group-card-button:hover {
+  border-color: rgba(14, 155, 177, 0.32);
+  background: rgba(255, 255, 255, 0.86);
+}
+
 .group-card.locked {
   box-shadow: none;
   background: rgba(255, 255, 255, 0.58);
@@ -384,6 +398,10 @@ button {
 }
 
 .quick-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.action-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -583,6 +601,34 @@ button {
   line-height: 1.2;
 }
 
+.lesson-point-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.lesson-point {
+  display: grid;
+  gap: 4px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.lesson-point:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.lesson-point strong {
+  font-size: 13px;
+}
+
+.lesson-point span {
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .audio-strip {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -722,6 +768,15 @@ button {
   text-align: right;
   font-size: 30px;
   font-weight: 800;
+}
+
+.practice-key-row {
+  grid-template-columns: repeat(auto-fit, minmax(54px, 1fr));
+}
+
+.practice-key-row .key-button {
+  border-color: rgba(14, 155, 177, 0.22);
+  background: var(--teal-soft);
 }
 
 .keyboard-grid {
