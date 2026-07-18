@@ -90,7 +90,23 @@ const vocabTopicDefinitions = [
       ["seventeen", "ئون يەتتە", "on yette", "十七"],
       ["eighteen", "ئون سەككىز", "on sekkiz", "十八"],
       ["nineteen", "ئون توققۇز", "on toqquz", "十九"],
-      ["twenty", "يىگىرمە", "yigirme", "二十"]
+      ["twenty", "يىگىرمە", "yigirme", "二十"],
+      ["ten-tens", "ئون", "on", "十、整十数"],
+      ["thirty", "ئوتتۇز", "ottuz", "三十"],
+      ["forty", "قىرىق", "qiriq", "四十"],
+      ["fifty", "ئەللىك", "ellik", "五十"],
+      ["sixty", "ئاتمىش", "atmish", "六十"],
+      ["seventy", "يەتمىش", "yetmish", "七十"],
+      ["eighty", "سەكسەن", "seksen", "八十"],
+      ["ninety", "توقسان", "toqsan", "九十"],
+      ["hundred", "يۈز", "yüz", "百"],
+      ["thousand", "مىڭ", "ming", "千"],
+      ["ten-thousand", "ئون مىڭ", "on ming", "万、十千"],
+      ["hundred-thousand", "يۈز مىڭ", "yüz ming", "十万"],
+      ["million", "بىر مىليون", "bir milyon", "百万"],
+      ["ten-million", "ئون مىليون", "on milyon", "千万"],
+      ["hundred-million", "يۈز مىليون", "yüz milyon", "亿、一亿"],
+      ["billion", "بىر مىليارد", "bir milyard", "十亿"]
     ]
   },
   {
@@ -112,7 +128,24 @@ const vocabTopicDefinitions = [
       ["kech", "كەچ", "kech", "晚上"],
       ["keche", "كېچە", "këche", "夜晚"],
       ["dushenbe", "دۈشەنبە", "düshenbe", "星期一"],
-      ["jume", "جۈمە", "jüme", "星期五"]
+      ["seshenbe", "سەيشەنبە", "seyshenbe", "星期二"],
+      ["charshenbe", "چارشەنبە", "charshenbe", "星期三"],
+      ["peyshenbe", "پەيشەنبە", "peyshenbe", "星期四"],
+      ["jume", "جۈمە", "jüme", "星期五"],
+      ["shenbe", "شەنبە", "shenbe", "星期六"],
+      ["yekshembe", "يەكشەنبە", "yekshembe", "星期日"],
+      ["yanwar", "يانۋار", "yanwar", "一月"],
+      ["fewral", "فېۋرال", "fëwral", "二月"],
+      ["mart", "مارت", "mart", "三月"],
+      ["aprel", "ئاپرېل", "aprël", "四月"],
+      ["may-month", "ماي", "may", "五月"],
+      ["iyun", "ئىيۇن", "iyun", "六月"],
+      ["iyul", "ئىيۇل", "iyul", "七月"],
+      ["awghust", "ئاۋغۇست", "awghust", "八月"],
+      ["sentyabr", "سېنتەبىر", "sentyabir", "九月"],
+      ["oktyabr", "ئۆكتەبىر", "öktyabir", "十月"],
+      ["noyabr", "نويابىر", "noyabir", "十一月"],
+      ["dekabr", "دېكابىر", "dëkabir", "十二月"]
     ]
   },
   {
@@ -271,6 +304,62 @@ const vocabTopicDefinitions = [
   }
 ];
 
+const vocabSectionDefinitions = {
+  greetings: [
+    ["daily", "日常问候", ["yaxshimusiz", "assalamu", "waalaykum", "xeyirlik-etigen", "xeyirlik-kech", "qandaq", "yaxshi"]],
+    ["polite", "礼貌用语", ["rahmat", "kop-rahmat", "marhaba", "kechurung", "xush-keldingiz", "xosh", "hayr", "korushkunche"]]
+  ],
+  pronouns: [
+    ["person", "人称", ["men", "sen", "siz", "u-pronoun", "biz", "ular"]],
+    ["possessive", "所属", ["mening", "sening", "sizning", "uning", "bizning"]],
+    ["pointing", "指示和疑问", ["bu", "shu", "kim", "nime"]]
+  ],
+  family: [
+    ["parents", "父母和家庭", ["ana-family", "apa-family", "ata-family", "dada-family", "aile-family", "bala-family"]],
+    ["siblings", "兄弟姐妹", ["oghul-family", "qiz-family", "aka-family", "inim-family", "singil-family", "acha-family"]],
+    ["relations", "长辈和关系", ["chong-ata-family", "chong-ana-family", "dost-family"]]
+  ],
+  numbers: [
+    ["one-to-ten", "1-10", ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]],
+    ["eleven-to-twenty", "11-20", ["eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"]],
+    ["tens", "整十数", ["ten-tens", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]],
+    ["large", "大数", ["hundred", "thousand", "ten-thousand", "hundred-thousand", "million", "ten-million", "hundred-million", "billion"]]
+  ],
+  time: [
+    ["basic", "基础时间", ["bugun", "ete", "tunugun", "hazir", "waqit", "kun", "hepte", "ay-time", "yil", "etigen", "chush", "kech", "keche"]],
+    ["weekdays", "星期", ["dushenbe", "seshenbe", "charshenbe", "peyshenbe", "jume", "shenbe", "yekshembe"]],
+    ["months", "月份", ["yanwar", "fewral", "mart", "aprel", "may-month", "iyun", "iyul", "awghust", "sentyabr", "oktyabr", "noyabr", "dekabr"]]
+  ],
+  body: [
+    ["head", "头部", ["bash-body", "koz-body", "qulaq-body", "burun-body", "eghiz-body", "chish-body", "til-body", "chach-body", "yuz-body"]],
+    ["body", "身体", ["qol-body", "put-body", "yurek-body", "boyun-body", "arqa-body", "qorsaq-body"]]
+  ],
+  food: [
+    ["basic", "主食饮料", ["nan-food", "su-food", "chay-food", "sut-food", "polu-food", "guruch-food", "shorpa-food", "qetiq-food"]],
+    ["meal", "食物和调味", ["gosh-food", "mewe-food", "tuz-food", "sheker-food", "may-food", "tuxum-food", "beliq-food"]]
+  ],
+  vegetables: [
+    ["common", "常见蔬菜", ["pemidur-vegetable", "piyaz-vegetable", "yangyu-vegetable", "berengge-vegetable", "sewze-vegetable", "terxemek-vegetable", "koktat-vegetable"]],
+    ["more", "补充蔬菜", ["samsaq-vegetable", "kawa-vegetable", "laza-vegetable", "yesiwilek-vegetable", "palek-vegetable", "chamghur-vegetable", "badamjan-vegetable", "qizilmuch-vegetable"]]
+  ],
+  animals: [
+    ["home", "家养动物", ["it-animal", "mushuk-animal", "kala-animal", "qoy-animal", "toxu-animal", "at-animal", "ochke-animal"]],
+    ["other", "其他动物", ["beliq-animal", "qush-animal", "toge-animal", "bore-animal", "burkut-animal", "chashqan-animal", "toshqan-animal", "yilan-animal"]]
+  ],
+  home: [
+    ["house", "家里", ["oy-home", "ishik-home", "dereze-home", "stol-home", "orunduq-home", "kariwat-home", "chiragh-home"]],
+    ["objects", "学习和随身", ["kitab-home", "qelem-home", "depter-home", "somka-home", "telefon-home", "achquch-home", "saet-home", "pul-home"]]
+  ],
+  colors: [
+    ["basic", "基础颜色", ["qizil-color", "kok-color", "yeshil-color", "seriq-color", "qara-color", "aq-color"]],
+    ["more", "扩展颜色", ["toq-seriq-color", "binepshe-color", "qongur-color", "kulreng-color", "altun-color", "kumush-color", "halreng-color", "sus-kok-color", "qeniq-kok-color"]]
+  ],
+  actions: [
+    ["learn", "看听说写", ["oqush-action", "yezish-action", "korush-action", "anglash-action", "sozlesh-action", "bilish-action"]],
+    ["daily", "日常动作", ["kelish-action", "ketish-action", "yeyish-action", "ichish-action", "berish-action", "elish-action", "echish-action", "taqash-action", "olturush-action"]]
+  ]
+};
+
 function defaultParts(value) {
   return value.split(/\s+/).filter(Boolean);
 }
@@ -295,6 +384,19 @@ function makeVocabItem(topic, entry) {
   };
 }
 
+function makeVocabSections(topic, items) {
+  const definitions = vocabSectionDefinitions[topic.id] || [];
+  const itemIds = new Set(items.map((item) => item.id));
+
+  return definitions
+    .map(([id, title, ids]) => ({
+      id,
+      title,
+      itemIds: ids.filter((itemId) => itemIds.has(itemId))
+    }))
+    .filter((section) => section.itemIds.length > 0);
+}
+
 const vocabGroups = vocabTopicDefinitions.map((topic) => {
   const items = topic.words.map((entry) => makeVocabItem(topic, entry));
 
@@ -305,6 +407,7 @@ const vocabGroups = vocabTopicDefinitions.map((topic) => {
     letters: items.map((item) => item.value),
     goal: topic.goal,
     status: "待审校",
+    sections: makeVocabSections(topic, items),
     items
   };
 });
