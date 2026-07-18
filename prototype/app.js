@@ -7,21 +7,118 @@ const course = {
     { label: "词尾", value: "ـب" }
   ],
   word: "بالا",
-  meaning: "孩子",
+  meaning: "字母组合示例",
   transliteration: "bala",
-  theme: "家庭 / 基础称呼"
+  theme: "字母基础 / 第一组"
 };
 
+const alphabetLetters = [
+  { letter: "ئا", latin: "a", type: "元音" },
+  { letter: "ئە", latin: "e", type: "元音" },
+  { letter: "ب", latin: "b", type: "辅音" },
+  { letter: "پ", latin: "p", type: "辅音" },
+  { letter: "ت", latin: "t", type: "辅音" },
+  { letter: "ج", latin: "j", type: "辅音" },
+  { letter: "چ", latin: "ch", type: "辅音" },
+  { letter: "خ", latin: "x", type: "辅音" },
+  { letter: "د", latin: "d", type: "辅音" },
+  { letter: "ر", latin: "r", type: "辅音" },
+  { letter: "ز", latin: "z", type: "辅音" },
+  { letter: "ژ", latin: "zh", type: "辅音" },
+  { letter: "س", latin: "s", type: "辅音" },
+  { letter: "ش", latin: "sh", type: "辅音" },
+  { letter: "غ", latin: "gh", type: "辅音" },
+  { letter: "ف", latin: "f", type: "辅音" },
+  { letter: "ق", latin: "q", type: "辅音" },
+  { letter: "ك", latin: "k", type: "辅音" },
+  { letter: "گ", latin: "g", type: "辅音" },
+  { letter: "ڭ", latin: "ng", type: "辅音" },
+  { letter: "ل", latin: "l", type: "辅音" },
+  { letter: "م", latin: "m", type: "辅音" },
+  { letter: "ن", latin: "n", type: "辅音" },
+  { letter: "ھ", latin: "h", type: "辅音" },
+  { letter: "ئو", latin: "o", type: "元音" },
+  { letter: "ئۇ", latin: "u", type: "元音" },
+  { letter: "ئۆ", latin: "ö", type: "元音" },
+  { letter: "ئۈ", latin: "ü", type: "元音" },
+  { letter: "ۋ", latin: "w / v", type: "辅音" },
+  { letter: "ئې", latin: "ë", type: "元音" },
+  { letter: "ئى", latin: "i", type: "元音" },
+  { letter: "ي", latin: "y", type: "辅音" }
+];
+
+const alphabetGroups = [
+  { title: "入门概念", letters: ["RTL", "形态", "点位"], goal: "先知道字母为什么会变形", status: "已开始" },
+  { title: "第一组：最小闭环", letters: ["ئا", "ب", "ل"], goal: "先学 1 个元音入口和 2 个简单辅音", status: "进行中" },
+  { title: "第二组：高频简单辅音", letters: ["م", "ن", "ت", "س"], goal: "继续熟悉点位和常见连接", status: "排队中" },
+  { title: "第三组：点位和形近字", letters: ["پ", "ج", "چ", "ش"], goal: "重点区分点的数量和位置", status: "排队中" },
+  { title: "第四组：断开连接字母", letters: ["د", "ر", "ز", "ژ"], goal: "理解哪些字母后面不继续连接", status: "排队中" },
+  { title: "第五组：较难发音", letters: ["خ", "غ", "ق", "ك", "گ", "ڭ"], goal: "谨慎处理较难发音", status: "排队中" },
+  { title: "第六组：剩余常用辅音", letters: ["ف", "ھ", "ۋ", "ي"], goal: "完成主要辅音认识", status: "排队中" },
+  { title: "元音专项", letters: ["ئە", "ئې", "ئى", "ئو", "ئۇ", "ئۆ", "ئۈ"], goal: "系统学习元音和 ئ 的作用", status: "排队中" }
+];
+
+const firstGroupLetters = [
+  {
+    id: "aa",
+    letter: "ئا",
+    latin: "a",
+    type: "元音入口",
+    forms: [
+      { label: "独立", value: "ئا" },
+      { label: "词首", value: "ئا" },
+      { label: "词中", value: "ـا" },
+      { label: "词尾", value: "ـا" }
+    ],
+    connection: "可以接收前一个字母的连接，但后面通常不继续连接，所以会造成视觉断开。",
+    soundHint: "先接近理解为汉语“啊”的开口音；正式版以真人音频为准。",
+    writingHint: "先认识 ئ 和 ا 的组合，不急着讲完 ئ 的所有用法。",
+    example: "在 بالا 中，ا 后面不继续连接，后面的 ل 会重新开始。"
+  },
+  {
+    id: "be",
+    letter: "ب",
+    latin: "b",
+    type: "辅音",
+    forms: [
+      { label: "独立", value: "ب" },
+      { label: "词首", value: "بـ" },
+      { label: "词中", value: "ـبـ" },
+      { label: "词尾", value: "ـب" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为英语 b 或汉语拼音里不送气的 b。",
+    writingHint: "主体像平稳的弧线，点在下方；第一版描摹先从 ب 开始。",
+    example: "在 با 中，ب 用词首形连接到后面的 ا。"
+  },
+  {
+    id: "lam",
+    letter: "ل",
+    latin: "l",
+    type: "辅音",
+    forms: [
+      { label: "独立", value: "ل" },
+      { label: "词首", value: "لـ" },
+      { label: "词中", value: "ـلـ" },
+      { label: "词尾", value: "ـل" }
+    ],
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
+    soundHint: "可先接近理解为英语 l；正式版以真人音频为准。",
+    writingHint: "注意竖线高度和下方收笔，连接形要贴近同一基线。",
+    example: "在 لا 中，ل 连接到后面的 ا，但 ا 后面不继续连接。"
+  }
+];
+
 const pictureChoices = [
-  { id: "child", title: "孩子", uyghur: "بالا", art: "بالا", correct: true },
-  { id: "bread", title: "面包", uyghur: "نان", art: "نان", correct: false },
-  { id: "water", title: "水", uyghur: "سۇ", art: "سۇ", correct: false }
+  { id: "bala", title: "正确组合", uyghur: "بالا", art: "بالا", correct: true },
+  { id: "bal", title: "少了最后 ا", uyghur: "بال", art: "بال", correct: false },
+  { id: "la", title: "只有后半段", uyghur: "لا", art: "لا", correct: false }
 ];
 
 const listeningChoices = [
-  { id: "bala", title: "بالا", meta: "孩子 / bala", correct: true },
-  { id: "ana", title: "ئانا", meta: "母亲 / ana", correct: false },
-  { id: "ata", title: "ئاتا", meta: "父亲 / ata", correct: false }
+  { id: "bala", title: "بالا", meta: "组合 / bala", correct: true },
+  { id: "ba", title: "با", meta: "前半段 / ba", correct: false },
+  { id: "la", title: "لا", meta: "后半段 / la", correct: false }
 ];
 
 const keyboardRows = [
@@ -36,6 +133,7 @@ const state = {
   selectedPicture: "",
   selectedListening: "",
   keyboardValue: "",
+  currentLetterId: "aa",
   showGuide: true,
   favorite: false
 };
@@ -43,6 +141,10 @@ const state = {
 const app = document.querySelector("#app");
 const toast = document.querySelector("#toast");
 let toastTimer = null;
+
+function currentLetter() {
+  return firstGroupLetters.find((letter) => letter.id === state.currentLetterId) || firstGroupLetters[0];
+}
 
 function render() {
   const screens = {
@@ -92,7 +194,7 @@ function bottomNav(active) {
     ["home", "首页", iconHome()],
     ["learn", "学习", iconBook()],
     ["writing", "书写", iconPen()],
-    ["library", "词库", iconLibrary()],
+    ["library", "字母", iconLibrary()],
     ["profile", "我的", iconUser()]
   ];
 
@@ -165,14 +267,14 @@ function renderHome() {
           <div class="section-row">
             <div>
               <p class="caption">今日进度</p>
-              <h2 class="section-title">MVP-0 第一课</h2>
+              <h2 class="section-title">字母基础 · 第一组</h2>
             </div>
             <span class="step-state">52%</span>
           </div>
           <div class="progress-track" aria-hidden="true">
             <div class="progress-fill" style="--value: 52%"></div>
           </div>
-          <p class="caption">继续学习字母 ب 和单词 بالا。</p>
+          <p class="caption">继续学习 ئا、ب、ل；先打好字母基础，再进入词汇主题。</p>
           <button class="primary-button" data-action="go" data-target="learn" type="button">
             继续学习
           </button>
@@ -191,13 +293,13 @@ function renderHome() {
           </div>
           <div class="quick-grid">
             <button class="quick-button" data-action="go" data-target="letter" type="button">
-              <strong>学字母</strong><span>看四种形态</span>
+              <strong>学字母</strong><span>第一组 ئا ب ل</span>
             </button>
             <button class="quick-button" data-action="go" data-target="writing" type="button">
               <strong>练书写</strong><span>描摹 ب</span>
             </button>
             <button class="quick-button" data-action="go" data-target="listening" type="button">
-              <strong>听发音</strong><span>选择正确词</span>
+              <strong>听发音</strong><span>辨认组合</span>
             </button>
             <button class="quick-button" data-action="go" data-target="keyboard" type="button">
               <strong>键盘训练</strong><span>输入 بالا</span>
@@ -212,22 +314,92 @@ function renderHome() {
 
 function renderLearnPath() {
   const steps = [
-    ["1", "认识字母", "查看 ب 的四种形态", "letter", "进行中"],
-    ["2", "描摹书写", "手指跟着参考字写", "writing", "下一步"],
-    ["3", "图片词汇", "把 بالا 和含义配对", "picture", "练习"],
-    ["4", "听力选择", "听标准音后选词", "listening", "练习"],
-    ["5", "键盘输入", "用维吾尔语键盘输入", "keyboard", "练习"]
+    ["1", "认识第一组", "切换 ئا、ب、ل，查看形态和连接", "letter", "进行中"],
+    ["2", "描摹书写", "先用 ب 演示主体和点位", "writing", "下一步"],
+    ["3", "组合辨认", "观察 بالا 的字母连接", "picture", "练习"],
+    ["4", "听音选择", "听组合音，选择正确写法", "listening", "练习"],
+    ["5", "键盘输入", "用维吾尔语键盘输入 بالا", "keyboard", "练习"]
   ];
 
   return screen(
     `
-      ${topBar("学习路径", course.theme)}
+      ${topBar("字母基础路线", "先字母，再词汇，再句子")}
       <section class="stack">
         <article class="card">
-          <p class="caption">本课目标</p>
-          <h2 class="screen-title">学会字母 <span class="uyghur">${course.letter}</span></h2>
-          <p class="muted">完成后，你会看到字母形态、写一次、认一个词，并用键盘输入。</p>
+          <div class="section-row">
+            <div>
+              <p class="caption">完整阶段</p>
+              <h2 class="screen-title">${alphabetLetters.length} 个字母</h2>
+            </div>
+            <span class="step-state">待审校</span>
+          </div>
+          <p class="muted">Ana Tilim 先从标准维吾尔语字母开始。家庭 / 基础称呼会在字母阶段后单独进入。</p>
+          <div class="alphabet-strip" aria-label="完整字母目录">
+            ${alphabetLetters
+              .map(
+                (item, index) => `
+                  <span class="letter-pill ${index < 3 ? "active" : ""}">
+                    <span class="uyghur">${item.letter}</span>
+                    <small>${item.latin}</small>
+                  </span>
+                `
+              )
+              .join("")}
+          </div>
         </article>
+
+        <article class="group-card">
+          <div>
+            <p class="caption">当前组</p>
+            <h2 class="section-title">第一组：最小闭环</h2>
+            <p class="muted">先学 ئا、ب、ل，理解元音入口、点位、连接和键盘输入。</p>
+          </div>
+          <div class="alphabet-strip compact">
+            ${firstGroupLetters
+              .map(
+                (item) => `
+                  <button
+                    class="letter-pill button-pill"
+                    data-action="select-letter"
+                    data-id="${item.id}"
+                    type="button"
+                  >
+                    <span class="uyghur">${item.letter}</span>
+                    <small>${item.latin}</small>
+                  </button>
+                `
+              )
+              .join("")}
+          </div>
+          <button class="primary-button" data-action="go" data-target="letter" type="button">
+            开始第一组
+          </button>
+        </article>
+
+        <div class="path-list">
+          ${alphabetGroups
+            .slice(2)
+            .map(
+              (group) => `
+                <div class="group-card locked">
+                  <div>
+                    <div class="section-row">
+                      <strong>${group.title}</strong>
+                      <span class="step-state">${group.status}</span>
+                    </div>
+                    <p class="caption">${group.goal}</p>
+                    <div class="alphabet-strip compact">
+                      ${group.letters
+                        .map((letter) => `<span class="letter-pill"><span class="uyghur">${letter}</span></span>`)
+                        .join("")}
+                    </div>
+                  </div>
+                </div>
+              `
+            )
+            .join("")}
+        </div>
+
         <div class="path-list">
           ${steps
             .map(
@@ -245,7 +417,7 @@ function renderLearnPath() {
             .join("")}
         </div>
         <button class="primary-button" data-action="go" data-target="letter" type="button">
-          开始第一课
+          进入字母页
         </button>
       </section>
     `,
@@ -254,26 +426,49 @@ function renderLearnPath() {
 }
 
 function renderLetter() {
+  const letter = currentLetter();
+
   return screen(
     `
       ${topBar(
         "字母学习",
-        "认识独立、词首、词中、词尾",
+        "第一组：ئا、ب、ل",
         `<button class="icon-button" data-action="toggle-favorite" type="button" aria-label="收藏">${state.favorite ? "★" : "☆"}</button>`
       )}
       <section class="stack">
+        <div class="alphabet-strip compact">
+          ${firstGroupLetters
+            .map(
+              (item) => `
+                <button
+                  class="letter-pill button-pill ${item.id === letter.id ? "active" : ""}"
+                  data-action="select-letter"
+                  data-id="${item.id}"
+                  type="button"
+                >
+                  <span class="uyghur">${item.letter}</span>
+                  <small>${item.latin}</small>
+                </button>
+              `
+            )
+            .join("")}
+        </div>
+
         <div class="letter-focus">
-          <div class="uyghur letter-big">${course.letter}</div>
+          <div>
+            <div class="uyghur letter-big">${letter.letter}</div>
+            <p class="caption">${letter.type} / ${letter.latin}</p>
+          </div>
         </div>
         <div class="audio-strip">
           <button class="play-dot" data-action="toast" type="button" aria-label="播放发音">听</button>
           <div>
-            <strong>发音练习</strong>
-            <p class="caption">正式版会播放真人音频。原型先用按钮表示播放。</p>
+            <strong>发音提示</strong>
+            <p class="caption">${letter.soundHint}</p>
           </div>
         </div>
         <div class="form-grid">
-          ${course.forms
+          ${letter.forms
             .map(
               (form) => `
                 <div class="form-cell">
@@ -285,17 +480,25 @@ function renderLetter() {
             .join("")}
         </div>
         <article class="card">
-          <p class="caption">示例词</p>
+          <p class="caption">连接规则</p>
+          <h2 class="section-title">${letter.connection}</h2>
+        </article>
+        <article class="card">
+          <p class="caption">书写提示</p>
+          <p class="muted">${letter.writingHint}</p>
+        </article>
+        <article class="card">
+          <p class="caption">组合观察</p>
           <div class="section-row">
             <strong class="uyghur word-big">${course.word}</strong>
             <div>
-              <strong>${course.meaning}</strong>
-              <p class="caption">${course.transliteration}</p>
+              <strong>不是正式词汇课</strong>
+              <p class="caption">${letter.example}</p>
             </div>
           </div>
         </article>
         <button class="primary-button" data-action="go" data-target="writing" type="button">
-          继续书写
+          继续：描摹 ب
         </button>
       </section>
     `,
@@ -329,7 +532,7 @@ function renderWriting() {
           <button class="secondary-button" data-action="toast" type="button">重做</button>
         </div>
         <div class="feedback">
-          第一版先做轨迹描摹和自我检查，不做精准手写识别。
+          第一版先用 ب 演示主体弧线和下方点位；后续再扩展 ئا、ل 和更多字母。
         </div>
         <button class="primary-button" data-action="go" data-target="picture" type="button">
           完成描摹
@@ -346,12 +549,12 @@ function renderPicturePractice() {
 
   return screen(
     `
-      ${topBar("图片词汇", "看图认识示例词")}
+      ${topBar("组合辨认", "先看字母组合，不急着学词义")}
       <section class="stack">
         <article class="card">
-          <p class="caption">选择正确图片</p>
+          <p class="caption">选择正确组合</p>
           <h2 class="section-title">
-            哪一个是 <span class="uyghur">${course.word}</span>？
+            哪一个完整写成 <span class="uyghur">${course.word}</span>？
           </h2>
         </article>
         <div class="choice-grid">
@@ -381,8 +584,8 @@ function renderPicturePractice() {
           hasPicked
             ? `<div class="feedback ${picked.correct ? "good" : "bad"}">${
                 picked.correct
-                  ? "答对了。بالا 在这里表示孩子。"
-                  : "这个不是目标词。原型会保留你的选择，正式版会进入错题复习。"
+                  ? "答对了。这里先把 بالا 当作字母组合观察。"
+                  : "这个不是目标组合。正式版会把错误放入复习。"
               }</div>`
             : ""
         }
@@ -401,7 +604,7 @@ function renderListeningPractice() {
 
   return screen(
     `
-      ${topBar("听音选择", "听标准音后选择词")}
+      ${topBar("听音选择", "听标准音后选择组合")}
       <section class="stack">
         <div class="audio-strip">
           <button class="play-dot" data-action="toast" type="button" aria-label="播放发音">听</button>
@@ -437,8 +640,8 @@ function renderListeningPractice() {
           hasPicked
             ? `<div class="feedback ${picked.correct ? "good" : "bad"}">${
                 picked.correct
-                  ? "听对了。下一步用键盘输入这个词。"
-                  : "这个读音不对应目标词。可以再点播放按钮听一次。"
+                  ? "听对了。下一步用键盘输入这个组合。"
+                  : "这个读音不对应目标组合。可以再点播放按钮听一次。"
               }</div>`
             : ""
         }
@@ -460,7 +663,7 @@ function renderKeyboardPractice() {
       ${topBar("键盘输入", "用内置键盘输入维吾尔语")}
       <section class="stack">
         <article class="card">
-          <p class="caption">请输入这个词</p>
+          <p class="caption">请输入这个组合</p>
           <div class="section-row">
             <strong>${course.meaning}</strong>
             <span class="caption">${course.transliteration}</span>
@@ -492,7 +695,7 @@ function renderKeyboardPractice() {
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
                   ? "输入正确。你已经完成这条学习闭环。"
-                  : "继续输入，目标词是 بالا。"
+                  : "继续输入，目标组合是 بالا。"
               }</div>`
             : `<div class="feedback">提示：依次点击 ب、ا、ل、ا。</div>`
         }
@@ -513,13 +716,13 @@ function renderComplete() {
         <article class="card">
           <p class="caption">本次学会</p>
           <h2 class="screen-title">
-            <span class="uyghur">${course.letter}</span> 和 <span class="uyghur">${course.word}</span>
+            第一组 <span class="uyghur">ئا ب ل</span>
           </h2>
-          <p class="muted">你看了字母形态、描摹了一次、完成选择题，并用键盘输入了目标词。</p>
+          <p class="muted">你看了第一组字母形态、描摹了 ب、完成组合辨认，并用键盘输入了 بالا。</p>
         </article>
         <div class="metric-grid">
-          <div class="metric"><strong>1</strong><span>字母</span></div>
-          <div class="metric"><strong>1</strong><span>单词</span></div>
+          <div class="metric"><strong>3</strong><span>字母</span></div>
+          <div class="metric"><strong>1</strong><span>组合</span></div>
           <div class="metric"><strong>0</strong><span>错题</span></div>
         </div>
         <button class="primary-button" data-action="go" data-target="learn" type="button">
@@ -537,12 +740,12 @@ function renderComplete() {
 function renderLibrary() {
   return screen(
     `
-      ${topBar("词库", "第一批课程词")}
+      ${topBar("字母库", "先作为字母库示意")}
       <section class="stack">
         <div class="word-row">
           <span>
-            <strong class="uyghur">${course.word}</strong>
-            <span class="caption">${course.meaning} / ${course.transliteration}</span>
+            <strong class="uyghur">ئا</strong>
+            <span class="caption">元音入口 / a / 待审校</span>
           </span>
           <button class="ghost-button" data-action="toggle-favorite" type="button">
             ${state.favorite ? "已收藏" : "收藏"}
@@ -550,17 +753,17 @@ function renderLibrary() {
         </div>
         <div class="word-row">
           <span>
-            <strong class="uyghur">ئانا</strong>
-            <span class="caption">母亲 / ana</span>
+            <strong class="uyghur">ب</strong>
+            <span class="caption">辅音 / b / 待审校</span>
           </span>
-          <button class="ghost-button" data-action="toast" type="button">预览</button>
+          <button class="ghost-button" data-action="go" data-target="letter" type="button">学习</button>
         </div>
         <div class="word-row">
           <span>
-            <strong class="uyghur">ئاتا</strong>
-            <span class="caption">父亲 / ata</span>
+            <strong class="uyghur">ل</strong>
+            <span class="caption">辅音 / l / 待审校</span>
           </span>
-          <button class="ghost-button" data-action="toast" type="button">预览</button>
+          <button class="ghost-button" data-action="go" data-target="letter" type="button">学习</button>
         </div>
       </section>
     `,
@@ -577,8 +780,8 @@ function renderProfile() {
           <h2 class="section-title">Ana Tilim 学习者</h2>
           <p class="muted">第一版不需要登录，进度保存在本地。这个页面先展示未来个人中心的样子。</p>
         </article>
-        <div class="profile-row"><strong>已学字母</strong><span>1 / 32</span></div>
-        <div class="profile-row"><strong>已学单词</strong><span>1 / 10</span></div>
+        <div class="profile-row"><strong>已学字母</strong><span>3 / 32</span></div>
+        <div class="profile-row"><strong>已学组合</strong><span>1 / 1</span></div>
         <div class="profile-row"><strong>连续学习</strong><span>3 天</span></div>
         <button class="secondary-button" data-action="toast" type="button">学习提醒</button>
       </section>
@@ -623,6 +826,12 @@ document.addEventListener("click", (event) => {
 
   if (action === "pick-listening") {
     state.selectedListening = button.dataset.id;
+    render();
+    return;
+  }
+
+  if (action === "select-letter") {
+    state.currentLetterId = button.dataset.id;
     render();
     return;
   }

@@ -260,6 +260,67 @@ button {
   gap: 10px;
 }
 
+.alphabet-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.alphabet-strip.compact {
+  margin-top: 0;
+}
+
+.letter-pill {
+  display: inline-grid;
+  grid-template-columns: auto;
+  place-items: center;
+  min-width: 44px;
+  min-height: 46px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.72);
+  text-align: center;
+}
+
+.letter-pill .uyghur {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.letter-pill small {
+  color: var(--ink-soft);
+  font-size: 10px;
+  line-height: 1;
+}
+
+.letter-pill.active {
+  border-color: rgba(14, 155, 177, 0.40);
+  background: var(--teal-soft);
+}
+
+.button-pill {
+  cursor: pointer;
+}
+
+.group-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: 0 10px 24px rgba(22, 38, 87, 0.08);
+}
+
+.group-card.locked {
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.58);
+}
+
 .chip-row {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
