@@ -1,0 +1,8 @@
+{
+  "title": "Ana Tilim Practice Audio Reuse Manifest",
+  "status": "reuses_alphabet_human_audio",
+  "outputDirectory": "./assets/audio/human/practice/",
+  "instructions": "Practice sessions reuse the connected alphabet human recordings; no duplicate practice files are kept.",
+  "items": [],
+  "source": "human-recorded"
+}

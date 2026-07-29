@@ -19,7 +19,7 @@ const vocabTopicDefinitions = [
       ["qandaq", "قانداق", "qandaq", "怎么样、如何"],
       ["xeyirlik-etigen", "خەيرلىك ئەتىگەن", "xeyirlik etigen", "早上好"],
       ["xeyirlik-kech", "خەيرلىك كەچ", "xeyirlik kech", "晚上好"],
-      ["korushkunche", "كۆرۈشكۈنچە", "körüshkünche", "回头见、再会"]
+      ["korushkunche", "كۆرۈشكىچە", "körüshkiche", "回头见、再会"]
     ]
   },
   {
@@ -170,7 +170,7 @@ const vocabTopicDefinitions = [
       ["su-food", "سۇ", "su", "水"],
       ["chay-food", "چاي", "chay", "茶"],
       ["gosh-food", "گۆش", "gösh", "肉"],
-      ["polu-food", "پولۇ", "polu", "抓饭"],
+      ["polu-food", "پولو", "polo", "抓饭"],
       ["mewe-food", "مېۋە", "mëwe", "水果"],
       ["tuz-food", "تۇز", "tuz", "盐"],
       ["sheker-food", "شېكەر", "shëker", "糖"],
@@ -234,8 +234,8 @@ const vocabTopicDefinitions = [
     words: [
       ["oy-home", "ئۆي", "öy", "家、房间"],
       ["ishik-home", "ئىشىك", "ishik", "门"],
-      ["dereze-home", "دەرىزە", "derize", "窗户"],
-      ["stol-home", "ستول", "stol", "桌子"],
+      ["dereze-home", "دېرىزە", "dërize", "窗户"],
+      ["stol-home", "ئۈستەل", "üstel", "桌子"],
       ["kitab-home", "كىتاب", "kitab", "书"],
       ["orunduq-home", "ئورۇندۇق", "orunduq", "椅子"],
       ["kariwat-home", "كارىۋات", "kariwat", "床"],

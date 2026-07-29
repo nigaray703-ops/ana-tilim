@@ -1,0 +1,1888 @@
+{
+  "title": "Ana Tilim Form Example Human Audio",
+  "status": "human_audio_connected",
+  "outputDirectory": "./assets/audio/human/form-examples/",
+  "instructions": "Human-recorded audio for the 94 form examples that do not reuse vocabulary or combo recordings.",
+  "items": [
+    {
+      "order": 1,
+      "id": "form-example-1ctj8t0",
+      "key": "1ctj8t0",
+      "value": "پۇتبول",
+      "latin": "putbol",
+      "meaning": "足球",
+      "occurrences": [
+        {
+          "letterId": "be",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1ctj8t0.webm",
+      "file": "human_form_example_1ctj8t0.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1ctj8t0.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 2,
+      "id": "form-example-1nbd124",
+      "key": "1nbd124",
+      "value": "قەلب",
+      "latin": "qelb",
+      "meaning": "心",
+      "occurrences": [
+        {
+          "letterId": "be",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1nbd124.webm",
+      "file": "human_form_example_1nbd124.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1nbd124.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 3,
+      "id": "form-example-162zbwm",
+      "key": "162zbwm",
+      "value": "كۆپ",
+      "latin": "köp",
+      "meaning": "多",
+      "occurrences": [
+        {
+          "letterId": "pe",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_162zbwm.webm",
+      "file": "human_form_example_162zbwm.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_162zbwm.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 4,
+      "id": "form-example-1cbnaoa",
+      "key": "1cbnaoa",
+      "value": "پارتا",
+      "latin": "parta",
+      "meaning": "课桌",
+      "occurrences": [
+        {
+          "letterId": "pe",
+          "label": "后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1cbnaoa.webm",
+      "file": "human_form_example_1cbnaoa.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1cbnaoa.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 5,
+      "id": "form-example-1057h4d",
+      "key": "1057h4d",
+      "value": "قالپاق",
+      "latin": "qalpaq",
+      "meaning": "帽子",
+      "occurrences": [
+        {
+          "letterId": "pe",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1057h4d.webm",
+      "file": "human_form_example_1057h4d.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1057h4d.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 6,
+      "id": "form-example-ukaciu",
+      "key": "ukaciu",
+      "value": "يىپ",
+      "latin": "yip",
+      "meaning": "线",
+      "occurrences": [
+        {
+          "letterId": "pe",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_ukaciu.webm",
+      "file": "human_form_example_ukaciu.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_ukaciu.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 7,
+      "id": "form-example-1bvtdwu",
+      "key": "1bvtdwu",
+      "value": "تاۋۇز",
+      "latin": "tawuz",
+      "meaning": "西瓜",
+      "occurrences": [
+        {
+          "letterId": "te",
+          "label": "后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1bvtdwu.webm",
+      "file": "human_form_example_1bvtdwu.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1bvtdwu.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 8,
+      "id": "form-example-bdswkd",
+      "key": "bdswkd",
+      "value": "خالتا",
+      "latin": "xalta",
+      "meaning": "袋子",
+      "occurrences": [
+        {
+          "letterId": "te",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_bdswkd.webm",
+      "file": "human_form_example_bdswkd.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_bdswkd.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 9,
+      "id": "form-example-wp8lqz",
+      "key": "wp8lqz",
+      "value": "بانان",
+      "latin": "banan",
+      "meaning": "香蕉",
+      "occurrences": [
+        {
+          "letterId": "nun",
+          "label": "后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_wp8lqz.webm",
+      "file": "human_form_example_wp8lqz.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_wp8lqz.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 10,
+      "id": "form-example-1l6w64g",
+      "key": "1l6w64g",
+      "value": "ئەينەك",
+      "latin": "eynek",
+      "meaning": "镜子",
+      "occurrences": [
+        {
+          "letterId": "nun",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1l6w64g.webm",
+      "file": "human_form_example_1l6w64g.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1l6w64g.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 11,
+      "id": "form-example-1f4bfx1",
+      "key": "1f4bfx1",
+      "value": "تىيىن",
+      "latin": "tiyin",
+      "meaning": "松鼠",
+      "occurrences": [
+        {
+          "letterId": "nun",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1f4bfx1.webm",
+      "file": "human_form_example_1f4bfx1.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1f4bfx1.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 12,
+      "id": "form-example-zf4k86",
+      "key": "zf4k86",
+      "value": "تاج",
+      "latin": "taj",
+      "meaning": "皇冠",
+      "occurrences": [
+        {
+          "letterId": "jim",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_zf4k86.webm",
+      "file": "human_form_example_zf4k86.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_zf4k86.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 13,
+      "id": "form-example-ejonea",
+      "key": "ejonea",
+      "value": "بۆلجۈرگەن",
+      "latin": "böljürgen",
+      "meaning": "草莓",
+      "occurrences": [
+        {
+          "letterId": "jim",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_ejonea.webm",
+      "file": "human_form_example_ejonea.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_ejonea.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 14,
+      "id": "form-example-1mlurta",
+      "key": "1mlurta",
+      "value": "ئانكورېج",
+      "latin": "ankorëj",
+      "meaning": "安克雷奇",
+      "occurrences": [
+        {
+          "letterId": "jim",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1mlurta.webm",
+      "file": "human_form_example_1mlurta.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1mlurta.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 15,
+      "id": "form-example-10xwr46",
+      "key": "10xwr46",
+      "value": "چارچاش",
+      "latin": "charchash",
+      "meaning": "疲劳",
+      "occurrences": [
+        {
+          "letterId": "che",
+          "label": "后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_10xwr46.webm",
+      "file": "human_form_example_10xwr46.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_10xwr46.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 16,
+      "id": "form-example-fuvkvi",
+      "key": "fuvkvi",
+      "value": "پايچىك",
+      "latin": "paychik",
+      "meaning": "股东",
+      "occurrences": [
+        {
+          "letterId": "che",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_fuvkvi.webm",
+      "file": "human_form_example_fuvkvi.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_fuvkvi.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 17,
+      "id": "form-example-mnledy",
+      "key": "mnledy",
+      "value": "ساندۋىچ",
+      "latin": "sandwich",
+      "meaning": "三明治",
+      "occurrences": [
+        {
+          "letterId": "che",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_mnledy.webm",
+      "file": "human_form_example_mnledy.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_mnledy.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 18,
+      "id": "form-example-1nl4syb",
+      "key": "1nl4syb",
+      "value": "دەرەخ",
+      "latin": "derex",
+      "meaning": "树",
+      "occurrences": [
+        {
+          "letterId": "khe",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1nl4syb.webm",
+      "file": "human_form_example_1nl4syb.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1nl4syb.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 19,
+      "id": "form-example-1nw6wab",
+      "key": "1nw6wab",
+      "value": "خوجايىن",
+      "latin": "xojayin",
+      "meaning": "老板",
+      "occurrences": [
+        {
+          "letterId": "khe",
+          "label": "后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1nw6wab.webm",
+      "file": "human_form_example_1nw6wab.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1nw6wab.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 20,
+      "id": "form-example-ju70om",
+      "key": "ju70om",
+      "value": "ئاشخانا",
+      "latin": "ashxana",
+      "meaning": "饭馆",
+      "occurrences": [
+        {
+          "letterId": "khe",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_ju70om.webm",
+      "file": "human_form_example_ju70om.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_ju70om.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 21,
+      "id": "form-example-1adsb7g",
+      "key": "1adsb7g",
+      "value": "بىخ",
+      "latin": "bix",
+      "meaning": "芽",
+      "occurrences": [
+        {
+          "letterId": "khe",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1adsb7g.webm",
+      "file": "human_form_example_1adsb7g.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1adsb7g.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 22,
+      "id": "form-example-l1dsvc",
+      "key": "l1dsvc",
+      "value": "چايدان",
+      "latin": "chaydan",
+      "meaning": "保温瓶",
+      "occurrences": [
+        {
+          "letterId": "dal",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_l1dsvc.webm",
+      "file": "human_form_example_l1dsvc.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_l1dsvc.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 23,
+      "id": "form-example-1qu5qm5",
+      "key": "1qu5qm5",
+      "value": "شىر",
+      "latin": "shir",
+      "meaning": "狮子",
+      "occurrences": [
+        {
+          "letterId": "re",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1qu5qm5.webm",
+      "file": "human_form_example_1qu5qm5.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1qu5qm5.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 24,
+      "id": "form-example-qjstj8",
+      "key": "qjstj8",
+      "value": "ژۇرنال",
+      "latin": "zhurnal",
+      "meaning": "杂志",
+      "occurrences": [
+        {
+          "letterId": "zhe",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_qjstj8.webm",
+      "file": "human_form_example_qjstj8.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_qjstj8.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 25,
+      "id": "form-example-4g5suw",
+      "key": "4g5suw",
+      "value": "پارىژ",
+      "latin": "parizh",
+      "meaning": "巴黎",
+      "occurrences": [
+        {
+          "letterId": "zhe",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_4g5suw.webm",
+      "file": "human_form_example_4g5suw.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_4g5suw.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 26,
+      "id": "form-example-cz566g",
+      "key": "cz566g",
+      "value": "يولۋاس",
+      "latin": "yolwas",
+      "meaning": "老虎",
+      "occurrences": [
+        {
+          "letterId": "sin",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_cz566g.webm",
+      "file": "human_form_example_cz566g.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_cz566g.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 27,
+      "id": "form-example-69fhv0",
+      "key": "69fhv0",
+      "value": "قالتىس",
+      "latin": "qaltis",
+      "meaning": "很棒",
+      "occurrences": [
+        {
+          "letterId": "sin",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_69fhv0.webm",
+      "file": "human_form_example_69fhv0.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_69fhv0.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 28,
+      "id": "form-example-162v0vi",
+      "key": "162v0vi",
+      "value": "تاش",
+      "latin": "tash",
+      "meaning": "石头",
+      "occurrences": [
+        {
+          "letterId": "shin",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_162v0vi.webm",
+      "file": "human_form_example_162v0vi.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_162v0vi.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 29,
+      "id": "form-example-1psq58n",
+      "key": "1psq58n",
+      "value": "شار",
+      "latin": "shar",
+      "meaning": "气球",
+      "occurrences": [
+        {
+          "letterId": "shin",
+          "label": "后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1psq58n.webm",
+      "file": "human_form_example_1psq58n.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1psq58n.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 30,
+      "id": "form-example-dipez9",
+      "key": "dipez9",
+      "value": "ئىشچى",
+      "latin": "ishchi",
+      "meaning": "工人",
+      "occurrences": [
+        {
+          "letterId": "shin",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_dipez9.webm",
+      "file": "human_form_example_dipez9.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_dipez9.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 31,
+      "id": "form-example-edem59",
+      "key": "edem59",
+      "value": "ئاياغ",
+      "latin": "ayagh",
+      "meaning": "鞋",
+      "occurrences": [
+        {
+          "letterId": "ghayn",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_edem59.webm",
+      "file": "human_form_example_edem59.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_edem59.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 32,
+      "id": "form-example-q52010",
+      "key": "q52010",
+      "value": "غاز",
+      "latin": "ghaz",
+      "meaning": "鹅",
+      "occurrences": [
+        {
+          "letterId": "ghayn",
+          "label": "后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_q52010.webm",
+      "file": "human_form_example_q52010.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_q52010.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 33,
+      "id": "form-example-1onxwi1",
+      "key": "1onxwi1",
+      "value": "يامغۇر",
+      "latin": "yamghur",
+      "meaning": "雨",
+      "occurrences": [
+        {
+          "letterId": "ghayn",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1onxwi1.webm",
+      "file": "human_form_example_1onxwi1.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1onxwi1.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 34,
+      "id": "form-example-55btqq",
+      "key": "55btqq",
+      "value": "تىغ",
+      "latin": "tigh",
+      "meaning": "刀片",
+      "occurrences": [
+        {
+          "letterId": "ghayn",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_55btqq.webm",
+      "file": "human_form_example_55btqq.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_55btqq.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 35,
+      "id": "form-example-d0adr7",
+      "key": "d0adr7",
+      "value": "تېلېگراف",
+      "latin": "tëlëgraf",
+      "meaning": "电信",
+      "occurrences": [
+        {
+          "letterId": "fe",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_d0adr7.webm",
+      "file": "human_form_example_d0adr7.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_d0adr7.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 36,
+      "id": "form-example-turzpo",
+      "key": "turzpo",
+      "value": "فامىلە",
+      "latin": "famile",
+      "meaning": "姓",
+      "occurrences": [
+        {
+          "letterId": "fe",
+          "label": "后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_turzpo.webm",
+      "file": "human_form_example_turzpo.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_turzpo.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 37,
+      "id": "form-example-h3ruhx",
+      "key": "h3ruhx",
+      "value": "ئاسفالت",
+      "latin": "asfalt",
+      "meaning": "沥青",
+      "occurrences": [
+        {
+          "letterId": "fe",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_h3ruhx.webm",
+      "file": "human_form_example_h3ruhx.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_h3ruhx.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 38,
+      "id": "form-example-19sy97t",
+      "key": "19sy97t",
+      "value": "گولف",
+      "latin": "golf",
+      "meaning": "高尔夫",
+      "occurrences": [
+        {
+          "letterId": "fe",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_19sy97t.webm",
+      "file": "human_form_example_19sy97t.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_19sy97t.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 39,
+      "id": "form-example-e7ye5w",
+      "key": "e7ye5w",
+      "value": "قەشقەر",
+      "latin": "qeshqer",
+      "meaning": "喀什",
+      "occurrences": [
+        {
+          "letterId": "qaf",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_e7ye5w.webm",
+      "file": "human_form_example_e7ye5w.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_e7ye5w.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 40,
+      "id": "form-example-1b7nd0k",
+      "key": "1b7nd0k",
+      "value": "ئېيىق",
+      "latin": "ëyiq",
+      "meaning": "熊",
+      "occurrences": [
+        {
+          "letterId": "qaf",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1b7nd0k.webm",
+      "file": "human_form_example_1b7nd0k.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1b7nd0k.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 41,
+      "id": "form-example-4l44zs",
+      "key": "4l44zs",
+      "value": "كابىنكا",
+      "latin": "kabinka",
+      "meaning": "舱",
+      "occurrences": [
+        {
+          "letterId": "kaf",
+          "label": "后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_4l44zs.webm",
+      "file": "human_form_example_4l44zs.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_4l44zs.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 42,
+      "id": "form-example-zuwg79",
+      "key": "zuwg79",
+      "value": "بىئولوگ",
+      "latin": "bi'olog",
+      "meaning": "生物学家",
+      "occurrences": [
+        {
+          "letterId": "gaf",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_zuwg79.webm",
+      "file": "human_form_example_zuwg79.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_zuwg79.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 43,
+      "id": "form-example-71hf7p",
+      "key": "71hf7p",
+      "value": "گىلەم",
+      "latin": "gilem",
+      "meaning": "地毯",
+      "occurrences": [
+        {
+          "letterId": "gaf",
+          "label": "后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_71hf7p.webm",
+      "file": "human_form_example_71hf7p.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_71hf7p.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 44,
+      "id": "form-example-ggpxxt",
+      "key": "ggpxxt",
+      "value": "ئۈلگە",
+      "latin": "ülge",
+      "meaning": "榜样",
+      "occurrences": [
+        {
+          "letterId": "gaf",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_ggpxxt.webm",
+      "file": "human_form_example_ggpxxt.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_ggpxxt.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 45,
+      "id": "form-example-69bfn5",
+      "key": "69bfn5",
+      "value": "لېيپزىگ",
+      "latin": "lëypzig",
+      "meaning": "莱比锡",
+      "occurrences": [
+        {
+          "letterId": "gaf",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_69bfn5.webm",
+      "file": "human_form_example_69bfn5.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_69bfn5.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 46,
+      "id": "form-example-h9algv",
+      "key": "h9algv",
+      "value": "يەڭ",
+      "latin": "yeng",
+      "meaning": "袖子",
+      "occurrences": [
+        {
+          "letterId": "ng",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_h9algv.webm",
+      "file": "human_form_example_h9algv.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_h9algv.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 47,
+      "id": "form-example-1jsbrgo",
+      "key": "1jsbrgo",
+      "value": "ياڭاق",
+      "latin": "yangaq",
+      "meaning": "核桃",
+      "occurrences": [
+        {
+          "letterId": "ng",
+          "label": "后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1jsbrgo.webm",
+      "file": "human_form_example_1jsbrgo.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1jsbrgo.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 48,
+      "id": "form-example-18ja08u",
+      "key": "18ja08u",
+      "value": "يىڭنە",
+      "latin": "yingne",
+      "meaning": "针",
+      "occurrences": [
+        {
+          "letterId": "ng",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_18ja08u.webm",
+      "file": "human_form_example_18ja08u.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_18ja08u.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 49,
+      "id": "form-example-13b3ayw",
+      "key": "13b3ayw",
+      "value": "كۆل",
+      "latin": "köl",
+      "meaning": "湖",
+      "occurrences": [
+        {
+          "letterId": "lam",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_13b3ayw.webm",
+      "file": "human_form_example_13b3ayw.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_13b3ayw.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 50,
+      "id": "form-example-uicr9q",
+      "key": "uicr9q",
+      "value": "خەلق",
+      "latin": "xelq",
+      "meaning": "人民",
+      "occurrences": [
+        {
+          "letterId": "lam",
+          "label": "后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_uicr9q.webm",
+      "file": "human_form_example_uicr9q.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_uicr9q.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 51,
+      "id": "form-example-1l82bno",
+      "key": "1l82bno",
+      "value": "بىلىم",
+      "latin": "bilim",
+      "meaning": "知识",
+      "occurrences": [
+        {
+          "letterId": "lam",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1l82bno.webm",
+      "file": "human_form_example_1l82bno.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1l82bno.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 52,
+      "id": "form-example-jo4vlg",
+      "key": "jo4vlg",
+      "value": "پىل",
+      "latin": "pil",
+      "meaning": "大象",
+      "occurrences": [
+        {
+          "letterId": "lam",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_jo4vlg.webm",
+      "file": "human_form_example_jo4vlg.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_jo4vlg.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 53,
+      "id": "form-example-1ie2201",
+      "key": "1ie2201",
+      "value": "مايمۇن",
+      "latin": "maymun",
+      "meaning": "猴子",
+      "occurrences": [
+        {
+          "letterId": "mim",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1ie2201.webm",
+      "file": "human_form_example_1ie2201.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1ie2201.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 54,
+      "id": "form-example-stc0rv",
+      "key": "stc0rv",
+      "value": "تارىم",
+      "latin": "tarim",
+      "meaning": "塔里木",
+      "occurrences": [
+        {
+          "letterId": "mim",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_stc0rv.webm",
+      "file": "human_form_example_stc0rv.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_stc0rv.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 55,
+      "id": "form-example-1x9qhal",
+      "key": "1x9qhal",
+      "value": "ئابدۇللاھ",
+      "latin": "abdullah",
+      "meaning": "阿卜杜拉",
+      "occurrences": [
+        {
+          "letterId": "he",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1x9qhal.webm",
+      "file": "human_form_example_1x9qhal.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1x9qhal.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 56,
+      "id": "form-example-gfxrxi",
+      "key": "gfxrxi",
+      "value": "ھەرە",
+      "latin": "here",
+      "meaning": "蜜蜂",
+      "occurrences": [
+        {
+          "letterId": "he",
+          "label": "后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_gfxrxi.webm",
+      "file": "human_form_example_gfxrxi.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_gfxrxi.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 57,
+      "id": "form-example-ygp8s3",
+      "key": "ygp8s3",
+      "value": "دېھقان",
+      "latin": "dëhqan",
+      "meaning": "农民",
+      "occurrences": [
+        {
+          "letterId": "he",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_ygp8s3.webm",
+      "file": "human_form_example_ygp8s3.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_ygp8s3.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 58,
+      "id": "form-example-y6zp0p",
+      "key": "y6zp0p",
+      "value": "تەنبىھ",
+      "latin": "tenbih",
+      "meaning": "训诫",
+      "occurrences": [
+        {
+          "letterId": "he",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_y6zp0p.webm",
+      "file": "human_form_example_y6zp0p.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_y6zp0p.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 59,
+      "id": "form-example-1bx69wn",
+      "key": "1bx69wn",
+      "value": "كومپيۇتېر",
+      "latin": "kompyutër",
+      "meaning": "电脑",
+      "occurrences": [
+        {
+          "letterId": "ye",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1bx69wn.webm",
+      "file": "human_form_example_1bx69wn.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1bx69wn.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 60,
+      "id": "form-example-vq25o",
+      "key": "vq25o",
+      "value": "ناترىي",
+      "latin": "natriy",
+      "meaning": "钠",
+      "occurrences": [
+        {
+          "letterId": "ye",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_vq25o.webm",
+      "file": "human_form_example_vq25o.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_vq25o.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 61,
+      "id": "form-example-z4794u",
+      "key": "z4794u",
+      "value": "ئالما",
+      "latin": "alma",
+      "meaning": "苹果",
+      "occurrences": [
+        {
+          "letterId": "aa",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_z4794u.webm",
+      "file": "human_form_example_z4794u.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_z4794u.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 62,
+      "id": "form-example-1awfesp",
+      "key": "1awfesp",
+      "value": "خەلقئارا",
+      "latin": "xelq'ara",
+      "meaning": "国际",
+      "occurrences": [
+        {
+          "letterId": "aa",
+          "label": "隔音前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1awfesp.webm",
+      "file": "human_form_example_1awfesp.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1awfesp.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 63,
+      "id": "form-example-1q1qjna",
+      "key": "1q1qjna",
+      "value": "ئەدەبىيات",
+      "latin": "edebiyat",
+      "meaning": "文学",
+      "occurrences": [
+        {
+          "letterId": "ae",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1q1qjna.webm",
+      "file": "human_form_example_1q1qjna.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1q1qjna.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 64,
+      "id": "form-example-1ov7tia",
+      "key": "1ov7tia",
+      "value": "رەسىم",
+      "latin": "resim",
+      "meaning": "图片",
+      "occurrences": [
+        {
+          "letterId": "ae",
+          "label": "简单独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1ov7tia.webm",
+      "file": "human_form_example_1ov7tia.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1ov7tia.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 65,
+      "id": "form-example-1xadtcs",
+      "key": "1xadtcs",
+      "value": "مەشئەل",
+      "latin": "mesh'el",
+      "meaning": "火炬",
+      "occurrences": [
+        {
+          "letterId": "ae",
+          "label": "隔音前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1xadtcs.webm",
+      "file": "human_form_example_1xadtcs.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1xadtcs.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 66,
+      "id": "form-example-iiz5xn",
+      "key": "iiz5xn",
+      "value": "ئوت",
+      "latin": "ot",
+      "meaning": "火",
+      "occurrences": [
+        {
+          "letterId": "o",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_iiz5xn.webm",
+      "file": "human_form_example_iiz5xn.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_iiz5xn.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 67,
+      "id": "form-example-1p9jhze",
+      "key": "1p9jhze",
+      "value": "دورا",
+      "latin": "未提供转写",
+      "meaning": "药",
+      "occurrences": [
+        {
+          "letterId": "o",
+          "label": "简单独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1p9jhze.webm",
+      "file": "human_form_example_1p9jhze.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1p9jhze.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 68,
+      "id": "form-example-38dj36",
+      "key": "38dj36",
+      "value": "قوغۇن",
+      "latin": "qoghun",
+      "meaning": "甜瓜",
+      "occurrences": [
+        {
+          "letterId": "o",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_38dj36.webm",
+      "file": "human_form_example_38dj36.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_38dj36.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 69,
+      "id": "form-example-fvl3z1",
+      "key": "fvl3z1",
+      "value": "گېئولوگىيە",
+      "latin": "未提供转写",
+      "meaning": "地质学",
+      "occurrences": [
+        {
+          "letterId": "o",
+          "label": "隔音前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_fvl3z1.webm",
+      "file": "human_form_example_fvl3z1.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_fvl3z1.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 70,
+      "id": "form-example-tsgggu",
+      "key": "tsgggu",
+      "value": "ئۇيغۇر",
+      "latin": "uyghur",
+      "meaning": "维吾尔",
+      "occurrences": [
+        {
+          "letterId": "u",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_tsgggu.webm",
+      "file": "human_form_example_tsgggu.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_tsgggu.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 71,
+      "id": "form-example-sfq5tf",
+      "key": "sfq5tf",
+      "value": "دۇمباق",
+      "latin": "未提供转写",
+      "meaning": "鼓",
+      "occurrences": [
+        {
+          "letterId": "u",
+          "label": "简单独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_sfq5tf.webm",
+      "file": "human_form_example_sfq5tf.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_sfq5tf.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 72,
+      "id": "form-example-it6405",
+      "key": "it6405",
+      "value": "مەسئۇلىيەت",
+      "latin": "未提供转写",
+      "meaning": "责任",
+      "occurrences": [
+        {
+          "letterId": "u",
+          "label": "隔音前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_it6405.webm",
+      "file": "human_form_example_it6405.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_it6405.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 73,
+      "id": "form-example-s3d4b",
+      "key": "s3d4b",
+      "value": "دۆلەت",
+      "latin": "dölet",
+      "meaning": "国家",
+      "occurrences": [
+        {
+          "letterId": "oe",
+          "label": "简单独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_s3d4b.webm",
+      "file": "human_form_example_s3d4b.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_s3d4b.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 74,
+      "id": "form-example-9v44sc",
+      "key": "9v44sc",
+      "value": "قىزىلئۆڭگەچ",
+      "latin": "未提供转写",
+      "meaning": "食管",
+      "occurrences": [
+        {
+          "letterId": "oe",
+          "label": "隔音前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_9v44sc.webm",
+      "file": "human_form_example_9v44sc.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_9v44sc.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 75,
+      "id": "form-example-wbny2y",
+      "key": "wbny2y",
+      "value": "ئۈمىد",
+      "latin": "ümid",
+      "meaning": "希望",
+      "occurrences": [
+        {
+          "letterId": "ue",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_wbny2y.webm",
+      "file": "human_form_example_wbny2y.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_wbny2y.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 76,
+      "id": "form-example-1ty34m4",
+      "key": "1ty34m4",
+      "value": "ئۈزۈم",
+      "latin": "üzüm",
+      "meaning": "葡萄",
+      "occurrences": [
+        {
+          "letterId": "ue",
+          "label": "简单独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1ty34m4.webm",
+      "file": "human_form_example_1ty34m4.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1ty34m4.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 77,
+      "id": "form-example-19mtq1e",
+      "key": "19mtq1e",
+      "value": "گۈل",
+      "latin": "gül",
+      "meaning": "花",
+      "occurrences": [
+        {
+          "letterId": "ue",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_19mtq1e.webm",
+      "file": "human_form_example_19mtq1e.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_19mtq1e.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 78,
+      "id": "form-example-o62h8j",
+      "key": "o62h8j",
+      "value": "نائۈمىد",
+      "latin": "未提供转写",
+      "meaning": "无望",
+      "occurrences": [
+        {
+          "letterId": "ue",
+          "label": "隔音前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_o62h8j.webm",
+      "file": "human_form_example_o62h8j.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_o62h8j.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 79,
+      "id": "form-example-xf4jg7",
+      "key": "xf4jg7",
+      "value": "ئې چيەنچيۇ",
+      "latin": "ë cyencyu",
+      "meaning": "鄂千秋",
+      "occurrences": [
+        {
+          "letterId": "ee",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_xf4jg7.webm",
+      "file": "human_form_example_xf4jg7.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_xf4jg7.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 80,
+      "id": "form-example-17wwxf9",
+      "key": "17wwxf9",
+      "value": "چېڭدې",
+      "latin": "chëngdë",
+      "meaning": "承德",
+      "occurrences": [
+        {
+          "letterId": "ee",
+          "label": "简单独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_17wwxf9.webm",
+      "file": "human_form_example_17wwxf9.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_17wwxf9.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 81,
+      "id": "form-example-1fipjtg",
+      "key": "1fipjtg",
+      "value": "ئېتىز",
+      "latin": "ëtiz",
+      "meaning": "田地",
+      "occurrences": [
+        {
+          "letterId": "ee",
+          "label": "后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1fipjtg.webm",
+      "file": "human_form_example_1fipjtg.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1fipjtg.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 82,
+      "id": "form-example-1bieeo2",
+      "key": "1bieeo2",
+      "value": "دېڭىز",
+      "latin": "dëngiz",
+      "meaning": "海",
+      "occurrences": [
+        {
+          "letterId": "ee",
+          "label": "简单后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1bieeo2.webm",
+      "file": "human_form_example_1bieeo2.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1bieeo2.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 83,
+      "id": "form-example-3t3hvj",
+      "key": "3t3hvj",
+      "value": "تېز",
+      "latin": "tëz",
+      "meaning": "快",
+      "occurrences": [
+        {
+          "letterId": "ee",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_3t3hvj.webm",
+      "file": "human_form_example_3t3hvj.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_3t3hvj.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 84,
+      "id": "form-example-m308as",
+      "key": "m308as",
+      "value": "مۈشۈكئېيىق",
+      "latin": "未提供转写",
+      "meaning": "熊猫",
+      "occurrences": [
+        {
+          "letterId": "ee",
+          "label": "隔音双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_m308as.webm",
+      "file": "human_form_example_m308as.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_m308as.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 85,
+      "id": "form-example-2slu5s",
+      "key": "2slu5s",
+      "value": "چاڭجياجې",
+      "latin": "jangjyajë",
+      "meaning": "张家界",
+      "occurrences": [
+        {
+          "letterId": "ee",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_2slu5s.webm",
+      "file": "human_form_example_2slu5s.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_2slu5s.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 86,
+      "id": "form-example-7724mz",
+      "key": "7724mz",
+      "value": "چاڭئې",
+      "latin": "未提供转写",
+      "meaning": "嫦娥",
+      "occurrences": [
+        {
+          "letterId": "ee",
+          "label": "隔音前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_7724mz.webm",
+      "file": "human_form_example_7724mz.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_7724mz.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 87,
+      "id": "form-example-21gnnb",
+      "key": "21gnnb",
+      "value": "ئى نائومى",
+      "latin": "i na'omi",
+      "meaning": "井尚美",
+      "occurrences": [
+        {
+          "letterId": "ii",
+          "label": "独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_21gnnb.webm",
+      "file": "human_form_example_21gnnb.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_21gnnb.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 88,
+      "id": "form-example-n2aowk",
+      "key": "n2aowk",
+      "value": "مالاۋى",
+      "latin": "未提供转写",
+      "meaning": "马拉维",
+      "occurrences": [
+        {
+          "letterId": "ii",
+          "label": "简单独立式"
+        }
+      ],
+      "sourceFile": "voice_form_example_n2aowk.webm",
+      "file": "human_form_example_n2aowk.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_n2aowk.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 89,
+      "id": "form-example-1jple7a",
+      "key": "1jple7a",
+      "value": "ئىز",
+      "latin": "iz",
+      "meaning": "痕迹",
+      "occurrences": [
+        {
+          "letterId": "ii",
+          "label": "后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_1jple7a.webm",
+      "file": "human_form_example_1jple7a.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_1jple7a.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 90,
+      "id": "form-example-uvnpi3",
+      "key": "uvnpi3",
+      "value": "پىڭۋىن",
+      "latin": "未提供转写",
+      "meaning": "企鹅",
+      "occurrences": [
+        {
+          "letterId": "ii",
+          "label": "简单后连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_uvnpi3.webm",
+      "file": "human_form_example_uvnpi3.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_uvnpi3.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 91,
+      "id": "form-example-16xcsgp",
+      "key": "16xcsgp",
+      "value": "چىرايلىق",
+      "latin": "chirayliq",
+      "meaning": "美丽",
+      "occurrences": [
+        {
+          "letterId": "ii",
+          "label": "双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_16xcsgp.webm",
+      "file": "human_form_example_16xcsgp.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_16xcsgp.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 92,
+      "id": "form-example-u80owi",
+      "key": "u80owi",
+      "value": "پېئىل",
+      "latin": "未提供转写",
+      "meaning": "动词",
+      "occurrences": [
+        {
+          "letterId": "ii",
+          "label": "隔音双连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_u80owi.webm",
+      "file": "human_form_example_u80owi.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_u80owi.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 93,
+      "id": "form-example-sgde44",
+      "key": "sgde44",
+      "value": "قايسى",
+      "latin": "qaysi",
+      "meaning": "哪个",
+      "occurrences": [
+        {
+          "letterId": "ii",
+          "label": "前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_sgde44.webm",
+      "file": "human_form_example_sgde44.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_sgde44.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    },
+    {
+      "order": 94,
+      "id": "form-example-7vb21m",
+      "key": "7vb21m",
+      "value": "مەنئى",
+      "latin": "未提供转写",
+      "meaning": "禁止",
+      "occurrences": [
+        {
+          "letterId": "ii",
+          "label": "隔音前连式"
+        }
+      ],
+      "sourceFile": "voice_form_example_7vb21m.webm",
+      "file": "human_form_example_7vb21m.webm",
+      "outputPath": "./assets/audio/human/form-examples/human_form_example_7vb21m.webm",
+      "reviewStatus": "已接入",
+      "playable": true,
+      "statusLabel": "真人音频"
+    }
+  ]
+}
