@@ -5,14 +5,34 @@ const node = process.execPath;
 
 const checks = [
   {
-    label: "syntax: audio generator",
+    label: "syntax: ULY transliteration",
     command: node,
-    args: ["--check", "audio-tools/generate-alphabet-ai-audio.mjs"]
+    args: ["--check", "prototype/uly-transliteration.js"]
+  },
+  {
+    label: "syntax: audio controller",
+    command: node,
+    args: ["--check", "prototype/audio-controller.js"]
+  },
+  {
+    label: "syntax: cloud config",
+    command: node,
+    args: ["--check", "prototype/cloud-config.js"]
+  },
+  {
+    label: "syntax: cloud sync",
+    command: node,
+    args: ["--check", "prototype/cloud-sync.js"]
   },
   {
     label: "syntax: app",
     command: node,
     args: ["--check", "prototype/app.js"]
+  },
+  {
+    label: "syntax: re-recording queue utility",
+    command: node,
+    args: ["--check", "prototype/re-record-audio.js"]
   },
   {
     label: "syntax: course data aggregator",
@@ -45,6 +65,31 @@ const checks = [
     args: ["--check", "prototype/course-data/reading-data.js"]
   },
   {
+    label: "test: ULY transliteration",
+    command: node,
+    args: ["tests/uly-transliteration.test.mjs"]
+  },
+  {
+    label: "test: audio controller",
+    command: node,
+    args: ["tests/audio-controller.test.mjs"]
+  },
+  {
+    label: "test: Supabase schema and public config",
+    command: node,
+    args: ["tests/supabase-schema.test.mjs"]
+  },
+  {
+    label: "test: cloud snapshot and sync controller",
+    command: node,
+    args: ["tests/cloud-sync.test.mjs"]
+  },
+  {
+    label: "test: re-recording queue utility",
+    command: node,
+    args: ["tests/re-record-audio.test.mjs"]
+  },
+  {
     label: "test: course data integrity",
     command: node,
     args: ["tests/course-data-integrity.test.mjs"]
@@ -55,9 +100,14 @@ const checks = [
     args: ["tests/unit-learning-experience.test.mjs"]
   },
   {
-    label: "test: alphabet AI audio",
+    label: "test: human audio",
     command: node,
-    args: ["tests/alphabet-ai-audio.test.mjs"]
+    args: ["tests/human-audio.test.mjs"]
+  },
+  {
+    label: "test: full content render",
+    command: node,
+    args: ["tests/full-content-render.test.mjs"]
   },
   {
     label: "git: whitespace check",

@@ -1,30 +1,34 @@
 # Ana Tilim Audio Folder
 
-This folder is reserved for future human-recorded audio files.
+This folder contains the current prototype audio files.
 
 Current status:
 
-- No production audio files are included yet.
-- Unit 4 audio controls are placeholders.
-- Audio status in course docs is `真人音频待录制`.
-- AI temporary audio is allowed only under `ai-temp/` and must be labeled `AI 临时音频`.
+- Human-recorded `.webm` files are connected for all alphabet, form-example, combo, and reading lessons.
+- Vocabulary audio is connected for every current lesson item, including the newly re-recorded `dereze-home` (窗户).
+- The 94 form examples without reusable vocabulary or combo audio now use dedicated human recordings.
+- The practice center reuses the 32 alphabet recordings instead of keeping duplicate practice audio.
+- All retained playable audio lives under `human/`.
+- Pronunciation can still be reviewed later, and individual files can be re-recorded if needed.
 
-Before adding audio:
+Audio folders:
 
-1. Review text with a standard Uyghur speaker.
-2. Confirm filenames in `审校与音频准备包/03-真人音频录制清单.md`.
-3. Put human-recorded `.mp3` files in this folder.
-4. Put AI temporary `.mp3` files in `ai-temp/`.
-5. Wire file paths in `prototype/app.js` or a future audio manifest.
+```text
+human/alphabet/
+human/form-examples/
+human/combos/
+human/vocab/
+human/practice/
+human/reading/
+```
 
 Use relative paths from the prototype:
 
 ```text
-./assets/audio/word_rahmat.mp3
+./assets/audio/human/alphabet/human_letter_01_b.webm
+./assets/audio/human/form-examples/human_form_example_1ctj8t0.webm
+./assets/audio/human/combos/human_combo_ba.webm
+./assets/audio/human/vocab/human_vocab_rahmat.webm
 ```
 
-Use AI temporary paths like:
-
-```text
-./assets/audio/ai-temp/ai_temp_word_rahmat.mp3
-```
+Each folder has a `manifest.json` that must stay in sync with the files.

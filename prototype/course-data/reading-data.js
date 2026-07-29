@@ -1,10 +1,290 @@
 (() => {
 const readingUnits = [
   {
+    id: "grammar-basics",
+    kind: "reading",
+    readingKind: "grammar",
+    title: "第四单元：语法入门",
+    subtitle: "先看规则，再读例句",
+    status: "待母语者审校",
+    groups: [
+      {
+        id: "grammar-word-order",
+        title: "主语 + 宾语 + 动词",
+        items: [
+          {
+            id: "grammar-word-order-1",
+            pattern: "谁 + 什么 + 做什么",
+            value: "مەن كىتاب ئوقۇيمەن.",
+            meaning: "我读书。",
+            lesson: "维语常见语序是主语、宾语、动词；动词通常放在句末。",
+            reviewStatus: "待母语者审校"
+          },
+          {
+            id: "grammar-word-order-2",
+            pattern: "谁 + 什么 + 做什么",
+            value: "مەن چاي ئىچىمەن.",
+            meaning: "我喝茶。",
+            lesson: "先找最后的动词，再往前看谁在做、做什么。",
+            reviewStatus: "待母语者审校"
+          },
+          {
+            id: "grammar-word-order-3",
+            pattern: "谁 + 哪里 + 做什么",
+            value: "ئۇ بازارغا بارىدۇ.",
+            meaning: "他/她去市场。",
+            lesson: "去哪里这类成分也常放在动词前面。",
+            reviewStatus: "待母语者审校"
+          }
+        ]
+      },
+      {
+        id: "grammar-copula",
+        title: "A 是 B",
+        items: [
+          {
+            id: "grammar-copula-1",
+            pattern: "A + B",
+            value: "بۇ قەلەم.",
+            meaning: "这是笔。",
+            lesson: "现在时的“是”常常不单独写出来，A 和 B 直接并列。",
+            reviewStatus: "待母语者审校"
+          },
+          {
+            id: "grammar-copula-2",
+            pattern: "A + 身份",
+            value: "مەن ئوقۇغۇچى.",
+            meaning: "我是学生。",
+            lesson: "人称和身份直接放在一起，就能表达“我是……”。",
+            reviewStatus: "待母语者审校"
+          },
+          {
+            id: "grammar-copula-3",
+            pattern: "A + 身份",
+            value: "ئۇ دوختۇر.",
+            meaning: "他/她是医生。",
+            lesson: "第三人称没有性别区分，ئۇ 可以指他、她或它。",
+            reviewStatus: "待母语者审校"
+          }
+        ]
+      },
+      {
+        id: "grammar-negative-emes",
+        title: "不是",
+        items: [
+          {
+            id: "grammar-negative-emes-1",
+            pattern: "A + B + ئەمەس",
+            value: "بۇ كىتاب ئەمەس.",
+            meaning: "这不是书。",
+            lesson: "名词句或形容词句的否定，常把 ئەمەس 放在句末。",
+            reviewStatus: "待母语者审校"
+          },
+          {
+            id: "grammar-negative-emes-2",
+            pattern: "A + 身份 + ئەمەس",
+            value: "ئۇ دوختۇر ئەمەس.",
+            meaning: "他/她不是医生。",
+            lesson: "先说对象和身份，最后用 ئەمەس 否定。",
+            reviewStatus: "待母语者审校"
+          },
+          {
+            id: "grammar-negative-emes-3",
+            pattern: "A + 身份 + ئەمەس",
+            value: "مەن مۇئەللىم ئەمەس.",
+            meaning: "我不是老师。",
+            lesson: "先记住句尾否定，比一开始背很多变化更稳。",
+            reviewStatus: "待母语者审校"
+          }
+        ]
+      },
+      {
+        id: "grammar-yes-no-mu",
+        title: "是 / 否疑问",
+        items: [
+          {
+            id: "grammar-yes-no-mu-1",
+            pattern: "句子 + مۇ؟",
+            value: "بۇ كىتابمۇ؟",
+            meaning: "这是书吗？",
+            lesson: "能回答“是/不是”的问题，常把 مۇ 连在前一个词后面。",
+            reviewStatus: "待母语者审校"
+          },
+          {
+            id: "grammar-yes-no-mu-2",
+            pattern: "形容词 + مۇ؟",
+            value: "سىز ياخشىمۇ؟",
+            meaning: "您好吗？",
+            lesson: "مۇ 是问题标记，前面的词是这句的判断重点。",
+            reviewStatus: "待母语者审校"
+          },
+          {
+            id: "grammar-yes-no-mu-3",
+            pattern: "bar / yoq + مۇ؟",
+            value: "سىزدە كىتاب بارمۇ؟",
+            meaning: "您有书吗？",
+            lesson: "有/没有句也可以用 مۇ 来问。",
+            reviewStatus: "待母语者审校"
+          }
+        ]
+      },
+      {
+        id: "grammar-question-words",
+        title: "谁 / 什么 / 哪里",
+        items: [
+          {
+            id: "grammar-question-words-1",
+            pattern: "A + كىم؟",
+            value: "بۇ كىم؟",
+            meaning: "这是谁？",
+            lesson: "有疑问词时，通常不再加 مۇ。",
+            reviewStatus: "待母语者审校"
+          },
+          {
+            id: "grammar-question-words-2",
+            pattern: "A + نېمە؟",
+            value: "بۇ نېمە؟",
+            meaning: "这是什么？",
+            lesson: "疑问词放在要询问的位置。",
+            reviewStatus: "待母语者审校"
+          },
+          {
+            id: "grammar-question-words-3",
+            pattern: "地点 + قەيەردە؟",
+            value: "مەكتەپ قەيەردە؟",
+            meaning: "学校在哪里？",
+            lesson: "问地点时，用 قەيەردە。",
+            reviewStatus: "待母语者审校"
+          }
+        ]
+      },
+      {
+        id: "grammar-bar-yoq",
+        title: "有 / 没有",
+        items: [
+          {
+            id: "grammar-bar-yoq-1",
+            pattern: "某处/某人处 + 名词 + بار",
+            value: "مەندە قەلەم بار.",
+            meaning: "我有笔。",
+            lesson: "بار 表示有、存在，常放在句末。",
+            reviewStatus: "待母语者审校"
+          },
+          {
+            id: "grammar-bar-yoq-2",
+            pattern: "某处/某人处 + 名词 + يوق",
+            value: "مەندە قەلەم يوق.",
+            meaning: "我没有笔。",
+            lesson: "يوق 表示没有、不存在，也常放在句末。",
+            reviewStatus: "待母语者审校"
+          },
+          {
+            id: "grammar-bar-yoq-3",
+            pattern: "时间/地点 + 名词 + بار",
+            value: "بۈگۈن كىنو بار.",
+            meaning: "今天有电影。",
+            lesson: "时间或地点可以放在句首，说明哪里或什么时候有。",
+            reviewStatus: "待母语者审校"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: "sentence-patterns",
+    kind: "reading",
+    readingKind: "sentence",
+    title: "第五单元：基础句型",
+    subtitle: "把日常词汇放进短句里",
+    status: "待审校",
+    groups: [
+      {
+        id: "sentence-this-that",
+        title: "这是…… / 那是……",
+        items: [
+          { id: "sentence-this-that-1", value: "بۇ قەلەم.", meaning: "这是笔。", reviewStatus: "待母语者审校" },
+          { id: "sentence-this-that-2", value: "بۇ كىتاب.", meaning: "这是书。", reviewStatus: "待母语者审校" },
+          { id: "sentence-this-that-3", value: "ئۇ مەكتەپ.", meaning: "那是学校。", reviewStatus: "待母语者审校" },
+          { id: "sentence-this-that-4", value: "ئۇ مۇئەللىم.", meaning: "那是老师。", reviewStatus: "待母语者审校" }
+        ]
+      },
+      {
+        id: "sentence-who-what",
+        title: "谁？什么？哪里？",
+        items: [
+          { id: "sentence-who-what-1", value: "بۇ كىم؟", meaning: "这是谁？", reviewStatus: "待母语者审校" },
+          { id: "sentence-who-what-2", value: "بۇ نېمە؟", meaning: "这是什么？", reviewStatus: "待母语者审校" },
+          { id: "sentence-who-what-3", value: "مەكتەپ قەيەردە؟", meaning: "学校在哪里？", reviewStatus: "待母语者审校" },
+          { id: "sentence-who-what-4", value: "سىز قانداقسىز؟", meaning: "您怎么样？", reviewStatus: "待母语者审校" }
+        ]
+      },
+      {
+        id: "sentence-i-you",
+        title: "我是…… / 你是……",
+        items: [
+          { id: "sentence-i-you-1", value: "مەن ئوقۇغۇچى.", meaning: "我是学生。", reviewStatus: "待母语者审校" },
+          { id: "sentence-i-you-2", value: "سىز مۇئەللىم.", meaning: "您是老师。", reviewStatus: "待母语者审校" },
+          { id: "sentence-i-you-3", value: "ئۇ دوختۇر.", meaning: "他/她是医生。", reviewStatus: "待母语者审校" },
+          { id: "sentence-i-you-4", value: "بۇ مېنىڭ دوستۇم.", meaning: "这是我的朋友。", reviewStatus: "待母语者审校" }
+        ]
+      },
+      {
+        id: "sentence-have",
+        title: "我有…… / 我没有……",
+        items: [
+          { id: "sentence-have-1", value: "مەندە قەلەم بار.", meaning: "我有笔。", reviewStatus: "待母语者审校" },
+          { id: "sentence-have-2", value: "مەندە قەلەم يوق.", meaning: "我没有笔。", reviewStatus: "待母语者审校" },
+          { id: "sentence-have-3", value: "سىزدە كىتاب بارمۇ؟", meaning: "您有书吗？", reviewStatus: "待母语者审校" },
+          { id: "sentence-have-4", value: "بىزدە نان بار.", meaning: "我们有馕。", reviewStatus: "待母语者审校" }
+        ]
+      },
+      {
+        id: "sentence-like-need",
+        title: "我要…… / 我喜欢……",
+        items: [
+          { id: "sentence-like-need-1", value: "ماڭا سۇ لازىم.", meaning: "我要水。", reviewStatus: "待母语者审校" },
+          { id: "sentence-like-need-2", value: "ماڭا نان لازىم.", meaning: "我要馕。", reviewStatus: "待母语者审校" },
+          { id: "sentence-like-need-3", value: "مەن چاي ئىچىمەن.", meaning: "我喝茶。", reviewStatus: "待母语者审校" },
+          { id: "sentence-like-need-4", value: "مەن ئانا تىلىمنى ياخشى كۆرىمەن.", meaning: "我喜欢我的母语。", reviewStatus: "待母语者审校" }
+        ]
+      },
+      {
+        id: "sentence-time",
+        title: "时间和日期",
+        items: [
+          { id: "sentence-time-1", value: "بۈگۈن قايسى كۈن؟", meaning: "今天星期几？", reviewStatus: "待母语者审校" },
+          { id: "sentence-time-2", value: "بۈگۈن دۈشەنبە.", meaning: "今天是星期一。", reviewStatus: "待母语者审校" },
+          { id: "sentence-time-3", value: "ھازىر سائەت قانچە؟", meaning: "现在几点？", reviewStatus: "待母语者审校" },
+          { id: "sentence-time-4", value: "ھازىر سائەت سەككىز.", meaning: "现在八点。", reviewStatus: "待母语者审校" }
+        ]
+      },
+      {
+        id: "sentence-no",
+        title: "不是 / 没有 / 不做",
+        items: [
+          { id: "sentence-no-1", value: "بۇ كىتاب ئەمەس.", meaning: "这不是书。", reviewStatus: "待母语者审校" },
+          { id: "sentence-no-2", value: "ئۇ ئۆيدە يوق.", meaning: "他/她不在家。", reviewStatus: "待母语者审校" },
+          { id: "sentence-no-3", value: "مەن چاي ئىچمەيمەن.", meaning: "我不喝茶。", reviewStatus: "待母语者审校" },
+          { id: "sentence-no-4", value: "ئۇ بازارغا بارمايدۇ.", meaning: "他/她不去市场。", reviewStatus: "待母语者审校" }
+        ]
+      },
+      {
+        id: "sentence-question",
+        title: "简单疑问句",
+        items: [
+          { id: "sentence-question-1", value: "بۇ كىتابمۇ؟", meaning: "这是书吗？", reviewStatus: "待母语者审校" },
+          { id: "sentence-question-2", value: "سىز ياخشىمۇ؟", meaning: "您好吗？", reviewStatus: "待母语者审校" },
+          { id: "sentence-question-3", value: "سىز چاي ئىچەمسىز؟", meaning: "您喝茶吗？", reviewStatus: "待母语者审校" },
+          { id: "sentence-question-4", value: "ئۇ كېلەمدۇ؟", meaning: "他/她来吗？", reviewStatus: "待母语者审校" }
+        ]
+      }
+    ]
+  },
+  {
     id: "dialogue-theater",
     kind: "reading",
     readingKind: "dialogue",
-    title: "第五单元：对话小剧场",
+    title: "第六单元：对话小剧场",
     subtitle: "很短的双人日常对话",
     status: "待审校",
     groups: [
@@ -15,7 +295,7 @@ const readingUnits = [
           { id: "dialogue-greeting-1", speaker: "A", value: "ياخشىمۇسىز؟", meaning: "你好，你好吗？" },
           { id: "dialogue-greeting-2", speaker: "B", value: "ياخشى، رەھمەت. سىزچۇ؟", meaning: "很好，谢谢。您呢？" },
           { id: "dialogue-greeting-3", speaker: "A", value: "مەنمۇ ياخشى.", meaning: "我也很好。" },
-          { id: "dialogue-greeting-4", speaker: "B", value: "كۆرۈشكۈنچە.", meaning: "回头见。" }
+          { id: "dialogue-greeting-4", speaker: "B", value: "كۆرۈشكىچە.", meaning: "回头见。" }
         ]
       },
       {
@@ -74,7 +354,7 @@ const readingUnits = [
     id: "short-stories",
     kind: "reading",
     readingKind: "story",
-    title: "第六单元：小故事",
+    title: "第七单元：小故事",
     subtitle: "超短生活故事",
     status: "待审校",
     groups: [
@@ -106,7 +386,7 @@ const readingUnits = [
         items: [
           { id: "story-market-1", value: "بۈگۈن ئانام بىلەن بازارغا باردىم.", meaning: "今天我和妈妈去了市场。" },
           { id: "story-market-2", value: "بازاردا كۆپ ئادەم بار ئىدى.", meaning: "市场里有很多人。" },
-          { id: "story-market-3", value: "بىز پەمىدۇر ۋە بەرەڭگە ئالдуқ.", meaning: "我们买了番茄和土豆。" },
+          { id: "story-market-3", value: "بىز پەمىدۇر ۋە بەرەڭگە ئالدۇق.", meaning: "我们买了番茄和土豆。" },
           { id: "story-market-4", value: "ئانام نانمۇ ئالدى.", meaning: "妈妈也买了面包。" },
           { id: "story-market-5", value: "كېيىن ئۆيگە قايتتۇق.", meaning: "然后我们回家了。" }
         ]
@@ -150,7 +430,7 @@ const readingUnits = [
     id: "famous-quotes",
     kind: "reading",
     readingKind: "quote",
-    title: "第七单元：名人名言",
+    title: "第八单元：名人名言",
     subtitle: "10 位名人，每位 3 条学习句",
     status: "待来源审校",
     groups: [
@@ -260,7 +540,7 @@ const readingUnits = [
     id: "uyghur-proverbs",
     kind: "reading",
     readingKind: "proverb",
-    title: "第八单元：维吾尔谚语",
+    title: "第九单元：维吾尔谚语",
     subtitle: "10 个主题，每组 3 条智慧短句",
     status: "待母语者审校",
     groups: [

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>连续补录音频｜Ana Tilim</title>
+    <style>
+      :root { color: #163c39; background: #edf7f5; font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif; }
+      * { box-sizing: border-box; }
+      body { min-height: 100vh; margin: 0; padding: 24px; display: grid; place-items: center; background: radial-gradient(circle at 7% 4%, #fff5ce 0 10%, transparent 27%), radial-gradient(circle at 95% 94%, #bee8dc 0 14%, transparent 34%), #edf7f5; }
+      main { width: min(100%, 720px); overflow: hidden; border: 1px solid rgba(21, 60, 58, .12); border-radius: 28px; background: rgba(255,255,255,.95); box-shadow: 0 24px 70px rgba(21,60,58,.14); }
+      header { padding: 28px 32px 24px; color: #fff; background: linear-gradient(135deg, #0f5d59, #25887f); }
+      .eyebrow { margin: 0 0 8px; font-size: .76rem; font-weight: 700; letter-spacing: .12em; opacity: .82; }
+      h1 { margin: 0; font-size: clamp(1.45rem, 4vw, 2rem); }
+      .summary { margin: 9px 0 0; font-size: .92rem; opacity: .9; }
+      .content { padding: 25px 32px 30px; }
+      .progress { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 16px; color: #456563; font-size: .9rem; font-weight: 700; }
+      .target-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 23px; }
+      .target-pill { min-width: 48px; padding: 8px 12px; border: 1px solid #c8dfda; border-radius: 999px; color: #275d58; background: #f7fbfa; font: inherit; font-weight: 700; cursor: pointer; }
+      .target-pill[aria-current="true"] { color: #fff; border-color: #197168; background: #197168; }
+      .target-pill.is-complete::after { content: " ✓"; font-size: .76em; }
+      .target-card { padding: 22px; border: 1px solid #d9e9e5; border-radius: 19px; background: #f8fcfb; }
+      .target-card h2 { margin: 0; color: #0f5d59; font-size: clamp(1.65rem, 5vw, 2.3rem); }
+      .target-card p { margin: 6px 0 0; color: #54716d; }
+      .note { margin: 18px 0; padding: 12px 14px; border-left: 4px solid #edbd4a; border-radius: 8px; color: #546966; background: #fff9e7; font-size: .88rem; line-height: 1.55; }
+      .controls { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      button, .download { min-height: 47px; border: 0; border-radius: 13px; font: inherit; font-weight: 700; cursor: pointer; text-align: center; text-decoration: none; transition: transform .15s ease, opacity .15s ease; }
+      button:hover:not(:disabled), .download:hover { transform: translateY(-1px); }
+      button:focus-visible, .download:focus-visible { outline: 3px solid #f0c75e; outline-offset: 3px; }
+      button:disabled { cursor: not-allowed; opacity: .48; }
+      #start-recording { color: #fff; background: #d96649; box-shadow: 0 8px 16px rgba(217,102,73,.18); }
+      #stop-recording { color: #205b57; background: #d9eeea; }
+      #recording-status { min-height: 1.5em; margin: 18px 0 12px; color: #456563; font-size: .92rem; line-height: 1.55; }
+      .result { display: grid; gap: 11px; }
+      audio { width: 100%; }
+      .download { display: grid; place-items: center; color: #fff; background: #197168; }
+      #next-incomplete { width: 100%; margin-top: 12px; color: #205b57; background: #e3f2ef; }
+      footer { padding: 0 32px 26px; color: #728a87; font-size: .78rem; line-height: 1.5; }
+      [hidden] { display: none !important; }
+      @media (max-width: 470px) { body { padding: 14px; } header, .content { padding-left: 21px; padding-right: 21px; } footer { padding-left: 21px; padding-right: 21px; } .controls { grid-template-columns: 1fr; } .progress { flex-direction: column; gap: 4px; } }
+    </style>
+  </head>
+  <body>
+    <main aria-labelledby="page-title">
+      <header>
+        <p class="eyebrow">ANA TILIM · 专用连续补录</p>
+        <h1 id="page-title">14 项音频补录队列</h1>
+        <p class="summary">录制、试听并下载；此页面不会上传、导入或替换项目中的任何音频。</p>
+      </header>
+      <section class="content" aria-label="音频补录队列">
+        <div class="progress"><span id="queue-progress"></span><span id="completed-count"></span></div>
+        <div id="target-list" class="target-list" aria-label="选择补录项"></div>
+        <div class="target-card">
+          <h2 id="target-value"></h2>
+          <p id="target-label"></p>
+        </div>
+        <p class="note">请在安静环境中朗读。每项下载后才会在本次页面会话中标记完成；刷新页面会清除完成标记。</p>
+        <div class="controls">
+          <button id="start-recording" type="button">开始录音</button>
+          <button id="stop-recording" type="button" disabled>停止并生成试听</button>
+        </div>
+        <p id="recording-status" role="status" aria-live="polite">准备就绪，请选择或开始录制当前项。</p>
+        <div class="result">
+          <audio id="recording-preview" controls hidden aria-label="录音试听"></audio>
+          <a id="download-recording" hidden aria-disabled="true">下载当前录音</a>
+        </div>
+        <button id="next-incomplete" type="button" hidden>转到下一个未完成项</button>
+      </section>
+      <footer>文件名已为每一项固定。请试听确认后下载，待全部完成并确认后再进行受控替换。</footer>
+    </main>
+    <script src="./re-record-audio.js"></script>
+  </body>
+</html>
