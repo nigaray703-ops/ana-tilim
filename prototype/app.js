@@ -3828,7 +3828,10 @@ function renderVocabRow(item, activeId) {
       class="vocab-row ${item.id === activeId ? "active" : ""}"
       ${item.id === activeId ? `aria-current="true"` : ""}
     >
-      ${renderAudioWord({ value: item.value, audio })}
+      <div class="vocab-word-cell">
+        ${renderAudioWord({ value: item.value, audio })}
+        ${renderVocabMorphemeBreakdown(item.value)}
+      </div>
       <button
         class="vocab-row-main"
         data-action="select-vocab"
@@ -4150,38 +4153,49 @@ function renderGlossSegments(segments) {
   if (!segments?.length) return "";
 
   return `
-    <div class="morpheme-glosses" aria-label="词素拆解">
+    <div class="morpheme-glosses" aria-label="词素拆解" dir="rtl">
       ${segments
         .map(
           (segment) => `
-            <span class="morpheme-gloss">
-              <b class="uyghur">${escapeHtml(segment.word)}</b>
-              <small>${escapeHtml(segment.latin)}</small>
-              <em>${escapeHtml(segment.meaning)}</em>
+            <span class="morpheme-gloss" data-morpheme="${escapeHtml(segment.word)}">
+              <b class="uyghur" dir="rtl">${escapeHtml(segment.word)}</b>
+              <small dir="ltr">${escapeHtml(segment.latin)}</small>
+              <em dir="ltr">${escapeHtml(segment.meaning)}</em>
             </span>
           `
         )
-        .join('<span class="morpheme-divider" aria-hidden="true">/</span>')}
+        .join('<span class="morpheme-direction" aria-hidden="true">←</span>')}
     </div>
   `;
 }
 
+function renderVocabMorphemeBreakdown(value) {
+  const gloss = sentenceGlossary.glossToken(value);
+  if (!gloss?.segments?.length) return "";
+
+  return `<div class="vocab-morpheme-breakdown">${renderGlossSegments(gloss.segments)}</div>`;
+}
+
 function renderSentenceGlosses(value) {
   const glosses = sentenceGlossary.glossSentence(value);
-  if (!glosses.length) return "";
+  const hasBreakdown = glosses.some((gloss) => gloss.segments?.length);
+  if (!glosses.length || (glosses.length === 1 && !hasBreakdown)) return "";
 
   return `
     <details class="sentence-gloss" open>
-      <summary>逐词与词素参考</summary>
+      <summary>
+        <span>逐词与词素参考</span>
+        <span class="gloss-direction">从右向左理解 ←</span>
+      </summary>
       <p>维语和汉语语序不同，下列词义用于理解结构，不表示逐字位置完全对应。</p>
-      <div class="word-glosses">
+      <div class="word-glosses" dir="rtl">
         ${glosses
           .map(
             (gloss) => `
-              <span class="word-gloss">
-                <b class="uyghur">${escapeHtml(gloss.word)}</b>
-                <small>${escapeHtml(gloss.latin)}</small>
-                <em>${escapeHtml(gloss.meaning)}</em>
+              <span class="word-gloss" data-gloss-word="${escapeHtml(gloss.word)}">
+                <b class="uyghur" dir="rtl">${escapeHtml(gloss.word)}</b>
+                <small dir="ltr">${escapeHtml(gloss.latin)}</small>
+                <em dir="ltr">${escapeHtml(gloss.meaning)}</em>
                 ${renderGlossSegments(gloss.segments)}
               </span>
             `

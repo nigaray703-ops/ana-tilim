@@ -2034,4 +2034,33 @@ assert.ok(
 const lastReadingCourse = renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'dialogue-theater'; state.selectedReadingGroupId = 'dialogue-guest'");
 assert.ok(!lastReadingCourse.includes("继续学习本单元下一课程"), "the last reading lesson should not show a nonexistent continuation");
 
+const schoolGloss = vm.runInContext("renderSentenceGlosses('بۈگۈن دەرس بارمۇ؟')", context);
+includesAll(
+  schoolGloss,
+  ["从右向左理解", "gloss-direction", 'data-gloss-word="بۈگۈن"', 'data-gloss-word="دەرس"', 'data-gloss-word="بارمۇ"'],
+  "centered rtl sentence gloss"
+);
+assert.ok(
+  schoolGloss.indexOf('data-gloss-word="بۈگۈن"') < schoolGloss.indexOf('data-gloss-word="دەرس"') &&
+    schoolGloss.indexOf('data-gloss-word="دەرس"') < schoolGloss.indexOf('data-gloss-word="بارمۇ"'),
+  "sentence gloss source order should match the original Uyghur sentence"
+);
+assert.ok(
+  schoolGloss.indexOf('data-morpheme="بار"') < schoolGloss.indexOf('data-morpheme="مۇ"'),
+  "morpheme source order should keep the root before the suffix"
+);
+assert.ok(schoolGloss.includes('class="morpheme-direction"'), "morpheme breakdown should use a right-to-left direction arrow");
+assert.equal(vm.runInContext("renderSentenceGlosses('رەھمەت.')", context), "", "a single indivisible word should not repeat its meaning in a gloss panel");
+assert.equal(vm.runInContext("renderVocabMorphemeBreakdown('رەھمەت')", context), "", "plain vocabulary should not show a redundant breakdown");
+includesAll(
+  vm.runInContext("renderVocabMorphemeBreakdown('ياخشىمۇسىز')", context),
+  ["vocab-morpheme-breakdown", 'data-morpheme="ياخشى"', 'data-morpheme="مۇ"', 'data-morpheme="سىز"'],
+  "decomposable vocabulary breakdown"
+);
+const wordGlossStyle = styleSource.match(/^\.word-glosses\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
+assert.ok(wordGlossStyle.includes("direction: rtl;"), "word glosses should begin at the right edge");
+assert.ok(wordGlossStyle.includes("justify-content: center;"), "word glosses should be centered");
+const morphemeGlossStyle = styleSource.match(/^\.morpheme-glosses\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
+assert.ok(morphemeGlossStyle.includes("direction: rtl;"), "morpheme breakdowns should run from right to left");
+
 console.log("unit learning experience checks passed");
