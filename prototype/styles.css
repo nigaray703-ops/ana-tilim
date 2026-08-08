@@ -395,6 +395,24 @@ button {
   align-items: center;
 }
 
+.import-progress-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  text-align: center;
+}
+
+.import-progress-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .profile-name-editor {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1144,6 +1162,14 @@ button {
 .vocab-row.active {
   border-color: rgba(14, 155, 177, 0.42);
   background: var(--teal-soft);
+}
+
+.vocab-word-cell {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+  text-align: center;
 }
 
 .vocab-row-main {
@@ -1900,6 +1926,126 @@ button {
   font-size: 13px;
   line-height: 1.5;
   text-align: center;
+}
+
+.sentence-gloss {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+
+.sentence-gloss summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 5px 10px;
+  color: var(--teal);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.gloss-direction {
+  color: var(--ink-soft);
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.sentence-gloss > p {
+  margin: 6px 0 8px;
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.word-glosses {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+  direction: rtl;
+}
+
+.word-gloss {
+  display: grid;
+  gap: 2px;
+  min-width: 76px;
+  padding: 7px 8px;
+  border: 1px solid rgba(14, 155, 177, 0.2);
+  border-radius: var(--radius-sm);
+  background: rgba(232, 246, 247, 0.6);
+  direction: ltr;
+  text-align: center;
+}
+
+.word-gloss > b {
+  color: var(--ink);
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.word-gloss > small {
+  color: var(--teal);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.word-gloss > em,
+.morpheme-gloss em {
+  color: var(--ink-soft);
+  font-size: 10px;
+  font-style: normal;
+  line-height: 1.35;
+}
+
+.morpheme-glosses {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  direction: rtl;
+  gap: 4px;
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px dashed rgba(14, 155, 177, 0.28);
+}
+
+.morpheme-gloss {
+  display: grid;
+  align-content: start;
+  gap: 1px;
+  min-width: 0;
+  direction: ltr;
+}
+
+.morpheme-gloss b {
+  font-size: 14px;
+}
+
+.morpheme-gloss small {
+  color: var(--teal);
+  font-size: 9px;
+}
+
+.morpheme-direction {
+  align-self: center;
+  color: var(--teal);
+  font-weight: 900;
+}
+
+.vocab-morpheme-breakdown {
+  max-width: 100%;
+}
+
+.vocab-morpheme-breakdown .morpheme-glosses {
+  margin-top: 2px;
+  padding-top: 4px;
+}
+
+.vocab-morpheme-breakdown .morpheme-gloss em {
+  max-width: 64px;
 }
 
 .reading-intro-text {
