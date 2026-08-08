@@ -2674,6 +2674,87 @@ button {
   flex-grow: 1.5;
 }
 
+.latin-letter-class-section {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: 0 8px 18px rgba(22, 38, 87, 0.07);
+}
+
+.latin-letter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.latin-letter-card,
+.latin-vowel-comparison-card {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 14px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(145deg, rgba(223, 246, 247, 0.72), rgba(255, 242, 207, 0.55));
+  text-align: center;
+}
+
+.latin-letter-audio {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.latin-letter-audio-status {
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
+.latin-letter-glyph {
+  font-size: clamp(36px, 7vw, 52px);
+  line-height: 1.25;
+}
+
+.latin-letter-uly {
+  color: var(--teal-dark);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.latin-letter-cue,
+.latin-vowel-focus {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.latin-vowel-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.latin-vowel-comparison-card {
+  min-height: 190px;
+  padding: 20px 14px;
+}
+
+.latin-stage-complete {
+  display: grid;
+  gap: 8px;
+}
+
+.latin-stage-complete p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
 @media (min-width: 561px) and (max-width: 900px) {
   .uyghur-keyboard {
     max-width: 680px;
@@ -2686,6 +2767,10 @@ button {
 }
 
 @media (max-width: 560px) {
+  .latin-vowel-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+
   .uyghur-keyboard {
     gap: 6px;
     padding: 8px 6px;
