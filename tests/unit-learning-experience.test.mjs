@@ -44,6 +44,7 @@ assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should n
 
 const expectedVersionedAssets = [
   "./styles.css?v=20260729-password-auth",
+  "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
   "./course-data/combo-data.js?v=20260728-uly-transliteration",
@@ -51,6 +52,8 @@ const expectedVersionedAssets = [
   "./course-data/practice-data.js?v=20260728-learned-markers",
   "./course-data/reading-data.js?v=20260728-uly-transliteration",
   "./course-data.js?v=20260728-uly-transliteration",
+  "./sentence-glossary.js?v=20260808-word-glosses",
+  "./progress-transfer.js?v=20260808-local-progress",
   "./audio-controller.js?v=20260728-uly-transliteration",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
@@ -59,7 +62,7 @@ const expectedVersionedAssets = [
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
-    /(?:href|src)="(?<url>(?:\.\/(?:styles\.css|uly-transliteration\.js|course-data\/[^"]+\.js|course-data\.js|audio-controller\.js|cloud-config\.js|cloud-sync\.js|app\.js)[^"]*|https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2\.110\.8))"/g
+    /(?:href|src)="(?<url>(?:\.\/(?:styles\.css|app-config\.js|uly-transliteration\.js|course-data\/[^"]+\.js|course-data\.js|sentence-glossary\.js|progress-transfer\.js|audio-controller\.js|cloud-config\.js|cloud-sync\.js|app\.js)[^"]*|https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2\.110\.8))"/g
   )
 ].map((match) => match.groups.url);
 assert.deepEqual(
@@ -225,8 +228,11 @@ assert.ok(!appSource.includes('["writing", "书写"'), "bottom navigation should
 assert.ok(appSource.includes("pointerdown"), "writing canvas should support direct pointer writing");
 assert.ok(appSource.includes("clear-canvas"), "writing canvas should include a real clear action");
 const htmlScriptOrder = [
+  "prototype/app-config.js",
   ...courseDataScriptPaths,
   courseDataAggregatorPath,
+  "prototype/sentence-glossary.js",
+  "prototype/progress-transfer.js",
   "prototype/cloud-config.js",
   "prototype/cloud-sync.js",
   "prototype/app.js"
@@ -324,10 +330,13 @@ const context = {
 
 context.globalThis = context;
 vm.createContext(context);
+vm.runInContext(fs.readFileSync("prototype/app-config.js", "utf8"), context, { filename: "prototype/app-config.js" });
 for (const scriptPath of courseDataScriptPaths) {
   vm.runInContext(fs.readFileSync(scriptPath, "utf8"), context, { filename: scriptPath });
 }
 vm.runInContext(fs.readFileSync(courseDataAggregatorPath, "utf8"), context, { filename: courseDataAggregatorPath });
+vm.runInContext(fs.readFileSync("prototype/sentence-glossary.js", "utf8"), context, { filename: "prototype/sentence-glossary.js" });
+vm.runInContext(fs.readFileSync("prototype/progress-transfer.js", "utf8"), context, { filename: "prototype/progress-transfer.js" });
 vm.runInContext(fs.readFileSync("prototype/cloud-config.js", "utf8"), context, { filename: "prototype/cloud-config.js" });
 vm.runInContext(fs.readFileSync("prototype/cloud-sync.js", "utf8"), context, { filename: "prototype/cloud-sync.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
@@ -1772,15 +1781,24 @@ assert.ok(!app.innerHTML.includes("词库审校字段"), "learning mode should h
 clickDataset({ action: "select-adjacent-vocab", id: "apa-family" });
 assert.equal(vm.runInContext("state.currentVocabItemId", context), "apa-family", "next vocab button should switch words");
 
-renderState("state.screen = 'picture'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'");
+const pointRecognitionHtml = renderState("state.screen = 'picture'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'; state.selectedPicture = ''");
+const pointRecognitionChoices = pointRecognitionHtml.match(/<div class="choice-grid">([\s\S]*?)<\/div>\s*<button class="primary-button"/)?.[1] || "";
+assert.equal(
+  (pointRecognitionChoices.match(/class="choice-card letter-only-choice"/g) || []).length,
+  3,
+  "point recognition should show every choice as a letter-only button"
+);
+for (const hiddenAnswer of ["<strong>", "class=\"caption\"", "class=\"step-state\"", ">选择<", "下方一个点", "下方三个点", "上方两个点", ">b<", ">p<", ">t<"]) {
+  assert.ok(!pointRecognitionChoices.includes(hiddenAnswer), `point recognition choices should hide answer hint ${hiddenAnswer}`);
+}
 clickDataset({ action: "pick-picture", id: "pe" });
 let mistakeSummary = vm.runInContext("state.mistakes.map((item) => item.targetId).join(',')", context);
 assert.equal(mistakeSummary, "be", "wrong letter choice should create a review item");
-includesAll(
-  app.innerHTML,
-  ["目标是 ب", "你选了 پ", "下方一个点", "下方三个点"],
-  "letter mistake explanation"
-);
+includesAll(app.innerHTML, ["再看点位和点数"], "letter point-recognition retry feedback");
+const pointRecognitionFeedback = app.innerHTML.match(/<div class="feedback bad">([\s\S]*?)<\/div>/)?.[1] || "";
+for (const hiddenFeedback of ["目标是 ب", "你选了 پ", "下方一个点", "下方三个点"]) {
+  assert.ok(!pointRecognitionFeedback.includes(hiddenFeedback), `point recognition feedback should hide answer hint ${hiddenFeedback}`);
+}
 renderState("state.screen = 'letterSound'; state.selectedGroupId = 'vowels-basic'; state.currentLetterId = 'aa'; state.selectedListening = ''");
 clickDataset({ action: "pick-letter-sound", id: "ae" });
 const reviewMistakeIds = vm.runInContext("mistakeReviewItems().map((item) => item.id)", context);
@@ -1821,17 +1839,33 @@ assert.equal(savedProgress().mistakes.length, 2, "mistakes should be saved local
 
 includesAll(
   renderState("state.screen = 'complete'"),
-  ["下一步建议", "复习本组", "进入第二单元"],
+  ["继续学习本单元下一课程", "下一步建议", "复习本组", "进入第二单元"],
   "unit one complete"
 );
 assert.ok(app.innerHTML.includes("ب / پ"), "unit one completion should separate learned letters with punctuation");
+assert.ok(app.innerHTML.includes('data-action="open-group" data-id="curved"'), "completion should point to the next alphabet group");
+clickDataset({ action: "open-group", id: "curved" });
+assert.equal(vm.runInContext("state.selectedGroupId", context), "curved", "continue should enter the next alphabet group");
+assert.equal(vm.runInContext("state.currentLetterId", context), "jim", "continue should start from the next group's first letter");
+assert.equal(vm.runInContext("state.screen", context), "group", "continue should open the next lesson");
+const lastAlphabetGroupComplete = renderState("state.screen = 'complete'; state.selectedGroupId = 'tail'; state.currentLetterId = 'waw'");
+assert.ok(!lastAlphabetGroupComplete.includes("继续学习本单元下一课程"), "the last alphabet group should not show a nonexistent next lesson");
 
-const comboCompleteHtml = renderState("state.screen = 'comboComplete'");
+const comboCompleteHtml = renderState("state.screen = 'comboComplete'; state.selectedComboGroupId = 'open-a'; state.currentComboItemId = 'ba'");
 includesAll(
   comboCompleteHtml,
-  ["下一步建议", "复习组合", "进入第三单元"],
+  ["继续学习本单元下一课程", "下一步建议", "复习组合", "进入第三单元"],
   "unit two complete"
 );
+assert.ok(
+  comboCompleteHtml.includes('data-action="open-combo-group" data-id="soft-e"'),
+  "unit two completion should point to the next combination course"
+);
+clickDataset({ action: "open-combo-group", id: "soft-e" });
+assert.equal(vm.runInContext("state.selectedComboGroupId", context), "soft-e", "combo continuation should open the next course");
+assert.equal(vm.runInContext("state.currentComboItemId", context), "be-e", "combo continuation should start at the next course's first item");
+const lastComboComplete = renderState("state.screen = 'comboComplete'; state.selectedComboGroupId = 'connection-breaks'; state.currentComboItemId = 'dada-connection'");
+assert.ok(!lastComboComplete.includes("继续学习本单元下一课程"), "the last combo course should not show a nonexistent continuation");
 assert.ok(comboCompleteHtml.includes("با / پا"), "unit two completion should separate learned combinations with punctuation");
 assert.ok(
   !comboCompleteHtml.includes("如果这一组有词义，它仍然需要母语者审校后才能进入正式考核。"),
@@ -1970,9 +2004,34 @@ includesAll(
 );
 
 includesAll(
-  renderState("state.screen = 'practiceComplete'"),
-  ["下一步建议", "再练一轮", "返回字母练习"],
+  renderState("state.screen = 'practiceComplete'; state.selectedPracticeGroupId = 'listening-loop'; state.currentPracticeItemId = 'practice-listen-be'"),
+  ["继续学习本单元下一课程", "下一步建议", "再练一轮", "返回字母练习"],
   "letter practice complete"
 );
+assert.ok(
+  app.innerHTML.includes('data-action="open-practice-group" data-id="repeat-loop"'),
+  "practice completion should point to the next formal practice course"
+);
+const lastPracticeComplete = renderState("state.screen = 'practiceComplete'; state.selectedPracticeGroupId = 'keyboard-loop'; state.currentPracticeItemId = 'practice-keyboard-kaf'");
+assert.ok(!lastPracticeComplete.includes("继续学习本单元下一课程"), "the last formal practice course should not continue into the dynamic mistake review");
+
+const vocabCourseComplete = renderState("state.screen = 'vocabComplete'; state.selectedVocabGroupId = 'greetings'; state.currentVocabItemId = 'yaxshimusiz'");
+assert.ok(vocabCourseComplete.includes("继续学习本单元下一课程"), "vocabulary completion should continue to the next section");
+assert.ok(
+  vocabCourseComplete.includes('data-action="open-vocab-course" data-id="greetings" data-item-id="rahmat"'),
+  "vocabulary continuation should point to the next section's first item"
+);
+clickDataset({ action: "open-vocab-course", id: "greetings", itemId: "rahmat" });
+assert.equal(vm.runInContext("state.selectedVocabGroupId", context), "greetings", "vocabulary continuation should preserve the topic when another section exists");
+assert.equal(vm.runInContext("state.currentVocabItemId", context), "rahmat", "vocabulary continuation should start at the next section's first item");
+
+const readingCourse = renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'dialogue-theater'; state.selectedReadingGroupId = 'dialogue-greeting'");
+assert.ok(readingCourse.includes("继续学习本单元下一课程"), "reading lessons should continue within the same unit");
+assert.ok(
+  readingCourse.includes('data-action="open-reading-group" data-unit-id="dialogue-theater" data-id="dialogue-family"'),
+  "reading continuation should point to the next lesson in the same unit"
+);
+const lastReadingCourse = renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'dialogue-theater'; state.selectedReadingGroupId = 'dialogue-guest'");
+assert.ok(!lastReadingCourse.includes("继续学习本单元下一课程"), "the last reading lesson should not show a nonexistent continuation");
 
 console.log("unit learning experience checks passed");

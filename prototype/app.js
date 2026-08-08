@@ -1,7 +1,19 @@
 const courseData = window.ANA_TILIM_COURSE;
+const sentenceGlossary = window.ANA_TILIM_SENTENCE_GLOSSARY;
+const progressTransfer = window.ANA_TILIM_PROGRESS_TRANSFER;
+const appConfig = Object.freeze({
+  edition: "global",
+  brandName: "Ana Tilim",
+  brandNameUyghur: "ئانا تىلىم",
+  logoPath: "./assets/logo.png",
+  cloudEnabled: true,
+  progressStorageKey: "ana-tilim-progress",
+  backupStorageKey: "ana-tilim-guest-progress-backup",
+  ...(window.ANA_TILIM_APP_CONFIG || {})
+});
 
-if (!courseData) {
-  throw new Error("Ana Tilim course data failed to load.");
+if (!courseData || !sentenceGlossary || !progressTransfer) {
+  throw new Error("Learning data modules failed to load.");
 }
 
 const { alphabetLetters, letterDetails, alphabetGroups, alphabetAudioItems, comboGroups, vocabGroups, practiceGroups, readingUnits } = courseData;
@@ -314,6 +326,21 @@ const unitExperience = {
   }
 };
 
+readingUnits.forEach((unit, index) => {
+  const experience = unitExperience[unit.id];
+  if (!experience) return;
+  const nextUnit = readingUnits[index + 1];
+  if (nextUnit) {
+    experience.nextUnitId = nextUnit.id;
+    experience.nextLabel = `进入${nextUnit.title.split("：")[0]}`;
+    delete experience.nextTarget;
+  } else {
+    experience.nextUnitId = "letters";
+    experience.nextLabel = "回到学习路径";
+    experience.nextTarget = "learn";
+  }
+});
+
 const keyboardRows = [
   ["ق", "و", "ې", "ر", "ت"],
   ["ي", "ۇ", "ڭ", "ا", "س"],
@@ -321,8 +348,8 @@ const keyboardRows = [
   ["ك", "ل", "ز", "خ", "ب"]
 ];
 
-const progressStorageKey = "ana-tilim-progress";
-const guestBackupStorageKey = "ana-tilim-guest-progress-backup";
+const progressStorageKey = appConfig.progressStorageKey;
+const guestBackupStorageKey = appConfig.backupStorageKey;
 const DEFAULT_PREFERENCES = Object.freeze({
   audioAutoplay: false,
   dailyGoal: 10,
@@ -531,7 +558,22 @@ function saveLocalProgress() {
     return false;
   }
 
-  const saved = {
+  const saved = buildLocalProgressData();
+
+  try {
+    storage.setItem(progressStorageKey, JSON.stringify(saved));
+    if (state.syncDirty && typeof cloudSync?.scheduleSync === "function") {
+      cloudSync.scheduleSync(buildCloudSnapshot());
+      state.syncDirty = false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function buildLocalProgressData() {
+  return {
     screen: state.screen,
     currentLetterId: state.currentLetterId,
     selectedGroupId: state.selectedGroupId,
@@ -554,17 +596,32 @@ function saveLocalProgress() {
     preferencesUpdatedAt: state.preferencesUpdatedAt,
     favoriteUpdatedAt: state.favoriteUpdatedAt
   };
+}
 
-  try {
-    storage.setItem(progressStorageKey, JSON.stringify(saved));
-    if (state.syncDirty && typeof cloudSync?.scheduleSync === "function") {
-      cloudSync.scheduleSync(buildCloudSnapshot());
-      state.syncDirty = false;
-    }
-    return true;
-  } catch {
-    return false;
+function exportLocalProgress() {
+  const payload = progressTransfer.createExportPayload(buildLocalProgressData(), {
+    edition: appConfig.edition,
+    brandName: appConfig.brandName
+  });
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `uyghur-tili-progress-${localDayKey()}.json`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+function importLocalProgressText(text) {
+  const storage = localStorageSafe();
+  if (!storage) {
+    throw new Error("当前浏览器不能保存学习记录");
   }
+  const data = progressTransfer.parseImportPayload(text);
+  storage.setItem(progressStorageKey, JSON.stringify(data));
+  hydrateLocalProgress();
+  state.screen = "profile";
+  saveLocalProgress();
 }
 
 function markCloudDirty(kind = "learning") {
@@ -758,6 +815,19 @@ function groupForLetter(letterId) {
   return alphabetGroups.find((group) => group.letters.some((letter) => letter.id === letterId));
 }
 
+function nextCollectionItem(items, currentId) {
+  const currentIndex = items.findIndex((item) => item.id === currentId);
+  return currentIndex >= 0 ? items[currentIndex + 1] || null : null;
+}
+
+function nextAlphabetGroup(groupId) {
+  return nextCollectionItem(alphabetGroups, groupId);
+}
+
+function nextComboGroup(groupId) {
+  return nextCollectionItem(comboGroups, groupId);
+}
+
 function currentComboGroup() {
   return comboGroups.find((group) => group.id === state.selectedComboGroupId) || comboGroups[0];
 }
@@ -823,6 +893,19 @@ function currentVocabSectionItems() {
   return section.itemIds.map((itemId) => itemsById[itemId]).filter(Boolean);
 }
 
+function nextVocabCourse(groupId, sectionId) {
+  const group = vocabGroups.find((item) => item.id === groupId) || vocabGroups[0];
+  const sections = group.sections || [];
+  const section = sections.find((item) => item.id === sectionId) || sections[0] || null;
+  const nextSection = section ? nextCollectionItem(sections, section.id) : null;
+  if (nextSection) {
+    return { groupId: group.id, itemId: nextSection.itemIds[0] };
+  }
+
+  const nextGroup = nextCollectionItem(vocabGroups, group.id);
+  return nextGroup ? { groupId: nextGroup.id, itemId: nextGroup.items[0].id } : null;
+}
+
 function currentVocabAudio() {
   return vocabAudioByItemId[currentVocabItem().id] || null;
 }
@@ -850,6 +933,11 @@ function currentPracticeItems() {
 
 function currentPracticeItem() {
   return currentPracticeItems().find((item) => item.id === state.currentPracticeItemId) || currentPracticeItems()[0];
+}
+
+function nextPracticeGroup(groupId) {
+  const courseGroups = practiceGroups.filter((group) => group.mode !== "review");
+  return nextCollectionItem(courseGroups, groupId);
 }
 
 function practiceListeningCompletedIds(group = currentPracticeGroup()) {
@@ -1057,6 +1145,11 @@ function readingUnitForGroup(groupId) {
 function currentReadingGroup() {
   const unit = currentReadingUnit();
   return unit.groups.find((group) => group.id === state.selectedReadingGroupId) || unit.groups[0];
+}
+
+function nextReadingGroup(unitId, groupId) {
+  const unit = readingUnits.find((item) => item.id === unitId) || readingUnits[0];
+  return nextCollectionItem(unit.groups, groupId);
 }
 
 function currentAutoplayEntry() {
@@ -1757,6 +1850,21 @@ function renderAdjacentNav({ previous, next, action, previousLabel = "上一个"
   `;
 }
 
+function renderContinueCourseButton(options = {}) {
+  const { action, id, unitId = "", itemId = "" } = options || {};
+  if (!action || !id) return "";
+  const attributes = [
+    `data-action="${action}"`,
+    unitId ? `data-unit-id="${unitId}"` : "",
+    `data-id="${id}"`,
+    itemId ? `data-item-id="${itemId}"` : ""
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return `<button class="primary-button continue-course-button" ${attributes} type="button">继续学习本单元下一课程</button>`;
+}
+
 function renderUnitNextActions(unitId, primaryClass = "primary-button") {
   const experience = currentUnitExperience(unitId);
   const nextUnit = learningUnits.find((unit) => unit.id === experience.nextUnitId);
@@ -1972,7 +2080,7 @@ function topBar(title, subtitle, action = "", leading = "") {
     <header class="top-row">
       ${leading}
       <div class="brand-lockup">
-        <img class="brand-mark" src="./assets/logo.png" alt="Ana Tilim logo" />
+        <img class="brand-mark" src="${escapeHtml(appConfig.logoPath)}" alt="${escapeHtml(appConfig.brandName)} logo" />
         <div>
           <h1 class="brand-name">${title}</h1>
           <p class="brand-subtitle">${subtitle}</p>
@@ -2087,6 +2195,10 @@ function cloudStatusLabel() {
 }
 
 function renderCloudAuthControls() {
+  if (!appConfig.cloudEnabled) {
+    return "";
+  }
+
   const accountEmail = cloudAccountEmail();
   if (accountEmail) {
     return `
@@ -2248,25 +2360,29 @@ function renderWelcome() {
     <div class="hero view without-nav">
       <div class="hero-content">
         <div class="hero-intro">
-          <img class="hero-logo" src="./assets/logo.png" alt="Ana Tilim logo" />
-          <h1>Ana Tilim</h1>
-          <div class="uyghur uyghur-title">ئانا تىلىم</div>
+          <img class="hero-logo" src="${escapeHtml(appConfig.logoPath)}" alt="${escapeHtml(appConfig.brandName)} logo" />
+          <h1>${escapeHtml(appConfig.brandName)}</h1>
+          <div class="uyghur uyghur-title">${escapeHtml(appConfig.brandNameUyghur)}</div>
           <p class="hero-copy">
             从字母、发音、书写到键盘输入，一步一步学会自己的母语。
           </p>
           <button class="ghost-button" data-action="continue-local" type="button">
-            无需登录，直接开始学习
+            ${appConfig.cloudEnabled ? "无需登录，直接开始学习" : "开始学习"}
           </button>
         </div>
 
-        <article class="card auth-panel">
-          <div>
-            <p class="caption">登录后自动同步</p>
-            <h2 class="section-title">${accountEmail ? "学习记录已同步" : "保存你的学习进度"}</h2>
-            <p class="muted">${accountEmail ? `已登录 ${escapeHtml(accountEmail)}` : "换设备也能继续学习；不登录不会影响课程使用。"}</p>
-          </div>
-          ${renderCloudAuthControls()}
-        </article>
+        ${
+          appConfig.cloudEnabled
+            ? `<article class="card auth-panel">
+                <div>
+                  <p class="caption">登录后自动同步</p>
+                  <h2 class="section-title">${accountEmail ? "学习记录已同步" : "保存你的学习进度"}</h2>
+                  <p class="muted">${accountEmail ? `已登录 ${escapeHtml(accountEmail)}` : "换设备也能继续学习；不登录不会影响课程使用。"}</p>
+                </div>
+                ${renderCloudAuthControls()}
+              </article>`
+            : ""
+        }
       </div>
     </div>
   `;
@@ -2835,17 +2951,13 @@ function renderPicturePractice() {
               const resultClass = selected ? (correctChoice ? "correct" : "wrong") : "";
               return `
                 <button
-                  class="choice-card ${resultClass}"
+                  class="${["choice-card", "letter-only-choice", resultClass].filter(Boolean).join(" ")}"
                   data-action="pick-picture"
                   data-id="${choice.id}"
                   type="button"
+                  aria-label="${displayStandaloneLetterGlyph(choice.letter)}"
                 >
                   <span class="choice-art uyghur">${displayStandaloneLetterGlyph(choice.letter)}</span>
-                  <span>
-                    <strong>${choice.cue}</strong>
-                    <span class="caption">${choice.type}，${choice.latin}</span>
-                  </span>
-                  <span class="step-state">${selected ? (correctChoice ? "正确" : "再想想") : "选择"}</span>
                 </button>
               `;
             })
@@ -2855,8 +2967,8 @@ function renderPicturePractice() {
           hasPicked
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? `答对了。${displayStandaloneLetterGlyph(letter.letter)} 的关键是 ${letter.cue}。`
-                  : letterMistakeFeedback(letter, picked)
+                  ? "答对了。"
+                  : "再看点位和点数，然后重新选择。"
               }</div>`
             : ""
         }
@@ -3137,6 +3249,7 @@ function renderKeyboardPractice() {
 
 function renderComplete() {
   const group = currentGroup();
+  const nextGroup = nextAlphabetGroup(group.id);
   const letter = currentLetter();
   const groupLetters = group.letters.map((item) => displayStandaloneLetterGlyph(item.letter)).join(" / ");
   const loop = letterLoopProgress(group.id);
@@ -3158,6 +3271,7 @@ function renderComplete() {
           <div class="metric"><strong>${loop.completeCount} / ${loop.total}</strong><span>完成进度</span></div>
           <div class="metric"><strong>${groupMistakes}</strong><span>本组错题</span></div>
         </div>
+        ${renderContinueCourseButton(nextGroup ? { action: "open-group", id: nextGroup.id } : null)}
         ${renderUnitNextActions("letters")}
         <button class="secondary-button" data-action="go" data-target="home" type="button">
           回到首页
@@ -3658,6 +3772,7 @@ function renderComboComplete() {
   const group = currentComboGroup();
   const unit = currentComboUnit();
   const item = currentComboItem();
+  const nextGroup = nextComboGroup(group.id);
   const groupValues = group.items.map((choice) => choice.value).join(" / ");
 
   return screen(
@@ -3676,6 +3791,7 @@ function renderComboComplete() {
           <div class="metric"><strong>1</strong><span>输入</span></div>
           <div class="metric"><strong>词形</strong><span>理解</span></div>
         </div>
+        ${renderContinueCourseButton(nextGroup ? { action: "open-combo-group", id: nextGroup.id } : null)}
         ${renderUnitNextActions(unit.id)}
         <button class="secondary-button" data-action="go" data-target="learn" type="button">
           学习路径
@@ -3779,6 +3895,7 @@ function renderVocabLesson() {
           </div>
           <p class="muted compact-note">点维语词播放；点右侧解释选择词。中文仅预览，不设唯一答案。</p>
           ${renderVocabRows(group, item.id)}
+          ${renderSentenceGlosses(item.value)}
         </article>
 
         <div class="item-progress">
@@ -3945,6 +4062,7 @@ function renderVocabComplete() {
   const item = currentVocabItem();
   const section = currentVocabSection();
   const sectionItems = currentVocabSectionItems();
+  const nextCourse = nextVocabCourse(group.id, section?.id);
   const groupValues = sectionItems.map((choice) => choice.value).join(" / ");
 
   return screen(
@@ -3963,6 +4081,11 @@ function renderVocabComplete() {
           <div class="metric"><strong>1</strong><span>输入</span></div>
           <div class="metric"><strong>词义</strong><span>理解</span></div>
         </div>
+        ${renderContinueCourseButton(
+          nextCourse
+            ? { action: "open-vocab-course", id: nextCourse.groupId, itemId: nextCourse.itemId }
+            : null
+        )}
         ${renderUnitNextActions("basic-phrases")}
         <button class="secondary-button" data-action="go" data-target="learn" type="button">
           学习路径
@@ -3990,6 +4113,7 @@ function renderReadingLine(unit, item) {
           <div class="uyghur reading-value">${item.value}</div>
           ${renderLatinTransliteration(item.latin, "reading-latin")}
           <p class="reading-meaning">${item.meaning}</p>
+          ${renderSentenceGlosses(item.value)}
           <p class="grammar-lesson">${item.lesson}</p>
         </div>
       </article>
@@ -4003,6 +4127,7 @@ function renderReadingLine(unit, item) {
         <div class="uyghur reading-value">${item.value}</div>
         ${renderLatinTransliteration(item.latin, "reading-latin")}
         <p class="reading-meaning">${item.meaning}</p>
+        ${renderSentenceGlosses(item.value)}
       </article>
     `;
   }
@@ -4015,14 +4140,62 @@ function renderReadingLine(unit, item) {
         <div class="uyghur reading-value">${item.value}</div>
         ${renderLatinTransliteration(item.latin, "reading-latin")}
         <p class="reading-meaning">${item.meaning}</p>
+        ${renderSentenceGlosses(item.value)}
       </div>
     </article>
+  `;
+}
+
+function renderGlossSegments(segments) {
+  if (!segments?.length) return "";
+
+  return `
+    <div class="morpheme-glosses" aria-label="词素拆解">
+      ${segments
+        .map(
+          (segment) => `
+            <span class="morpheme-gloss">
+              <b class="uyghur">${escapeHtml(segment.word)}</b>
+              <small>${escapeHtml(segment.latin)}</small>
+              <em>${escapeHtml(segment.meaning)}</em>
+            </span>
+          `
+        )
+        .join('<span class="morpheme-divider" aria-hidden="true">/</span>')}
+    </div>
+  `;
+}
+
+function renderSentenceGlosses(value) {
+  const glosses = sentenceGlossary.glossSentence(value);
+  if (!glosses.length) return "";
+
+  return `
+    <details class="sentence-gloss" open>
+      <summary>逐词与词素参考</summary>
+      <p>维语和汉语语序不同，下列词义用于理解结构，不表示逐字位置完全对应。</p>
+      <div class="word-glosses">
+        ${glosses
+          .map(
+            (gloss) => `
+              <span class="word-gloss">
+                <b class="uyghur">${escapeHtml(gloss.word)}</b>
+                <small>${escapeHtml(gloss.latin)}</small>
+                <em>${escapeHtml(gloss.meaning)}</em>
+                ${renderGlossSegments(gloss.segments)}
+              </span>
+            `
+          )
+          .join("")}
+      </div>
+    </details>
   `;
 }
 
 function renderReadingLesson() {
   const unit = currentReadingUnit();
   const group = currentReadingGroup();
+  const nextGroup = nextReadingGroup(unit.id, group.id);
 
   return screen(
     `
@@ -4044,6 +4217,9 @@ function renderReadingLesson() {
         <div class="reading-list ${unit.readingKind}">
           ${group.items.map((item) => renderReadingLine(unit, item)).join("")}
         </div>
+        ${renderContinueCourseButton(
+          nextGroup ? { action: "open-reading-group", id: nextGroup.id, unitId: unit.id } : null
+        )}
         <button class="secondary-button" data-action="go" data-target="unit" type="button">
           返回小课
         </button>
@@ -4424,6 +4600,7 @@ function renderPracticeComplete() {
   const group = currentPracticeGroup();
   const isReviewPractice = group.mode === "review";
   const item = currentPracticeItem();
+  const nextGroup = isReviewPractice ? null : nextPracticeGroup(group.id);
   if (!item) {
     return screen(
       `
@@ -4473,6 +4650,7 @@ function renderPracticeComplete() {
             <div class="audit-row"><strong>备注</strong><span>${item.audioStatus}。</span></div>
           </div>
         </article>
+        ${renderContinueCourseButton(nextGroup ? { action: "open-practice-group", id: nextGroup.id } : null)}
         <article class="card next-action-card">
           <p class="caption">下一步建议</p>
           <div class="action-grid">
@@ -4552,13 +4730,36 @@ function profileStreakDays(progress) {
 
 function renderProfileHero(progress, reviewCount) {
   const streakDays = profileStreakDays(progress);
+  if (!appConfig.cloudEnabled) {
+    return `
+      <article class="card profile-hero-card">
+        <div class="profile-identity">
+          <div class="profile-avatar"><span aria-hidden="true">UT</span></div>
+          <div class="profile-account">
+            <p class="caption">本地学习</p>
+            <h2 class="section-title">${escapeHtml(appConfig.brandName)} 学习者</h2>
+            <p class="muted">学习进度保存在当前设备</p>
+          </div>
+          <span class="step-state profile-status">本地模式</span>
+        </div>
+        <div class="metric-grid profile-account-metrics" aria-label="个人学习概览">
+          <div class="metric"><strong>${streakDays}</strong><span>连续学习</span></div>
+          <div class="metric"><strong>${reviewCount}</strong><span>今日待复习</span></div>
+          <div class="metric"><strong>${progress.completed} / ${progress.total}</strong><span>总进度</span></div>
+        </div>
+        <div class="profile-progress-row"><span>个人学习状态</span><strong>${progress.percent}%</strong></div>
+        <div class="progress-track" aria-hidden="true"><div class="progress-fill" style="--value: ${progress.percent}%"></div></div>
+        <p class="caption">可使用下方导出功能备份学习记录。</p>
+      </article>
+    `;
+  }
   const accountEmail = cloudAccountEmail();
   const accountProfile = cloudAccountProfile();
   const avatarUrl = accountProfile.avatarUrl;
-  const displayName = accountProfile.displayName || "Ana Tilim 学习者";
+  const displayName = accountProfile.displayName || `${appConfig.brandName} 学习者`;
   const avatarContent = avatarUrl
     ? `<img src="${escapeHtml(avatarUrl)}" alt="学习头像" />`
-    : `<span aria-hidden="true">AT</span>`;
+    : `<span aria-hidden="true">${appConfig.brandName === "Ana Tilim" ? "AT" : "UT"}</span>`;
 
   return `
     <article class="card profile-hero-card">
@@ -4611,7 +4812,15 @@ function renderProfileMemoryCard(reviewCount) {
         </div>
         <span class="step-state">${reviewCount} 项</span>
       </div>
-      <p class="muted">${hasReview ? "错题会优先进入复习队列，后续登录版会按间隔重复自动安排下次复习。" : "当前没有待复习错题，后续登录版会按记忆状态生成每日复习队列。"}</p>
+      <p class="muted">${
+        hasReview
+          ? appConfig.cloudEnabled
+            ? "错题会优先进入复习队列，后续登录版会按间隔重复自动安排下次复习。"
+            : "错题会优先进入本地复习队列。"
+          : appConfig.cloudEnabled
+            ? "当前没有待复习错题，后续登录版会按记忆状态生成每日复习队列。"
+            : "当前没有待复习错题，可以继续巩固基础内容。"
+      }</p>
       <button
         class="primary-button"
         data-action="${hasReview ? "open-practice-group" : "go"}"
@@ -4698,7 +4907,10 @@ function renderSettingsPanel() {
       </section>
 
       <section class="profile-setting-group" aria-labelledby="account-settings-title">
-        <h3 id="account-settings-title">账号与数据</h3>
+        <h3 id="account-settings-title">${appConfig.cloudEnabled ? "账号与数据" : "本地数据"}</h3>
+        ${
+          appConfig.cloudEnabled
+            ? `
         <div class="profile-setting-block profile-account-setting">
           <div>
             <strong>当前账号</strong>
@@ -4726,12 +4938,27 @@ function renderSettingsPanel() {
             : ""
         }
         ${renderCloudAuthControls()}
+        `
+            : `
+              <div class="profile-setting-block profile-account-setting">
+                <div><strong>学习记录</strong><small>仅保存在当前浏览器</small></div>
+                <span class="step-state">本地模式</span>
+              </div>
+              <div class="action-grid local-data-actions">
+                <button class="secondary-button" data-action="export-progress" type="button">导出学习记录</button>
+                <label class="secondary-button import-progress-button">
+                  <input id="progress-import-input" type="file" accept="application/json,.json" />
+                  <span>导入学习记录</span>
+                </label>
+              </div>
+            `
+        }
         ${
           state.clearLearningConfirmation
             ? `
               <div class="clear-learning-confirmation" role="alert">
                 <strong>确认清除学习记录</strong>
-                <p>将清除课程进度、今日记录、错题、收藏和最近学习位置；账号与设置会保留。</p>
+                <p>将清除课程进度、今日记录、错题、收藏和最近学习位置；学习设置会保留。</p>
                 <div class="action-grid">
                   <button class="secondary-button" data-action="cancel-clear-learning" type="button">取消</button>
                   <button class="danger-button" data-action="confirm-clear-learning" type="button">确认清除</button>
@@ -4908,6 +5135,16 @@ document.addEventListener("click", (event) => {
     saveLocalProgress();
     render();
     showToast("已进入本地学习模式");
+    return;
+  }
+
+  if (action === "export-progress") {
+    try {
+      exportLocalProgress();
+      showToast("学习记录已导出");
+    } catch {
+      showToast("导出失败，请稍后重试");
+    }
     return;
   }
 
@@ -5163,6 +5400,18 @@ document.addEventListener("click", (event) => {
     state.selectedUnitId = "basic-phrases";
     state.selectedVocabGroupId = group.id;
     state.currentVocabItemId = group.items[0].id;
+    markProgress("vocab", group.id, "viewed");
+    resetVocabPracticeState();
+    goTo("vocab");
+    return;
+  }
+
+  if (action === "open-vocab-course") {
+    const group = vocabGroups.find((item) => item.id === button.dataset.id) || vocabGroups[0];
+    const item = group.items.find((choice) => choice.id === button.dataset.itemId) || group.items[0];
+    state.selectedUnitId = "basic-phrases";
+    state.selectedVocabGroupId = group.id;
+    state.currentVocabItemId = item.id;
     markProgress("vocab", group.id, "viewed");
     resetVocabPracticeState();
     goTo("vocab");
@@ -5504,6 +5753,22 @@ document.addEventListener("click", (event) => {
 
 document.addEventListener("change", (event) => {
   const input = event.target;
+  if (input?.id === "progress-import-input") {
+    const file = input.files?.[0];
+    if (!file) return;
+    file
+      .text()
+      .then((text) => {
+        importLocalProgressText(text);
+        render();
+        showToast("学习记录已导入");
+      })
+      .catch((error) => {
+        showToast(error?.message || "导入失败，请检查文件");
+      });
+    input.value = "";
+    return;
+  }
   if (input?.id !== "profile-avatar-input") return;
 
   const file = input.files?.[0];
@@ -5538,6 +5803,10 @@ document.addEventListener("change", (event) => {
 });
 
 function initializeCloudAuthentication() {
+  if (!appConfig.cloudEnabled) {
+    cloudStatus = { phase: "local", error: "" };
+    return;
+  }
   const cloudApi = window.ANA_TILIM_CLOUD;
   const config = window.ANA_TILIM_CLOUD_CONFIG || {};
   if (!cloudApi?.createCloudSync) {
