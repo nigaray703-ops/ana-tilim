@@ -397,6 +397,7 @@ const state = {
   preferences: { ...DEFAULT_PREFERENCES },
   dailyActivity: { date: "", completedIds: [] },
   clearLearningConfirmation: false,
+  pendingProgressImport: null,
   modifiedAt: initialCloudTimestamp,
   preferencesUpdatedAt: initialCloudTimestamp,
   favoriteUpdatedAt: initialCloudTimestamp,
@@ -601,15 +602,34 @@ function exportLocalProgress() {
 }
 
 function importLocalProgressText(text) {
+  const envelope = progressTransfer.parseImportPayload(text, { expectedEdition: appConfig.edition });
+  state.pendingProgressImport = envelope;
+  return envelope;
+}
+
+function confirmLocalProgressImport() {
   const storage = localStorageSafe();
   if (!storage) {
     throw new Error("当前浏览器不能保存学习记录");
   }
-  const data = progressTransfer.parseImportPayload(text);
-  storage.setItem(progressStorageKey, JSON.stringify(data));
+  if (!state.pendingProgressImport) {
+    throw new Error("请先选择学习记录文件");
+  }
+  storage.setItem(progressStorageKey, JSON.stringify(state.pendingProgressImport.data));
   hydrateLocalProgress();
+  state.pendingProgressImport = null;
   state.screen = "profile";
+  markCloudDirty("learning");
+  markCloudDirty("preferences");
+  markCloudDirty("favorite");
   saveLocalProgress();
+}
+
+function progressEditionName(edition) {
+  return {
+    cn: "Uyghur Tili 国内版",
+    global: "Ana Tilim 海外版"
+  }[edition] || "未知版本";
 }
 
 function markCloudDirty(kind = "learning") {
@@ -2113,7 +2133,7 @@ function initializeFormExampleHighlights() {
   });
 }
 
-function render() {
+function render({ persist = true } = {}) {
   if (state.screen === "settings") {
     state.screen = "profile";
   }
@@ -2158,7 +2178,9 @@ function render() {
   app.innerHTML = (screens[state.screen] || renderHome)();
   initializeFormExampleHighlights();
   initializeWritingCanvases();
-  saveLocalProgress();
+  if (persist && !state.pendingProgressImport) {
+    saveLocalProgress();
+  }
   syncAudioAutoplay();
 }
 
@@ -4992,14 +5014,34 @@ function renderSettingsPanel() {
                 <div><strong>学习记录</strong><small>仅保存在当前浏览器</small></div>
                 <span class="step-state">本地模式</span>
               </div>
-              <div class="action-grid local-data-actions">
-                <button class="secondary-button" data-action="export-progress" type="button">导出学习记录</button>
-                <label class="secondary-button import-progress-button">
-                  <input id="progress-import-input" type="file" accept="application/json,.json" />
-                  <span>导入学习记录</span>
-                </label>
+            `
+        }
+        <div class="action-grid local-data-actions">
+          <button class="secondary-button" data-action="export-progress" type="button">导出学习记录</button>
+          <label class="secondary-button import-progress-button">
+            <input id="progress-import-input" type="file" accept="application/json,.json" />
+            <span>导入学习记录</span>
+          </label>
+        </div>
+        ${
+          state.pendingProgressImport
+            ? `
+              <div class="clear-learning-confirmation" role="alert">
+                <strong>确认导入学习记录</strong>
+                <p>来源版本：${progressEditionName(state.pendingProgressImport.edition)}</p>
+                <p>导出时间：${escapeHtml(
+                  typeof state.pendingProgressImport.exportedAt === "string"
+                    ? state.pendingProgressImport.exportedAt
+                    : "未提供"
+                )}</p>
+                <p>手动导入会替换当前设备记录，并在登录状态下按现有同步规则上传。</p>
+                <div class="action-grid">
+                  <button class="secondary-button" data-action="cancel-import-progress" type="button">取消</button>
+                  <button class="primary-button" data-action="confirm-import-progress" type="button">确认导入</button>
+                </div>
               </div>
             `
+            : ""
         }
         ${
           state.clearLearningConfirmation
@@ -5224,6 +5266,24 @@ document.addEventListener("click", (event) => {
       showToast("学习记录已导出");
     } catch {
       showToast("导出失败，请稍后重试");
+    }
+    return;
+  }
+
+  if (action === "cancel-import-progress") {
+    state.pendingProgressImport = null;
+    render({ persist: false });
+    showToast("已取消导入");
+    return;
+  }
+
+  if (action === "confirm-import-progress") {
+    try {
+      confirmLocalProgressImport();
+      render();
+      showToast("学习记录已导入");
+    } catch (error) {
+      showToast(error?.message || "导入失败，请检查文件");
     }
     return;
   }
@@ -5891,14 +5951,17 @@ document.addEventListener("change", (event) => {
   if (input?.id === "progress-import-input") {
     const file = input.files?.[0];
     if (!file) return;
+    state.pendingProgressImport = null;
     file
       .text()
       .then((text) => {
         importLocalProgressText(text);
-        render();
-        showToast("学习记录已导入");
+        render({ persist: false });
+        showToast("请确认导入学习记录");
       })
       .catch((error) => {
+        state.pendingProgressImport = null;
+        render({ persist: false });
         showToast(error?.message || "导入失败，请检查文件");
       });
     input.value = "";

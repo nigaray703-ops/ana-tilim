@@ -274,6 +274,7 @@ const app = makeElement("app");
 const toast = makeElement("toast");
 let clickHandler = null;
 let keydownHandler = null;
+let changeHandler = null;
 const storage = {};
 const sessionStorageValues = {};
 let storageWritesFail = false;
@@ -305,6 +306,9 @@ const context = {
       }
       if (eventName === "keydown") {
         keydownHandler = handler;
+      }
+      if (eventName === "change") {
+        changeHandler = handler;
       }
     }
   },
@@ -844,6 +848,18 @@ function clickDataset(dataset) {
   });
 }
 
+async function selectProgressImport(text) {
+  assert.ok(changeHandler, "change handler should be registered");
+  const input = {
+    id: "progress-import-input",
+    files: [{ text: () => Promise.resolve(text) }],
+    value: "selected.json"
+  };
+  changeHandler({ target: input });
+  await new Promise((resolve) => setImmediate(resolve));
+  return input;
+}
+
 function savedProgress() {
   assert.ok(storage["ana-tilim-progress"], "local progress should be saved");
   return JSON.parse(storage["ana-tilim-progress"]);
@@ -1012,7 +1028,9 @@ includesAll(
     "清除学习记录",
     "从相册选择头像",
     "使用 Google 登录",
-    "使用邮箱验证码"
+    "使用邮箱验证码",
+    "导出学习记录",
+    "导入学习记录"
   ],
   "profile account and settings"
 );
@@ -1106,6 +1124,9 @@ vm.runInContext(
   `
     globalThis.savedCloudSyncForProfileTest = cloudSync;
     cloudSync = {
+      scheduleSync() {
+        globalThis.importCloudScheduleCount += 1;
+      },
       session() {
         return {
           user: {
@@ -1123,11 +1144,134 @@ vm.runInContext(
         };
       }
     };
+    globalThis.importCloudScheduleCount = 0;
     cloudStatus = { phase: "signed-in", error: "" };
   `,
   context
 );
 const signedInProfileHtml = renderState("state.screen = 'profile'");
+includesAll(
+  signedInProfileHtml,
+  ["学习记录会自动同步到云端。", "导出学习记录", "导入学习记录"],
+  "signed-in profile cloud and manual transfer controls"
+);
+
+const storedBytesBeforeImport = '{ "screen": "home", "marker": "preserve exact bytes" }';
+storage["ana-tilim-progress"] = storedBytesBeforeImport;
+const importedProgress = {
+  screen: "library",
+  selectedUnitId: "combos",
+  learningProgress: {
+    letters: { "dot-bone": { completed: true } },
+    combos: {},
+    vocab: {},
+    practice: {},
+    reading: {}
+  },
+  mistakes: [],
+  writingChecks: [],
+  favorite: false,
+  preferences: {
+    audioAutoplay: false,
+    dailyGoal: 10,
+    learningReminder: false,
+    showLatin: true
+  },
+  dailyActivity: { date: "2026-08-09", completedIds: ["letters:dot-bone:completed"] },
+  modifiedAt: "2026-08-09T01:02:03.000Z",
+  preferencesUpdatedAt: "2026-08-09T01:02:03.000Z",
+  favoriteUpdatedAt: "2026-08-09T01:02:03.000Z"
+};
+const globalImportText = JSON.stringify({
+  format: "uyghur-tili-local-progress",
+  version: 1,
+  exportedAt: "2026-08-09T01:02:03.000Z",
+  edition: "global",
+  brandName: "Forged Product Name",
+  data: importedProgress
+});
+
+const selectedInput = await selectProgressImport(globalImportText);
+assert.equal(selectedInput.value, "", "the selected filename should be cleared after parsing");
+assert.equal(
+  storage["ana-tilim-progress"],
+  storedBytesBeforeImport,
+  "selecting a valid file should not change the original storage bytes before confirmation"
+);
+assert.equal(vm.runInContext("state.pendingProgressImport.edition", context), "global");
+includesAll(
+  app.innerHTML,
+  [
+    "来源版本：Ana Tilim 海外版",
+    "导出时间：2026-08-09T01:02:03.000Z",
+    "手动导入会替换当前设备记录，并在登录状态下按现有同步规则上传",
+    'data-action="cancel-import-progress"',
+    'data-action="confirm-import-progress"'
+  ],
+  "manual import confirmation"
+);
+vm.runInContext("render()", context);
+assert.equal(
+  storage["ana-tilim-progress"],
+  storedBytesBeforeImport,
+  "ordinary rerenders while an import is pending should not bypass confirmation and rewrite storage"
+);
+
+clickDataset({ action: "cancel-import-progress" });
+assert.equal(vm.runInContext("state.pendingProgressImport", context), null);
+assert.equal(
+  storage["ana-tilim-progress"],
+  storedBytesBeforeImport,
+  "canceling a pending import should preserve the original storage bytes"
+);
+
+await selectProgressImport("not-json");
+assert.equal(vm.runInContext("state.pendingProgressImport", context), null);
+assert.equal(
+  storage["ana-tilim-progress"],
+  storedBytesBeforeImport,
+  "a malformed import should preserve the original storage bytes"
+);
+assert.equal(toast.textContent, "文件不是有效的 JSON");
+
+const domesticImportText = JSON.stringify({
+  format: "uyghur-tili-local-progress",
+  version: 1,
+  exportedAt: "2026-08-09T01:02:03.000Z",
+  edition: "cn",
+  brandName: "Ana Tilim 海外版",
+  data: importedProgress
+});
+await selectProgressImport(domesticImportText);
+assert.equal(vm.runInContext("state.pendingProgressImport", context), null);
+assert.equal(
+  storage["ana-tilim-progress"],
+  storedBytesBeforeImport,
+  "a cross-edition import should preserve the original storage bytes"
+);
+assert.equal(toast.textContent, "备份属于 Uyghur Tili 国内版，不能导入 Ana Tilim 海外版");
+
+await selectProgressImport(globalImportText);
+assert.equal(
+  storage["ana-tilim-progress"],
+  storedBytesBeforeImport,
+  "reselecting a valid import should still wait for confirmation"
+);
+clickDataset({ action: "confirm-import-progress" });
+assert.equal(vm.runInContext("state.pendingProgressImport", context), null);
+assert.equal(vm.runInContext("state.screen", context), "profile");
+assert.equal(
+  JSON.parse(storage["ana-tilim-progress"]).learningProgress.letters["dot-bone"].completed,
+  true,
+  "confirmation should replace local learning progress with the imported data"
+);
+assert.equal(
+  Object.prototype.hasOwnProperty.call(JSON.parse(storage["ana-tilim-progress"]), "edition"),
+  false,
+  "confirmation should store envelope.data rather than nesting the envelope"
+);
+assert.equal(vm.runInContext("globalThis.importCloudScheduleCount", context), 1);
+assert.equal(toast.textContent, "学习记录已导入");
 assert.match(
   signedInProfileHtml,
   /data-action="edit-display-name"/,
