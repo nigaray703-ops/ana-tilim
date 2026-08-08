@@ -169,4 +169,20 @@ assert.doesNotThrow(
   "progress summaries should accept the Task 1 catalog shape before the interactive screen exists"
 );
 
+const audioImportTool = await import("../tools/import-form-example-audio.mjs");
+assert.equal(
+  typeof audioImportTool.loadCourseData,
+  "function",
+  "form example audio tool should expose its real course loader for side-effect-free verification"
+);
+const audioToolCourse = audioImportTool.loadCourseData();
+assert.equal(
+  audioToolCourse.latinWriting.unit.id,
+  "latin-keyboard-writing",
+  "form example audio tool should load the strict latin writing dependency"
+);
+assert.ok(audioToolCourse.letterDetails.aa, "form example audio tool should still load alphabet form examples");
+assert.ok(audioToolCourse.comboGroups.length > 0, "form example audio tool should still load combo reuse data");
+assert.ok(audioToolCourse.vocabGroups.length > 0, "form example audio tool should still load vocabulary reuse data");
+
 console.log("latin writing course data checks passed");
