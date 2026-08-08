@@ -1855,6 +1855,16 @@ function isAudioPlayable(audio) {
   return Boolean(audio && audio.playable && audio.outputPath);
 }
 
+function speakerIcon() {
+  return `
+    <svg class="speaker-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M4 9v6h4l5 4V5L8 9H4"></path>
+      <path d="M16 9.5a4 4 0 0 1 0 5"></path>
+      <path d="M18.5 7a7 7 0 0 1 0 10"></path>
+    </svg>
+  `;
+}
+
 function renderAudioButton({ audio, label, className = "" }) {
   const canPlay = isAudioPlayable(audio);
   const classes = ["play-dot", className, canPlay ? "" : "disabled"].filter(Boolean).join(" ");
@@ -1868,7 +1878,7 @@ function renderAudioButton({ audio, label, className = "" }) {
       type="button"
       ${canPlay ? "" : "disabled"}
       aria-label="${t("audio.play")} ${label}"
-    >${t("audio.play")}</button>
+    >${speakerIcon()}</button>
   `;
 }
 
@@ -2215,6 +2225,15 @@ function languageSwitcher(compact = false) {
         <button type="button" data-action="set-language" data-language="${language}"
           aria-pressed="${state.interfaceLanguage === language}">${compact ? (language === "zh" ? "中文" : "EN") : t(language === "zh" ? "language.chinese" : "language.english")}</button>`).join("")}
     </div>`;
+}
+
+function profileLanguageSelect() {
+  return `
+    <select id="profile-language-select" class="language-select"
+      data-action="set-language-select" aria-label="${t("language.label")}">
+      ${["zh", "en"].map((language) => `
+        <option value="${language}"${state.interfaceLanguage === language ? " selected" : ""}>${t(language === "zh" ? "language.chinese" : "language.english")}</option>`).join("")}
+    </select>`;
 }
 
 function topBar(title, subtitle, action = "", leading = "") {
@@ -4862,8 +4881,8 @@ function renderSettingsPanel() {
 
       <section class="profile-setting-group" aria-labelledby="learning-preferences-title">
         <div class="profile-setting-block language-setting">
-          <strong>${t("language.label")}</strong>
-          ${languageSwitcher()}
+          <label for="profile-language-select"><strong>${t("language.label")}</strong></label>
+          ${profileLanguageSelect()}
         </div>
         ${renderToggleSetting({
           label: t("settings.reminder"),
@@ -5707,6 +5726,14 @@ document.addEventListener("click", (event) => {
 
 document.addEventListener("change", (event) => {
   const input = event.target;
+  if (input?.dataset?.action === "set-language-select") {
+    const language = input.value;
+    if (language !== "zh" && language !== "en") return;
+    applyInterfaceLanguage(language, { explicit: true });
+    render();
+    showToast(t("language.changed"));
+    return;
+  }
   if (input?.id !== "profile-avatar-input") return;
 
   const file = input.files?.[0];

@@ -56,7 +56,7 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260809-bilingual",
+  "./styles.css?v=20260809-english-layout",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260809-bilingual",
   "./course-data/combo-data.js?v=20260728-uly-transliteration",
@@ -76,7 +76,7 @@ const expectedVersionedAssets = [
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260729-password-auth",
-  "./app.js?v=20260809-bilingual-final"
+  "./app.js?v=20260809-english-layout"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -88,6 +88,17 @@ assert.deepEqual(
   expectedVersionedAssets,
   "the international build should load every local asset in release order with its required cache version"
 );
+const previousEnglishUiCache = new Map([
+  ["./styles.css?v=20260809-bilingual", { release: "before-english-layout" }],
+  ["./app.js?v=20260809-bilingual-final", { release: "before-english-layout" }]
+]);
+for (const url of [
+  "./styles.css?v=20260809-english-layout",
+  "./app.js?v=20260809-english-layout"
+]) {
+  assert.ok(versionedAppAssets.includes(url));
+  assert.equal(previousEnglishUiCache.get(url), undefined);
+}
 const staleAlphabetCache = new Map([
   ["./course-data/alphabet-data.js?v=20260728-uly-transliteration", { release: "pre-bilingual" }]
 ]);
@@ -104,13 +115,11 @@ assert.equal(
 );
 const previousFinalReviewCache = new Map([
   ["./i18n/ui-messages.js?v=20260809-bilingual", { release: "pr-5" }],
-  ["./i18n/runtime.js?v=20260809-bilingual", { release: "pr-5" }],
-  ["./app.js?v=20260809-bilingual", { release: "pr-5" }]
+  ["./i18n/runtime.js?v=20260809-bilingual", { release: "pr-5" }]
 ]);
 for (const finalAssetUrl of [
   "./i18n/ui-messages.js?v=20260809-bilingual-final",
-  "./i18n/runtime.js?v=20260809-bilingual-final",
-  "./app.js?v=20260809-bilingual-final"
+  "./i18n/runtime.js?v=20260809-bilingual-final"
 ]) {
   assert.ok(versionedAppAssets.includes(finalAssetUrl), `${finalAssetUrl} should be requested by production HTML`);
   assert.equal(
@@ -381,6 +390,7 @@ Object.defineProperty(app, "innerHTML", {
 });
 const toast = makeElement("toast");
 let clickHandler = null;
+let changeHandler = null;
 const storage = {};
 const sessionStorageValues = {};
 let storageWritesFail = false;
@@ -404,6 +414,9 @@ const context = {
     addEventListener(eventName, handler) {
       if (eventName === "click") {
         clickHandler = handler;
+      }
+      if (eventName === "change") {
+        changeHandler = handler;
       }
     }
   },
@@ -854,6 +867,16 @@ function clickDataset(dataset) {
   });
 }
 
+function changeLanguageSelect(value) {
+  assert.ok(changeHandler, "change handler should be registered");
+  changeHandler({
+    target: {
+      value,
+      dataset: { action: "set-language-select" }
+    }
+  });
+}
+
 function savedProgress() {
   assert.ok(storage["ana-tilim-progress"], "local progress should be saved");
   return JSON.parse(storage["ana-tilim-progress"]);
@@ -919,6 +942,7 @@ writingCanvasBeforeLanguageSwitch.dispatchPointer("pointerup", { clientX: 200, c
 writingCanvasBeforeLanguageSwitch.dispatchPointer("pointerdown", { clientX: 80, clientY: 54 });
 writingCanvasBeforeLanguageSwitch.dispatchPointer("pointermove", { clientX: 240, clientY: 144 });
 writingCanvasBeforeLanguageSwitch.dispatchPointer("pointerup", { clientX: 240, clientY: 144 });
+vm.runInContext('state.screen = "profile"; render();', context);
 const learningStateBeforeLanguageSwitch = vm.runInContext(
   `JSON.stringify({
     screen: state.screen,
@@ -945,7 +969,7 @@ const learningStateBeforeLanguageSwitch = vm.runInContext(
   })`,
   context
 );
-clickDataset({ action: "set-language", language: "en" });
+changeLanguageSelect("en");
 assert.equal(
   vm.runInContext(
     `JSON.stringify({
@@ -974,12 +998,16 @@ assert.equal(
     context
   ),
   learningStateBeforeLanguageSwitch,
-  "manually switching from Chinese to the opposing English language should preserve the current learning state"
+  "changing the Profile language select should preserve the current learning state"
 );
+assert.equal(vm.runInContext("state.screen", context), "profile", "Profile should remain active after changing its language select");
+assert.equal(vm.runInContext("state.interfaceLanguage", context), "en");
+assert.equal(savedProgress().preferences.uiLanguage, "en");
+vm.runInContext('state.screen = "letterWriting"; render();', context);
 assert.notEqual(
   activeWritingCanvas,
   writingCanvasBeforeLanguageSwitch,
-  "the language switch should exercise the real rerender path and replace the canvas element"
+  "the preserved learning state should replace the canvas element on its next render"
 );
 assert.deepEqual(
   activeWritingCanvas.context2d.operations
@@ -1001,8 +1029,6 @@ assert.equal(
   false,
   "temporary handwriting strokes must not be added to cloud learning snapshots"
 );
-assert.equal(vm.runInContext("state.preferences.uiLanguage", context), "en");
-assert.equal(savedProgress().preferences.uiLanguage, "en");
 
 clickDataset({ action: "clear-canvas" });
 vm.runInContext("render()", context);
@@ -1032,9 +1058,17 @@ assert.deepEqual(
 const englishProfileHtml = renderState("state.screen = 'profile'");
 includesAll(
   englishProfileHtml,
-  ["Learning preferences", "Chinese", "English"],
-  "English profile settings"
+  [
+    'class="profile-setting-block language-setting"',
+    'id="profile-language-select"',
+    'data-action="set-language-select"',
+    '<option value="zh">Chinese</option>',
+    '<option value="en" selected>English</option>'
+  ],
+  "English Profile language select"
 );
+assert.ok(!englishProfileHtml.includes('class="language-switcher "'));
+assert.ok(englishHomeHtml.includes('class="language-switcher is-compact"'));
 
 const compactLanguageControl = vm.runInContext("languageSwitcher(true)", context);
 assert.ok(compactLanguageControl.includes('aria-label="Language"'));
@@ -1057,11 +1091,11 @@ assert.ok(!compactLanguageControl.includes("🇨🇳") && !compactLanguageContro
 
 const languageSwitcherStyle = styleSource.match(/^\.language-switcher\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
 assert.ok(languageSwitcherStyle.includes("width: max-content;"), "language controls should use intrinsic width");
-const fullLanguageButtonStyle = styleSource.match(/^\.language-switcher:not\(\.is-compact\) button\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
-assert.ok(fullLanguageButtonStyle.includes("min-height: 44px;"), "Profile language buttons should meet the 44px touch target");
+const profileLanguageSelectStyle = styleSource.match(/^\.language-select\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
+assert.ok(profileLanguageSelectStyle.includes("min-height: 44px;"), "Profile language select should meet the 44px touch target");
 assert.ok(
-  /\.language-switcher button:focus-visible\s*\{[^}]*outline:/s.test(styleSource),
-  "language buttons should expose a visible keyboard focus indicator"
+  /\.language-select:focus-visible\s*\{[^}]*outline:/s.test(styleSource),
+  "Profile language select should expose a visible keyboard focus indicator"
 );
 const phoneLanguageStyle = styleSource.match(/@media \(max-width: 719px\)\s*\{(?<body>[\s\S]*?)\n\}/m)?.groups?.body || "";
 assert.ok(
@@ -1079,8 +1113,37 @@ assert.ok(
     phoneSectionTitleStyle.includes("overflow-wrap: anywhere;"),
   "long English section headings should override the desktop ellipsis rule on phones"
 );
+for (const selector of [
+  ".brand-name",
+  ".brand-subtitle",
+  ".section-title",
+  ".lesson-step strong",
+  ".lesson-step .caption",
+  ".combo-part-note",
+  ".profile-account-metrics span",
+  ".profile-setting-row strong",
+  ".profile-setting-row small",
+  ".nav-button"
+]) {
+  assert.match(
+    styleSource,
+    new RegExp(`html\\[lang="en"\\][^{}]*${selector.replaceAll(".", "\\.")}[^{}]*\\{[^}]*white-space:\\s*normal;`, "s"),
+    `${selector} should show complete English text`
+  );
+}
+assert.match(styleSource, /html\[lang="en"\] \.primary-button[^{]*\{[^}]*font-size:\s*clamp\(/s);
+assert.ok(!/html\[lang="en"\][^{]*\.uyghur/.test(styleSource));
 
 setLanguage("zh");
+vm.runInContext("state.screen = 'profile'; render();", context);
+changeLanguageSelect("zh");
+assert.equal(vm.runInContext("state.interfaceLanguage", context), "zh");
+assert.equal(savedProgress().preferences.uiLanguage, "zh");
+assert.equal(vm.runInContext("state.screen", context), "profile");
+assert.ok(app.innerHTML.includes('<option value="zh" selected>'));
+changeLanguageSelect("fr");
+assert.equal(vm.runInContext("state.interfaceLanguage", context), "zh");
+
 vm.runInContext("state.screen = 'home'; render();", context);
 clickDataset({ action: "set-language", language: "en" });
 assert.equal(vm.runInContext("state.interfaceLanguage", context), "en", "the language control should switch the live interface");
@@ -1114,9 +1177,23 @@ const englishAudioChrome = vm.runInContext(
 );
 includesAll(
   englishAudioChrome,
-  ['aria-label="Play ب"', ">Play</button>", "Human recording", "No audio available"],
+  [
+    'aria-label="Play ب"',
+    'class="speaker-icon"',
+    'aria-hidden="true"',
+    'data-action="play-audio"'
+  ],
   "English reusable audio chrome"
 );
+assert.ok(!englishAudioChrome.includes(">Play</button>"));
+setLanguage("zh");
+const chineseSpeakerButton = vm.runInContext(
+  `renderAudioButton({ audio: { playable: true, outputPath: "./test.webm" }, label: "ب" })`,
+  context
+);
+assert.ok(chineseSpeakerButton.includes('aria-label="播放 ب"'));
+assert.ok(!chineseSpeakerButton.includes(">播放</button>"));
+setLanguage("en");
 for (const chineseChrome of ['aria-label="播放', "播放发音", ">听</button>", "真人音频", "音频待录"]) {
   assert.ok(
     !englishAudioChrome.includes(chineseChrome),
