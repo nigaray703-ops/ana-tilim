@@ -248,6 +248,74 @@ const readingUnitCatalog = readingUnits.map(({ title: _title, ...unit }) => ({
 }));
 const learningUnitCatalog = [lettersUnit, combosUnit, vocabUnit, ...readingUnitCatalog];
 const learningUnits = unitOrder.buildVisibleUnits(learningUnitCatalog, appConfig);
+const persistedScreenIds = new Set([
+  "welcome",
+  "home",
+  "learn",
+  "unit",
+  "letter",
+  "group",
+  "writing",
+  "letterWriting",
+  "picture",
+  "listening",
+  "letterOdd",
+  "letterSound",
+  "keyboard",
+  "complete",
+  "combo",
+  "comboRecognition",
+  "comboBuild",
+  "comboWriting",
+  "comboKeyboard",
+  "comboComplete",
+  "vocab",
+  "vocabRecognition",
+  "vocabKeyboard",
+  "vocabComplete",
+  "reading",
+  "practiceSession",
+  "practiceComplete",
+  "library",
+  "profile",
+  "settings"
+]);
+const stableProgressIds = Object.freeze({
+  letters: new Set(alphabetGroups.map((group) => group.id)),
+  combos: new Set(comboGroups.map((group) => group.id)),
+  vocab: new Set(vocabGroups.map((group) => group.id)),
+  practice: new Set(practiceGroups.map((group) => group.id)),
+  reading: new Set(readingUnits.flatMap((unit) => unit.groups.map((group) => group.id)))
+});
+const stableNavigationIds = Object.freeze({
+  currentLetterId: new Set(Object.keys(letterDetails)),
+  selectedGroupId: stableProgressIds.letters,
+  currentComboItemId: new Set(comboGroups.flatMap((group) => group.items.map((item) => item.id))),
+  selectedComboGroupId: stableProgressIds.combos,
+  currentVocabItemId: new Set(vocabGroups.flatMap((group) => group.items.map((item) => item.id))),
+  selectedVocabGroupId: stableProgressIds.vocab,
+  currentPracticeItemId: new Set(
+    practiceGroups.filter((group) => group.mode !== "review").flatMap((group) => group.items.map((item) => item.id))
+  ),
+  selectedPracticeGroupId: stableProgressIds.practice,
+  selectedReadingUnitId: new Set(readingUnits.map((unit) => unit.id)),
+  selectedReadingGroupId: stableProgressIds.reading,
+  selectedUnitId: new Set([...learningUnits.map((unit) => unit.id), "practice"])
+});
+const stableMistakeTargetIds = Object.freeze({
+  letter: stableNavigationIds.currentLetterId,
+  combo: stableNavigationIds.currentComboItemId,
+  vocab: stableNavigationIds.currentVocabItemId,
+  practice: stableNavigationIds.currentPracticeItemId
+});
+const stableWritingCheckIds = new Set(["shape", "dots", "spacing"]);
+const dailyActivitySteps = Object.freeze({
+  letters: new Set(["viewed", "writing", "recognition", "keyboard", "completed"]),
+  combos: new Set(["viewed", "writing", "recognition", "build", "keyboard", "completed"]),
+  vocab: new Set(["viewed", "recognition", "keyboard", "completed"]),
+  practice: new Set(["viewed", "listen", "repeat", "write", "keyboard", "review", "completed"]),
+  reading: new Set(["viewed", "completed"])
+});
 
 function learningUnitById(unitId) {
   return learningUnits.find((unit) => unit.id === unitId) || null;
@@ -603,8 +671,86 @@ function exportLocalProgress() {
 
 function importLocalProgressText(text) {
   const envelope = progressTransfer.parseImportPayload(text, { expectedEdition: appConfig.edition });
+  validateImportedProgressIds(envelope.data);
   state.pendingProgressImport = envelope;
   return envelope;
+}
+
+function validateImportedProgressIds(saved) {
+  if (saved.screen !== undefined && !persistedScreenIds.has(saved.screen)) {
+    throw new Error(`学习数据包含未知页面 ID: ${saved.screen}`);
+  }
+
+  const importedMistakeIds = new Set(
+    (saved.mistakes || []).map((mistake) => `mistake-${mistake.key}`)
+  );
+  for (const [field, allowedIds] of Object.entries(stableNavigationIds)) {
+    const value = saved[field];
+    if (value === undefined) continue;
+    const isRecognizedPracticeReviewId =
+      field === "currentPracticeItemId" && (value === "" || importedMistakeIds.has(value));
+    if (!allowedIds.has(value) && !isRecognizedPracticeReviewId) {
+      throw new Error(`学习数据包含未知 ${field}: ${value}`);
+    }
+  }
+
+  for (const [scope, bucket] of Object.entries(saved.learningProgress || {})) {
+    const allowedIds = stableProgressIds[scope];
+    for (const id of Object.keys(bucket)) {
+      if (!allowedIds.has(id)) {
+        throw new Error(`learningProgress.${scope} 包含未知 ID: ${id}`);
+      }
+      const listenCompletedIds = bucket[id].listenCompletedIds;
+      if (listenCompletedIds) {
+        const group = practiceGroups.find((item) => item.id === id);
+        const itemIds = new Set((group?.items || []).map((item) => item.id));
+        const unknownItemId = listenCompletedIds.find((itemId) => !itemIds.has(itemId));
+        if (unknownItemId) {
+          throw new Error(`learningProgress.${scope}.${id}.listenCompletedIds 包含未知 ID: ${unknownItemId}`);
+        }
+      }
+    }
+  }
+
+  (saved.mistakes || []).forEach((mistake, index) => {
+    const allowedTargets = stableMistakeTargetIds[mistake.kind];
+    if (!allowedTargets) {
+      throw new Error(`mistakes[${index}] 包含未知 kind: ${mistake.kind}`);
+    }
+    if (mistake.key !== `${mistake.kind}:${mistake.targetId}`) {
+      throw new Error(`mistakes[${index}] 的 key 与 kind/targetId 不匹配`);
+    }
+    if (!allowedTargets.has(mistake.targetId)) {
+      throw new Error(`mistakes[${index}] 包含未知 targetId: ${mistake.targetId}`);
+    }
+  });
+
+  const unknownWritingCheck = (saved.writingChecks || []).find((id) => !stableWritingCheckIds.has(id));
+  if (unknownWritingCheck) {
+    throw new Error(`writingChecks 包含未知 ID: ${unknownWritingCheck}`);
+  }
+
+  const unknownActivityId = (saved.dailyActivity?.completedIds || []).find(
+    (activityId) => !isRecognizedDailyActivityId(activityId)
+  );
+  if (unknownActivityId) {
+    throw new Error(`dailyActivity.completedIds 包含未知 ID: ${unknownActivityId}`);
+  }
+}
+
+function isRecognizedDailyActivityId(activityId) {
+  const parts = activityId.split(":");
+  if (parts.length === 4) {
+    const [scope, groupId, step, itemId] = parts;
+    if (scope !== "practice" || step !== "listen" || !stableProgressIds.practice.has(groupId)) {
+      return false;
+    }
+    const group = practiceGroups.find((item) => item.id === groupId);
+    return Boolean(group?.items.some((item) => item.id === itemId));
+  }
+  if (parts.length !== 3) return false;
+  const [scope, id, step] = parts;
+  return Boolean(stableProgressIds[scope]?.has(id) && dailyActivitySteps[scope]?.has(step));
 }
 
 function confirmLocalProgressImport() {
@@ -1428,13 +1574,13 @@ function upsertMistake(mistake) {
 
 function mistakeReviewItems() {
   return state.mistakes.map((mistake) => ({
-    id: `mistake-${mistake.key}`,
-    type: mistake.kindLabel,
-    value: mistake.value,
-    latin: mistake.latin,
-    label: mistake.source,
-    hint: `${mistake.note} ${mistake.help || ""} 错 ${mistake.attempts} 次。`,
-    parts: [mistake.value],
+    id: `mistake-${escapeHtml(mistake.key)}`,
+    type: escapeHtml(mistake.kindLabel),
+    value: escapeHtml(mistake.value),
+    latin: escapeHtml(mistake.latin),
+    label: escapeHtml(mistake.source),
+    hint: escapeHtml(`${mistake.note} ${mistake.help || ""} 错 ${mistake.attempts} 次。`),
+    parts: [escapeHtml(mistake.value)],
     audio: audioForMistake(mistake),
     audioStatus: "复习错题"
   }));

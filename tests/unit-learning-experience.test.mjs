@@ -396,6 +396,16 @@ vm.runInContext(fs.readFileSync("prototype/cloud-config.js", "utf8"), context, {
 vm.runInContext(fs.readFileSync("prototype/cloud-sync.js", "utf8"), context, { filename: "prototype/cloud-sync.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
 
+const currentRealExportText = vm.runInContext(
+  "JSON.stringify(progressTransfer.createExportPayload(buildLocalProgressData(), { edition: appConfig.edition, brandName: appConfig.brandName }))",
+  context
+);
+assert.doesNotThrow(
+  () => vm.runInContext(`importLocalProgressText(${JSON.stringify(currentRealExportText)})`, context),
+  "the app's current real export should pass both structural and course-derived semantic validation"
+);
+vm.runInContext("state.pendingProgressImport = null", context);
+
 const globalUnits = JSON.parse(
   vm.runInContext("JSON.stringify(learningUnits.map(({ id, title }) => ({ id, title })))", context)
 );
@@ -1441,6 +1451,117 @@ assert.equal(
 );
 assert.equal(toast.textContent, "备份属于 Uyghur Tili 国内版，不能导入 Ana Tilim 海外版");
 
+function importTextWithData(data) {
+  return JSON.stringify({
+    ...JSON.parse(globalImportText),
+    exportedAt: "2026-08-09T01:02:04.000Z",
+    data
+  });
+}
+
+function importProgressDirect(text) {
+  return vm.runInContext(`importLocalProgressText(${JSON.stringify(text)})`, context);
+}
+
+const validPendingBeforeSemanticFailures = importProgressDirect(globalImportText);
+const pendingBytesBeforeSemanticFailures = JSON.stringify(validPendingBeforeSemanticFailures);
+const runtimeBytesBeforeSemanticFailures = vm.runInContext("JSON.stringify(buildLocalProgressData())", context);
+const semanticInvalidCases = [
+  ["screen", { screen: "unknown-screen" }, /未知页面 ID: unknown-screen/],
+  ["current letter", { currentLetterId: "unknown-letter" }, /未知 currentLetterId: unknown-letter/],
+  ["selected letter group", { selectedGroupId: "unknown-letter-group" }, /未知 selectedGroupId: unknown-letter-group/],
+  ["current combo", { currentComboItemId: "unknown-combo" }, /未知 currentComboItemId: unknown-combo/],
+  ["selected combo group", { selectedComboGroupId: "unknown-combo-group" }, /未知 selectedComboGroupId: unknown-combo-group/],
+  ["current vocabulary item", { currentVocabItemId: "unknown-vocab" }, /未知 currentVocabItemId: unknown-vocab/],
+  ["selected vocabulary group", { selectedVocabGroupId: "unknown-vocab-group" }, /未知 selectedVocabGroupId: unknown-vocab-group/],
+  ["current practice item", { currentPracticeItemId: "unknown-practice" }, /未知 currentPracticeItemId: unknown-practice/],
+  ["selected practice group", { selectedPracticeGroupId: "unknown-practice-group" }, /未知 selectedPracticeGroupId: unknown-practice-group/],
+  ["selected reading unit", { selectedReadingUnitId: "unknown-reading-unit" }, /未知 selectedReadingUnitId: unknown-reading-unit/],
+  ["selected reading group", { selectedReadingGroupId: "unknown-reading-group" }, /未知 selectedReadingGroupId: unknown-reading-group/],
+  ["selected unit", { selectedUnitId: "unknown-unit" }, /未知 selectedUnitId: unknown-unit/],
+  [
+    "letter progress key",
+    { learningProgress: { letters: { "unknown-letter-group": { completed: true } } } },
+    /learningProgress\.letters 包含未知 ID: unknown-letter-group/
+  ],
+  [
+    "combo progress key",
+    { learningProgress: { combos: { "unknown-combo-group": { completed: true } } } },
+    /learningProgress\.combos 包含未知 ID: unknown-combo-group/
+  ],
+  [
+    "vocabulary progress key",
+    { learningProgress: { vocab: { "unknown-vocab-group": { completed: true } } } },
+    /learningProgress\.vocab 包含未知 ID: unknown-vocab-group/
+  ],
+  [
+    "practice progress key",
+    { learningProgress: { practice: { "unknown-practice-group": { completed: true } } } },
+    /learningProgress\.practice 包含未知 ID: unknown-practice-group/
+  ],
+  [
+    "reading progress key",
+    { learningProgress: { reading: { "unknown-reading-group": { completed: true } } } },
+    /learningProgress\.reading 包含未知 ID: unknown-reading-group/
+  ],
+  [
+    "mistake kind",
+    {
+      mistakes: [{
+        key: "unknown:be", kind: "unknown", kindLabel: "字母", targetId: "be", pickedId: "", value: "ب",
+        latin: "b", source: "错题", note: "note", help: "help", attempts: 1, createdAt: "2026-08-09T00:00:00.000Z"
+      }]
+    },
+    /mistakes\[0\] 包含未知 kind: unknown/
+  ],
+  [
+    "mistake key",
+    {
+      mistakes: [{
+        key: "letter:pe", kind: "letter", kindLabel: "字母", targetId: "be", pickedId: "", value: "ب",
+        latin: "b", source: "错题", note: "note", help: "help", attempts: 1, createdAt: "2026-08-09T00:00:00.000Z"
+      }]
+    },
+    /mistakes\[0\] 的 key 与 kind\/targetId 不匹配/
+  ],
+  [
+    "mistake target",
+    {
+      mistakes: [{
+        key: "letter:unknown-letter", kind: "letter", kindLabel: "字母", targetId: "unknown-letter", pickedId: "", value: "ب",
+        latin: "b", source: "错题", note: "note", help: "help", attempts: 1, createdAt: "2026-08-09T00:00:00.000Z"
+      }]
+    },
+    /mistakes\[0\] 包含未知 targetId: unknown-letter/
+  ],
+  ["writing check", { writingChecks: ["shape", "unknown-check"] }, /writingChecks 包含未知 ID: unknown-check/],
+  [
+    "daily activity ID",
+    { dailyActivity: { date: "2026-08-09", completedIds: ["letters:unknown-letter-group:viewed"] } },
+    /dailyActivity\.completedIds 包含未知 ID: letters:unknown-letter-group:viewed/
+  ]
+];
+
+for (const [label, data, expectedError] of semanticInvalidCases) {
+  assert.throws(
+    () => importProgressDirect(importTextWithData(data)),
+    expectedError,
+    `${label} should be rejected before preview`
+  );
+  assert.equal(storage["ana-tilim-progress"], storedBytesBeforeImport, `${label} rejection should preserve storage bytes`);
+  assert.equal(
+    vm.runInContext("JSON.stringify(buildLocalProgressData())", context),
+    runtimeBytesBeforeSemanticFailures,
+    `${label} rejection should preserve persisted runtime state`
+  );
+  assert.equal(
+    vm.runInContext("JSON.stringify(state.pendingProgressImport)", context),
+    pendingBytesBeforeSemanticFailures,
+    `${label} rejection should preserve the previous pending preview`
+  );
+}
+clickDataset({ action: "cancel-import-progress" });
+
 await selectProgressImport(globalImportText);
 assert.equal(
   storage["ana-tilim-progress"],
@@ -1682,6 +1803,47 @@ assert.equal(
 );
 assert.equal(vm.runInContext("saveLocalProgress()", context), true, "local save should retry cloud scheduling after recovery");
 assert.equal(vm.runInContext("state.syncDirty", context), false, "a successful retry should clear the dirty flag");
+
+const hostileMistakeText = "<img src=x onerror=globalThis.hostileImportRan=true>";
+const hostileProfileText = "<b>Profile</b>";
+const hostileImportText = importTextWithData({
+  screen: "practiceSession",
+  selectedPracticeGroupId: "review-loop",
+  currentPracticeItemId: "mistake-letter:be",
+  mistakes: [
+    {
+      key: "letter:be",
+      kind: "letter",
+      kindLabel: hostileMistakeText,
+      targetId: "be",
+      pickedId: "pe",
+      value: hostileMistakeText,
+      latin: hostileMistakeText,
+      source: hostileMistakeText,
+      note: hostileMistakeText,
+      help: hostileMistakeText,
+      attempts: 1,
+      createdAt: "2026-08-09T00:00:00.000Z"
+    }
+  ],
+  localProfile: { displayName: hostileProfileText, avatarDataUrl: "" }
+});
+vm.runInContext(
+  "globalThis.hostileImportRan = false; globalThis.hostileSavedCloudSync = cloudSync; cloudSync = null; cloudStatus = { phase: 'local', error: '' }",
+  context
+);
+importProgressDirect(hostileImportText);
+clickDataset({ action: "confirm-import-progress" });
+assert.ok(app.innerHTML.includes("&lt;b&gt;Profile&lt;/b&gt;"), "imported profile markup should render as escaped literal text");
+assert.doesNotMatch(app.innerHTML, /<b>Profile<\/b>/i, "imported profile markup must not create a real element");
+vm.runInContext("state.screen = 'practiceSession'; render({ persist: false })", context);
+assert.ok(app.innerHTML.includes("&lt;img src=x onerror=globalThis.hostileImportRan=true&gt;"), "imported mistake markup should render as escaped literal text");
+assert.doesNotMatch(app.innerHTML, /<img\b[^>]*onerror/i, "imported mistake markup must not create an executable image tag");
+assert.equal(vm.runInContext("globalThis.hostileImportRan", context), false, "hostile imported markup must not execute");
+vm.runInContext(
+  "cloudSync = globalThis.hostileSavedCloudSync; cloudStatus = { phase: 'signed-in', error: '' }; state.screen = 'profile'; state.profileNameEditing = false; render({ persist: false })",
+  context
+);
 assert.match(
   signedInProfileHtml,
   /data-action="edit-display-name"/,
