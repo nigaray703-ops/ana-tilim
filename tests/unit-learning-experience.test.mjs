@@ -12,6 +12,7 @@ const i18nScriptPaths = [
   "prototype/i18n/alphabet-en.js",
   "prototype/i18n/combo-en.js",
   "prototype/i18n/vocab-en.js",
+  "prototype/i18n/practice-en.js",
   "prototype/i18n/course-en.js",
   "prototype/i18n/runtime.js"
 ];
@@ -53,6 +54,7 @@ const expectedVersionedAssets = [
   "./i18n/alphabet-en.js?v=20260809-bilingual-alphabet",
   "./i18n/combo-en.js?v=20260809-bilingual-combos",
   "./i18n/vocab-en.js?v=20260809-bilingual-vocab",
+  "./i18n/practice-en.js?v=20260809-bilingual-practice",
   "./i18n/course-en.js?v=20260809-bilingual-alphabet",
   "./i18n/runtime.js?v=20260809-bilingual",
   "./audio-controller.js?v=20260728-uly-transliteration",
@@ -661,6 +663,8 @@ const requiredGlobalMessageKeys = [
   "vocab.recognitionTitle", "vocab.chooseWordForm", "vocab.recognitionCorrect", "vocab.continueKeyboard",
   "vocab.keyboardTitle", "vocab.keyboardPrompt", "vocab.inputAria", "vocab.keyboardCorrect",
   "vocab.finishGroup", "vocab.completeTitle", "vocab.completeSummary", "vocab.learningPath",
+  "practice.chooseLetter", "practice.listenInstruction", "practice.repeatSteps", "practice.writingPad",
+  "practice.keyboardAria", "practice.noMistakes", "practice.results", "practice.tryAgain",
   "common.back", "common.previous", "common.next", "common.cancel", "common.confirm",
   "audio.play", "audio.playing", "audio.unavailable", "audio.humanRecording",
   "error.storage", "error.cloud", "error.avatar", "progress.count"
@@ -992,6 +996,35 @@ for (const [screenName, html] of Object.entries(englishVocabScreens)) {
   assert.ok(
     !/[\u3400-\u9fff]/u.test(html),
     `English vocabulary ${screenName} screen should not contain Chinese learner copy`
+  );
+}
+
+const englishPracticeScreens = {
+  listen: renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'listening-loop'; state.currentPracticeItemId = 'practice-listen-be'; state.practiceAudioPlayed = true; state.selectedListening = ''"),
+  repeat: renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'repeat-loop'; state.currentPracticeItemId = 'practice-repeat-be'; state.practiceSpoken = false"),
+  write: renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'writing-loop'; state.currentPracticeItemId = 'practice-write-be'; state.showGuide = true"),
+  keyboard: renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'keyboard-loop'; state.currentPracticeItemId = 'practice-keyboard-be'; state.keyboardValue = ''"),
+  review: renderState(`state.mistakes = [{ key: 'practice:practice-listen-be', kind: 'practice', kindLabel: '练习', targetId: 'practice-listen-be', value: 'ب', latin: 'b', source: '练习错题', note: '需要复习 ب', help: '目标线索：下方一个点。', attempts: 1 }]; state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'review-loop'; state.currentPracticeItemId = 'mistake-practice:practice-listen-be'`),
+  completion: renderState("state.screen = 'practiceComplete'; state.selectedPracticeGroupId = 'keyboard-loop'; state.currentPracticeItemId = 'practice-keyboard-be'; state.keyboardValue = 'ب'")
+};
+includesAll(
+  englishPracticeScreens.listen,
+  ["Sound recognition", "Listening letter", "Choose a letter", "Choose the letter you hear from all 32 letters", "0 / 32"],
+  "English listening practice"
+);
+const listeningChoiceStrip = englishPracticeScreens.listen.match(/<div class="alphabet-strip compact listening-choice-strip"[\s\S]*?<\/div>/)?.[0] || "";
+assert.equal((listeningChoiceStrip.match(/data-action="pick-practice"/g) || []).length, 32, "English listening practice should show all 32 answer letters");
+assert.equal((listeningChoiceStrip.match(/<small>/g) || []).length, 0, "point-identification answer choices should show letters only");
+assert.ok(!/One dot below|Three dots below|sound|hint/i.test(listeningChoiceStrip), "point-identification answer choices should not expose answer-revealing cue or hint text");
+includesAll(englishPracticeScreens.repeat, ["Repeat aloud", "Letter to repeat", "Repeat steps", "Look at the letter", "Read the hint", "Repeat softly"], "English repeat practice");
+includesAll(englishPracticeScreens.write, ["Writing", "Letter to write", "Writing pad", "Clear pad", "Hide guide", "one dot below"], "English writing practice");
+includesAll(englishPracticeScreens.keyboard, ["Keyboard", "Keyboard letter", "Random letter keyboard", "Keyboard tools", "Backspace", "Clear"], "English keyboard practice");
+includesAll(englishPracticeScreens.review, ["Mistake review", "Today's review", "Mistakes this round", "Practice mistake", "Saved locally"], "English mistake review");
+includesAll(englishPracticeScreens.completion, ["Practice results", "Round target", "Practice record", "Listening", "Repeat", "Writing", "Keyboard", "Next step", "Practice another round"], "English practice completion");
+for (const [screenName, html] of Object.entries(englishPracticeScreens)) {
+  assert.ok(
+    !/[\u3400-\u9fff]/u.test(html),
+    `English practice ${screenName} screen should not contain Chinese course or interface text`
   );
 }
 

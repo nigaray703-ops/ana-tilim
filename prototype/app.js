@@ -1387,16 +1387,19 @@ function upsertMistake(mistake) {
 }
 
 function mistakeReviewItems() {
+  const useEnglish = i18n.getLanguage() === "en";
   return state.mistakes.map((mistake) => ({
     id: `mistake-${mistake.key}`,
-    type: mistake.kindLabel,
+    type: useEnglish ? t("practice.reviewType") : mistake.kindLabel,
     value: mistake.value,
     latin: mistake.latin,
-    label: mistake.source,
-    hint: `${mistake.note} ${mistake.help || ""} 错 ${mistake.attempts} 次。`,
+    label: useEnglish ? t("practice.reviewLabel") : mistake.source,
+    hint: useEnglish
+      ? t("practice.reviewHint", { count: mistake.attempts })
+      : `${mistake.note} ${mistake.help || ""} 错 ${mistake.attempts} 次。`,
     parts: [mistake.value],
     audio: audioForMistake(mistake),
-    audioStatus: "复习错题"
+    audioStatus: useEnglish ? t("practice.reviewAudio") : "复习错题"
   }));
 }
 
@@ -2477,11 +2480,11 @@ function renderGroupCard(group) {
 }
 
 function practiceTopicLabel(group) {
-  if (group.mode === "listen") return "听音选择";
-  if (group.mode === "repeat") return "跟读确认";
-  if (group.mode === "write") return "手写板";
-  if (group.mode === "keyboard") return "键盘输入";
-  return "错题回看";
+  if (group.mode === "listen") return t("practice.topicListenLabel");
+  if (group.mode === "repeat") return t("practice.topicRepeatLabel");
+  if (group.mode === "write") return t("practice.topicWriteLabel");
+  if (group.mode === "keyboard") return t("practice.topicKeyboardLabel");
+  return t("practice.topicReviewLabel");
 }
 
 function practiceTopicCount(group) {
@@ -2489,11 +2492,11 @@ function practiceTopicCount(group) {
 }
 
 function practiceHubTopicTitle(group) {
-  if (group.mode === "listen") return "听音练习";
-  if (group.mode === "repeat") return "跟读练习";
-  if (group.mode === "write") return "书写";
-  if (group.mode === "keyboard") return "键盘练习";
-  return "错题复习";
+  if (group.mode === "listen") return t("practice.topicListenTitle");
+  if (group.mode === "repeat") return t("practice.topicRepeatTitle");
+  if (group.mode === "write") return t("practice.topicWriteTitle");
+  if (group.mode === "keyboard") return t("practice.topicKeyboardTitle");
+  return t("practice.topicReviewTitle");
 }
 
 function renderPracticeTopicCard(group, action = "open-practice-group") {
@@ -2505,11 +2508,11 @@ function renderPracticeTopicCard(group, action = "open-practice-group") {
       data-action="${action}"
       data-id="${group.id}"
       type="button"
-      aria-label="进入${title}"
+      aria-label="${t("practice.openAria", { title })}"
     >
       <span>
         <strong>${title}</strong>
-        <small>${practiceTopicLabel(group)} · ${practiceTopicCount(group)} 项</small>
+        <small>${t("practice.topicCount", { label: practiceTopicLabel(group), count: practiceTopicCount(group) })}</small>
       </span>
       <span class="topic-end">
         ${renderLearnedMarker("practice", group.id)}
@@ -4168,9 +4171,9 @@ function renderPracticeChoices(group, item) {
               <span class="choice-art choice-art-wide uyghur">${choice.value}</span>
               <span>
                 <strong>${choice.label}</strong>
-                <span class="caption">${choice.type}，${choice.latin}</span>
+                <span class="caption">${t("practice.typeWithLatin", { type: choice.type, latin: choice.latin })}</span>
               </span>
-              <span class="step-state">${selected ? (correctChoice ? "正确" : "再听") : "选择"}</span>
+              <span class="step-state">${selected ? (correctChoice ? t("practice.correct") : t("practice.listenAgain")) : t("practice.choose")}</span>
             </button>
           `;
         })
@@ -4180,8 +4183,8 @@ function renderPracticeChoices(group, item) {
       hasPicked
         ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
             isCorrect
-              ? `辨认正确。本轮确认的是 ${item.value} 的词形。`
-              : itemMistakeFeedback(item, picked, "练习目标")
+              ? t("practice.choiceCorrect", { letter: item.value })
+              : itemMistakeFeedback(item, picked, t("practice.choiceTarget"))
           }</div>`
         : ""
     }
@@ -4199,11 +4202,11 @@ function renderPracticeListeningChoices(group, item) {
 
   return `
     <article class="card practice-mode-card">
-      <p class="caption">选择字母</p>
-      <h2 class="section-title unit-goal-text">从 32 个字母里选择你听到的字母</h2>
-      <div class="alphabet-strip compact listening-choice-strip" aria-label="32 个字母选择">
+      <p class="caption">${t("practice.chooseLetter")}</p>
+      <h2 class="section-title unit-goal-text">${t("practice.listenInstruction")}</h2>
+      <div class="alphabet-strip compact listening-choice-strip" aria-label="${t("practice.choicesAria")}">
         ${group.items
-          .map((choice) => {
+          .map((choice, index) => {
             const selected = state.selectedListening === choice.id;
             const choiceClass = selected ? (choice.id === item.id ? "active" : "wrong") : "";
             return `
@@ -4212,10 +4215,9 @@ function renderPracticeListeningChoices(group, item) {
                 data-action="pick-practice"
                 data-id="${choice.id}"
                 type="button"
-                aria-label="选择 ${choice.latin}"
+                aria-label="${t("practice.choiceAria", { count: index + 1 })}"
               >
                 <span class="uyghur">${choice.value}</span>
-                <small>${choice.latin}</small>
               </button>
             `;
           })
@@ -4225,7 +4227,9 @@ function renderPracticeListeningChoices(group, item) {
     ${
       hasPicked
         ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
-            isCorrect ? `辨认正确。已完成 ${completedCount} / ${group.items.length}。` : "再听一次，再选。"
+            isCorrect
+              ? t("practice.listenCorrect", { completed: completedCount, total: group.items.length })
+              : t("practice.listenRetry")
           }</div>`
         : ""
     }
@@ -4240,11 +4244,11 @@ function renderPracticeModeCard(group, item) {
   if (group.mode === "repeat") {
     return `
       <article class="card practice-mode-card">
-        <p class="caption">跟读步骤</p>
+        <p class="caption">${t("practice.repeatSteps")}</p>
         <div class="lesson-point-list">
-          <div class="lesson-point"><strong>看词形</strong><span class="uyghur">${item.value}</span></div>
-          <div class="lesson-point"><strong>看提示</strong><span>${item.latin}，${item.hint}</span></div>
-          <div class="lesson-point"><strong>轻声跟读</strong><span>${item.audioStatus}。</span></div>
+          <div class="lesson-point"><strong>${t("practice.lookLetter")}</strong><span class="uyghur">${item.value}</span></div>
+          <div class="lesson-point"><strong>${t("practice.readHint")}</strong><span>${item.latin}, ${item.hint}</span></div>
+          <div class="lesson-point"><strong>${t("practice.repeatSoftly")}</strong><span>${item.audioStatus}.</span></div>
         </div>
       </article>
     `;
@@ -4254,12 +4258,12 @@ function renderPracticeModeCard(group, item) {
     return `
       <article class="card practice-mode-card">
         <div class="section-row">
-          <p class="caption">手写板</p>
-          <button class="ghost-button" data-action="clear-canvas" type="button">清空画布</button>
+          <p class="caption">${t("practice.writingPad")}</p>
+          <button class="ghost-button" data-action="clear-canvas" type="button">${t("practice.clearPad")}</button>
         </div>
-        ${renderWritingCanvas(item.value, "字母练习手写板")}
+        ${renderWritingCanvas(item.value, t("practice.canvasAria"))}
         <button class="ghost-button" data-action="toggle-guide" type="button">
-          ${state.showGuide ? "隐藏参考" : "显示参考"}
+          ${state.showGuide ? t("practice.hideGuide") : t("practice.showGuide")}
         </button>
       </article>
       ${renderWritingCoach({
@@ -4278,11 +4282,11 @@ function renderPracticeModeCard(group, item) {
       <input
         class="rtl-input uyghur"
         value="${state.keyboardValue}"
-        aria-label="字母练习维吾尔语输入框"
+        aria-label="${t("practice.keyboardAria")}"
         readonly
         dir="rtl"
       />
-      <div class="keyboard-grid random-keyboard-grid" aria-label="随机字母键盘">
+      <div class="keyboard-grid random-keyboard-grid" aria-label="${t("practice.randomKeyboardAria")}">
         ${keyboardChoices
           .map(
             (key) => `
@@ -4293,9 +4297,9 @@ function renderPracticeModeCard(group, item) {
           )
           .join("")}
       </div>
-      <div class="keyboard-utility-row" aria-label="键盘工具">
-        <button class="key-button utility" data-action="backspace" type="button">删除</button>
-        <button class="key-button utility" data-action="clear-input" type="button">清空</button>
+      <div class="keyboard-utility-row" aria-label="${t("practice.keyboardTools")}">
+        <button class="key-button utility" data-action="backspace" type="button">${t("practice.backspace")}</button>
+        <button class="key-button utility" data-action="clear-input" type="button">${t("practice.clear")}</button>
       </div>
     `;
   }
@@ -4304,17 +4308,17 @@ function renderPracticeModeCard(group, item) {
   if (!reviewItems.length) {
     return `
       <article class="card practice-mode-card">
-        <p class="caption">暂无错题</p>
-        <h2 class="section-title">练习答错后会自动进入这里</h2>
-        <p class="muted">先去听音辨认、跟读、书写或键盘练习。答错的字母会保存在本地错题里。</p>
+        <p class="caption">${t("practice.noMistakes")}</p>
+        <h2 class="section-title">${t("practice.noMistakesTitle")}</h2>
+        <p class="muted">${t("practice.noMistakesDetail")}</p>
       </article>
-      <div class="feedback">当前没有需要复习的错题。</div>
+      <div class="feedback">${t("practice.noMistakesFeedback")}</div>
     `;
   }
 
   return `
     <article class="card practice-mode-card">
-      <p class="caption">本轮错题</p>
+      <p class="caption">${t("practice.mistakesRound")}</p>
       <div class="practice-review-list">
         ${reviewItems
           .map(
@@ -4336,21 +4340,21 @@ function renderPracticeModeCard(group, item) {
           .join("")}
       </div>
     </article>
-    <div class="feedback">这些错题已保存在本地，之后可以继续按错题频率安排复习。</div>
+    <div class="feedback">${t("practice.reviewSaved")}</div>
   `;
 }
 
 function renderPracticeHub() {
   return screen(
     `
-      ${topBar("练习已整理", "入口已移动到首页和字母")}
+      ${topBar(t("practice.hubTitle"), t("practice.hubSubtitle"))}
       <section class="stack">
         <article class="card">
-          <p class="caption">练习入口</p>
-          <h2 class="section-title">今日复习在首页，字母练习在字母页</h2>
+          <p class="caption">${t("practice.hubEntry")}</p>
+          <h2 class="section-title">${t("practice.hubDetail")}</h2>
           <div class="action-grid">
-            <button class="primary-button" data-action="go" data-target="home" type="button">回到首页</button>
-            <button class="secondary-button" data-action="go" data-target="library" type="button">去字母练习</button>
+            <button class="primary-button" data-action="go" data-target="home" type="button">${t("practice.hubBackHome")}</button>
+            <button class="secondary-button" data-action="go" data-target="library" type="button">${t("practice.goAlphabet")}</button>
           </div>
         </article>
       </section>
@@ -4370,14 +4374,14 @@ function renderPracticeSession() {
       `
         ${topBar(
           group.title,
-          isReviewPractice ? "首页：今日复习" : "字母：专项练习",
+          isReviewPractice ? t("practice.reviewSubtitle") : t("practice.alphabetSubtitle"),
           "",
           `<button class="back-button" data-action="go" data-target="${practiceBackTarget}" type="button" aria-label="${t("common.back")}">←</button>`
         )}
         <section class="stack">
           ${renderPracticeModeCard(group, null)}
           <button class="primary-button" data-action="go" data-target="${practiceBackTarget}" type="button">
-            ${isReviewPractice ? "返回首页" : "返回字母练习"}
+            ${isReviewPractice ? t("practice.backHome") : t("practice.backAlphabet")}
           </button>
         </section>
       `,
@@ -4399,11 +4403,11 @@ function renderPracticeSession() {
   const showSeparatePracticeAudio = isListeningPractice && showPracticeAudio && !showPracticeTarget;
   const practiceAudioFocus = renderAudioFocus({
     audio,
-    label: isListeningPractice ? "听音练习" : item.value,
-    title: isListeningPractice ? "听音练习" : `播放：${item.latin}`,
+    label: isListeningPractice ? t("practice.listeningPractice") : item.value,
+    title: isListeningPractice ? t("practice.listeningPractice") : t("practice.playLetter", { latin: item.latin }),
     hint: isListeningPractice
-      ? "先听声音，再从 32 个字母里选择。"
-      : "音频待录，暂不播放。",
+      ? t("practice.listenFirst")
+      : t("practice.audioPending"),
     hideFile: isListeningPractice
   });
   const practiceTargetCard = (withAudio = false) => `
@@ -4412,14 +4416,14 @@ function renderPracticeSession() {
         withAudio
           ? renderAudioButton({
               audio,
-              label: isListeningPractice ? "听音练习" : item.value,
+              label: isListeningPractice ? t("practice.listeningPractice") : item.value,
               className: "letter-focus-play"
             })
           : ""
       }
       <div>
         <div class="uyghur letter-big practice-big ${longWordClass}">${item.value}</div>
-        <p class="caption">${item.type}，${item.latin}</p>
+        <p class="caption">${t("practice.typeWithLatin", { type: item.type, latin: item.latin })}</p>
       </div>
     </div>
   `;
@@ -4428,7 +4432,7 @@ function renderPracticeSession() {
     `
       ${topBar(
         group.title,
-        isReviewPractice ? "首页：今日复习" : "字母：专项练习",
+        isReviewPractice ? t("practice.reviewSubtitle") : t("practice.alphabetSubtitle"),
         "",
         `<button class="back-button" data-action="go" data-target="${practiceBackTarget}" type="button" aria-label="${t("common.back")}">←</button>`
       )}
@@ -4440,7 +4444,11 @@ function renderPracticeSession() {
               <h2 class="section-title unit-goal-text">${group.goal}</h2>
             </div>
             <span class="step-state">${
-              isListeningPractice ? `${listeningCompletedCount} / ${group.items.length}` : isReviewPractice ? `${reviewItems.length} 项` : group.status
+              isListeningPractice
+                ? `${listeningCompletedCount} / ${group.items.length}`
+                : isReviewPractice
+                  ? t("practice.itemCount", { count: reviewItems.length })
+                  : group.status
             }</span>
           </div>
         </article>
@@ -4472,19 +4480,19 @@ function renderPracticeSession() {
             ? ""
             : isListeningPractice && !listeningAnsweredCorrect
               ? `<button class="secondary-button" data-action="go" data-target="${practiceBackTarget}" type="button">
-                  返回字母练习
+                  ${t("practice.backAlphabet")}
                 </button>`
               : `<div class="action-grid">
                 <button class="secondary-button" data-action="go" data-target="${practiceBackTarget}" type="button">
-                  ${isReviewPractice ? "返回首页" : "返回字母练习"}
+                  ${isReviewPractice ? t("practice.backHome") : t("practice.backAlphabet")}
                 </button>
                 ${
                   isListeningPractice && !listeningRoundComplete
                     ? `<button class="primary-button" data-action="next-practice-audio" type="button">
-                        下一个音频
+                        ${t("practice.nextAudio")}
                       </button>`
                     : `<button class="primary-button" data-action="go" data-target="practiceComplete" type="button">
-                        查看结果
+                        ${t("practice.viewResults")}
                       </button>`
                 }
               </div>`
@@ -4502,15 +4510,15 @@ function renderPracticeComplete() {
   if (!item) {
     return screen(
       `
-        ${topBar("复习结果", group.title)}
+        ${topBar(t("practice.results"), group.title)}
         <section class="stack">
           <article class="card review-card">
-            <p class="caption">暂无错题</p>
-            <h2 class="section-title">还没有需要复习的内容</h2>
-            <p class="muted">练习中答错的字母会自动进入本地错题。</p>
+            <p class="caption">${t("practice.noMistakes")}</p>
+            <h2 class="section-title">${t("practice.noReviewTitle")}</h2>
+            <p class="muted">${t("practice.noReviewDetail")}</p>
           </article>
           <button class="primary-button" data-action="go" data-target="${isReviewPractice ? "home" : "library"}" type="button">
-            ${isReviewPractice ? "返回首页" : "返回字母练习"}
+            ${isReviewPractice ? t("practice.backHome") : t("practice.backAlphabet")}
           </button>
         </section>
       `,
@@ -4519,43 +4527,49 @@ function renderPracticeComplete() {
   }
 
   const listened =
-    group.mode === "listen" ? `已完成 ${practiceListeningCompletedCount(group)} / ${group.items.length}` : "可选";
-  const repeated = group.mode === "repeat" ? (state.practiceSpoken ? "已跟读" : "未跟读") : "可选";
-  const written = group.mode === "write" ? "已练习" : "可选";
-  const typed = group.mode === "keyboard" ? (state.keyboardValue === item.value ? "已输入" : "未完成") : "可选";
+    group.mode === "listen"
+      ? t("practice.completedCount", { completed: practiceListeningCompletedCount(group), total: group.items.length })
+      : t("practice.optional");
+  const repeated = group.mode === "repeat"
+    ? (state.practiceSpoken ? t("practice.repeated") : t("practice.notRepeated"))
+    : t("practice.optional");
+  const written = group.mode === "write" ? t("practice.practiced") : t("practice.optional");
+  const typed = group.mode === "keyboard"
+    ? (state.keyboardValue === item.value ? t("practice.entered") : t("practice.notComplete"))
+    : t("practice.optional");
 
   return screen(
     `
-      ${topBar("复习结果", group.title)}
+      ${topBar(t("practice.results"), group.title)}
       <section class="stack">
         <article class="card review-card">
-          <p class="caption">本轮目标</p>
+          <p class="caption">${t("practice.roundTarget")}</p>
           <h2 class="screen-title"><span class="uyghur">${item.value}</span></h2>
-          <p class="muted">本页只记录练习流程，不确认主题词义是否最终正确。</p>
+          <p class="muted">${t("practice.scopeNote")}</p>
         </article>
         <div class="metric-grid">
-          <div class="metric"><strong>${group.items.length}</strong><span>本组项目</span></div>
-          <div class="metric"><strong>待录</strong><span>音频</span></div>
-          <div class="metric"><strong>${state.mistakes.length}</strong><span>本地错题</span></div>
+          <div class="metric"><strong>${group.items.length}</strong><span>${t("practice.groupItems")}</span></div>
+          <div class="metric"><strong>${t("practice.recorded")}</strong><span>${t("practice.audio")}</span></div>
+          <div class="metric"><strong>${state.mistakes.length}</strong><span>${t("practice.localMistakes")}</span></div>
         </div>
         <article class="card">
-          <p class="caption">练习记录</p>
+          <p class="caption">${t("practice.record")}</p>
           <div class="audit-grid">
-            <div class="audit-row"><strong>听音</strong><span>${listened}</span></div>
-            <div class="audit-row"><strong>跟读</strong><span>${repeated}</span></div>
-            <div class="audit-row"><strong>书写</strong><span>${written}</span></div>
-            <div class="audit-row"><strong>键盘</strong><span>${typed}</span></div>
-            <div class="audit-row"><strong>备注</strong><span>${item.audioStatus}。</span></div>
+            <div class="audit-row"><strong>${t("practice.listening")}</strong><span>${listened}</span></div>
+            <div class="audit-row"><strong>${t("practice.repeat")}</strong><span>${repeated}</span></div>
+            <div class="audit-row"><strong>${t("practice.writing")}</strong><span>${written}</span></div>
+            <div class="audit-row"><strong>${t("practice.keyboard")}</strong><span>${typed}</span></div>
+            <div class="audit-row"><strong>${t("practice.note")}</strong><span>${item.audioStatus}.</span></div>
           </div>
         </article>
         <article class="card next-action-card">
-          <p class="caption">下一步建议</p>
+          <p class="caption">${t("practice.nextStep")}</p>
           <div class="action-grid">
             <button class="secondary-button" data-action="open-practice-group" data-id="${group.id}" type="button">
-              再练一轮
+              ${t("practice.tryAgain")}
             </button>
             <button class="primary-button" data-action="go" data-target="${isReviewPractice ? "home" : "library"}" type="button">
-              ${isReviewPractice ? "返回首页" : "返回字母练习"}
+              ${isReviewPractice ? t("practice.backHome") : t("practice.backAlphabet")}
             </button>
           </div>
         </article>

@@ -6,6 +6,8 @@
   const comboGroupFields = ["title", "goal", "status"];
   const comboItemFields = ["type", "rule", "hint", "review", "meaning"];
   const vocabGroupFields = ["title", "goal", "status"];
+  const practiceGroupFields = ["title", "goal", "status"];
+  const practiceItemFields = ["type", "label", "hint", "audioStatus"];
   let currentLanguage = "en";
 
   function supported(value) {
@@ -110,6 +112,20 @@
             )
           }
         ])
+      ),
+      practiceGroups: Object.fromEntries(
+        (courseData.practiceGroups || []).map((group) => [
+          group.id,
+          {
+            fields: Object.fromEntries(practiceGroupFields.map((field) => [field, group[field]])),
+            items: Object.fromEntries(
+              (group.items || []).map((item) => [
+                item.id,
+                Object.fromEntries(practiceItemFields.map((field) => [field, item[field]]))
+              ])
+            )
+          }
+        ])
       )
     };
 
@@ -209,15 +225,48 @@
     return missing;
   }
 
+  function missingPracticeEnglish(courseData, catalog) {
+    const missing = [];
+    for (const group of courseData.practiceGroups || []) {
+      for (const field of practiceGroupFields) {
+        if (typeof catalog?.groups?.[group.id]?.[field] !== "string") {
+          missing.push(`practice.groups.${group.id}.${field}`);
+        }
+      }
+      if (group.mode !== "review") {
+        for (const field of ["type", "label"]) {
+          if (typeof catalog?.templates?.[group.mode]?.[field] !== "string") {
+            missing.push(`practice.templates.${group.mode}.${field}`);
+          }
+        }
+      }
+    }
+    if (typeof catalog?.audioStatus !== "string") {
+      missing.push("practice.audioStatus");
+    }
+    return missing;
+  }
+
+  function englishPracticeHint(mode, item, localizedLetter) {
+    if (mode === "listen") return localizedLetter?.cue || localizedLetter?.soundHint || "";
+    if (mode === "write") return localizedLetter?.writingHint || localizedLetter?.cue || "";
+    if (mode === "keyboard") {
+      return `Type ${item.value} only. First learn its keyboard position, then move on to combinations.`;
+    }
+    return localizedLetter?.soundHint || localizedLetter?.cue || "";
+  }
+
   function createCourseLocalizer(courseData, englishCatalog) {
     const original = captureCourse(courseData);
     const alphabetEnglish = englishCatalog?.alphabet || englishCatalog || {};
     const comboEnglish = englishCatalog?.combos || {};
     const vocabEnglish = englishCatalog?.vocab || {};
+    const practiceEnglish = englishCatalog?.practice || {};
     const missing = [
       ...missingAlphabetEnglish(courseData, alphabetEnglish),
       ...missingComboEnglish(courseData, comboEnglish),
-      ...missingVocabEnglish(courseData, vocabEnglish)
+      ...missingVocabEnglish(courseData, vocabEnglish),
+      ...missingPracticeEnglish(courseData, practiceEnglish)
     ];
 
     function apply(language) {
@@ -291,6 +340,26 @@
             }
           } else {
             setAvailableText(item, originalGroup?.items?.[item.id], ["meaning", "tip"]);
+          }
+        }
+      }
+
+      for (const group of courseData.practiceGroups || []) {
+        const originalGroup = original.practiceGroups[group.id];
+        setAvailableText(
+          group,
+          useEnglish ? practiceEnglish.groups?.[group.id] : originalGroup?.fields,
+          practiceGroupFields
+        );
+        for (const item of group.items || []) {
+          if (useEnglish) {
+            const template = practiceEnglish.templates?.[group.mode];
+            const localizedLetter = courseData.letterDetails?.[item.letterId];
+            setAvailableText(item, template, ["type", "label"]);
+            item.hint = englishPracticeHint(group.mode, item, localizedLetter);
+            item.audioStatus = practiceEnglish.audioStatus;
+          } else {
+            setAvailableText(item, originalGroup?.items?.[item.id], practiceItemFields);
           }
         }
       }
