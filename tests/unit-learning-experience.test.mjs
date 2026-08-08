@@ -56,7 +56,7 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260809-bilingual",
+  "./styles.css?v=20260809-english-layout",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260809-bilingual",
   "./course-data/combo-data.js?v=20260728-uly-transliteration",
@@ -76,7 +76,7 @@ const expectedVersionedAssets = [
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260729-password-auth",
-  "./app.js?v=20260809-bilingual-final"
+  "./app.js?v=20260809-english-layout"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -88,6 +88,17 @@ assert.deepEqual(
   expectedVersionedAssets,
   "the international build should load every local asset in release order with its required cache version"
 );
+const previousEnglishUiCache = new Map([
+  ["./styles.css?v=20260809-bilingual", { release: "before-english-layout" }],
+  ["./app.js?v=20260809-bilingual-final", { release: "before-english-layout" }]
+]);
+for (const url of [
+  "./styles.css?v=20260809-english-layout",
+  "./app.js?v=20260809-english-layout"
+]) {
+  assert.ok(versionedAppAssets.includes(url));
+  assert.equal(previousEnglishUiCache.get(url), undefined);
+}
 const staleAlphabetCache = new Map([
   ["./course-data/alphabet-data.js?v=20260728-uly-transliteration", { release: "pre-bilingual" }]
 ]);
@@ -104,13 +115,11 @@ assert.equal(
 );
 const previousFinalReviewCache = new Map([
   ["./i18n/ui-messages.js?v=20260809-bilingual", { release: "pr-5" }],
-  ["./i18n/runtime.js?v=20260809-bilingual", { release: "pr-5" }],
-  ["./app.js?v=20260809-bilingual", { release: "pr-5" }]
+  ["./i18n/runtime.js?v=20260809-bilingual", { release: "pr-5" }]
 ]);
 for (const finalAssetUrl of [
   "./i18n/ui-messages.js?v=20260809-bilingual-final",
-  "./i18n/runtime.js?v=20260809-bilingual-final",
-  "./app.js?v=20260809-bilingual-final"
+  "./i18n/runtime.js?v=20260809-bilingual-final"
 ]) {
   assert.ok(versionedAppAssets.includes(finalAssetUrl), `${finalAssetUrl} should be requested by production HTML`);
   assert.equal(
