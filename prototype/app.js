@@ -270,6 +270,8 @@ const persistedScreenIds = new Set([
   "learn",
   "unit",
   "latinKeyboardIntro",
+  "latinLetterClasses",
+  "latinVowelCompare",
   "letter",
   "group",
   "writing",
@@ -297,8 +299,9 @@ const persistedScreenIds = new Set([
   "profile",
   "settings"
 ]);
+const latinWritingStepIds = Object.freeze(["qwerty", "classification", "vowel-contrast", "dictation", "forms"]);
 const stableProgressIds = Object.freeze({
-  latinWriting: new Set(["qwerty"]),
+  latinWriting: new Set(latinWritingStepIds),
   letters: new Set(alphabetGroups.map((group) => group.id)),
   combos: new Set(comboGroups.map((group) => group.id)),
   vocab: new Set(vocabGroups.map((group) => group.id)),
@@ -357,8 +360,8 @@ const unitExperience = {
     reviewTarget: "group"
   },
   "latin-keyboard-writing": {
-    recommended: "先完成普通拉丁 QWERTY，再继续本单元后续字母练习。",
-    steps: ["认识三排键位", "输入 qwerty", "核对完全一致", "后续内容将按单元顺序开放"],
+    recommended: "先完成普通拉丁 QWERTY，再按顺序整理字母并练习书写。",
+    steps: ["普通 QWERTY", "元音与辅音分类", "元音对比辨认", "ULY 提示默写", "书写形式参考"],
     reviewLabel: "练习 QWERTY",
     reviewTarget: "latinKeyboardIntro"
   },
@@ -489,6 +492,7 @@ const state = {
   keyboardValue: "",
   keyboardShift: false,
   latinKeyboardValue: "",
+  latinVowelComparisonIndex: 0,
   practiceSpoken: false,
   emailAuthExpanded: false,
   emailCodeSent: false,
@@ -1503,8 +1507,8 @@ function unitProgressSummaries() {
       completed = countCompleted("letters");
       total = unit.groups.length;
     } else if (unit.id === "latin-keyboard-writing") {
-      completed = countCompletedForIds("latinWriting", ["qwerty"]);
-      total = 1;
+      completed = countCompletedForIds("latinWriting", latinWritingStepIds);
+      total = latinWritingStepIds.length;
     } else if (unit.id === "combos") {
       completed = countCompletedForIds("combos", basicComboIds);
       total = basicComboIds.length;
@@ -2341,6 +2345,8 @@ function render({ persist = true } = {}) {
     learn: renderLearnPath,
     unit: renderUnitDetail,
     latinKeyboardIntro: renderLatinKeyboardIntro,
+    latinLetterClasses: renderLatinLetterClasses,
+    latinVowelCompare: renderLatinVowelCompare,
     letter: renderGroupLesson,
     group: renderGroupLesson,
     writing: renderPracticeHub,
@@ -3612,8 +3618,148 @@ function renderLatinKeyboardIntro() {
         </div>
         <div class="action-grid">
           <button class="secondary-button" data-action="go" data-target="unit" type="button">返回本单元</button>
-          <button class="primary-button" data-action="go" data-target="home" type="button">回到首页</button>
+          <button class="secondary-button" data-action="go" data-target="home" type="button">回到首页</button>
+          ${isComplete ? `<button class="primary-button" data-action="go" data-target="latinLetterClasses" type="button">继续：元辅音分类</button>` : ""}
         </div>
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function renderLatinTeachingTarget(value, className = "") {
+  const classes = ["latin-letter-uly", className].filter(Boolean).join(" ");
+  return `<span class="${classes}" dir="ltr">${value}</span>`;
+}
+
+function renderLatinLetterAudio(audio, label) {
+  return `
+    ${renderAudioButton({ audio, label, className: "latin-letter-audio" })}
+    ${isAudioPlayable(audio) ? "" : `<span class="latin-letter-audio-status">音频待录</span>`}
+  `;
+}
+
+function renderLatinLetterCard(letterId, letterClass) {
+  const letter = letterDetails[letterId];
+  if (!letter) return "";
+  const audio = alphabetAudioByLetterId[letterId] || null;
+
+  return `
+    <article
+      class="latin-letter-card"
+      data-letter-class="${letterClass}"
+      data-letter-id="${letter.id}"
+      data-has-forms="${Array.isArray(letter.forms) && letter.forms.length > 0}"
+    >
+      ${renderLatinLetterAudio(audio, letter.letter)}
+      <strong class="uyghur latin-letter-glyph">${letter.letter}</strong>
+      ${renderLatinTeachingTarget(letter.latin)}
+      <p class="latin-letter-cue">${letter.cue}</p>
+    </article>
+  `;
+}
+
+function renderLatinLetterClasses() {
+  return screen(
+    `
+      ${topBar(
+        "元音和辅音",
+        learningUnitTitle("latin-keyboard-writing"),
+        "",
+        `<button class="back-button" data-action="go" data-target="latinKeyboardIntro" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack latin-letter-classes">
+        <section class="latin-letter-class-section" data-letter-section="vowel" aria-labelledby="latin-vowels-title">
+          <div class="section-row">
+            <div>
+              <p class="caption">8 个元音</p>
+              <h2 class="section-title" id="latin-vowels-title">元音</h2>
+            </div>
+            <span class="step-state">8 张</span>
+          </div>
+          <div class="latin-letter-grid">
+            ${latinWriting.vowelLetterIds.map((letterId) => renderLatinLetterCard(letterId, "vowel")).join("")}
+          </div>
+        </section>
+        <section class="latin-letter-class-section" data-letter-section="consonant" aria-labelledby="latin-consonants-title">
+          <div class="section-row">
+            <div>
+              <p class="caption">24 个辅音</p>
+              <h2 class="section-title" id="latin-consonants-title">辅音</h2>
+            </div>
+            <span class="step-state">24 张</span>
+          </div>
+          <div class="latin-letter-grid">
+            ${latinWriting.consonantLetterIds.map((letterId) => renderLatinLetterCard(letterId, "consonant")).join("")}
+          </div>
+        </section>
+        <button class="primary-button" data-action="complete-latin-classification" type="button">
+          完成分类，开始元音辨认
+        </button>
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function renderLatinVowelCompare() {
+  const comparisonCount = latinWriting.vowelComparisons.length;
+  const comparisonIndex = Math.max(0, Math.min(comparisonCount - 1, state.latinVowelComparisonIndex));
+  const comparison = latinWriting.vowelComparisons[comparisonIndex];
+  const stageComplete = Boolean(state.learningProgress.latinWriting?.["vowel-contrast"]?.completed);
+
+  return screen(
+    `
+      ${topBar(
+        "元音辨认",
+        learningUnitTitle("latin-keyboard-writing"),
+        "",
+        `<button class="back-button" data-action="go" data-target="latinLetterClasses" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack latin-vowel-compare" data-comparison-id="${comparison.id}">
+        ${renderItemProgress(`${comparisonIndex + 1} / ${comparisonCount}`, "每次只比较一组元音")}
+        <div class="latin-vowel-comparison-grid">
+          ${comparison.letterIds
+            .map((letterId) => {
+              const letter = letterDetails[letterId];
+              const audio = alphabetAudioByLetterId[letterId] || null;
+              return `
+                <article class="latin-vowel-comparison-card" data-comparison-id="${comparison.id}" data-letter-id="${letter.id}">
+                  ${renderLatinLetterAudio(audio, letter.letter)}
+                  <strong class="uyghur latin-letter-glyph">${letter.letter}</strong>
+                  ${renderLatinTeachingTarget(letter.latin)}
+                  <p class="latin-vowel-focus">辨认重点：${comparison.focus}</p>
+                </article>
+              `;
+            })
+            .join("")}
+        </div>
+        <div class="adjacent-nav" aria-label="元音比较前后切换">
+          <button
+            class="secondary-button"
+            data-action="navigate-latin-vowel-comparison"
+            data-direction="previous"
+            type="button"
+            ${comparisonIndex === 0 ? "disabled" : ""}
+          >上一组</button>
+          <button
+            class="secondary-button"
+            data-action="navigate-latin-vowel-comparison"
+            data-direction="next"
+            type="button"
+            ${comparisonIndex === comparisonCount - 1 ? "disabled" : ""}
+          >下一组</button>
+        </div>
+        ${
+          comparisonIndex === comparisonCount - 1
+            ? `<button class="primary-button" data-action="complete-latin-vowel-comparison" type="button">完成元音辨认</button>`
+            : ""
+        }
+        ${
+          stageComplete
+            ? `<article class="card latin-stage-complete"><strong>本阶段完成</strong><p>已完成 QWERTY、元辅音分类和元音辨认。</p><button class="secondary-button" data-action="go" data-target="unit" type="button">返回本单元</button></article>`
+            : ""
+        }
       </section>
     `,
     "learn"
@@ -5480,6 +5626,30 @@ document.addEventListener("click", (event) => {
   }
 
   const action = button.dataset.action;
+
+  if (action === "complete-latin-classification") {
+    markProgress("latinWriting", "classification", "completed");
+    state.latinVowelComparisonIndex = 0;
+    goTo("latinVowelCompare");
+    return;
+  }
+
+  if (action === "navigate-latin-vowel-comparison") {
+    const direction = button.dataset.direction === "previous" ? -1 : 1;
+    const lastIndex = latinWriting.vowelComparisons.length - 1;
+    state.latinVowelComparisonIndex = Math.max(0, Math.min(lastIndex, state.latinVowelComparisonIndex + direction));
+    render();
+    return;
+  }
+
+  if (action === "complete-latin-vowel-comparison") {
+    const lastIndex = latinWriting.vowelComparisons.length - 1;
+    if (state.latinVowelComparisonIndex === lastIndex) {
+      markProgress("latinWriting", "vowel-contrast", "completed");
+    }
+    render();
+    return;
+  }
 
   if (action === "latin-key") {
     updateLatinKeyboardValue(latinKeyboard.applyKey(state.latinKeyboardValue, { key: button.dataset.key || "" }));

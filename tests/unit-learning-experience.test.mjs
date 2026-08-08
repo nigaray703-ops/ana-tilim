@@ -3240,7 +3240,169 @@ assert.deepEqual(
   "an exact literal match should persist one completion flag and no fabricated score"
 );
 includesAll(app.innerHTML, ["输入完全一致", "返回本单元", "回到首页"], "Latin QWERTY success");
-assert.ok(!app.innerHTML.includes("classification"), "Task 2 must not link to the unimplemented classification screen");
+assert.match(
+  app.innerHTML,
+  /data-action="go"[^>]*data-target="latinLetterClasses"[^>]*>\s*继续：元辅音分类\s*<\/button>/,
+  "QWERTY success should link to the real letter classification screen"
+);
+clickDataset({ action: "go", target: "latinLetterClasses" });
+assert.equal(vm.runInContext("state.screen", context), "latinLetterClasses");
+assert.equal(
+  (app.innerHTML.match(/data-letter-class="vowel"/g) || []).length,
+  8,
+  "letter classification should render exactly eight vowel cards"
+);
+assert.equal(
+  (app.innerHTML.match(/data-letter-class="consonant"/g) || []).length,
+  24,
+  "letter classification should render exactly twenty-four consonant cards"
+);
+assert.match(
+  app.innerHTML,
+  /data-letter-id="aa"[\s\S]*?data-audio-src="\.\/assets\/audio\/human\/alphabet\/human_letter_25_a\.webm"/,
+  "classification should reuse the existing human alphabet audio mapping"
+);
+const classificationCards = [...app.innerHTML.matchAll(/<article\s+class="latin-letter-card"(?<attributes>[^>]*)>(?<body>[\s\S]*?)<\/article>/g)];
+assert.equal(classificationCards.length, 32, "classification should render exactly 32 letter cards total");
+const classificationIds = classificationCards.map((match) => match.groups.attributes.match(/data-letter-id="([^"]+)"/)?.[1]);
+assert.equal(new Set(classificationIds).size, 32, "classification cards should use 32 unique letter IDs");
+for (const [index, card] of classificationCards.entries()) {
+  const letterId = classificationIds[index];
+  const detail = context.window.ANA_TILIM_COURSE.letterDetails[letterId];
+  const expectedAudioPath = vm.runInContext(`alphabetAudioByLetterId[${JSON.stringify(letterId)}].outputPath`, context);
+  assert.ok(detail, `classification card ${letterId} should resolve through letterDetails`);
+  assert.ok(card.groups.attributes.includes('data-has-forms="true"'), `${letterId} should confirm existing letterDetails forms`);
+  includesAll(card.groups.body, [detail.letter, detail.latin, detail.cue, `data-audio-src="${expectedAudioPath}"`], `classification card ${letterId}`);
+  assert.ok(!card.groups.body.includes(detail.connection), `${letterId} should not duplicate connection prose on the compact card`);
+  assert.ok(!card.groups.body.includes(detail.writingHint), `${letterId} should not duplicate writing prose on the compact card`);
+}
+assert.match(
+  styleSource,
+  /\.latin-letter-grid\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(auto-fit, minmax\(140px, 1fr\)\);/s,
+  "classification cards should use a responsive auto-fitting grid"
+);
+assert.match(
+  styleSource,
+  /\.latin-vowel-comparison-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/s,
+  "vowel comparison should keep the active pair in two balanced columns"
+);
+assert.match(
+  styleSource,
+  /@media \(max-width: 560px\)[\s\S]*?\.latin-vowel-comparison-grid\s*\{[^}]*grid-template-columns:\s*1fr;/s,
+  "vowel comparison cards should stack on narrow phones"
+);
+vm.runInContext(
+  "globalThis.savedClassificationAaAudio = alphabetAudioByLetterId.aa; delete alphabetAudioByLetterId.aa; state.screen = 'latinLetterClasses'; render()",
+  context
+);
+const classificationAaWithoutAudio = app.innerHTML.match(/<article\s+class="latin-letter-card"[^>]*data-letter-id="aa"[^>]*>(?<body>[\s\S]*?)<\/article>/)?.groups?.body || "";
+includesAll(classificationAaWithoutAudio, ["音频待录", 'data-audio-src=""', "disabled"], "classification missing-audio policy");
+vm.runInContext("alphabetAudioByLetterId.aa = globalThis.savedClassificationAaAudio; render()", context);
+
+renderState("state.screen = 'latinLetterClasses'; state.preferences.showLatin = false");
+assert.equal(
+  (app.innerHTML.match(/class="latin-letter-uly"/g) || []).length,
+  32,
+  "ULY teaching targets should remain visible when the global Latin preference is off"
+);
+for (const latin of context.window.ANA_TILIM_COURSE.latinWriting.vowelLetterIds.map((id) => context.window.ANA_TILIM_COURSE.letterDetails[id].latin)) {
+  assert.ok(app.innerHTML.includes(`>${latin}</span>`), `classification should keep ULY ${latin} visible`);
+}
+vm.runInContext("state.preferences.showLatin = true; render()", context);
+assert.match(
+  app.innerHTML,
+  /data-action="complete-latin-classification"[^>]*>\s*完成分类，开始元音辨认\s*<\/button>/,
+  "classification should expose one explicit completion action"
+);
+clickDataset({ action: "complete-latin-classification" });
+assert.equal(vm.runInContext("state.screen", context), "latinVowelCompare");
+assert.equal(vm.runInContext("state.latinVowelComparisonIndex", context), 0);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.latinWriting.classification)", context)),
+  { completed: true },
+  "classification completion should persist only its completed boolean"
+);
+const expectedVowelComparisons = [
+  { id: "a-e", letterIds: ["aa", "ae"], focus: "开口位置与字形符号" },
+  { id: "o-u", letterIds: ["o", "u"], focus: "圆唇字形符号" },
+  { id: "oe-ue", letterIds: ["oe", "ue"], focus: "ö 与 ü 的 ULY 符号和真人音频" },
+  { id: "ee-ii", letterIds: ["ee", "ii"], focus: "ë 与 i 的字形和真人音频" }
+];
+for (const [comparisonIndex, expectedComparison] of expectedVowelComparisons.entries()) {
+  renderState(`state.screen = 'latinVowelCompare'; state.latinVowelComparisonIndex = ${comparisonIndex}`);
+  const comparisonCards = [...app.innerHTML.matchAll(/<article\s+class="latin-vowel-comparison-card"(?<attributes>[^>]*)>(?<body>[\s\S]*?)<\/article>/g)];
+  assert.equal(comparisonCards.length, 2, `comparison ${expectedComparison.id} should render exactly two cards`);
+  assert.deepEqual(
+    comparisonCards.map((card) => card.groups.attributes.match(/data-letter-id="([^"]+)"/)?.[1]),
+    expectedComparison.letterIds,
+    `comparison ${expectedComparison.id} should render only its fixed pair`
+  );
+  for (const [cardIndex, card] of comparisonCards.entries()) {
+    const letterId = expectedComparison.letterIds[cardIndex];
+    const detail = context.window.ANA_TILIM_COURSE.letterDetails[letterId];
+    const expectedAudioPath = vm.runInContext(`alphabetAudioByLetterId[${JSON.stringify(letterId)}].outputPath`, context);
+    includesAll(
+      card.groups.body,
+      [detail.letter, detail.latin, expectedComparison.focus, `data-audio-src="${expectedAudioPath}"`],
+      `vowel comparison card ${letterId}`
+    );
+  }
+}
+
+renderState("state.screen = 'latinVowelCompare'; state.latinVowelComparisonIndex = 0; state.preferences.showLatin = false");
+assert.equal((app.innerHTML.match(/class="latin-letter-uly"/g) || []).length, 2, "vowel comparison ULY should ignore the global hide-Latin preference");
+clickDataset({ action: "navigate-latin-vowel-comparison", direction: "previous" });
+assert.equal(vm.runInContext("state.latinVowelComparisonIndex", context), 0, "previous should stay stable at the first pair");
+clickDataset({ action: "navigate-latin-vowel-comparison", direction: "next" });
+assert.equal(vm.runInContext("state.latinVowelComparisonIndex", context), 1, "next should advance one pair");
+clickDataset({ action: "navigate-latin-vowel-comparison", direction: "previous" });
+assert.equal(vm.runInContext("state.latinVowelComparisonIndex", context), 0, "previous should move back one pair");
+vm.runInContext("state.latinVowelComparisonIndex = 3; state.preferences.showLatin = true; render()", context);
+clickDataset({ action: "navigate-latin-vowel-comparison", direction: "next" });
+assert.equal(vm.runInContext("state.latinVowelComparisonIndex", context), 3, "next should stay stable at the final pair");
+assert.match(app.innerHTML, /data-action="complete-latin-vowel-comparison"/, "the final pair should expose one completion action");
+for (const deadTarget of ["latinDictation", "latinWritingForms", "dictation", "forms"]) {
+  assert.ok(!app.innerHTML.includes(`data-target="${deadTarget}"`), `Task 3 should not link to unimplemented ${deadTarget}`);
+}
+clickDataset({ action: "complete-latin-vowel-comparison" });
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.latinWriting['vowel-contrast'])", context)),
+  { completed: true },
+  "vowel contrast completion should persist only its completed boolean"
+);
+assert.equal(vm.runInContext("state.screen", context), "latinVowelCompare", "Task 3 completion should stay on an implemented screen");
+includesAll(app.innerHTML, ["本阶段完成", "返回本单元"], "vowel comparison completion");
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(Object.keys(state.learningProgress.latinWriting).sort())", context)),
+  ["classification", "qwerty", "vowel-contrast"],
+  "Task 3 should write only the first three implemented stable Latin steps"
+);
+const allStableLatinSteps = {
+  qwerty: { completed: true },
+  classification: { completed: true },
+  "vowel-contrast": { completed: true },
+  dictation: { completed: true },
+  forms: { completed: true }
+};
+assert.doesNotThrow(
+  () => vm.runInContext(
+    `validateImportedProgressIds({
+      learningProgress: { latinWriting: ${JSON.stringify(allStableLatinSteps)} },
+      dailyActivity: {
+        date: "2026-08-09",
+        completedIds: ${JSON.stringify(Object.keys(allStableLatinSteps).map((id) => `latinWriting:${id}:completed`))}
+      }
+    })`,
+    context
+  ),
+  "backup and cloud semantic validation should accept all five planned stable Latin step IDs"
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(unitProgressSummaries().find((item) => item.label.includes('拉丁键盘与字母书写强化')))", context)),
+  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 3, total: 5 },
+  "the course progress summary should stay stable across all five planned Latin steps"
+);
+vm.runInContext("state.preferences.showLatin = true; state.screen = 'latinKeyboardIntro'; render()", context);
 
 vm.runInContext("state.latinKeyboardValue = ''; render()", context);
 clickDataset({ action: "latin-key", key: "q" });

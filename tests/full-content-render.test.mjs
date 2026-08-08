@@ -148,6 +148,23 @@ renderState(
   "Latin QWERTY keyboard",
   "qwerty"
 );
+renderState(
+  { screen: "latinLetterClasses", selectedUnitId: "latin-keyboard-writing" },
+  "Latin letter classification",
+  "8 个元音"
+);
+for (const [latinVowelComparisonIndex, comparison] of courseData.latinWriting.vowelComparisons.entries()) {
+  renderState(
+    { screen: "latinVowelCompare", selectedUnitId: "latin-keyboard-writing", latinVowelComparisonIndex },
+    `Latin vowel comparison ${comparison.id}`,
+    comparison.focus
+  );
+  assert.equal(
+    (app.innerHTML.match(/class="latin-vowel-comparison-card"/g) || []).length,
+    2,
+    `Latin vowel comparison ${comparison.id} should render one pair at a time`
+  );
+}
 
 for (const group of courseData.alphabetGroups) {
   for (const letter of group.letters) {
@@ -201,6 +218,6 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
   }
 }
 
-assert.equal(renderCount, 467, "full UI audit should render every retained main screen, welcome state, unit, lesson item, reading group, and practice item");
+assert.equal(renderCount, 472, "full UI audit should render every retained main screen, Latin writing stage, lesson item, reading group, and practice item");
 
 console.log(`full content render checks passed (${renderCount} states)`);
