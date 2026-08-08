@@ -183,6 +183,91 @@ assert.equal(
   "sync should not introduce Supabase, cloud, or auth scripts"
 );
 
+const misplacedUnitOrderTargetPath = path.join(os.tmpdir(), "ana-tilim-cn-core-sync-misplaced-unit-order-test");
+fs.mkdirSync(misplacedUnitOrderTargetPath, { recursive: true });
+fs.writeFileSync(path.join(misplacedUnitOrderTargetPath, "index.html"), `<!doctype html>
+<html>
+  <body>
+    <main data-misplaced-domestic-marker="keep"></main>
+    <script src="./course-data.js?v=cn-course"></script>
+    <script src="./app.js?v=cn-app"></script>
+    <script src="./domestic-after-app.js?v=1"></script>
+    <script src="./unit-order.js?v=misplaced"></script>
+  </body>
+</html>
+`);
+const misplacedUnitOrderSyncResult = runSync(misplacedUnitOrderTargetPath);
+assertCoreSyncPassed(misplacedUnitOrderSyncResult);
+const normalizedMisplacedIndex = fs.readFileSync(
+  path.join(misplacedUnitOrderTargetPath, "index.html"),
+  "utf8"
+);
+const normalizedMisplacedUnitOrderTags = [
+  ...normalizedMisplacedIndex.matchAll(/<script\s+[^>]*src=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
+];
+assert.equal(normalizedMisplacedUnitOrderTags.length, 1, "sync should keep one normalized unit-order tag");
+assert.ok(
+  normalizedMisplacedIndex.indexOf("./course-data.js") < normalizedMisplacedIndex.indexOf("./unit-order.js")
+    && normalizedMisplacedIndex.indexOf("./unit-order.js") < normalizedMisplacedIndex.indexOf("./app.js"),
+  "sync should move a misplaced unit-order tag before app.js"
+);
+assert.ok(
+  normalizedMisplacedIndex.includes('data-misplaced-domestic-marker="keep"'),
+  "sync should preserve misplaced-fixture domestic markup"
+);
+assert.ok(
+  normalizedMisplacedIndex.includes("./domestic-after-app.js?v=1"),
+  "sync should preserve misplaced-fixture domestic scripts"
+);
+const normalizedMisplacedScriptSources = [
+  ...normalizedMisplacedIndex.matchAll(/<script\s+[^>]*src=["']([^"']+)["'][^>]*>/g)
+].map((match) => match[1]);
+assert.equal(
+  normalizedMisplacedScriptSources.some((source) => /supabase|cloud|auth/i.test(source)),
+  false,
+  "misplaced-tag normalization should not introduce Supabase, cloud, or auth scripts"
+);
+
+const duplicateUnitOrderTargetPath = path.join(os.tmpdir(), "ana-tilim-cn-core-sync-duplicate-unit-order-test");
+fs.mkdirSync(duplicateUnitOrderTargetPath, { recursive: true });
+fs.writeFileSync(path.join(duplicateUnitOrderTargetPath, "index.html"), `<!doctype html>
+<html>
+  <body>
+    <main data-duplicate-domestic-marker="keep"></main>
+    <script src="./course-data.js?v=cn-course"></script>
+    <script src="./unit-order.js?v=old-before"></script>
+    <script src="./domestic-duplicate-fixture.js?v=1"></script>
+    <script src="./app.js?v=cn-app"></script>
+    <script src="./unit-order.js?v=old-after"></script>
+  </body>
+</html>
+`);
+const duplicateUnitOrderSyncResult = runSync(duplicateUnitOrderTargetPath);
+assertCoreSyncPassed(duplicateUnitOrderSyncResult);
+const normalizedDuplicateIndex = fs.readFileSync(
+  path.join(duplicateUnitOrderTargetPath, "index.html"),
+  "utf8"
+);
+const normalizedDuplicateUnitOrderTags = [
+  ...normalizedDuplicateIndex.matchAll(/<script\s+[^>]*src=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
+];
+assert.equal(normalizedDuplicateUnitOrderTags.length, 1, "sync should collapse duplicate unit-order tags");
+assert.equal(
+  normalizedDuplicateUnitOrderTags[0][0],
+  '<script src="./unit-order.js?v=20260809-edition-unit-order"></script>',
+  "duplicate normalization should use the standard unit-order tag"
+);
+assert.ok(
+  normalizedDuplicateIndex.indexOf("./course-data.js") < normalizedDuplicateIndex.indexOf("./unit-order.js")
+    && normalizedDuplicateIndex.indexOf("./unit-order.js") < normalizedDuplicateIndex.indexOf("./app.js"),
+  "duplicate normalization should place unit order before app.js"
+);
+assert.ok(
+  normalizedDuplicateIndex.includes('data-duplicate-domestic-marker="keep"')
+    && normalizedDuplicateIndex.includes("./domestic-duplicate-fixture.js?v=1"),
+  "duplicate normalization should preserve domestic content"
+);
+
 const missingAppTargetPath = path.join(os.tmpdir(), "ana-tilim-cn-core-sync-missing-app-test");
 fs.mkdirSync(missingAppTargetPath, { recursive: true });
 const missingAppIndex = `<!doctype html>

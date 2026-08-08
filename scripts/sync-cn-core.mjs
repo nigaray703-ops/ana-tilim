@@ -20,9 +20,8 @@ for (const relativePath of EDITION_CORE_FILES) {
 
 const indexPath = path.join(cnSiteRoot, "index.html");
 const indexSource = fs.readFileSync(indexPath, "utf8");
-const unitOrderScripts = indexSource.match(
-  /<script\b[^>]*\bsrc=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g
-) || [];
+const unitOrderScriptPattern = /<script\b[^>]*\bsrc=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g;
+const unitOrderScripts = indexSource.match(unitOrderScriptPattern) || [];
 const appScriptMatch = /^([ \t]*)(<script\b[^>]*\bsrc=["']\.\/app\.js(?:\?[^"']*)?["'][^>]*><\/script>)/m.exec(
   indexSource
 );
@@ -31,11 +30,27 @@ if (!appScriptMatch) {
   throw new Error(`Cannot update ${indexPath}: app.js script tag not found.`);
 }
 
+const standardUnitOrderScript = '<script src="./unit-order.js?v=20260809-edition-unit-order"></script>';
+const insertion = `${appScriptMatch[1]}${standardUnitOrderScript}\n`;
+
 if (unitOrderScripts.length === 0) {
-  const insertion = `${appScriptMatch[1]}<script src="./unit-order.js?v=20260809-edition-unit-order"></script>\n`;
   const updatedIndex = `${indexSource.slice(0, appScriptMatch.index)}${insertion}${indexSource.slice(appScriptMatch.index)}`;
   fs.writeFileSync(indexPath, updatedIndex);
   console.log("Updated index.html: added unit-order.js before app.js");
+} else if (unitOrderScripts.length === 1 && indexSource.indexOf(unitOrderScripts[0]) > appScriptMatch.index) {
+  const indexWithoutMisplacedScript = indexSource.replace(unitOrderScripts[0], "");
+  const updatedIndex = `${indexWithoutMisplacedScript.slice(0, appScriptMatch.index)}${insertion}${indexWithoutMisplacedScript.slice(appScriptMatch.index)}`;
+  fs.writeFileSync(indexPath, updatedIndex);
+  console.log("Updated index.html: moved unit-order.js before app.js");
+} else if (unitOrderScripts.length > 1) {
+  const indexWithoutDuplicateScripts = indexSource.replace(unitOrderScriptPattern, "");
+  const normalizedAppScriptMatch = /^([ \t]*)(<script\b[^>]*\bsrc=["']\.\/app\.js(?:\?[^"']*)?["'][^>]*><\/script>)/m.exec(
+    indexWithoutDuplicateScripts
+  );
+  const normalizedInsertion = `${normalizedAppScriptMatch[1]}${standardUnitOrderScript}\n`;
+  const updatedIndex = `${indexWithoutDuplicateScripts.slice(0, normalizedAppScriptMatch.index)}${normalizedInsertion}${indexWithoutDuplicateScripts.slice(normalizedAppScriptMatch.index)}`;
+  fs.writeFileSync(indexPath, updatedIndex);
+  console.log("Updated index.html: normalized unit-order.js before app.js");
 } else {
   console.log("Index already loads unit-order.js");
 }
