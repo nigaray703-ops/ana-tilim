@@ -84,6 +84,7 @@ for (const path of ["prototype/i18n/ui-messages.js", "prototype/i18n/runtime.js"
 
 const api = context.window.ANA_TILIM_I18N;
 assert.equal(api.resolveLanguage(null, ["zh-CN", "en-NZ"]), "zh");
+assert.equal(api.resolveLanguage(null, ["en-NZ", "zh-CN"]), "en");
 assert.equal(api.resolveLanguage(null, ["zh-TW"]), "zh");
 assert.equal(api.resolveLanguage(null, ["en-US"]), "en");
 assert.equal(api.resolveLanguage(null, ["fr-FR"]), "en");
@@ -130,7 +131,8 @@ Use this public shape in `prototype/i18n/runtime.js`:
     const explicit = supported(explicitLanguage);
     if (explicit) return explicit;
     const list = Array.isArray(languages) ? languages : [languages];
-    return list.some((value) => String(value || "").toLowerCase().startsWith("zh")) ? "zh" : "en";
+    const primaryLanguage = String(list[0] || "").toLowerCase();
+    return primaryLanguage.startsWith("zh") ? "zh" : "en";
   }
 
   function readSavedLanguage(serializedProgress) {
