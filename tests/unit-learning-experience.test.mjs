@@ -277,8 +277,48 @@ function makeElement(id) {
   };
 }
 
+function makeWritingCanvas({ contextAvailable = true } = {}) {
+  const listeners = {};
+  const calls = [];
+  const drawingContext = {
+    setTransform(...args) { calls.push(["setTransform", ...args]); },
+    beginPath() { calls.push(["beginPath"]); },
+    moveTo(...args) { calls.push(["moveTo", ...args]); },
+    lineTo(...args) { calls.push(["lineTo", ...args]); },
+    stroke() { calls.push(["stroke"]); },
+    closePath() { calls.push(["closePath"]); },
+    clearRect(...args) { calls.push(["clearRect", ...args]); }
+  };
+  const canvas = {
+    dataset: { writingFallbackId: "latin-dictation-canvas-fallback" },
+    hidden: false,
+    width: 640,
+    height: 360,
+    listeners,
+    calls,
+    getContext(type) {
+      assert.equal(type, "2d");
+      return contextAvailable ? drawingContext : null;
+    },
+    getBoundingClientRect() {
+      return { left: 0, top: 0, width: 320, height: 180 };
+    },
+    addEventListener(eventName, handler) {
+      listeners[eventName] = handler;
+    },
+    setPointerCapture() {},
+    releasePointerCapture() {}
+  };
+  return canvas;
+}
+
 const app = makeElement("app");
 const toast = makeElement("toast");
+const latinDictationAnswerRegion = makeElement("latin-dictation-answer-region");
+latinDictationAnswerRegion.hidden = true;
+const latinDictationCanvasFallback = makeElement("latin-dictation-canvas-fallback");
+latinDictationCanvasFallback.hidden = true;
+let writingCanvasesForTest = [];
 let clickHandler = null;
 let keydownHandler = null;
 let changeHandler = null;
@@ -315,7 +355,16 @@ const context = {
           }
         };
       }
+      if (selector === "[data-latin-dictation-answer-region]") {
+        return latinDictationAnswerRegion;
+      }
+      if (selector === "#latin-dictation-canvas-fallback") {
+        return latinDictationCanvasFallback;
+      }
       return null;
+    },
+    querySelectorAll(selector) {
+      return selector === "[data-writing-canvas]" ? writingCanvasesForTest : [];
     },
     addEventListener(eventName, handler) {
       if (eventName === "click") {
@@ -3445,7 +3494,7 @@ vm.runInContext("state.latinVowelComparisonIndex = 3; state.preferences.showLati
 clickDataset({ action: "navigate-latin-vowel-comparison", direction: "next" });
 assert.equal(vm.runInContext("state.latinVowelComparisonIndex", context), 3, "next should stay stable at the final pair");
 assert.match(app.innerHTML, /data-action="complete-latin-vowel-comparison"/, "the final pair should expose one completion action");
-for (const deadTarget of ["latinDictation", "latinWritingForms", "dictation", "forms"]) {
+for (const deadTarget of ["latinWritingForms", "dictation", "forms"]) {
   assert.ok(!app.innerHTML.includes(`data-target="${deadTarget}"`), `Task 3 should not link to unimplemented ${deadTarget}`);
 }
 clickDataset({ action: "complete-latin-vowel-comparison" });
@@ -3454,12 +3503,193 @@ assert.deepEqual(
   { completed: true },
   "vowel contrast completion should persist only its completed boolean"
 );
-assert.equal(vm.runInContext("state.screen", context), "latinVowelCompare", "Task 3 completion should stay on an implemented screen");
-includesAll(app.innerHTML, ["本阶段完成", "返回本单元"], "vowel comparison completion");
+assert.equal(vm.runInContext("state.screen", context), "latinDictation", "vowel comparison completion should enter the real dictation screen");
+const oeDictationIndex = vm.runInContext(
+  "[...latinWriting.vowelLetterIds, ...latinWriting.consonantLetterIds].indexOf('oe')",
+  context
+);
+const oeDictationDetail = context.window.ANA_TILIM_COURSE.letterDetails.oe;
+const hiddenOeDictationHtml = renderState(
+  `state.screen = 'latinDictation'; state.latinDictationIndex = ${oeDictationIndex}; state.latinDictationRevealed = false; state.latinWritingForm = 0`
+);
+const hiddenOeDictationExercise = hiddenOeDictationHtml.match(
+  /<section\s+class="stack latin-dictation"[^>]*data-latin-dictation-exercise[^>]*>(?<body>[\s\S]*?)<\/section>/
+)?.groups?.body || "";
+assert.ok(hiddenOeDictationExercise, "oe dictation should render a scoped exercise region");
+includesAll(
+  hiddenOeDictationExercise,
+  [">ö<", 'data-writing-canvas', 'data-action="reveal-latin-dictation-answer"'],
+  "hidden oe dictation prompt"
+);
+assert.ok(!hiddenOeDictationExercise.includes(oeDictationDetail.letter), "oe answer glyph must stay hidden before reveal");
+for (const form of oeDictationDetail.forms) {
+  assert.ok(!hiddenOeDictationExercise.includes(form.value), `oe form ${form.value} must stay hidden before reveal`);
+}
+assert.doesNotMatch(hiddenOeDictationExercise, /accuracy|准确率|得分|分数/i, "dictation should not invent scoring");
+latinDictationAnswerRegion.innerHTML = "";
+latinDictationAnswerRegion.hidden = true;
+clickDataset({ action: "reveal-latin-dictation-answer" });
+assert.equal(vm.runInContext("state.latinDictationRevealed", context), true, "reveal should update only transient dictation state");
+assert.equal(latinDictationAnswerRegion.hidden, false, "reveal should expose the answer region without replacing the live canvas");
+includesAll(
+  latinDictationAnswerRegion.innerHTML,
+  [
+    oeDictationDetail.letter,
+    "字母形式参考",
+    "我自己比较，不是自动判分",
+    ...oeDictationDetail.forms.flatMap((form) => [form.label, form.value])
+  ],
+  "revealed oe dictation answer"
+);
+assert.equal(
+  (latinDictationAnswerRegion.innerHTML.match(/class="latin-dictation-form"/g) || []).length,
+  oeDictationDetail.forms.length,
+  "dictation reveal should show the real source forms count instead of assuming four"
+);
+assert.doesNotMatch(latinDictationAnswerRegion.innerHTML, /data-target="latinWritingForms"|stroke|accuracy|准确率|得分|分数/i);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.latinWriting.dictation)", context)),
+  { completed: true },
+  "revealing the self-check should persist only one completion flag"
+);
+const dictationLocalSnapshot = JSON.parse(vm.runInContext("JSON.stringify(buildLocalProgressData())", context));
+const dictationCloudSnapshot = JSON.parse(vm.runInContext("JSON.stringify(buildCloudSnapshot())", context));
+for (const transientField of ["latinDictationIndex", "latinDictationRevealed", "latinWritingForm"]) {
+  assert.equal(
+    Object.hasOwn(dictationLocalSnapshot, transientField),
+    false,
+    `${transientField} should stay out of local export inputs`
+  );
+  assert.equal(
+    Object.hasOwn(dictationCloudSnapshot, transientField),
+    false,
+    `${transientField} should stay out of cloud snapshots`
+  );
+}
+assert.ok(
+  !JSON.stringify([dictationLocalSnapshot, dictationCloudSnapshot]).includes("data-writing-canvas"),
+  "dictation progress should never serialize canvas markup or strokes"
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(unitProgressSummaries().find((item) => item.label.includes('拉丁键盘与字母书写强化')))", context)),
+  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 4, total: 5 },
+  "revealed dictation should advance the five-step summary to four of five"
+);
+
+const dictationDrawingCanvas = makeWritingCanvas();
+writingCanvasesForTest = [dictationDrawingCanvas];
+renderState(
+  `state.screen = 'latinDictation'; state.latinDictationIndex = ${oeDictationIndex}; state.latinDictationRevealed = false; state.latinWritingForm = 0`
+);
+for (const eventName of ["pointerdown", "pointermove", "pointerup", "pointercancel", "pointerleave"]) {
+  assert.equal(typeof dictationDrawingCanvas.listeners[eventName], "function", `dictation canvas should reuse ${eventName} writing support`);
+}
+let dictationPointerPrevented = 0;
+dictationDrawingCanvas.listeners.pointerdown({
+  clientX: 12,
+  clientY: 20,
+  pointerId: 1,
+  preventDefault() { dictationPointerPrevented += 1; }
+});
+dictationDrawingCanvas.listeners.pointermove({
+  clientX: 42,
+  clientY: 60,
+  pointerId: 1,
+  preventDefault() { dictationPointerPrevented += 1; }
+});
+dictationDrawingCanvas.listeners.pointerup({ pointerId: 1 });
+assert.deepEqual(
+  dictationDrawingCanvas.calls.filter(([name]) => ["beginPath", "moveTo", "lineTo", "stroke", "closePath"].includes(name)).map(([name]) => name),
+  ["beginPath", "moveTo", "lineTo", "stroke", "closePath"],
+  "dictation should draw through the existing pointer canvas pipeline"
+);
+assert.equal(dictationPointerPrevented, 2, "drawing pointer gestures should prevent page scrolling");
+assert.equal(
+  (appSource.match(/addEventListener\("pointerdown"/g) || []).length,
+  1,
+  "dictation must reuse the one shared canvas event implementation"
+);
+
+vm.runInContext("state.latinDictationRevealed = true; state.latinWritingForm = 7", context);
+clickDataset({ action: "next-latin-dictation" });
+assert.equal(vm.runInContext("state.latinDictationIndex", context), oeDictationIndex + 1, "next should advance to the following stable letter ID");
+assert.equal(vm.runInContext("state.latinDictationRevealed", context), false, "next should hide the previous answer");
+assert.equal(vm.runInContext("state.latinWritingForm", context), 0, "next should reset the reserved form state without assuming a fixed forms count");
+assert.ok(
+  dictationDrawingCanvas.calls.some(([name]) => name === "clearRect"),
+  "next should clear the current live canvas before rendering the following prompt"
+);
+includesAll(app.innerHTML, [">ü<", 'data-action="reveal-latin-dictation-answer"'], "next dictation prompt");
+assert.ok(!app.innerHTML.includes(oeDictationDetail.letter), "next prompt should not retain the previous revealed glyph");
+
+const unavailableDictationCanvas = makeWritingCanvas({ contextAvailable: false });
+writingCanvasesForTest = [unavailableDictationCanvas];
+latinDictationCanvasFallback.hidden = true;
+unavailableDictationCanvas.hidden = false;
+const unavailableDictationHtml = renderState(
+  `state.screen = 'latinDictation'; state.latinDictationIndex = ${oeDictationIndex}; state.latinDictationRevealed = false; state.latinWritingForm = 0`
+);
+assert.equal(unavailableDictationCanvas.hidden, true, "an unavailable Canvas should hide only the unusable drawing surface");
+assert.equal(latinDictationCanvasFallback.hidden, false, "an unavailable Canvas should expose its accurate fallback message");
+includesAll(
+  unavailableDictationHtml,
+  [
+    "当前浏览器不能自由书写，仍可查看标准字形和字母形式参考",
+    'data-action="reveal-latin-dictation-answer"',
+    'data-action="next-latin-dictation"',
+    'data-target="unit"'
+  ],
+  "Canvas unavailable dictation fallback"
+);
+latinDictationAnswerRegion.innerHTML = "";
+latinDictationAnswerRegion.hidden = true;
+clickDataset({ action: "reveal-latin-dictation-answer" });
+assert.equal(latinDictationAnswerRegion.hidden, false, "answer reveal should remain usable without Canvas");
+writingCanvasesForTest = [];
+
+const escapedLatinDictationAnswer = vm.runInContext(
+  `renderLatinDictationAnswer({
+    letter: 'ئۆ<&"',
+    forms: [{ label: 'form" data-form-injected="true', value: 'ـۆ<&"' }]
+  })`,
+  context
+);
+includesAll(
+  escapedLatinDictationAnswer,
+  [
+    'ئۆ&lt;&amp;&quot;',
+    'form&quot; data-form-injected=&quot;true',
+    'ـۆ&lt;&amp;&quot;'
+  ],
+  "escaped dictation answer"
+);
+assert.doesNotMatch(escapedLatinDictationAnswer, /\sdata-form-injected="true"/, "dictation form labels should not inject attributes");
+assert.ok(!escapedLatinDictationAnswer.includes("&amp;lt;"), "dictation answer fields should be escaped exactly once");
+
+assert.match(
+  styleSource,
+  /\.latin-dictation-prompt\s*\{[^}]*text-align:\s*center;/s,
+  "dictation ULY prompt should have a focused centered treatment"
+);
+assert.match(
+  styleSource,
+  /\.latin-dictation-forms\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(auto-fit, minmax\(120px, 1fr\)\);/s,
+  "real source forms should use a responsive grid"
+);
+assert.match(
+  styleSource,
+  /\.writing-canvas-fallback\s*\{[^}]*z-index:\s*3;[^}]*text-align:\s*center;/s,
+  "Canvas fallback should remain readable above the writing pad background"
+);
+assert.match(
+  styleSource,
+  /@media \(max-width: 560px\)[\s\S]*?\.latin-dictation-navigation\s*\{[^}]*grid-template-columns:\s*1fr;/s,
+  "dictation navigation should stack on narrow phones"
+);
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(Object.keys(state.learningProgress.latinWriting).sort())", context)),
-  ["classification", "qwerty", "vowel-contrast"],
-  "Task 3 should write only the first three implemented stable Latin steps"
+  ["classification", "dictation", "qwerty", "vowel-contrast"],
+  "Task 4 should add only the dictation stable step"
 );
 const allStableLatinSteps = {
   qwerty: { completed: true },
@@ -3483,8 +3713,8 @@ assert.doesNotThrow(
 );
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(unitProgressSummaries().find((item) => item.label.includes('拉丁键盘与字母书写强化')))", context)),
-  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 3, total: 5 },
-  "the course progress summary should stay stable across all five planned Latin steps"
+  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 4, total: 5 },
+  "the course progress summary should include the completed dictation step and retain a five-step denominator"
 );
 vm.runInContext("state.preferences.showLatin = true; state.screen = 'latinKeyboardIntro'; render()", context);
 

@@ -272,6 +272,7 @@ const persistedScreenIds = new Set([
   "latinKeyboardIntro",
   "latinLetterClasses",
   "latinVowelCompare",
+  "latinDictation",
   "letter",
   "group",
   "writing",
@@ -493,6 +494,9 @@ const state = {
   keyboardShift: false,
   latinKeyboardValue: "",
   latinVowelComparisonIndex: 0,
+  latinDictationIndex: 0,
+  latinDictationRevealed: false,
+  latinWritingForm: 0,
   practiceSpoken: false,
   emailAuthExpanded: false,
   emailCodeSent: false,
@@ -1930,11 +1934,26 @@ function renderWritingComparison({ value, parts, forms = [] }) {
   `;
 }
 
-function renderWritingCanvas(value, label = "手写板") {
+function renderWritingCanvas(value, label = "手写板", options = {}) {
+  const fallbackId = options.fallbackId || "";
+  const fallbackMessage = options.fallbackMessage || "";
+
   return `
-    <div class="writing-pad ${state.showGuide ? "" : "hide-guide"}" aria-label="${label}">
+    <div class="writing-pad ${state.showGuide ? "" : "hide-guide"}" aria-label="${escapeHtml(label)}">
       <span class="uyghur guide">${displayStandaloneLetterGlyph(value)}</span>
-      <canvas class="writing-canvas" data-writing-canvas width="640" height="360"></canvas>
+      <canvas
+        class="writing-canvas"
+        data-writing-canvas
+        ${fallbackId ? `data-writing-fallback-id="${escapeHtml(fallbackId)}"` : ""}
+        width="640"
+        height="360"
+        aria-label="${escapeHtml(label)}"
+      ></canvas>
+      ${
+        fallbackId && fallbackMessage
+          ? `<p class="writing-canvas-fallback" id="${escapeHtml(fallbackId)}" hidden>${escapeHtml(fallbackMessage)}</p>`
+          : ""
+      }
     </div>
   `;
 }
@@ -2215,8 +2234,19 @@ function initializeWritingCanvases() {
 
   document.querySelectorAll("[data-writing-canvas]").forEach((canvas) => {
     const context = canvas.getContext && canvas.getContext("2d");
+    const fallbackId = canvas.dataset?.writingFallbackId || "";
+    const fallback = fallbackId ? document.querySelector?.(`#${fallbackId}`) : null;
     if (!context || !canvas.getBoundingClientRect) {
+      canvas.hidden = true;
+      if (fallback) {
+        fallback.hidden = false;
+      }
       return;
+    }
+
+    canvas.hidden = false;
+    if (fallback) {
+      fallback.hidden = true;
     }
 
     const ratio = window.devicePixelRatio || 1;
@@ -2347,6 +2377,7 @@ function render({ persist = true } = {}) {
     latinKeyboardIntro: renderLatinKeyboardIntro,
     latinLetterClasses: renderLatinLetterClasses,
     latinVowelCompare: renderLatinVowelCompare,
+    latinDictation: renderLatinDictation,
     letter: renderGroupLesson,
     group: renderGroupLesson,
     writing: renderPracticeHub,
@@ -3764,6 +3795,110 @@ function renderLatinVowelCompare() {
             ? `<article class="card latin-stage-complete"><strong>本阶段完成</strong><p>已完成 QWERTY、元辅音分类和元音辨认。</p><button class="secondary-button" data-action="go" data-target="unit" type="button">返回本单元</button></article>`
             : ""
         }
+      </section>
+    `,
+    "learn"
+  );
+}
+
+const latinDictationLetterIds = Object.freeze([
+  ...latinWriting.vowelLetterIds,
+  ...latinWriting.consonantLetterIds
+]);
+
+function currentLatinDictationLetter() {
+  const lastIndex = latinDictationLetterIds.length - 1;
+  const index = Math.max(0, Math.min(lastIndex, state.latinDictationIndex));
+  return letterDetails[latinDictationLetterIds[index]];
+}
+
+function renderLatinDictationAnswer(letter) {
+  const forms = Array.isArray(letter.forms) ? letter.forms : [];
+
+  return `
+    <article class="latin-dictation-answer card" aria-label="默写自我检查">
+      <p class="caption">标准字形</p>
+      <strong class="uyghur latin-dictation-answer-glyph">${escapeHtml(letter.letter)}</strong>
+      <p class="latin-dictation-self-check">我自己比较，不是自动判分</p>
+      <div class="section-row">
+        <h3>字母形式参考</h3>
+        <span class="step-state">${forms.length} 项</span>
+      </div>
+      <div class="latin-dictation-forms">
+        ${forms
+          .map(
+            (form) => `
+              <div class="latin-dictation-form">
+                <span>${escapeHtml(form.label)}</span>
+                <strong class="uyghur">${escapeHtml(form.value)}</strong>
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+      <p class="caption">下一阶段可查看并练习该字母的全部形式。</p>
+    </article>
+  `;
+}
+
+function revealLatinDictationAnswer() {
+  const letter = currentLatinDictationLetter();
+  state.latinDictationRevealed = true;
+  markProgress("latinWriting", "dictation", "completed");
+
+  const answerRegion = document.querySelector?.("[data-latin-dictation-answer-region]");
+  if (answerRegion) {
+    answerRegion.innerHTML = renderLatinDictationAnswer(letter);
+    answerRegion.hidden = false;
+    saveLocalProgress();
+    return;
+  }
+
+  render();
+}
+
+function renderLatinDictation() {
+  const letter = currentLatinDictationLetter();
+  const lastIndex = latinDictationLetterIds.length - 1;
+  const index = Math.max(0, Math.min(lastIndex, state.latinDictationIndex));
+
+  return screen(
+    `
+      ${topBar(
+        "ULY 提示默写",
+        learningUnitTitle("latin-keyboard-writing"),
+        "",
+        `<button class="back-button" data-action="go" data-target="latinVowelCompare" type="button" aria-label="返回">←</button>`
+      )}
+      <section
+        class="stack latin-dictation"
+        data-latin-dictation-exercise
+        data-letter-id="${escapeHtml(letter.id)}"
+      >
+        ${renderItemProgress(`${index + 1} / ${latinDictationLetterIds.length}`, "看 ULY 写维吾尔字母")}
+        <article class="card latin-dictation-prompt">
+          <p class="caption">ULY 提示</p>
+          ${renderLatinTeachingTarget(letter.latin, "latin-dictation-uly")}
+          <p>先在画布中自由书写，再揭晓标准字形进行自我比较。</p>
+        </article>
+        <article class="card latin-dictation-writing">
+          <p class="caption">自由书写</p>
+          ${renderWritingCanvas("", "ULY 默写手写板", {
+            fallbackId: "latin-dictation-canvas-fallback",
+            fallbackMessage: "当前浏览器不能自由书写，仍可查看标准字形和字母形式参考"
+          })}
+          <div class="action-grid">
+            <button class="secondary-button" data-action="clear-canvas" type="button">清空画布</button>
+            <button class="primary-button" data-action="reveal-latin-dictation-answer" type="button">揭晓标准字形</button>
+          </div>
+          <div data-latin-dictation-answer-region ${state.latinDictationRevealed ? "" : "hidden"}>
+            ${state.latinDictationRevealed ? renderLatinDictationAnswer(letter) : ""}
+          </div>
+        </article>
+        <div class="action-grid latin-dictation-navigation">
+          <button class="secondary-button" data-action="go" data-target="unit" type="button">返回本单元</button>
+          <button class="primary-button" data-action="next-latin-dictation" type="button">下一题</button>
+        </div>
       </section>
     `,
     "learn"
@@ -5650,7 +5785,26 @@ document.addEventListener("click", (event) => {
     const lastIndex = latinWriting.vowelComparisons.length - 1;
     if (state.latinVowelComparisonIndex === lastIndex) {
       markProgress("latinWriting", "vowel-contrast", "completed");
+      state.latinDictationIndex = 0;
+      state.latinDictationRevealed = false;
+      state.latinWritingForm = 0;
+      goTo("latinDictation");
+      return;
     }
+    render();
+    return;
+  }
+
+  if (action === "reveal-latin-dictation-answer") {
+    revealLatinDictationAnswer();
+    return;
+  }
+
+  if (action === "next-latin-dictation") {
+    clearWritingCanvases();
+    state.latinDictationIndex = (state.latinDictationIndex + 1) % latinDictationLetterIds.length;
+    state.latinDictationRevealed = false;
+    state.latinWritingForm = 0;
     render();
     return;
   }
