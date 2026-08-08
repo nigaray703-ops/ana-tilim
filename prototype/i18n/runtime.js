@@ -17,11 +17,11 @@
     return value === "zh" || value === "en" ? value : null;
   }
 
-  function resolveLanguage(explicitLanguage, languages = []) {
+  function resolveLanguage(explicitLanguage, languages = [], fallbackLanguage = "") {
     const explicit = supported(explicitLanguage);
     if (explicit) return explicit;
     const list = Array.isArray(languages) ? languages : [languages];
-    const primaryLanguage = String(list[0] || "").toLowerCase();
+    const primaryLanguage = String(list[0] || fallbackLanguage || "").toLowerCase();
     return primaryLanguage.startsWith("zh") ? "zh" : "en";
   }
 

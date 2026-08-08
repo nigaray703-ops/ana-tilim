@@ -7,10 +7,16 @@ if (!courseData) {
 const { alphabetLetters, letterDetails, alphabetGroups, alphabetAudioItems, comboGroups, vocabGroups, practiceGroups, readingUnits } = courseData;
 const i18n = window.ANA_TILIM_I18N;
 const courseLocalizer = i18n.createCourseLocalizer(courseData, window.ANA_TILIM_COURSE_EN);
-const serializedProgress = window.localStorage?.getItem("ana-tilim-progress") || "";
+let serializedProgress = "";
+try {
+  serializedProgress = localStorageSafe()?.getItem("ana-tilim-progress") || "";
+} catch {
+  // Storage can be blocked by browser policy; guest learning must still start.
+}
 const savedLanguage = i18n.readSavedLanguage(serializedProgress);
-const systemLanguages = window.navigator?.languages || [window.navigator?.language].filter(Boolean);
-const initialInterfaceLanguage = i18n.resolveLanguage(savedLanguage, systemLanguages);
+const systemLanguages = window.navigator?.languages || [];
+const systemFallbackLanguage = window.navigator?.language || "";
+const initialInterfaceLanguage = i18n.resolveLanguage(savedLanguage, systemLanguages, systemFallbackLanguage);
 i18n.setLanguage(initialInterfaceLanguage);
 courseLocalizer.apply(initialInterfaceLanguage);
 document.documentElement.lang = initialInterfaceLanguage;
@@ -453,6 +459,7 @@ const letterLoopSteps = [
 ];
 
 const initialCloudTimestamp = new Date().toISOString();
+const untouchedPreferenceTimestamp = "1970-01-01T00:00:00.000Z";
 
 const state = {
   screen: "welcome",
@@ -488,12 +495,13 @@ const state = {
   mistakes: [],
   selectedUnitId: "letters",
   showGuide: true,
+  writingStrokes: {},
   favorite: false,
   preferences: { ...DEFAULT_PREFERENCES },
   dailyActivity: { date: "", completedIds: [] },
   clearLearningConfirmation: false,
   modifiedAt: initialCloudTimestamp,
-  preferencesUpdatedAt: initialCloudTimestamp,
+  preferencesUpdatedAt: untouchedPreferenceTimestamp,
   favoriteUpdatedAt: initialCloudTimestamp,
   syncDirty: false
 };
@@ -829,7 +837,7 @@ function setPreference(key, value) {
 }
 
 function applyInterfaceLanguage(language, { explicit = false } = {}) {
-  const effectiveLanguage = i18n.resolveLanguage(language, systemLanguages);
+  const effectiveLanguage = i18n.resolveLanguage(language, systemLanguages, systemFallbackLanguage);
   state.interfaceLanguage = effectiveLanguage;
   i18n.setLanguage(effectiveLanguage);
   courseLocalizer.apply(effectiveLanguage);
@@ -1966,6 +1974,19 @@ function renderUnitNextActions(unitId, primaryClass = "primary-button") {
   `;
 }
 
+function writingSurfaceKey() {
+  if (state.screen === "letterWriting") {
+    return `letter:${state.currentLetterId}`;
+  }
+  if (state.screen === "comboWriting") {
+    return `combo:${state.currentComboItemId}`;
+  }
+  if (state.screen === "practiceSession") {
+    return `practice:${state.currentPracticeItemId}`;
+  }
+  return "";
+}
+
 function initializeWritingCanvases() {
   if (!document.querySelectorAll) {
     return;
@@ -1989,19 +2010,48 @@ function initializeWritingCanvases() {
     context.lineWidth = 8;
     context.strokeStyle = "#162657";
 
+    const surfaceKey = writingSurfaceKey();
+    const savedStrokes = surfaceKey ? state.writingStrokes[surfaceKey] || [] : [];
+    savedStrokes.forEach((stroke) => {
+      if (!Array.isArray(stroke) || !stroke.length) {
+        return;
+      }
+      context.beginPath();
+      context.moveTo(stroke[0].x * rect.width, stroke[0].y * rect.height);
+      stroke.slice(1).forEach((point) => {
+        context.lineTo(point.x * rect.width, point.y * rect.height);
+      });
+      if (stroke.length > 1) {
+        context.stroke();
+      }
+      context.closePath();
+    });
+
     let isDrawing = false;
+    let activeStroke = null;
 
     function pointFor(event) {
       const bounds = canvas.getBoundingClientRect();
       return {
         x: event.clientX - bounds.left,
-        y: event.clientY - bounds.top
+        y: event.clientY - bounds.top,
+        normalized: {
+          x: bounds.width > 0 ? (event.clientX - bounds.left) / bounds.width : 0,
+          y: bounds.height > 0 ? (event.clientY - bounds.top) / bounds.height : 0
+        }
       };
     }
 
     canvas.addEventListener("pointerdown", (event) => {
       const point = pointFor(event);
       isDrawing = true;
+      activeStroke = [point.normalized];
+      if (surfaceKey) {
+        state.writingStrokes[surfaceKey] = [
+          ...(state.writingStrokes[surfaceKey] || []),
+          activeStroke
+        ];
+      }
       canvas.setPointerCapture?.(event.pointerId);
       context.beginPath();
       context.moveTo(point.x, point.y);
@@ -2013,6 +2063,7 @@ function initializeWritingCanvases() {
         return;
       }
       const point = pointFor(event);
+      activeStroke?.push(point.normalized);
       context.lineTo(point.x, point.y);
       context.stroke();
       event.preventDefault();
@@ -2023,6 +2074,7 @@ function initializeWritingCanvases() {
         return;
       }
       isDrawing = false;
+      activeStroke = null;
       canvas.releasePointerCapture?.(event.pointerId);
       context.closePath();
     }
@@ -2034,6 +2086,10 @@ function initializeWritingCanvases() {
 }
 
 function clearWritingCanvases() {
+  const surfaceKey = writingSurfaceKey();
+  if (surfaceKey) {
+    delete state.writingStrokes[surfaceKey];
+  }
   if (!document.querySelectorAll) {
     return;
   }
@@ -4256,7 +4312,7 @@ function renderPracticeListeningChoices(group, item) {
                 data-action="pick-practice"
                 data-id="${choice.id}"
                 type="button"
-                aria-label="${t("practice.choiceAria", { count: index + 1 })}"
+                aria-label="${t("practice.choiceAria", { count: index + 1, letter: choice.value })}"
               >
                 <span class="uyghur">${choice.value}</span>
               </button>
