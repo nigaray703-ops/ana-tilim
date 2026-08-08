@@ -279,6 +279,7 @@ const storage = {};
 const sessionStorageValues = {};
 let storageWritesFail = false;
 let storageWriteFailurePredicate = null;
+let progressStorageWriteCount = 0;
 const playedAudioSources = [];
 let audioPlayShouldReject = false;
 let profileDisplayNameValue = "";
@@ -345,6 +346,9 @@ const context = {
         }
         if (storageWriteFailurePredicate?.(key, String(value))) {
           throw new Error("localStorage write failed");
+        }
+        if (key === "ana-tilim-progress") {
+          progressStorageWriteCount += 1;
         }
         storage[key] = String(value);
       },
@@ -1153,7 +1157,8 @@ vm.runInContext(
     cloudSync = {
       scheduleSync() {
         globalThis.importCloudScheduleCount += 1;
-        if (globalThis.cloudScheduleShouldThrow) {
+        if (globalThis.cloudScheduleFailuresRemaining > 0) {
+          globalThis.cloudScheduleFailuresRemaining -= 1;
           throw new Error("cloud schedule failed");
         }
       },
@@ -1175,7 +1180,7 @@ vm.runInContext(
       }
     };
     globalThis.importCloudScheduleCount = 0;
-    globalThis.cloudScheduleShouldThrow = false;
+    globalThis.cloudScheduleFailuresRemaining = 0;
     cloudStatus = { phase: "signed-in", error: "" };
   `,
   context
@@ -1432,6 +1437,27 @@ assert.equal(
 assert.equal(toast.textContent, "请确认导入学习记录");
 clickDataset({ action: "cancel-import-progress" });
 
+await selectProgressImport(fastImportText);
+assert.ok(app.innerHTML.includes('data-action="confirm-import-progress"'));
+const writesBeforeSlowReplacement = progressStorageWriteCount;
+const storageBeforeSlowReplacement = storage["ana-tilim-progress"];
+const slowReplacementSelection = deferredProgressFile();
+triggerProgressImportFile(slowReplacementSelection.file);
+assert.equal(vm.runInContext("state.pendingProgressImport", context), null);
+assert.ok(
+  !app.innerHTML.includes('data-action="confirm-import-progress"'),
+  "starting a new file read should immediately remove the stale confirmation action"
+);
+assert.equal(
+  progressStorageWriteCount,
+  writesBeforeSlowReplacement,
+  "hiding the stale confirmation should not persist progress"
+);
+assert.equal(storage["ana-tilim-progress"], storageBeforeSlowReplacement);
+slowReplacementSelection.resolveText(fastImportText);
+await flushProgressImport();
+clickDataset({ action: "cancel-import-progress" });
+
 const canceledSelection = deferredProgressFile();
 triggerProgressImportFile(canceledSelection.file);
 clickDataset({ action: "cancel-import-progress" });
@@ -1494,9 +1520,20 @@ clickDataset({ action: "confirm-import-progress" });
 assert.equal(vm.runInContext("state.pendingProgressImport", context), null, "retry should clear pending after storage recovers");
 
 await selectProgressImport(fastImportText);
-vm.runInContext("globalThis.cloudScheduleShouldThrow = true", context);
+const writesBeforeSingleConfirmation = progressStorageWriteCount;
+const schedulesBeforeSingleConfirmation = vm.runInContext("globalThis.importCloudScheduleCount", context);
+vm.runInContext("globalThis.cloudScheduleFailuresRemaining = 1", context);
 clickDataset({ action: "confirm-import-progress" });
-vm.runInContext("globalThis.cloudScheduleShouldThrow = false", context);
+assert.equal(
+  progressStorageWriteCount - writesBeforeSingleConfirmation,
+  1,
+  "one confirmation click should persist progress exactly once"
+);
+assert.equal(
+  vm.runInContext("globalThis.importCloudScheduleCount", context) - schedulesBeforeSingleConfirmation,
+  1,
+  "one confirmation click should schedule cloud sync exactly once"
+);
 assert.equal(
   toast.textContent,
   "学习记录已导入",
