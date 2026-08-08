@@ -8,6 +8,9 @@
   const vocabGroupFields = ["title", "goal", "status"];
   const practiceGroupFields = ["title", "goal", "status"];
   const practiceItemFields = ["type", "label", "hint", "audioStatus"];
+  const readingUnitFields = ["title", "subtitle"];
+  const readingGroupFields = ["title", "intro"];
+  const readingItemFields = ["pattern", "speaker", "meaning", "lesson"];
   let currentLanguage = "en";
 
   function supported(value) {
@@ -122,6 +125,40 @@
               (group.items || []).map((item) => [
                 item.id,
                 Object.fromEntries(practiceItemFields.map((field) => [field, item[field]]))
+              ])
+            )
+          }
+        ])
+      ),
+      readingUnits: Object.fromEntries(
+        (courseData.readingUnits || []).map((unit) => [
+          unit.id,
+          {
+            fields: Object.fromEntries(
+              readingUnitFields
+                .filter((field) => Object.prototype.hasOwnProperty.call(unit, field))
+                .map((field) => [field, unit[field]])
+            ),
+            groups: Object.fromEntries(
+              (unit.groups || []).map((group) => [
+                group.id,
+                {
+                  fields: Object.fromEntries(
+                    readingGroupFields
+                      .filter((field) => Object.prototype.hasOwnProperty.call(group, field))
+                      .map((field) => [field, group[field]])
+                  ),
+                  items: Object.fromEntries(
+                    (group.items || []).map((item) => [
+                      item.id,
+                      Object.fromEntries(
+                        readingItemFields
+                          .filter((field) => Object.prototype.hasOwnProperty.call(item, field))
+                          .map((field) => [field, item[field]])
+                      )
+                    ])
+                  )
+                }
               ])
             )
           }
@@ -247,6 +284,47 @@
     return missing;
   }
 
+  function missingReadingEnglish(courseData, catalog) {
+    const missing = [];
+    for (const unit of courseData.readingUnits || []) {
+      const translatedUnit = catalog?.units?.[unit.id];
+      for (const field of readingUnitFields) {
+        if (
+          typeof unit[field] === "string" &&
+          unit[field].trim() &&
+          typeof translatedUnit?.[field] !== "string"
+        ) {
+          missing.push(`reading.units.${unit.id}.${field}`);
+        }
+      }
+      for (const group of unit.groups || []) {
+        const translatedGroup = catalog?.groups?.[group.id];
+        for (const field of readingGroupFields) {
+          if (
+            typeof group[field] === "string" &&
+            group[field].trim() &&
+            typeof translatedGroup?.[field] !== "string"
+          ) {
+            missing.push(`reading.groups.${group.id}.${field}`);
+          }
+        }
+        for (const item of group.items || []) {
+          const translatedItem = catalog?.items?.[item.id];
+          for (const field of readingItemFields) {
+            if (
+              typeof item[field] === "string" &&
+              item[field].trim() &&
+              typeof translatedItem?.[field] !== "string"
+            ) {
+              missing.push(`reading.items.${item.id}.${field}`);
+            }
+          }
+        }
+      }
+    }
+    return missing;
+  }
+
   function englishPracticeHint(mode, item, localizedLetter) {
     if (mode === "listen") return localizedLetter?.cue || localizedLetter?.soundHint || "";
     if (mode === "write") return localizedLetter?.writingHint || localizedLetter?.cue || "";
@@ -262,11 +340,13 @@
     const comboEnglish = englishCatalog?.combos || {};
     const vocabEnglish = englishCatalog?.vocab || {};
     const practiceEnglish = englishCatalog?.practice || {};
+    const readingEnglish = englishCatalog?.reading || {};
     const missing = [
       ...missingAlphabetEnglish(courseData, alphabetEnglish),
       ...missingComboEnglish(courseData, comboEnglish),
       ...missingVocabEnglish(courseData, vocabEnglish),
-      ...missingPracticeEnglish(courseData, practiceEnglish)
+      ...missingPracticeEnglish(courseData, practiceEnglish),
+      ...missingReadingEnglish(courseData, readingEnglish)
     ];
 
     function apply(language) {
@@ -360,6 +440,30 @@
             item.audioStatus = practiceEnglish.audioStatus;
           } else {
             setAvailableText(item, originalGroup?.items?.[item.id], practiceItemFields);
+          }
+        }
+      }
+
+      for (const unit of courseData.readingUnits || []) {
+        const originalUnit = original.readingUnits[unit.id];
+        setAvailableText(
+          unit,
+          useEnglish ? readingEnglish.units?.[unit.id] : originalUnit?.fields,
+          readingUnitFields
+        );
+        for (const group of unit.groups || []) {
+          const originalGroup = originalUnit?.groups?.[group.id];
+          setAvailableText(
+            group,
+            useEnglish ? readingEnglish.groups?.[group.id] : originalGroup?.fields,
+            readingGroupFields
+          );
+          for (const item of group.items || []) {
+            setAvailableText(
+              item,
+              useEnglish ? readingEnglish.items?.[item.id] : originalGroup?.items?.[item.id],
+              readingItemFields
+            );
           }
         }
       }

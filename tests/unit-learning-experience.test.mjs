@@ -13,6 +13,7 @@ const i18nScriptPaths = [
   "prototype/i18n/combo-en.js",
   "prototype/i18n/vocab-en.js",
   "prototype/i18n/practice-en.js",
+  "prototype/i18n/reading-en.js",
   "prototype/i18n/course-en.js",
   "prototype/i18n/runtime.js"
 ];
@@ -55,6 +56,7 @@ const expectedVersionedAssets = [
   "./i18n/combo-en.js?v=20260809-bilingual-combos",
   "./i18n/vocab-en.js?v=20260809-bilingual-vocab",
   "./i18n/practice-en.js?v=20260809-bilingual-practice",
+  "./i18n/reading-en.js?v=20260809-bilingual-reading",
   "./i18n/course-en.js?v=20260809-bilingual-alphabet",
   "./i18n/runtime.js?v=20260809-bilingual",
   "./audio-controller.js?v=20260728-uly-transliteration",
@@ -1039,6 +1041,98 @@ assert.ok(
 assert.ok(
   !/[\u3400-\u9fff]/u.test(englishViewedPracticeList),
   "English practice list with viewed progress should not contain Chinese course or interface text"
+);
+
+vm.runInContext(
+  `
+    state.selectedUnitId = "grammar-basics";
+    state.selectedReadingUnitId = "grammar-basics";
+    state.selectedReadingGroupId = "grammar-word-order";
+    state.learningProgress.letters["dot-bone"] = { viewed: true };
+    state.learningProgress.reading = { "grammar-word-order": { viewed: true } };
+  `,
+  context
+);
+const englishReadingScreens = {
+  unit: renderState("state.screen = 'unit'"),
+  grammar: renderState("state.screen = 'reading'"),
+  quote: renderState("state.selectedReadingUnitId = 'famous-quotes'; state.selectedReadingGroupId = 'quote-mahmud-kashgari'; state.screen = 'reading'")
+};
+includesAll(
+  englishReadingScreens.unit,
+  ["Unit 4: Grammar basics", "Subject + object + verb", "3 grammar points", "Learned"],
+  "English reading unit overview"
+);
+includesAll(
+  englishReadingScreens.grammar,
+  ["Who + what + does what", "I read a book.", "A common Uyghur word order", "Back to lessons"],
+  "English grammar reading lesson"
+);
+includesAll(
+  englishReadingScreens.quote,
+  ["Mahmud al-Kashgari", "About this person", "11th-century linguist", "Language is the key to understanding a people.", "Back to lessons"],
+  "English quote reading lesson"
+);
+for (const [screenName, html] of Object.entries(englishReadingScreens)) {
+  assert.ok(
+    !/[\u3400-\u9fff]/u.test(html),
+    `English reading ${screenName} screen should not contain Chinese course or interface text`
+  );
+}
+
+const englishReadingExperience = vm.runInContext(
+  `[
+    currentUnitExperience("grammar-basics").recommended,
+    renderStepList("grammar-basics"),
+    renderUnitNextActions("grammar-basics"),
+    JSON.stringify(unitProgressSummaries()),
+    renderLearningMap(unitProgressSummaries()),
+    JSON.stringify(audioCoverageCategories()),
+    renderLearnedMarker("letters", "dot-bone")
+  ].join("\\n")`,
+  context
+);
+includesAll(
+  englishReadingExperience,
+  [
+    "Start with the basic grammar rules",
+    "Choose a grammar point",
+    "Learning steps",
+    "Next step",
+    "Review grammar",
+    "Enter Unit 5",
+    "Unit 1",
+    "Alphabet learning",
+    "Learning map",
+    "Letters",
+    "Form examples",
+    "Combinations",
+    "Vocabulary",
+    "Sentences",
+    "Learned"
+  ],
+  "English reading navigation, progress, audio metadata, and learned fallbacks"
+);
+assert.ok(
+  !/[\u3400-\u9fff]/u.test(englishReadingExperience),
+  "English reading navigation, progress, audio metadata, and learned fallbacks should not contain Chinese learner copy"
+);
+const englishPracticeMistakeFeedback = vm.runInContext(
+  `itemMistakeFeedback(
+    { value: "ب", latin: "b" },
+    { value: "پ", latin: "p" },
+    t("practice.choiceTarget")
+  )`,
+  context
+);
+assert.equal(
+  englishPracticeMistakeFeedback,
+  "The target is ب. You chose پ. Compare the ULY hint b.",
+  "English practice mistake feedback should localize the conditional wrong-answer branch"
+);
+assert.ok(
+  !/[\u3400-\u9fff]/u.test(englishPracticeMistakeFeedback),
+  "English practice mistake feedback should not contain Chinese learner copy"
 );
 
 setLanguage("zh");
@@ -2459,6 +2553,18 @@ includesAll(
   renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'repeat-loop'; state.currentPracticeItemId = 'practice-repeat-aa'"),
   ["跟读步骤", "看词形", "看提示", "轻声跟读", "letter-focus-play"],
   "practice repeat lesson"
+);
+const chineseRepeatAudioStatus = vm.runInContext(
+  `practiceGroups.find((group) => group.id === "repeat-loop").items.find((item) => item.id === "practice-repeat-aa").audioStatus`,
+  context
+);
+assert.ok(
+  app.innerHTML.includes(`${chineseRepeatAudioStatus}。`),
+  "Chinese repeat audio status should restore its original full-width punctuation"
+);
+assert.ok(
+  !app.innerHTML.includes(`${chineseRepeatAudioStatus}.`),
+  "Chinese repeat audio status should not use hard-coded English punctuation"
 );
 assert.ok(!app.innerHTML.includes('<div class="audio-strip">'), "practice repeat should put the listen button in the gradient card");
 for (const removedPhrase of ["我已跟读", "跟读不评分", "练习中心", "查看结果"]) {

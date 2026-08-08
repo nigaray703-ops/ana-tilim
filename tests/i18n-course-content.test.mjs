@@ -15,6 +15,7 @@ const scriptPaths = [
   "prototype/i18n/combo-en.js",
   "prototype/i18n/vocab-en.js",
   "prototype/i18n/practice-en.js",
+  "prototype/i18n/reading-en.js",
   "prototype/i18n/course-en.js",
   "prototype/i18n/runtime.js"
 ];
@@ -40,14 +41,8 @@ assert.ok(english?.alphabet, "the focused English alphabet catalog should load")
 assert.ok(english?.combos, "the focused English combination catalog should load");
 assert.ok(english?.vocab, "the focused English vocabulary catalog should load");
 assert.ok(english?.practice, "the focused English practice catalog should load");
+assert.ok(english?.reading, "the focused English reading catalog should load");
 assert.ok(i18n?.createCourseLocalizer, "the i18n runtime should create course localizers");
-for (const catalogName of ["reading"]) {
-  assert.deepEqual(
-    Object.keys(english[catalogName] || {}),
-    [],
-    `${catalogName} may remain empty until its focused localization task`
-  );
-}
 
 const detailFields = ["type", "cue", "connection", "soundHint", "writingHint", "example"];
 const formFields = ["label"];
@@ -57,10 +52,14 @@ const comboItemFields = ["type", "rule", "hint", "review"];
 const vocabGroupFields = ["title", "goal", "status"];
 const practiceGroupFields = ["title", "goal", "status"];
 const practiceItemFields = ["type", "label", "hint", "audioStatus"];
+const readingUnitFields = ["title", "subtitle"];
+const readingGroupFields = ["title", "intro"];
+const readingItemFields = ["pattern", "speaker", "meaning", "lesson"];
 const alphabetEnglish = english.alphabet;
 const comboEnglish = english.combos;
 const vocabEnglish = english.vocab;
 const practiceEnglish = english.practice;
+const readingEnglish = english.reading;
 
 assert.equal(Object.keys(alphabetEnglish.letterDetails).length, 32);
 assert.equal(Object.keys(alphabetEnglish.groups).length, 11);
@@ -88,6 +87,52 @@ assert.equal(practiceEnglish.groups["repeat-loop"].title, "Repeat aloud");
 assert.equal(practiceEnglish.groups["writing-loop"].title, "Writing");
 assert.equal(practiceEnglish.groups["keyboard-loop"].title, "Keyboard");
 assert.deepEqual(Object.keys(practiceEnglish.templates).toSorted(), ["keyboard", "listen", "repeat", "write"]);
+assert.equal(Object.keys(readingEnglish.units).length, 6);
+assert.equal(Object.keys(readingEnglish.groups).length, 46);
+assert.equal(Object.keys(readingEnglish.items).length, 164);
+assert.equal(readingEnglish.units["grammar-basics"].title, "Unit 4: Grammar basics");
+assert.equal(readingEnglish.groups["grammar-word-order"].title, "Subject + object + verb");
+assert.equal(readingEnglish.items["grammar-word-order-1"].meaning, "I read a book.");
+
+let translatedReadingGroupCount = 0;
+let translatedReadingItemCount = 0;
+for (const unit of course.readingUnits) {
+  const translatedUnit = readingEnglish.units[unit.id];
+  assert.ok(translatedUnit, `English reading units should include ${unit.id}`);
+  for (const field of readingUnitFields) {
+    if (typeof unit[field] === "string" && unit[field].trim()) {
+      assert.equal(typeof translatedUnit[field], "string", `English reading unit ${unit.id}.${field} should be text`);
+      assert.ok(translatedUnit[field].trim(), `English reading unit ${unit.id}.${field} should not be empty`);
+    }
+  }
+
+  for (const group of unit.groups) {
+    const translatedGroup = readingEnglish.groups[group.id];
+    assert.ok(translatedGroup, `English reading groups should include ${group.id}`);
+    for (const field of readingGroupFields) {
+      if (typeof group[field] === "string" && group[field].trim()) {
+        assert.equal(typeof translatedGroup[field], "string", `English reading group ${group.id}.${field} should be text`);
+        assert.ok(translatedGroup[field].trim(), `English reading group ${group.id}.${field} should not be empty`);
+      }
+    }
+    translatedReadingGroupCount += 1;
+
+    for (const item of group.items) {
+      const translatedItem = readingEnglish.items[item.id];
+      assert.ok(translatedItem, `English reading items should include ${item.id}`);
+      for (const field of readingItemFields) {
+        if (typeof item[field] === "string" && item[field].trim()) {
+          assert.equal(typeof translatedItem[field], "string", `English reading item ${item.id}.${field} should be text`);
+          assert.ok(translatedItem[field].trim(), `English reading item ${item.id}.${field} should not be empty`);
+        }
+      }
+      translatedReadingItemCount += 1;
+    }
+  }
+}
+
+assert.equal(translatedReadingGroupCount, 46);
+assert.equal(translatedReadingItemCount, 164);
 
 for (const group of course.practiceGroups) {
   const translatedGroup = practiceEnglish.groups[group.id];
@@ -336,6 +381,52 @@ function practiceProtectedSnapshot() {
   );
 }
 
+function readingTranslatableSnapshot() {
+  return JSON.stringify(
+    course.readingUnits.map((unit) => ({
+      id: unit.id,
+      ...Object.fromEntries(readingUnitFields.map((field) => [field, unit[field]])),
+      groups: unit.groups.map((group) => ({
+        id: group.id,
+        ...Object.fromEntries(
+          readingGroupFields
+            .filter((field) => Object.prototype.hasOwnProperty.call(group, field))
+            .map((field) => [field, group[field]])
+        ),
+        items: group.items.map((item) => ({
+          id: item.id,
+          ...Object.fromEntries(
+            readingItemFields
+              .filter((field) => Object.prototype.hasOwnProperty.call(item, field))
+              .map((field) => [field, item[field]])
+          )
+        }))
+      }))
+    }))
+  );
+}
+
+function readingProtectedSnapshot() {
+  return JSON.stringify(
+    course.readingUnits.map((unit) => ({
+      id: unit.id,
+      kind: unit.kind,
+      readingKind: unit.readingKind,
+      status: unit.status,
+      groups: unit.groups.map((group) => ({
+        id: group.id,
+        items: group.items.map(({ id, value, latin, audioLatin, reviewStatus }) => ({
+          id,
+          value,
+          latin,
+          audioLatin,
+          reviewStatus
+        }))
+      }))
+    }))
+  );
+}
+
 const originalChinese = translatableSnapshot();
 const originalProtectedValues = protectedSnapshot();
 const originalChineseCombos = comboTranslatableSnapshot();
@@ -344,6 +435,8 @@ const originalChineseVocab = vocabTranslatableSnapshot();
 const originalProtectedVocab = vocabProtectedSnapshot();
 const originalChinesePractice = practiceTranslatableSnapshot();
 const originalProtectedPractice = practiceProtectedSnapshot();
+const originalChineseReading = readingTranslatableSnapshot();
+const originalProtectedReading = readingProtectedSnapshot();
 const originalLetterDetails = course.letterDetails;
 const originalGroups = course.alphabetGroups;
 const originalBe = course.letterDetails.be;
@@ -358,6 +451,12 @@ const originalPracticeGroups = course.practiceGroups;
 const originalListeningGroup = course.practiceGroups[0];
 const originalListeningItems = originalListeningGroup.items;
 const originalListeningBe = originalListeningItems[0];
+const originalReadingUnits = course.readingUnits;
+const originalGrammarUnit = course.readingUnits[0];
+const originalGrammarGroups = originalGrammarUnit.groups;
+const originalGrammarGroup = originalGrammarGroups[0];
+const originalGrammarItems = originalGrammarGroup.items;
+const originalGrammarItem = originalGrammarItems[0];
 
 const localizer = i18n.createCourseLocalizer(course, english);
 assert.deepEqual(Array.from(localizer.missingEnglish()), []);
@@ -390,6 +489,13 @@ assert.equal(localizedWritingBe.label, "Letter to write");
 assert.match(localizedWritingBe.hint, /dot below/i);
 assert.equal(localizedKeyboardBe.label, "Keyboard letter");
 assert.equal(localizedKeyboardBe.hint, "Type ب only. First learn its keyboard position, then move on to combinations.");
+assert.equal(course.readingUnits[0].title, "Unit 4: Grammar basics");
+assert.equal(course.readingUnits[0].groups[0].title, "Subject + object + verb");
+assert.equal(course.readingUnits[0].groups[0].items[0].meaning, "I read a book.");
+assert.equal(
+  course.readingUnits[0].groups[1].items[2].lesson,
+  "Uyghur third-person pronouns are not gendered: ئۇ can mean he, she, or it."
+);
 for (const item of localizedPracticeItems) {
   for (const field of practiceItemFields) {
     assert.equal(typeof item[field], "string", `localized practice item ${item.id}.${field} should be text`);
@@ -410,14 +516,22 @@ assert.strictEqual(course.practiceGroups, originalPracticeGroups, "localization 
 assert.strictEqual(course.practiceGroups[0], originalListeningGroup, "localization should preserve practice group objects");
 assert.strictEqual(course.practiceGroups[0].items, originalListeningItems, "localization should preserve practice item arrays");
 assert.strictEqual(course.practiceGroups[0].items[0], originalListeningBe, "localization should preserve practice item objects");
+assert.strictEqual(course.readingUnits, originalReadingUnits, "localization should preserve the reading unit array");
+assert.strictEqual(course.readingUnits[0], originalGrammarUnit, "localization should preserve reading unit objects");
+assert.strictEqual(course.readingUnits[0].groups, originalGrammarGroups, "localization should preserve reading group arrays");
+assert.strictEqual(course.readingUnits[0].groups[0], originalGrammarGroup, "localization should preserve reading group objects");
+assert.strictEqual(course.readingUnits[0].groups[0].items, originalGrammarItems, "localization should preserve reading item arrays");
+assert.strictEqual(course.readingUnits[0].groups[0].items[0], originalGrammarItem, "localization should preserve reading item objects");
 assert.equal(protectedSnapshot(), originalProtectedValues, "localization should not change glyphs, ULY, form values, words, targets, ids, or order");
 assert.equal(comboProtectedSnapshot(), originalProtectedCombos, "localization should not change combination ids, order, Uyghur, ULY, parts, or prompts");
 assert.equal(vocabProtectedSnapshot(), originalProtectedVocab, "localization should not change vocabulary ids, order, Uyghur, ULY, parts, or section membership");
 assert.equal(practiceProtectedSnapshot(), originalProtectedPractice, "localization should not change practice IDs, modes, letter targets, Uyghur, ULY, parts, or order");
+assert.equal(readingProtectedSnapshot(), originalProtectedReading, "localization should not change reading IDs, kinds, status metadata, Uyghur, ULY, audio values, or order");
 assert.ok(!/[\u3400-\u9fff]/u.test(translatableSnapshot()), "English alphabet course text should not contain CJK characters");
 assert.ok(!/[\u3400-\u9fff]/u.test(comboTranslatableSnapshot()), "English combination course text should not contain CJK characters");
 assert.ok(!/[\u3400-\u9fff]/u.test(vocabTranslatableSnapshot()), "English vocabulary course text should not contain CJK characters");
 assert.ok(!/[\u3400-\u9fff]/u.test(practiceTranslatableSnapshot()), "English practice course text should not contain CJK characters");
+assert.ok(!/[\u3400-\u9fff]/u.test(readingTranslatableSnapshot()), "English reading course text should not contain CJK characters");
 
 localizer.apply("zh");
 assert.equal(translatableSnapshot(), originalChinese, "returning to Chinese should restore every original alphabet string exactly");
@@ -428,5 +542,7 @@ assert.equal(vocabTranslatableSnapshot(), originalChineseVocab, "returning to Ch
 assert.equal(vocabProtectedSnapshot(), originalProtectedVocab, "returning to Chinese should preserve protected vocabulary values");
 assert.equal(practiceTranslatableSnapshot(), originalChinesePractice, "returning to Chinese should restore every original practice string exactly");
 assert.equal(practiceProtectedSnapshot(), originalProtectedPractice, "returning to Chinese should preserve protected practice values");
+assert.equal(readingTranslatableSnapshot(), originalChineseReading, "returning to Chinese should restore every original reading string exactly");
+assert.equal(readingProtectedSnapshot(), originalProtectedReading, "returning to Chinese should preserve protected reading values");
 
-console.log("English alphabet, combination, and vocabulary catalogs and in-place localization checks passed");
+console.log("English alphabet, combination, vocabulary, practice, and reading catalogs and in-place localization checks passed");

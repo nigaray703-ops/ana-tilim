@@ -30,7 +30,7 @@ function connectVoiceAudio(audio, folder) {
     ...audio,
     file,
     playable: true,
-    statusLabel: "真人音频",
+    get statusLabel() { return i18n.t("audio.humanRecording"); },
     outputPath: `./assets/audio/human/${folder}/${file}`
   };
 }
@@ -56,7 +56,7 @@ function createAudioItem({ folder, prefix, id, fileId = id, value, latin, order 
     latin,
     file,
     playable: true,
-    statusLabel: "真人音频",
+    get statusLabel() { return i18n.t("audio.humanRecording"); },
     outputPath: `./assets/audio/human/${folder}/${file}`
   };
 }
@@ -197,7 +197,7 @@ const dedicatedFormExampleAudioByValue = new Map(
         id: item.id,
         fileId: item.key,
         value: item.value,
-        latin: item.latin || "未提供转写",
+        latin: item.latin || "",
         order: index + 1
       })
     ])
@@ -264,7 +264,13 @@ const learningUnits = [
     actionTarget: "vocab"
   },
   ...readingUnits.map((unit) => ({
-    ...unit,
+    id: unit.id,
+    kind: unit.kind,
+    readingKind: unit.readingKind,
+    get title() { return unit.title; },
+    get subtitle() { return unit.subtitle; },
+    get status() { return unit.status; },
+    groups: unit.groups,
     actionTarget: "reading"
   }))
 ];
@@ -316,51 +322,88 @@ const unitExperience = {
     nextUnitId: "grammar-basics"
   },
   "grammar-basics": {
-    recommended: "先看最基础的语法规则，再读例句。",
-    steps: ["选择语法点", "看句型模式", "读维语例句", "看中文说明"],
-    reviewLabel: "复习语法",
+    get recommended() { return t("reading.grammarRecommended"); },
+    get steps() {
+      return [
+        t("reading.grammarStepChoose"),
+        t("reading.grammarStepPattern"),
+        t("reading.grammarStepExample"),
+        t("reading.grammarStepExplanation")
+      ];
+    },
+    get reviewLabel() { return t("reading.grammarReview"); },
     reviewTarget: "reading",
-    nextLabel: "进入第五单元",
+    get nextLabel() { return t("reading.enterUnit5"); },
     nextUnitId: "sentence-patterns"
   },
   "sentence-patterns": {
-    recommended: "把第三单元学过的常用词放进短句里。",
-    steps: ["选择句型", "一行一行读短句", "看中文翻译"],
-    reviewLabel: "复习句型",
+    get recommended() { return t("reading.sentenceRecommended"); },
+    get steps() {
+      return [
+        t("reading.sentenceStepChoose"),
+        t("reading.sentenceStepRead"),
+        t("reading.translationStep")
+      ];
+    },
+    get reviewLabel() { return t("reading.sentenceReview"); },
     reviewTarget: "reading",
-    nextLabel: "进入第六单元",
+    get nextLabel() { return t("reading.enterUnit6"); },
     nextUnitId: "dialogue-theater"
   },
   "dialogue-theater": {
-    recommended: "读很短的双人日常对话。",
-    steps: ["选择对话", "一句一句读", "看中文翻译"],
-    reviewLabel: "复习对话",
+    get recommended() { return t("reading.dialogueRecommended"); },
+    get steps() {
+      return [
+        t("reading.dialogueStepChoose"),
+        t("reading.dialogueStepRead"),
+        t("reading.translationStep")
+      ];
+    },
+    get reviewLabel() { return t("reading.dialogueReview"); },
     reviewTarget: "reading",
-    nextLabel: "进入第七单元",
+    get nextLabel() { return t("reading.enterUnit7"); },
     nextUnitId: "short-stories"
   },
   "short-stories": {
-    recommended: "读很短的小故事。",
-    steps: ["选择故事", "一句一句读", "看中文翻译"],
-    reviewLabel: "复习故事",
+    get recommended() { return t("reading.storyRecommended"); },
+    get steps() {
+      return [
+        t("reading.storyStepChoose"),
+        t("reading.storyStepRead"),
+        t("reading.translationStep")
+      ];
+    },
+    get reviewLabel() { return t("reading.storyReview"); },
     reviewTarget: "reading",
-    nextLabel: "进入第八单元",
+    get nextLabel() { return t("reading.enterUnit8"); },
     nextUnitId: "famous-quotes"
   },
   "famous-quotes": {
-    recommended: "阅读名人短句，先理解句意，再听真人发音。",
-    steps: ["选择人物", "读短句", "看中文翻译"],
-    reviewLabel: "复习名言",
+    get recommended() { return t("reading.quoteRecommended"); },
+    get steps() {
+      return [
+        t("reading.quoteStepChoose"),
+        t("reading.quoteStepRead"),
+        t("reading.translationStep")
+      ];
+    },
+    get reviewLabel() { return t("reading.quoteReview"); },
     reviewTarget: "reading",
-    nextLabel: "进入第九单元",
+    get nextLabel() { return t("reading.enterUnit9"); },
     nextUnitId: "uyghur-proverbs"
   },
   "uyghur-proverbs": {
-    recommended: "阅读常见谚语，先理解句意，再跟读真人发音。",
-    steps: ["选择谚语", "读原文", "看中文翻译"],
-    reviewLabel: "复习谚语",
+    get recommended() { return t("reading.proverbRecommended"); },
+    get steps() {
+      return [
+        t("reading.proverbStepChoose"),
+        t("reading.proverbStepRead"),
+        t("reading.translationStep")
+      ];
+    },
+    get reviewLabel() { return t("reading.proverbReview"); },
     reviewTarget: "reading",
-    nextLabel: "回到学习路径",
+    get nextLabel() { return t("reading.backToPath"); },
     nextUnitId: "letters",
     nextTarget: "learn"
   }
@@ -1029,9 +1072,9 @@ function alphabetAudioCoverageTargets() {
     audioCoverageTarget({
       id: `alphabet-${letter.id}`,
       categoryId: "alphabet",
-      categoryTitle: "字母",
-      unit: "第一单元",
-      groupTitle: groupForLetter(letter.id)?.title || "认识字母",
+      categoryTitle: t("audio.categoryAlphabet"),
+      unit: t("audio.unit1"),
+      groupTitle: groupForLetter(letter.id)?.title || t("audio.alphabetGroupFallback"),
       value: letter.letter,
       latin: letter.latin,
       kind: letter.type,
@@ -1045,12 +1088,12 @@ function formExampleAudioCoverageTargets() {
     audioCoverageTarget({
       id: item.id,
       categoryId: "form-example",
-      categoryTitle: "例词",
-      unit: "第一单元",
-      groupTitle: "写法例词",
+      categoryTitle: t("audio.categoryFormExamples"),
+      unit: t("audio.unit1"),
+      groupTitle: t("audio.formExamplesFallback"),
       value: item.value,
-      latin: item.latin || "未提供转写",
-      kind: item.meaning || "写法例词",
+      latin: item.latin || t("audio.noTransliteration"),
+      kind: item.meaning || t("audio.formExamplesFallback"),
       audio: formExampleAudioForWord(item.value),
       fileBase: `voice_form_example_${item.key}`
     })
@@ -1062,9 +1105,9 @@ function comboAudioCoverageTargets() {
     audioCoverageTarget({
       id: `combo-${item.id}`,
       categoryId: "combo",
-      categoryTitle: "组合",
+      categoryTitle: t("audio.categoryCombinations"),
       unit: unitNameForComboGroup(comboGroupForItem(item.id)?.id),
-      groupTitle: comboGroupForItem(item.id)?.title || "组合与词组",
+      groupTitle: comboGroupForItem(item.id)?.title || t("audio.combinationGroupFallback"),
       value: item.value,
       latin: item.latin,
       kind: item.type,
@@ -1078,9 +1121,9 @@ function vocabAudioCoverageTargets() {
     audioCoverageTarget({
       id: `vocab-${item.id}`,
       categoryId: "vocab",
-      categoryTitle: "词汇",
-      unit: "第三单元",
-      groupTitle: vocabGroupForItem(item.id)?.title || "日常词汇",
+      categoryTitle: t("audio.categoryVocabulary"),
+      unit: t("audio.unit3"),
+      groupTitle: vocabGroupForItem(item.id)?.title || t("audio.vocabularyGroupFallback"),
       value: item.value,
       latin: item.latin,
       kind: item.meaning,
@@ -1096,7 +1139,7 @@ function readingAudioCoverageTargets() {
         audioCoverageTarget({
           id: `reading-${item.id}`,
           categoryId: "reading",
-          categoryTitle: "句子",
+          categoryTitle: t("audio.categorySentences"),
           unit: unit.title,
           groupTitle: group.title,
           value: item.value,
@@ -1111,11 +1154,11 @@ function readingAudioCoverageTargets() {
 
 function audioCoverageCategories() {
   return [
-    { id: "alphabet", title: "字母", items: alphabetAudioCoverageTargets() },
-    { id: "form-example", title: "例词", items: formExampleAudioCoverageTargets() },
-    { id: "combo", title: "组合", items: comboAudioCoverageTargets() },
-    { id: "vocab", title: "词汇", items: vocabAudioCoverageTargets() },
-    { id: "reading", title: "句子", items: readingAudioCoverageTargets() }
+    { id: "alphabet", title: t("audio.categoryAlphabet"), items: alphabetAudioCoverageTargets() },
+    { id: "form-example", title: t("audio.categoryFormExamples"), items: formExampleAudioCoverageTargets() },
+    { id: "combo", title: t("audio.categoryCombinations"), items: comboAudioCoverageTargets() },
+    { id: "vocab", title: t("audio.categoryVocabulary"), items: vocabAudioCoverageTargets() },
+    { id: "reading", title: t("audio.categorySentences"), items: readingAudioCoverageTargets() }
   ];
 }
 
@@ -1275,13 +1318,13 @@ function countCompletedForIds(scope, ids) {
 function unitProgressSummaries() {
   const basicComboIds = basicComboGroups.map((group) => group.id);
   const coreSummaries = [
-    { unit: "第一单元", label: "字母学习", completed: countCompleted("letters"), total: alphabetGroups.length },
-    { unit: "第二单元", label: "基础组合", completed: countCompletedForIds("combos", basicComboIds), total: basicComboIds.length },
-    { unit: "第三单元", label: "主题词汇", completed: countCompleted("vocab"), total: vocabGroups.length }
+    { unit: t("progress.unit1"), label: t("progress.alphabet"), completed: countCompleted("letters"), total: alphabetGroups.length },
+    { unit: t("progress.unit2"), label: t("progress.combinations"), completed: countCompletedForIds("combos", basicComboIds), total: basicComboIds.length },
+    { unit: t("progress.unit3"), label: t("progress.vocabulary"), completed: countCompleted("vocab"), total: vocabGroups.length }
   ];
 
   const readingSummaries = readingUnits.map((unit) => {
-    const [unitName, label = unit.title] = unit.title.split("：");
+    const [unitName, label = unit.title] = unit.title.split(/[:：]\s*/u);
     const completed = unit.groups.filter((group) => state.learningProgress.reading?.[group.id]?.completed).length;
 
     return {
@@ -1319,10 +1362,7 @@ function renderLearnedMarker(scope, id) {
   if (!hasLearningActivity(scope, id)) {
     return "";
   }
-  if (scope === "vocab" || scope === "practice") {
-    return `<span class="learned-marker" aria-label="${t("vocab.learnedAria")}">✓ ${t("vocab.learned")}</span>`;
-  }
-  return '<span class="learned-marker" aria-label="已学习">✓ 已学</span>';
+  return `<span class="learned-marker" aria-label="${t("vocab.learnedAria")}">✓ ${t("vocab.learned")}</span>`;
 }
 
 function renderLearningMap(summaries) {
@@ -1330,8 +1370,8 @@ function renderLearningMap(summaries) {
     <article class="card learning-map-card">
       <div class="section-row">
         <div>
-          <p class="caption">学习地图</p>
-          <h2 class="section-title">按单元一步一步往前走</h2>
+          <p class="caption">${t("progress.map")}</p>
+          <h2 class="section-title">${t("progress.mapDetail")}</h2>
         </div>
         <span class="step-state">${summaries.reduce((sum, item) => sum + item.completed, 0)} / ${summaries.reduce((sum, item) => sum + item.total, 0)}</span>
       </div>
@@ -1462,12 +1502,17 @@ function oddLetterForCurrent() {
   return choices[index + 1] || choices[index - 1] || choices[0];
 }
 
-function itemMistakeFeedback(target, picked, label = "词形") {
+function itemMistakeFeedback(target, picked, label = t("practice.choiceTarget")) {
   if (!picked) {
-    return `目标${label}是 ${target.value}，先看 ${target.latin} 的转写提示。`;
+    return t("practice.mistakeMissing", { label, target: target.value, latin: target.latin });
   }
 
-  return `目标${label}是 ${target.value}，你选了 ${picked.value}。先对照转写：${target.latin}。`;
+  return t("practice.mistakePicked", {
+    label,
+    target: target.value,
+    picked: picked.value,
+    latin: target.latin
+  });
 }
 
 function comboMistakeFeedback(target, picked) {
@@ -1763,7 +1808,7 @@ function renderStepList(unitId) {
   const experience = currentUnitExperience(unitId);
 
   return `
-    <div class="step-list" aria-label="学习步骤">
+    <div class="step-list" aria-label="${t("reading.stepsAria")}">
       ${experience.steps
         .map(
           (step, index) => `
@@ -1898,7 +1943,7 @@ function renderUnitNextActions(unitId, primaryClass = "primary-button") {
       ? t("combo.nextStep")
       : unitId === "basic-phrases"
         ? t("vocab.nextStep")
-        : "下一步建议";
+        : t("reading.nextStep");
 
   return `
     <article class="card next-action-card">
@@ -2110,9 +2155,7 @@ function languageSwitcher(compact = false) {
     <div class="language-switcher ${compact ? "is-compact" : ""}" role="group" aria-label="${t("language.label")}">
       ${["zh", "en"].map((language) => `
         <button type="button" data-action="set-language" data-language="${language}"
-          aria-pressed="${state.interfaceLanguage === language}">
-          ${compact ? (language === "zh" ? "中文" : "EN") : t(language === "zh" ? "language.chinese" : "language.english")}
-        </button>`).join("")}
+          aria-pressed="${state.interfaceLanguage === language}">${compact ? (language === "zh" ? "中文" : "EN") : t(language === "zh" ? "language.chinese" : "language.english")}</button>`).join("")}
     </div>`;
 }
 
@@ -2545,17 +2588,17 @@ function renderVocabTopicCard(group, action = "open-vocab-group") {
 
 function readingGroupCountLabel(unit, group) {
   if (unit.readingKind === "grammar") {
-    return `${group.items.length} 个语法点`;
+    return t("reading.grammarCount", { count: group.items.length });
   }
 
   if (unit.readingKind === "sentence") {
-    return `${group.items.length} 个句型`;
+    return t("reading.patternCount", { count: group.items.length });
   }
 
   if (unit.readingKind === "quote" || unit.readingKind === "proverb") {
-    return `${group.items.length} 条`;
+    return t("reading.entryCount", { count: group.items.length });
   }
-  return `${group.items.length} 句`;
+  return t("reading.lineCount", { count: group.items.length });
 }
 
 function renderReadingTopicCard(unit, group) {
@@ -2566,7 +2609,7 @@ function renderReadingTopicCard(unit, group) {
       data-unit-id="${unit.id}"
       data-id="${group.id}"
       type="button"
-      aria-label="进入${group.title}"
+      aria-label="${t("reading.openTopic", { title: group.title })}"
     >
       <span>
         <strong>${group.title}</strong>
@@ -2625,8 +2668,8 @@ function renderUnitDetail() {
     unit.actionTarget === "letter" && firstGroup
       ? `<button class="primary-button" data-action="open-group" data-id="${firstGroup.id}" type="button">${t("alphabet.startCurrent")}</button>`
       : unit.actionTarget === "combo" && firstGroup
-        ? `<button class="primary-button" data-action="open-combo-group" data-id="${firstGroup.id}" type="button">进入当前学习</button>`
-        : `<button class="primary-button" data-action="go" data-target="${unit.actionTarget}" type="button">进入当前学习</button>`;
+        ? `<button class="primary-button" data-action="open-combo-group" data-id="${firstGroup.id}" type="button">${t("common.startCurrent")}</button>`
+        : `<button class="primary-button" data-action="go" data-target="${unit.actionTarget}" type="button">${t("common.startCurrent")}</button>`;
 
   if (unit.id === "basic-phrases") {
     return renderVocabUnitDetail(unit);
@@ -4114,7 +4157,7 @@ function renderReadingLesson() {
         ${
           unit.readingKind === "quote" && group.intro
             ? `<article class="card reading-intro-card">
-                <p class="caption">人物介绍</p>
+                <p class="caption">${t("reading.personIntro")}</p>
                 <p class="reading-intro-text">${group.intro}</p>
               </article>`
             : ""
@@ -4123,7 +4166,7 @@ function renderReadingLesson() {
           ${group.items.map((item) => renderReadingLine(unit, item)).join("")}
         </div>
         <button class="secondary-button" data-action="go" data-target="unit" type="button">
-          返回小课
+          ${t("reading.backToLessons")}
         </button>
       </section>
     `,
@@ -4248,7 +4291,7 @@ function renderPracticeModeCard(group, item) {
         <div class="lesson-point-list">
           <div class="lesson-point"><strong>${t("practice.lookLetter")}</strong><span class="uyghur">${item.value}</span></div>
           <div class="lesson-point"><strong>${t("practice.readHint")}</strong><span>${item.latin}, ${item.hint}</span></div>
-          <div class="lesson-point"><strong>${t("practice.repeatSoftly")}</strong><span>${item.audioStatus}.</span></div>
+          <div class="lesson-point"><strong>${t("practice.repeatSoftly")}</strong><span>${t("practice.audioStatusSentence", { status: item.audioStatus })}</span></div>
         </div>
       </article>
     `;
@@ -4559,7 +4602,7 @@ function renderPracticeComplete() {
             <div class="audit-row"><strong>${t("practice.repeat")}</strong><span>${repeated}</span></div>
             <div class="audit-row"><strong>${t("practice.writing")}</strong><span>${written}</span></div>
             <div class="audit-row"><strong>${t("practice.keyboard")}</strong><span>${typed}</span></div>
-            <div class="audit-row"><strong>${t("practice.note")}</strong><span>${item.audioStatus}.</span></div>
+            <div class="audit-row"><strong>${t("practice.note")}</strong><span>${t("practice.audioStatusSentence", { status: item.audioStatus })}</span></div>
           </div>
         </article>
         <article class="card next-action-card">
