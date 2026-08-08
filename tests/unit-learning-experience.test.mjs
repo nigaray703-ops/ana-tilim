@@ -64,19 +64,19 @@ const expectedVersionedAssets = [
   "./course-data/practice-data.js?v=20260728-learned-markers",
   "./course-data/reading-data.js?v=20260728-uly-transliteration",
   "./course-data.js?v=20260728-uly-transliteration",
-  "./i18n/ui-messages.js?v=20260809-bilingual",
+  "./i18n/ui-messages.js?v=20260809-bilingual-final",
   "./i18n/alphabet-en.js?v=20260809-bilingual",
   "./i18n/combo-en.js?v=20260809-bilingual",
   "./i18n/vocab-en.js?v=20260809-bilingual",
   "./i18n/practice-en.js?v=20260809-bilingual",
   "./i18n/reading-en.js?v=20260809-bilingual",
   "./i18n/course-en.js?v=20260809-bilingual",
-  "./i18n/runtime.js?v=20260809-bilingual",
+  "./i18n/runtime.js?v=20260809-bilingual-final",
   "./audio-controller.js?v=20260728-uly-transliteration",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260729-password-auth",
-  "./app.js?v=20260809-bilingual"
+  "./app.js?v=20260809-bilingual-final"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -102,6 +102,23 @@ assert.equal(
   undefined,
   "an old alphabet-data cache entry must not satisfy the bilingual release URL"
 );
+const previousFinalReviewCache = new Map([
+  ["./i18n/ui-messages.js?v=20260809-bilingual", { release: "pr-5" }],
+  ["./i18n/runtime.js?v=20260809-bilingual", { release: "pr-5" }],
+  ["./app.js?v=20260809-bilingual", { release: "pr-5" }]
+]);
+for (const finalAssetUrl of [
+  "./i18n/ui-messages.js?v=20260809-bilingual-final",
+  "./i18n/runtime.js?v=20260809-bilingual-final",
+  "./app.js?v=20260809-bilingual-final"
+]) {
+  assert.ok(versionedAppAssets.includes(finalAssetUrl), `${finalAssetUrl} should be requested by production HTML`);
+  assert.equal(
+    previousFinalReviewCache.get(finalAssetUrl),
+    undefined,
+    `${finalAssetUrl} must not be satisfied by the PR #5 cache key`
+  );
+}
 assert.ok(styleSource.includes("--content-max-width: 1120px;"), "prototype should define a tablet-friendly content width");
 assert.ok(styleSource.includes("--nav-rail-width: 96px;"), "prototype should define a tablet side navigation width");
 for (const phrase of [
@@ -1733,6 +1750,10 @@ vm.runInContext(
     };
     state.mistakes = [{ key: "letter:be", targetId: "be" }];
     state.writingChecks = ["shape"];
+    state.writingStrokes = {
+      "letter:pe": [[{ x: 0.1, y: 0.2 }, { x: 0.7, y: 0.8 }]],
+      "combo:ta": [[{ x: 0.2, y: 0.3 }, { x: 0.6, y: 0.7 }]]
+    };
     state.favorite = true;
     state.selectedPicture = "be";
     state.selectedListening = "practice-listen-be";
@@ -1762,6 +1783,7 @@ const populatedLearningRecord = vm.runInContext(
     dailyActivity: state.dailyActivity,
     mistakes: state.mistakes,
     writingChecks: state.writingChecks,
+    writingStrokes: state.writingStrokes,
     favorite: state.favorite,
     selectedPicture: state.selectedPicture,
     selectedListening: state.selectedListening,
@@ -1781,6 +1803,11 @@ const populatedLearningRecord = vm.runInContext(
     selectedUnitId: state.selectedUnitId
   })`,
   context
+);
+assert.equal(
+  vm.runInContext("Object.prototype.hasOwnProperty.call(learningRecordSnapshot(), 'writingStrokes')", context),
+  true,
+  "the failed-save rollback snapshot should include session handwriting strokes"
 );
 
 clickDataset({ action: "request-clear-learning" });
@@ -1802,6 +1829,7 @@ assert.equal(
       dailyActivity: state.dailyActivity,
       mistakes: state.mistakes,
       writingChecks: state.writingChecks,
+      writingStrokes: state.writingStrokes,
       favorite: state.favorite,
       selectedPicture: state.selectedPicture,
       selectedListening: state.selectedListening,
@@ -1836,6 +1864,11 @@ clickDataset({ action: "request-clear-learning" });
 clickDataset({ action: "confirm-clear-learning" });
 assert.equal(vm.runInContext("state.mistakes.length", context), 0);
 assert.equal(vm.runInContext("state.writingChecks.length", context), 0);
+assert.equal(
+  vm.runInContext("Object.keys(state.writingStrokes).length", context),
+  0,
+  "successfully clearing learning records should also clear session handwriting strokes"
+);
 assert.equal(vm.runInContext("state.favorite", context), false);
 assert.equal(vm.runInContext("state.dailyActivity.completedIds.length", context), 0);
 assert.equal(vm.runInContext("Object.keys(state.learningProgress.letters).length", context), 0);
