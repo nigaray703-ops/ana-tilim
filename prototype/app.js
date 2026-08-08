@@ -249,10 +249,23 @@ const readingUnitCatalog = readingUnits.map(({ title: _title, ...unit }) => ({
 const learningUnitCatalog = [lettersUnit, combosUnit, vocabUnit, ...readingUnitCatalog];
 const learningUnits = unitOrder.buildVisibleUnits(learningUnitCatalog, appConfig);
 
+function learningUnitById(unitId) {
+  return learningUnits.find((unit) => unit.id === unitId) || null;
+}
+
+function learningUnitTitle(unitId) {
+  return learningUnitById(unitId)?.title || unitOrder.UNIT_NAMES[unitId] || "学习单元";
+}
+
+function learningUnitOrdinal(unitId) {
+  const [ordinal, name] = learningUnitTitle(unitId).split("：");
+  return name ? ordinal : "学习单元";
+}
+
 const unitExperience = {
   letters: {
-    recommended: "先复习第一单元字母分组，再进入组合。",
-    steps: ["认识相似字母组", "看四种写法", "做辨认、听音、键盘", "完成后进入组合"],
+    recommended: "先复习字母分组，再进入下一单元。",
+    steps: ["认识相似字母组", "看四种写法", "做辨认、听音、键盘", "完成后进入下一单元"],
     reviewLabel: "复习本组",
     reviewTarget: "group"
   },
@@ -275,7 +288,7 @@ const unitExperience = {
     reviewTarget: "reading"
   },
   "sentence-patterns": {
-    recommended: "把第三单元学过的常用词放进短句里。",
+    recommended: "把日常用语与词汇中学过的常用词放进短句里。",
     steps: ["选择句型", "一行一行读短句", "看中文翻译"],
     reviewLabel: "复习句型",
     reviewTarget: "reading"
@@ -832,7 +845,7 @@ function unitIdForComboGroup() {
 }
 
 function unitNameForComboGroup() {
-  return "第二单元";
+  return learningUnitOrdinal("combos");
 }
 
 function currentComboUnit() {
@@ -1016,7 +1029,7 @@ function alphabetAudioCoverageTargets() {
       id: `alphabet-${letter.id}`,
       categoryId: "alphabet",
       categoryTitle: "字母",
-      unit: "第一单元",
+      unit: learningUnitOrdinal("letters"),
       groupTitle: groupForLetter(letter.id)?.title || "认识字母",
       value: letter.letter,
       latin: letter.latin,
@@ -1032,7 +1045,7 @@ function formExampleAudioCoverageTargets() {
       id: item.id,
       categoryId: "form-example",
       categoryTitle: "例词",
-      unit: "第一单元",
+      unit: learningUnitOrdinal("letters"),
       groupTitle: "写法例词",
       value: item.value,
       latin: item.latin || "未提供转写",
@@ -1065,7 +1078,7 @@ function vocabAudioCoverageTargets() {
       id: `vocab-${item.id}`,
       categoryId: "vocab",
       categoryTitle: "词汇",
-      unit: "第三单元",
+      unit: learningUnitOrdinal("basic-phrases"),
       groupTitle: vocabGroupForItem(item.id)?.title || "日常词汇",
       value: item.value,
       latin: item.latin,
@@ -1083,7 +1096,7 @@ function readingAudioCoverageTargets() {
           id: `reading-${item.id}`,
           categoryId: "reading",
           categoryTitle: "句子",
-          unit: unit.title,
+          unit: learningUnitTitle(unit.id),
           groupTitle: group.title,
           value: item.value,
           latin: item.pattern || item.speaker || unit.subtitle,
@@ -1110,11 +1123,13 @@ function allAudioCoverageTargets() {
 }
 
 function currentReadingUnit() {
-  return readingUnits.find((unit) => unit.id === state.selectedReadingUnitId) || readingUnits[0];
+  const visibleReadingUnits = learningUnits.filter((unit) => unit.actionTarget === "reading");
+  return visibleReadingUnits.find((unit) => unit.id === state.selectedReadingUnitId) || visibleReadingUnits[0];
 }
 
 function readingUnitForGroup(groupId) {
-  return readingUnits.find((unit) => unit.groups.some((group) => group.id === groupId)) || readingUnits[0];
+  const visibleReadingUnits = learningUnits.filter((unit) => unit.actionTarget === "reading");
+  return visibleReadingUnits.find((unit) => unit.groups.some((group) => group.id === groupId)) || visibleReadingUnits[0];
 }
 
 function currentReadingGroup() {
@@ -1123,7 +1138,7 @@ function currentReadingGroup() {
 }
 
 function nextReadingGroup(unitId, groupId) {
-  const unit = readingUnits.find((item) => item.id === unitId) || readingUnits[0];
+  const unit = learningUnitById(unitId) || currentReadingUnit();
   return nextCollectionItem(unit.groups, groupId);
 }
 
@@ -1402,7 +1417,7 @@ function recordLetterMistake(kind, target, picked) {
     pickedId: picked ? picked.id : "",
     value: target.letter,
     latin: target.latin,
-    source: "第一单元错题",
+    source: `${learningUnitOrdinal("letters")}错题`,
     note: picked
       ? `目标是 ${displayStandaloneLetterGlyph(target.letter)}，你选了 ${displayStandaloneLetterGlyph(picked.letter)}`
       : `需要复习 ${displayStandaloneLetterGlyph(target.letter)}`,
@@ -1758,7 +1773,7 @@ function resetPracticeSessionState() {
 }
 
 function currentUnit() {
-  return learningUnits.find((unit) => unit.id === state.selectedUnitId) || learningUnits[0];
+  return learningUnitById(state.selectedUnitId) || learningUnits[0];
 }
 
 function homeLearningUnit() {
@@ -2854,7 +2869,7 @@ function renderGroupLesson() {
     `
       ${topBar(
         group.title,
-        "第一单元：认识字母",
+        learningUnitTitle("letters"),
         `<button class="icon-button" data-action="toggle-favorite" type="button" aria-label="收藏">${state.favorite ? "★" : "☆"}</button>`,
         `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
       )}
@@ -3315,7 +3330,7 @@ function renderComplete() {
 
   return screen(
     `
-      ${topBar("课程完成", "第一单元完成")}
+      ${topBar("课程完成", `${learningUnitOrdinal("letters")}完成`)}
       <section class="stack">
         <article class="card">
           <p class="caption">本次学会</p>
@@ -3925,7 +3940,7 @@ function renderVocabLesson() {
     `
       ${topBar(
         group.title,
-        "第三单元：日常用语与词汇",
+        learningUnitTitle("basic-phrases"),
         "",
         `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
       )}
@@ -4103,7 +4118,7 @@ function renderVocabComplete() {
 
   return screen(
     `
-      ${topBar("第三单元完成", group.title)}
+      ${topBar(`${learningUnitOrdinal("basic-phrases")}完成`, group.title)}
       <section class="stack">
         <article class="card review-card">
           <p class="caption">本次练习</p>
@@ -4707,7 +4722,7 @@ function renderPracticeComplete() {
 function renderLibrary() {
   return screen(
     `
-      ${topBar("字母库", "第一单元全部字母")}
+      ${topBar("字母库", `${learningUnitOrdinal("letters")}全部字母`)}
       <section class="stack">
         <article class="card compact-library-card">
           <div class="section-row">
@@ -5283,7 +5298,7 @@ document.addEventListener("click", (event) => {
         state.authMode = "login";
         state.authEmail = "";
         render();
-        showToast("注册成功，从第一单元开始学习");
+        showToast(`注册成功，从${learningUnitOrdinal("letters")}开始学习`);
       })
       .catch((error) => {
         restoreGuestProgressBackup(backup.previousValue);
@@ -5525,7 +5540,7 @@ document.addEventListener("click", (event) => {
   }
 
   if (action === "open-reading-group") {
-    const unit = readingUnits.find((item) => item.id === button.dataset.unitId) || readingUnitForGroup(button.dataset.id);
+    const unit = learningUnitById(button.dataset.unitId) || readingUnitForGroup(button.dataset.id);
     const group = unit.groups.find((item) => item.id === button.dataset.id) || unit.groups[0];
     state.selectedUnitId = unit.id;
     state.selectedReadingUnitId = unit.id;
@@ -5594,7 +5609,7 @@ document.addEventListener("click", (event) => {
     if (picked && picked.id === target.id) {
       markProgress("combos", state.selectedComboGroupId, "recognition");
     } else if (picked) {
-      recordItemMistake("combo", target, picked, "第二单元错题");
+      recordItemMistake("combo", target, picked, `${learningUnitOrdinal("combos")}错题`);
     }
     render();
     return;
@@ -5607,7 +5622,7 @@ document.addEventListener("click", (event) => {
     if (picked && picked.id === target.id) {
       markProgress("vocab", state.selectedVocabGroupId, "recognition");
     } else if (picked) {
-      recordItemMistake("vocab", target, picked, "第三单元错题");
+      recordItemMistake("vocab", target, picked, `${learningUnitOrdinal("basic-phrases")}错题`);
     }
     render();
     return;
@@ -5646,7 +5661,12 @@ document.addEventListener("click", (event) => {
     if (state.keyboardValue === target.value) {
       markProgress("combos", state.selectedComboGroupId, "build");
     } else if (!target.value.startsWith(state.keyboardValue)) {
-      recordItemMistake("combo", target, { id: "build", value: state.keyboardValue, latin: "拼接" }, "第二单元拼接错题");
+      recordItemMistake(
+        "combo",
+        target,
+        { id: "build", value: state.keyboardValue, latin: "拼接" },
+        `${learningUnitOrdinal("combos")}拼接错题`
+      );
     }
     render();
     return;
