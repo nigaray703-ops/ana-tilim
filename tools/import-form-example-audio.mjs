@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import vm from "node:vm";
 
 const projectRoot = path.resolve(import.meta.dirname, "..");
@@ -11,13 +12,15 @@ const checkOnly = process.argv.includes("--check");
 const destinationDirectory = path.join(projectRoot, "prototype/assets/audio/human/form-examples");
 const manifestPath = path.join(destinationDirectory, "manifest.json");
 
-function loadCourseData() {
+export function loadCourseData() {
   const context = { console, window: {} };
   context.globalThis = context;
   vm.createContext(context);
 
   for (const relativePath of [
+    "prototype/uly-transliteration.js",
     "prototype/course-data/alphabet-data.js",
+    "prototype/course-data/latin-writing-data.js",
     "prototype/course-data/combo-data.js",
     "prototype/course-data/vocab-data.js",
     "prototype/course-data/practice-data.js",
@@ -107,66 +110,72 @@ function readWebmDurationMilliseconds(buffer) {
   assert.fail(`WebM duration should use a 4-byte or 8-byte float, received ${durationSize.value} bytes`);
 }
 
-const { letterDetails, comboGroups, vocabGroups } = loadCourseData();
-const reusableValues = new Set(
-  [...comboGroups, ...vocabGroups].flatMap((group) => group.items.map((item) => item.value))
-);
-const dedicatedItems = buildFormExampleItems(letterDetails).filter((item) => !reusableValues.has(item.value));
-const expectedSourceFiles = new Set(dedicatedItems.map((item) => `voice_form_example_${item.key}.webm`));
-const availableSourceFiles = new Set(
-  fs.readdirSync(sourceDirectory).filter((file) => /^voice_form_example_[a-z0-9]+\.webm$/.test(file))
-);
-const missingFiles = [...expectedSourceFiles].filter((file) => !availableSourceFiles.has(file));
-const unexpectedFiles = [...availableSourceFiles].filter((file) => !expectedSourceFiles.has(file));
+function main() {
+  const { letterDetails, comboGroups, vocabGroups } = loadCourseData();
+  const reusableValues = new Set(
+    [...comboGroups, ...vocabGroups].flatMap((group) => group.items.map((item) => item.value))
+  );
+  const dedicatedItems = buildFormExampleItems(letterDetails).filter((item) => !reusableValues.has(item.value));
+  const expectedSourceFiles = new Set(dedicatedItems.map((item) => `voice_form_example_${item.key}.webm`));
+  const availableSourceFiles = new Set(
+    fs.readdirSync(sourceDirectory).filter((file) => /^voice_form_example_[a-z0-9]+\.webm$/.test(file))
+  );
+  const missingFiles = [...expectedSourceFiles].filter((file) => !availableSourceFiles.has(file));
+  const unexpectedFiles = [...availableSourceFiles].filter((file) => !expectedSourceFiles.has(file));
 
-assert.equal(dedicatedItems.length, 94, "current course data should require 94 dedicated form example recordings");
-assert.deepEqual(missingFiles, [], `missing form example recordings: ${missingFiles.join(", ")}`);
-assert.deepEqual(unexpectedFiles, [], `unexpected form example recordings: ${unexpectedFiles.join(", ")}`);
+  assert.equal(dedicatedItems.length, 94, "current course data should require 94 dedicated form example recordings");
+  assert.deepEqual(missingFiles, [], `missing form example recordings: ${missingFiles.join(", ")}`);
+  assert.deepEqual(unexpectedFiles, [], `unexpected form example recordings: ${unexpectedFiles.join(", ")}`);
 
-for (const sourceFile of expectedSourceFiles) {
-  const sourcePath = path.join(sourceDirectory, sourceFile);
-  const buffer = fs.readFileSync(sourcePath);
-  assert.ok(buffer.length > 4096, `${sourceFile} should contain playable audio data`);
-  assert.deepEqual([...buffer.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3], `${sourceFile} should have a valid WebM header`);
-  assert.ok(Number.isFinite(readWebmDurationMilliseconds(buffer)) && readWebmDurationMilliseconds(buffer) > 0, `${sourceFile} should have a positive duration`);
-}
+  for (const sourceFile of expectedSourceFiles) {
+    const sourcePath = path.join(sourceDirectory, sourceFile);
+    const buffer = fs.readFileSync(sourcePath);
+    assert.ok(buffer.length > 4096, `${sourceFile} should contain playable audio data`);
+    assert.deepEqual([...buffer.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3], `${sourceFile} should have a valid WebM header`);
+    assert.ok(Number.isFinite(readWebmDurationMilliseconds(buffer)) && readWebmDurationMilliseconds(buffer) > 0, `${sourceFile} should have a positive duration`);
+  }
 
-if (checkOnly) {
-  console.log(`form example audio source check passed (${dedicatedItems.length} files)`);
-  process.exit(0);
-}
+  if (checkOnly) {
+    console.log(`form example audio source check passed (${dedicatedItems.length} files)`);
+    return;
+  }
 
-fs.mkdirSync(destinationDirectory, { recursive: true });
-const manifestItems = dedicatedItems.map((item, index) => {
-  const sourceFile = `voice_form_example_${item.key}.webm`;
-  const file = `human_form_example_${item.key}.webm`;
-  fs.copyFileSync(path.join(sourceDirectory, sourceFile), path.join(destinationDirectory, file));
+  fs.mkdirSync(destinationDirectory, { recursive: true });
+  const manifestItems = dedicatedItems.map((item, index) => {
+    const sourceFile = `voice_form_example_${item.key}.webm`;
+    const file = `human_form_example_${item.key}.webm`;
+    fs.copyFileSync(path.join(sourceDirectory, sourceFile), path.join(destinationDirectory, file));
 
-  return {
-    order: index + 1,
-    id: item.id,
-    key: item.key,
-    value: item.value,
-    latin: item.latin,
-    meaning: item.meaning,
-    occurrences: item.occurrences,
-    sourceFile,
-    file,
-    outputPath: `./assets/audio/human/form-examples/${file}`,
-    reviewStatus: "已接入",
-    playable: true,
-    statusLabel: "真人音频"
+    return {
+      order: index + 1,
+      id: item.id,
+      key: item.key,
+      value: item.value,
+      latin: item.latin,
+      meaning: item.meaning,
+      occurrences: item.occurrences,
+      sourceFile,
+      file,
+      outputPath: `./assets/audio/human/form-examples/${file}`,
+      reviewStatus: "已接入",
+      playable: true,
+      statusLabel: "真人音频"
+    };
+  });
+
+  const manifest = {
+    title: "Ana Tilim Form Example Human Audio",
+    status: "human_audio_connected",
+    outputDirectory: "./assets/audio/human/form-examples/",
+    instructions: "Human-recorded audio for the 94 form examples that do not reuse vocabulary or combo recordings.",
+    items: manifestItems
   };
-});
 
-const manifest = {
-  title: "Ana Tilim Form Example Human Audio",
-  status: "human_audio_connected",
-  outputDirectory: "./assets/audio/human/form-examples/",
-  instructions: "Human-recorded audio for the 94 form examples that do not reuse vocabulary or combo recordings.",
-  items: manifestItems
-};
+  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(`imported ${manifestItems.length} form example recordings`);
+  console.log(`manifest: ${path.relative(projectRoot, manifestPath)}`);
+}
 
-fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-console.log(`imported ${manifestItems.length} form example recordings`);
-console.log(`manifest: ${path.relative(projectRoot, manifestPath)}`);
+if (path.resolve(process.argv[1] || "") === fileURLToPath(import.meta.url)) {
+  main();
+}
