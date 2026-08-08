@@ -2745,6 +2745,82 @@ button {
   padding: 20px 14px;
 }
 
+.latin-dictation-prompt {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.latin-dictation-prompt p,
+.latin-dictation-self-check {
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.latin-dictation-uly {
+  font-size: clamp(42px, 11vw, 72px);
+  line-height: 1.1;
+}
+
+.latin-dictation-writing,
+.latin-dictation-answer {
+  display: grid;
+  gap: 12px;
+}
+
+.latin-dictation-answer {
+  margin-top: 12px;
+  background: var(--mint-soft);
+}
+
+.latin-dictation-answer-glyph {
+  font-size: clamp(52px, 14vw, 92px);
+  line-height: 1.15;
+  text-align: center;
+}
+
+.latin-dictation-forms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.latin-dictation-form {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  text-align: center;
+}
+
+.latin-dictation-form span {
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
+.latin-dictation-form strong {
+  font-size: 34px;
+  line-height: 1.2;
+}
+
+.writing-canvas-fallback {
+  position: relative;
+  z-index: 3;
+  width: min(100%, 360px);
+  margin: 0;
+  padding: 14px;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  text-align: center;
+  pointer-events: none;
+}
+
 .latin-stage-complete {
   display: grid;
   gap: 8px;
@@ -2768,6 +2844,10 @@ button {
 
 @media (max-width: 560px) {
   .latin-vowel-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .latin-dictation-navigation {
     grid-template-columns: 1fr;
   }
 

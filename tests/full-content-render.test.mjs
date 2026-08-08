@@ -166,6 +166,44 @@ for (const [latinVowelComparisonIndex, comparison] of courseData.latinWriting.vo
   );
 }
 
+const latinDictationLetterIds = [
+  ...courseData.latinWriting.vowelLetterIds,
+  ...courseData.latinWriting.consonantLetterIds
+];
+for (const [latinDictationIndex, letterId] of latinDictationLetterIds.entries()) {
+  const letter = courseData.letterDetails[letterId];
+  renderState(
+    {
+      screen: "latinDictation",
+      selectedUnitId: "latin-keyboard-writing",
+      latinDictationIndex,
+      latinDictationRevealed: false,
+      latinWritingForm: 0
+    },
+    `Latin dictation prompt ${letterId}`,
+    letter.latin
+  );
+  assert.ok(!app.innerHTML.includes(letter.letter), `Latin dictation prompt ${letterId} should hide its answer glyph`);
+  for (const form of letter.forms) {
+    assert.ok(!app.innerHTML.includes(form.value), `Latin dictation prompt ${letterId} should hide form ${form.value}`);
+  }
+
+  renderState(
+    {
+      screen: "latinDictation",
+      selectedUnitId: "latin-keyboard-writing",
+      latinDictationIndex,
+      latinDictationRevealed: true,
+      latinWritingForm: 0
+    },
+    `Latin dictation answer ${letterId}`,
+    letter.letter
+  );
+  for (const form of letter.forms) {
+    assert.ok(app.innerHTML.includes(form.value), `Latin dictation answer ${letterId} should show real form ${form.value}`);
+  }
+}
+
 for (const group of courseData.alphabetGroups) {
   for (const letter of group.letters) {
     renderState(
@@ -218,6 +256,6 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
   }
 }
 
-assert.equal(renderCount, 472, "full UI audit should render every retained main screen, Latin writing stage, lesson item, reading group, and practice item");
+assert.equal(renderCount, 536, "full UI audit should render every retained main screen, Latin writing stage, lesson item, reading group, and practice item");
 
 console.log(`full content render checks passed (${renderCount} states)`);
