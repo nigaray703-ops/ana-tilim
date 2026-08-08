@@ -2080,19 +2080,19 @@ function isAudioPlayable(audio) {
   return Boolean(audio && audio.playable && audio.outputPath);
 }
 
-function renderAudioButton({ audio, label, className = "" }) {
+function renderAudioButton({ audio, label, className = "", accessibleLabel = "播放发音" }) {
   const canPlay = isAudioPlayable(audio);
   const classes = ["play-dot", className, canPlay ? "" : "disabled"].filter(Boolean).join(" ");
 
   return `
     <button
-      class="${classes}"
+      class="${escapeHtml(classes)}"
       data-action="play-audio"
-      data-audio-src="${canPlay ? audio.outputPath : ""}"
-      data-audio-label="${label}"
+      data-audio-src="${escapeHtml(canPlay ? audio.outputPath : "")}"
+      data-audio-label="${escapeHtml(label)}"
       type="button"
       ${canPlay ? "" : "disabled"}
-      aria-label="播放发音"
+      aria-label="${escapeHtml(accessibleLabel)}"
     >听</button>
   `;
 }
@@ -3629,12 +3629,12 @@ function renderLatinKeyboardIntro() {
 
 function renderLatinTeachingTarget(value, className = "") {
   const classes = ["latin-letter-uly", className].filter(Boolean).join(" ");
-  return `<span class="${classes}" dir="ltr">${value}</span>`;
+  return `<span class="${escapeHtml(classes)}" dir="ltr">${escapeHtml(value)}</span>`;
 }
 
-function renderLatinLetterAudio(audio, label) {
+function renderLatinLetterAudio(audio, label, accessibleLabel) {
   return `
-    ${renderAudioButton({ audio, label, className: "latin-letter-audio" })}
+    ${renderAudioButton({ audio, label, className: "latin-letter-audio", accessibleLabel })}
     ${isAudioPlayable(audio) ? "" : `<span class="latin-letter-audio-status">音频待录</span>`}
   `;
 }
@@ -3647,14 +3647,29 @@ function renderLatinLetterCard(letterId, letterClass) {
   return `
     <article
       class="latin-letter-card"
-      data-letter-class="${letterClass}"
-      data-letter-id="${letter.id}"
+      data-letter-class="${escapeHtml(letterClass)}"
+      data-letter-id="${escapeHtml(letter.id)}"
       data-has-forms="${Array.isArray(letter.forms) && letter.forms.length > 0}"
     >
-      ${renderLatinLetterAudio(audio, letter.letter)}
-      <strong class="uyghur latin-letter-glyph">${letter.letter}</strong>
+      ${renderLatinLetterAudio(audio, letter.letter, `播放 ${letter.letter}，ULY ${letter.latin}`)}
+      <strong class="uyghur latin-letter-glyph">${escapeHtml(letter.letter)}</strong>
       ${renderLatinTeachingTarget(letter.latin)}
-      <p class="latin-letter-cue">${letter.cue}</p>
+      <p class="latin-letter-cue">${escapeHtml(letter.cue)}</p>
+    </article>
+  `;
+}
+
+function renderLatinVowelComparisonCard(letterId, comparison) {
+  const letter = letterDetails[letterId];
+  if (!letter) return "";
+  const audio = alphabetAudioByLetterId[letterId] || null;
+
+  return `
+    <article class="latin-vowel-comparison-card" data-comparison-id="${escapeHtml(comparison.id)}" data-letter-id="${escapeHtml(letter.id)}">
+      ${renderLatinLetterAudio(audio, letter.letter, `播放 ${letter.letter}，ULY ${letter.latin}`)}
+      <strong class="uyghur latin-letter-glyph">${escapeHtml(letter.letter)}</strong>
+      ${renderLatinTeachingTarget(letter.latin)}
+      <p class="latin-vowel-focus">辨认重点：${escapeHtml(comparison.focus)}</p>
     </article>
   `;
 }
@@ -3716,22 +3731,11 @@ function renderLatinVowelCompare() {
         "",
         `<button class="back-button" data-action="go" data-target="latinLetterClasses" type="button" aria-label="返回">←</button>`
       )}
-      <section class="stack latin-vowel-compare" data-comparison-id="${comparison.id}">
+      <section class="stack latin-vowel-compare" data-comparison-id="${escapeHtml(comparison.id)}">
         ${renderItemProgress(`${comparisonIndex + 1} / ${comparisonCount}`, "每次只比较一组元音")}
         <div class="latin-vowel-comparison-grid">
           ${comparison.letterIds
-            .map((letterId) => {
-              const letter = letterDetails[letterId];
-              const audio = alphabetAudioByLetterId[letterId] || null;
-              return `
-                <article class="latin-vowel-comparison-card" data-comparison-id="${comparison.id}" data-letter-id="${letter.id}">
-                  ${renderLatinLetterAudio(audio, letter.letter)}
-                  <strong class="uyghur latin-letter-glyph">${letter.letter}</strong>
-                  ${renderLatinTeachingTarget(letter.latin)}
-                  <p class="latin-vowel-focus">辨认重点：${comparison.focus}</p>
-                </article>
-              `;
-            })
+            .map((letterId) => renderLatinVowelComparisonCard(letterId, comparison))
             .join("")}
         </div>
         <div class="adjacent-nav" aria-label="元音比较前后切换">
