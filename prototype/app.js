@@ -1720,8 +1720,8 @@ function renderAudioButton({ audio, label, className = "" }) {
       data-audio-label="${label}"
       type="button"
       ${canPlay ? "" : "disabled"}
-      aria-label="播放发音"
-    >听</button>
+      aria-label="${t("audio.play")} ${label}"
+    >${t("audio.play")}</button>
   `;
 }
 
@@ -1740,22 +1740,31 @@ function renderAudioWord({ value, audio, className = "" }) {
       data-audio-src="${audio.outputPath}"
       data-audio-label="${value}"
       type="button"
-      aria-label="播放 ${value}"
+      aria-label="${t("audio.play")} ${value}"
     >${value}</button>
   `;
 }
 
 function renderAudioFocus({ audio, label, title, hint, hideFile = false, hideCaption = false, className = "" }) {
   const canPlay = isAudioPlayable(audio);
-  const audioInfo = canPlay ? (hideFile ? `${audio.statusLabel}。` : `${audio.statusLabel}：${audio.file}。`) : "";
-  const caption = hideCaption ? "" : canPlay ? `${audioInfo}${hint}` : "音频待录，暂不播放。";
+  const audioStatusLabel = t("audio.humanRecording");
+  const audioInfo = canPlay
+    ? state.interfaceLanguage === "zh"
+      ? hideFile
+        ? `${audioStatusLabel}。`
+        : `${audioStatusLabel}：${audio.file}。`
+      : hideFile
+        ? `${audioStatusLabel}. `
+        : `${audioStatusLabel}: ${audio.file}. `
+    : "";
+  const caption = hideCaption ? "" : canPlay ? `${audioInfo}${hint}` : t("audio.unavailable");
   const classes = ["letter-focus", "audio-focus", className].filter(Boolean).join(" ");
 
   return `
     <div class="${classes}">
       ${renderAudioButton({ audio, label, className: "letter-focus-play" })}
       <div>
-        <strong class="audio-focus-title">${canPlay ? title : "音频待录"}</strong>
+        <strong class="audio-focus-title">${canPlay ? title : t("audio.unavailable")}</strong>
         ${caption ? `<p class="caption">${caption}</p>` : ""}
       </div>
     </div>

@@ -784,6 +784,37 @@ assert.equal(toast.textContent, "Interface language changed to English", "an inv
 assert.equal(vm.runInContext('playAudio("", "Lesson")', context), false);
 assert.equal(toast.textContent, "No audio available", "audio errors should use the selected interface language");
 
+const englishAudioChrome = vm.runInContext(
+  `
+    (() => {
+      const audio = {
+        playable: true,
+        outputPath: "./test.webm",
+        file: "test.webm",
+        statusLabel: "真人音频"
+      };
+      return [
+        renderAudioButton({ audio, label: "ب" }),
+        renderAudioWord({ value: "ب", audio }),
+        renderAudioFocus({ audio, label: "ب", title: "ب", hint: "", hideFile: true }),
+        renderAudioFocus({ audio: null, label: "ب", title: "ب", hint: "" })
+      ].join("");
+    })()
+  `,
+  context
+);
+includesAll(
+  englishAudioChrome,
+  ['aria-label="Play ب"', ">Play</button>", "Human recording", "No audio available"],
+  "English reusable audio chrome"
+);
+for (const chineseChrome of ['aria-label="播放', "播放发音", ">听</button>", "真人音频", "音频待录"]) {
+  assert.ok(
+    !englishAudioChrome.includes(chineseChrome),
+    `English reusable audio chrome should not include ${chineseChrome}`
+  );
+}
+
 setLanguage("zh");
 
 vm.runInContext(
