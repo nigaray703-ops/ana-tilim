@@ -55,6 +55,7 @@ for (const scriptPath of [
   "prototype/course-data/practice-data.js",
   "prototype/course-data/reading-data.js",
   "prototype/course-data.js",
+  "prototype/unit-order.js",
   "prototype/uyghur-keyboard.js",
   "prototype/sentence-morphemes.js",
   "prototype/sentence-glossary.js",

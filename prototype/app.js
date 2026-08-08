@@ -2,6 +2,7 @@ const courseData = window.ANA_TILIM_COURSE;
 const sentenceGlossary = window.ANA_TILIM_SENTENCE_GLOSSARY;
 const progressTransfer = window.ANA_TILIM_PROGRESS_TRANSFER;
 const uyghurKeyboard = window.ANA_TILIM_UYGHUR_KEYBOARD;
+const unitOrder = window.ANA_TILIM_UNIT_ORDER;
 const appConfig = Object.freeze({
   edition: "global",
   brandName: "Ana Tilim",
@@ -13,7 +14,7 @@ const appConfig = Object.freeze({
   ...(window.ANA_TILIM_APP_CONFIG || {})
 });
 
-if (!courseData || !sentenceGlossary || !progressTransfer || !uyghurKeyboard) {
+if (!courseData || !sentenceGlossary || !progressTransfer || !uyghurKeyboard || !unitOrder) {
   throw new Error("Learning data modules failed to load.");
 }
 
@@ -217,130 +218,93 @@ const letterAudioByShapeLatin = Object.fromEntries(
     .filter(([, audio]) => Boolean(audio))
 );
 
-const learningUnits = [
-  {
-    id: "letters",
-    title: "第一单元：认识字母",
-    subtitle: "32 个字母，相似分组",
-    description: "先按截图顺序认识全部字母，学习时把看起来相似、容易混的字母放在一组。",
-    bullets: ["认识字母形状", "区分点位和点数", "看四种形态", "练单字母键盘输入"],
-    groups: alphabetGroups,
-    actionTarget: "letter"
-  },
-  {
-    id: "combos",
-    title: "第二单元：基础组合",
-    subtitle: "基础组合、三字母连接和断开规则",
-    description: "先做两字母组合，再加入三字母和断开连接例子，比较同一个字母在词里的形态变化。",
-    bullets: ["开口组合", "轻声组合", "三字母连接", "断开规则", "拆开再合上"],
-    groups: basicComboGroups,
-    actionTarget: "combo"
-  },
-  {
-    id: "basic-phrases",
-    title: "第三单元：日常用语与词汇",
-    subtitle: "问候、人称代词、称呼、数字、动物等",
-    description: "选择一个常用主题，点进去再一行一行学习词形。",
-    bullets: ["主题小课", "一行一词", "词形辨认", "键盘输入"],
-    groups: vocabGroups,
-    actionTarget: "vocab"
-  },
-  ...readingUnits.map((unit) => ({
-    ...unit,
-    actionTarget: "reading"
-  }))
-];
+const lettersUnit = {
+  id: "letters",
+  subtitle: "32 个字母，相似分组",
+  description: "先按截图顺序认识全部字母，学习时把看起来相似、容易混的字母放在一组。",
+  bullets: ["认识字母形状", "区分点位和点数", "看四种形态", "练单字母键盘输入"],
+  groups: alphabetGroups,
+  actionTarget: "letter"
+};
+const combosUnit = {
+  id: "combos",
+  subtitle: "基础组合、三字母连接和断开规则",
+  description: "先做两字母组合，再加入三字母和断开连接例子，比较同一个字母在词里的形态变化。",
+  bullets: ["开口组合", "轻声组合", "三字母连接", "断开规则", "拆开再合上"],
+  groups: basicComboGroups,
+  actionTarget: "combo"
+};
+const vocabUnit = {
+  id: "basic-phrases",
+  subtitle: "问候、人称代词、称呼、数字、动物等",
+  description: "选择一个常用主题，点进去再一行一行学习词形。",
+  bullets: ["主题小课", "一行一词", "词形辨认", "键盘输入"],
+  groups: vocabGroups,
+  actionTarget: "vocab"
+};
+const readingUnitCatalog = readingUnits.map(({ title: _title, ...unit }) => ({
+  ...unit,
+  actionTarget: "reading"
+}));
+const learningUnitCatalog = [lettersUnit, combosUnit, vocabUnit, ...readingUnitCatalog];
+const learningUnits = unitOrder.buildVisibleUnits(learningUnitCatalog, appConfig);
 
 const unitExperience = {
   letters: {
     recommended: "先复习第一单元字母分组，再进入组合。",
     steps: ["认识相似字母组", "看四种写法", "做辨认、听音、键盘", "完成后进入组合"],
     reviewLabel: "复习本组",
-    reviewTarget: "group",
-    nextLabel: "进入第二单元",
-    nextUnitId: "combos"
+    reviewTarget: "group"
   },
   combos: {
     recommended: "先练两字母组合，再看三字母连接和断开规则，从右往左拆分再合上。",
     steps: ["看两字母组合", "看三字母连接", "找断开字母", "做组合辨认和键盘输入"],
     reviewLabel: "复习组合",
-    reviewTarget: "combo",
-    nextLabel: "进入第三单元",
-    nextUnitId: "basic-phrases"
+    reviewTarget: "combo"
   },
   "basic-phrases": {
     recommended: "按主题小课学日常用语和词汇，一行一行看词形。",
     steps: ["选择主题小课", "一行一行看词", "做词形辨认", "完成键盘输入"],
     reviewLabel: "复习主题词",
-    reviewTarget: "vocab",
-    nextLabel: "进入第四单元",
-    nextUnitId: "grammar-basics"
+    reviewTarget: "vocab"
   },
   "grammar-basics": {
     recommended: "先看最基础的语法规则，再读例句。",
     steps: ["选择语法点", "看句型模式", "读维语例句", "看中文说明"],
     reviewLabel: "复习语法",
-    reviewTarget: "reading",
-    nextLabel: "进入第五单元",
-    nextUnitId: "sentence-patterns"
+    reviewTarget: "reading"
   },
   "sentence-patterns": {
     recommended: "把第三单元学过的常用词放进短句里。",
     steps: ["选择句型", "一行一行读短句", "看中文翻译"],
     reviewLabel: "复习句型",
-    reviewTarget: "reading",
-    nextLabel: "进入第六单元",
-    nextUnitId: "dialogue-theater"
+    reviewTarget: "reading"
   },
   "dialogue-theater": {
     recommended: "读很短的双人日常对话。",
     steps: ["选择对话", "一句一句读", "看中文翻译"],
     reviewLabel: "复习对话",
-    reviewTarget: "reading",
-    nextLabel: "进入第七单元",
-    nextUnitId: "short-stories"
+    reviewTarget: "reading"
   },
   "short-stories": {
     recommended: "读很短的小故事。",
     steps: ["选择故事", "一句一句读", "看中文翻译"],
     reviewLabel: "复习故事",
-    reviewTarget: "reading",
-    nextLabel: "进入第八单元",
-    nextUnitId: "famous-quotes"
+    reviewTarget: "reading"
   },
   "famous-quotes": {
     recommended: "阅读名人短句，先理解句意，再听真人发音。",
     steps: ["选择人物", "读短句", "看中文翻译"],
     reviewLabel: "复习名言",
-    reviewTarget: "reading",
-    nextLabel: "进入第九单元",
-    nextUnitId: "uyghur-proverbs"
+    reviewTarget: "reading"
   },
   "uyghur-proverbs": {
     recommended: "阅读常见谚语，先理解句意，再跟读真人发音。",
     steps: ["选择谚语", "读原文", "看中文翻译"],
     reviewLabel: "复习谚语",
-    reviewTarget: "reading",
-    nextLabel: "回到学习路径",
-    nextUnitId: "letters",
-    nextTarget: "learn"
+    reviewTarget: "reading"
   }
 };
-
-readingUnits.forEach((unit, index) => {
-  const experience = unitExperience[unit.id];
-  if (!experience) return;
-  const nextUnit = readingUnits[index + 1];
-  if (nextUnit) {
-    experience.nextUnitId = nextUnit.id;
-    experience.nextLabel = `进入${nextUnit.title.split("：")[0]}`;
-    delete experience.nextTarget;
-  } else {
-    experience.nextUnitId = "letters";
-    experience.nextLabel = "回到学习路径";
-    experience.nextTarget = "learn";
-  }
-});
 
 const progressStorageKey = appConfig.progressStorageKey;
 const guestBackupStorageKey = appConfig.backupStorageKey;
@@ -1301,25 +1265,32 @@ function countCompletedForIds(scope, ids) {
 
 function unitProgressSummaries() {
   const basicComboIds = basicComboGroups.map((group) => group.id);
-  const coreSummaries = [
-    { unit: "第一单元", label: "字母学习", completed: countCompleted("letters"), total: alphabetGroups.length },
-    { unit: "第二单元", label: "基础组合", completed: countCompletedForIds("combos", basicComboIds), total: basicComboIds.length },
-    { unit: "第三单元", label: "主题词汇", completed: countCompleted("vocab"), total: vocabGroups.length }
-  ];
-
-  const readingSummaries = readingUnits.map((unit) => {
+  return learningUnits.map((unit) => {
     const [unitName, label = unit.title] = unit.title.split("：");
-    const completed = unit.groups.filter((group) => state.learningProgress.reading?.[group.id]?.completed).length;
+    let completed;
+    let total;
+
+    if (unit.id === "letters") {
+      completed = countCompleted("letters");
+      total = unit.groups.length;
+    } else if (unit.id === "combos") {
+      completed = countCompletedForIds("combos", basicComboIds);
+      total = basicComboIds.length;
+    } else if (unit.id === "basic-phrases") {
+      completed = countCompleted("vocab");
+      total = unit.groups.length;
+    } else {
+      completed = unit.groups.filter((group) => state.learningProgress.reading?.[group.id]?.completed).length;
+      total = unit.groups.length;
+    }
 
     return {
       unit: unitName,
       label,
       completed,
-      total: unit.groups.length
+      total
     };
   });
-
-  return [...coreSummaries, ...readingSummaries];
 }
 
 function totalLearningProgress() {
@@ -1797,7 +1768,18 @@ function homeLearningUnit() {
 }
 
 function currentUnitExperience(unitId = currentUnit().id) {
-  return unitExperience[unitId] || unitExperience.letters;
+  const base = unitExperience[unitId] || unitExperience.letters;
+  const nextId = unitOrder.nextUnitId(unitId, learningUnits);
+  if (!nextId) {
+    return { ...base, nextLabel: "回到学习路径", nextTarget: "learn", nextUnitId: null };
+  }
+  const next = learningUnits.find((unit) => unit.id === nextId);
+  return {
+    ...base,
+    nextLabel: `进入${next.title.split("：")[0]}`,
+    nextTarget: "unit",
+    nextUnitId: nextId
+  };
 }
 
 function displayStandaloneLetterGlyph(value) {

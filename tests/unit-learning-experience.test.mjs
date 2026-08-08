@@ -7,6 +7,7 @@ const courseDataGuidePath = "课程/00-课程数据编辑与审校说明.md";
 const courseDataIntegrityTestPath = "tests/course-data-integrity.test.mjs";
 const projectCheckScriptPath = "scripts/check-project.mjs";
 const courseDataAggregatorPath = "prototype/course-data.js";
+const unitOrderPath = "prototype/unit-order.js";
 const uyghurKeyboardPath = "prototype/uyghur-keyboard.js";
 const courseDataScriptPaths = [
   "prototype/uly-transliteration.js",
@@ -17,6 +18,7 @@ const courseDataScriptPaths = [
   "prototype/course-data/reading-data.js"
 ];
 assert.ok(fs.existsSync(courseDataAggregatorPath), "course data aggregator should exist");
+assert.ok(fs.existsSync(unitOrderPath), "edition-aware unit order module should exist");
 assert.ok(fs.existsSync(uyghurKeyboardPath), "focused Uyghur keyboard mapping module should exist");
 for (const scriptPath of courseDataScriptPaths) {
   assert.ok(fs.existsSync(scriptPath), `${scriptPath} should exist as a focused course data file`);
@@ -356,10 +358,15 @@ const context = {
 context.globalThis = context;
 vm.createContext(context);
 vm.runInContext(fs.readFileSync("prototype/app-config.js", "utf8"), context, { filename: "prototype/app-config.js" });
+context.window.ANA_TILIM_APP_CONFIG = Object.freeze({
+  ...context.window.ANA_TILIM_APP_CONFIG,
+  hiddenUnitIds: []
+});
 for (const scriptPath of courseDataScriptPaths) {
   vm.runInContext(fs.readFileSync(scriptPath, "utf8"), context, { filename: scriptPath });
 }
 vm.runInContext(fs.readFileSync(courseDataAggregatorPath, "utf8"), context, { filename: courseDataAggregatorPath });
+vm.runInContext(fs.readFileSync(unitOrderPath, "utf8"), context, { filename: unitOrderPath });
 vm.runInContext(fs.readFileSync(uyghurKeyboardPath, "utf8"), context, { filename: uyghurKeyboardPath });
 vm.runInContext(fs.readFileSync("prototype/sentence-morphemes.js", "utf8"), context, { filename: "prototype/sentence-morphemes.js" });
 vm.runInContext(fs.readFileSync("prototype/sentence-glossary.js", "utf8"), context, { filename: "prototype/sentence-glossary.js" });
@@ -367,6 +374,85 @@ vm.runInContext(fs.readFileSync("prototype/progress-transfer.js", "utf8"), conte
 vm.runInContext(fs.readFileSync("prototype/cloud-config.js", "utf8"), context, { filename: "prototype/cloud-config.js" });
 vm.runInContext(fs.readFileSync("prototype/cloud-sync.js", "utf8"), context, { filename: "prototype/cloud-sync.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
+
+const globalUnits = JSON.parse(
+  vm.runInContext("JSON.stringify(learningUnits.map(({ id, title }) => ({ id, title })))", context)
+);
+assert.deepEqual(globalUnits.map(({ id, title }) => [id, title]), [
+  ["letters", "第一单元：认识字母"],
+  ["combos", "第二单元：基础组合"],
+  ["basic-phrases", "第三单元：日常用语与词汇"],
+  ["grammar-basics", "第四单元：语法入门"],
+  ["sentence-patterns", "第五单元：基础句型"],
+  ["dialogue-theater", "第六单元：对话小剧场"],
+  ["short-stories", "第七单元：小故事"],
+  ["uyghur-proverbs", "第八单元：维吾尔谚语"],
+  ["famous-quotes", "第九单元：名人名言"]
+]);
+
+const domesticUnits = JSON.parse(
+  vm.runInContext(
+    `JSON.stringify(unitOrder.buildVisibleUnits(learningUnitCatalog, {
+      hiddenUnitIds: ["famous-quotes"]
+    }).map(({ id, title }) => ({ id, title })))`,
+    context
+  )
+);
+assert.deepEqual(domesticUnits.map(({ id, title }) => [id, title]), [
+  ["letters", "第一单元：认识字母"],
+  ["combos", "第二单元：基础组合"],
+  ["basic-phrases", "第三单元：日常用语与词汇"],
+  ["grammar-basics", "第四单元：语法入门"],
+  ["sentence-patterns", "第五单元：基础句型"],
+  ["dialogue-theater", "第六单元：对话小剧场"],
+  ["short-stories", "第七单元：小故事"],
+  ["uyghur-proverbs", "第八单元：维吾尔谚语"]
+]);
+assert.equal(vm.runInContext("currentUnitExperience('short-stories').nextUnitId", context), "uyghur-proverbs");
+assert.equal(vm.runInContext("currentUnitExperience('uyghur-proverbs').nextUnitId", context), "famous-quotes");
+assert.equal(vm.runInContext("currentUnitExperience('famous-quotes').nextUnitId", context), null);
+assert.equal(vm.runInContext("currentUnitExperience('famous-quotes').nextLabel", context), "回到学习路径");
+
+assert.deepEqual(
+  JSON.parse(
+    vm.runInContext(
+      "JSON.stringify(unitProgressSummaries().map(({ unit, label }) => [unit, label]))",
+      context
+    )
+  ),
+  [
+    ["第一单元", "认识字母"],
+    ["第二单元", "基础组合"],
+    ["第三单元", "日常用语与词汇"],
+    ["第四单元", "语法入门"],
+    ["第五单元", "基础句型"],
+    ["第六单元", "对话小剧场"],
+    ["第七单元", "小故事"],
+    ["第八单元", "维吾尔谚语"],
+    ["第九单元", "名人名言"]
+  ]
+);
+
+storage["ana-tilim-progress"] = JSON.stringify({
+  selectedUnitId: "dialogue-theater",
+  learningProgress: {
+    letters: {},
+    combos: {},
+    vocab: {},
+    practice: {},
+    reading: { "dialogue-greeting": { completed: true } }
+  }
+});
+vm.runInContext("hydrateLocalProgress()", context);
+const savedSelectedUnitIdAfterLoad = vm.runInContext("state.selectedUnitId", context);
+assert.equal(savedSelectedUnitIdAfterLoad, "dialogue-theater");
+assert.equal(
+  vm.runInContext("state.learningProgress.reading['dialogue-greeting'].completed", context),
+  true,
+  "legacy learning progress should remain attached to its stable lesson ID"
+);
+delete storage["ana-tilim-progress"];
+vm.runInContext("state.selectedUnitId = 'letters'; state.learningProgress = emptyLearningProgress()", context);
 
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(window.ANA_TILIM_UYGHUR_KEYBOARD.rows.map((row) => row.map((key) => key.value)))", context)),
@@ -1355,8 +1441,8 @@ includesAll(
     "第五单元：基础句型",
     "第六单元：对话小剧场",
     "第七单元：小故事",
-    "第八单元：名人名言",
-    "第九单元：维吾尔谚语",
+    "第八单元：维吾尔谚语",
+    "第九单元：名人名言",
     "问候、人称代词、称呼、数字、动物"
   ],
   "learning path with reading units"
