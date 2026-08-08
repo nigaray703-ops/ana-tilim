@@ -1104,6 +1104,25 @@ assert.ok(
     phoneSectionTitleStyle.includes("overflow-wrap: anywhere;"),
   "long English section headings should override the desktop ellipsis rule on phones"
 );
+for (const selector of [
+  ".brand-name",
+  ".brand-subtitle",
+  ".section-title",
+  ".lesson-step strong",
+  ".lesson-step .caption",
+  ".combo-part-note",
+  ".profile-setting-row strong",
+  ".profile-setting-row small",
+  ".nav-button"
+]) {
+  assert.match(
+    styleSource,
+    new RegExp(`html\\[lang="en"\\][^{}]*${selector.replaceAll(".", "\\.")}[^{}]*\\{[^}]*white-space:\\s*normal;`, "s"),
+    `${selector} should show complete English text`
+  );
+}
+assert.match(styleSource, /html\[lang="en"\] \.primary-button[^{]*\{[^}]*font-size:\s*clamp\(/s);
+assert.ok(!/html\[lang="en"\][^{]*\.uyghur/.test(styleSource));
 
 setLanguage("zh");
 vm.runInContext("state.screen = 'profile'; render();", context);

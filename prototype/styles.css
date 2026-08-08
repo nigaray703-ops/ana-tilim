@@ -262,6 +262,22 @@ button {
   white-space: nowrap;
 }
 
+html[lang="en"] .brand-name,
+html[lang="en"] .brand-subtitle,
+html[lang="en"] .section-title,
+html[lang="en"] .lesson-step strong,
+html[lang="en"] .lesson-step .caption,
+html[lang="en"] .combo-part-note,
+html[lang="en"] .profile-setting-row strong,
+html[lang="en"] .profile-setting-row small,
+html[lang="en"] .nav-button {
+  min-width: 0;
+  overflow: visible;
+  overflow-wrap: break-word;
+  text-overflow: clip;
+  white-space: normal;
+}
+
 .hero {
   display: grid;
   place-items: center;
@@ -2763,6 +2779,34 @@ button {
 @media (max-width: 719px) {
   .brand-lockup {
     min-width: 0;
+  }
+
+  html[lang="en"] .brand-name {
+    font-size: clamp(14px, 4vw, 17px);
+  }
+
+  html[lang="en"] .brand-subtitle {
+    font-size: clamp(10px, 2.8vw, 11px);
+  }
+
+  html[lang="en"] .section-title {
+    font-size: clamp(16px, 4.6vw, 20px);
+  }
+
+  html[lang="en"] .primary-button,
+  html[lang="en"] .secondary-button,
+  html[lang="en"] .danger-button,
+  html[lang="en"] .ghost-button {
+    font-size: clamp(11px, 3.2vw, 13px);
+  }
+
+  html[lang="en"] .nav-button {
+    font-size: clamp(10px, 2.8vw, 12px);
+  }
+
+  html[lang="en"] .language-select {
+    min-width: min(148px, 46vw);
+    font-size: 12px;
   }
 
   .brand-name,
