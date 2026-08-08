@@ -3526,11 +3526,15 @@ for (const form of oeDictationDetail.forms) {
   assert.ok(!hiddenOeDictationExercise.includes(form.value), `oe form ${form.value} must stay hidden before reveal`);
 }
 assert.doesNotMatch(hiddenOeDictationExercise, /accuracy|准确率|得分|分数/i, "dictation should not invent scoring");
+const hiddenOeAnswerRegionTag = hiddenOeDictationExercise.match(/<div\s+data-latin-dictation-answer-region[^>]*>/)?.[0] || "";
 latinDictationAnswerRegion.innerHTML = "";
 latinDictationAnswerRegion.hidden = true;
 clickDataset({ action: "reveal-latin-dictation-answer" });
 assert.equal(vm.runInContext("state.latinDictationRevealed", context), true, "reveal should update only transient dictation state");
 assert.equal(latinDictationAnswerRegion.hidden, false, "reveal should expose the answer region without replacing the live canvas");
+assert.match(hiddenOeAnswerRegionTag, /\shidden(?:\s|>)/, "the unrevealed live answer region should start hidden");
+assert.match(hiddenOeAnswerRegionTag, /aria-live="polite"/, "the real reveal click should announce the inserted answer politely");
+assert.match(hiddenOeAnswerRegionTag, /aria-atomic="true"/, "the answer announcement should include the complete self-check region");
 includesAll(
   latinDictationAnswerRegion.innerHTML,
   [
