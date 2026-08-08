@@ -5,6 +5,7 @@
   const exampleFields = ["label", "meaning", "noteTitle", "note"];
   const comboGroupFields = ["title", "goal", "status"];
   const comboItemFields = ["type", "rule", "hint", "review", "meaning"];
+  const vocabGroupFields = ["title", "goal", "status"];
   let currentLanguage = "en";
 
   function supported(value) {
@@ -92,6 +93,23 @@
             )
           }
         ])
+      ),
+      vocabGroups: Object.fromEntries(
+        (courseData.vocabGroups || []).map((group) => [
+          group.id,
+          {
+            fields: Object.fromEntries(vocabGroupFields.map((field) => [field, group[field]])),
+            sections: Object.fromEntries(
+              (group.sections || []).map((section) => [section.id, { title: section.title }])
+            ),
+            items: Object.fromEntries(
+              (group.items || []).map((item) => [
+                item.id,
+                { meaning: item.meaning, tip: item.tip }
+              ])
+            )
+          }
+        ])
       )
     };
 
@@ -165,13 +183,41 @@
     return missing;
   }
 
+  function missingVocabEnglish(courseData, catalog) {
+    const missing = [];
+    for (const group of courseData.vocabGroups || []) {
+      const translatedGroup = catalog?.groups?.[group.id];
+      for (const field of vocabGroupFields) {
+        if (typeof translatedGroup?.[field] !== "string") {
+          missing.push(`vocab.groups.${group.id}.${field}`);
+        }
+      }
+      for (const section of group.sections || []) {
+        if (typeof translatedGroup?.sections?.[section.id]?.title !== "string") {
+          missing.push(`vocab.groups.${group.id}.sections.${section.id}.title`);
+        }
+      }
+      for (const item of group.items || []) {
+        if (typeof catalog?.items?.[item.id]?.meaning !== "string") {
+          missing.push(`vocab.items.${item.id}.meaning`);
+        }
+        if (typeof item.tip === "string" && item.tip.trim() && typeof catalog?.items?.[item.id]?.note !== "string") {
+          missing.push(`vocab.items.${item.id}.note`);
+        }
+      }
+    }
+    return missing;
+  }
+
   function createCourseLocalizer(courseData, englishCatalog) {
     const original = captureCourse(courseData);
     const alphabetEnglish = englishCatalog?.alphabet || englishCatalog || {};
     const comboEnglish = englishCatalog?.combos || {};
+    const vocabEnglish = englishCatalog?.vocab || {};
     const missing = [
       ...missingAlphabetEnglish(courseData, alphabetEnglish),
-      ...missingComboEnglish(courseData, comboEnglish)
+      ...missingComboEnglish(courseData, comboEnglish),
+      ...missingVocabEnglish(courseData, vocabEnglish)
     ];
 
     function apply(language) {
@@ -219,6 +265,33 @@
             useEnglish ? comboEnglish.items?.[item.id] : originalGroup?.items?.[item.id],
             comboItemFields
           );
+        }
+      }
+
+      for (const group of courseData.vocabGroups || []) {
+        const originalGroup = original.vocabGroups[group.id];
+        const translatedGroup = vocabEnglish.groups?.[group.id];
+        setAvailableText(
+          group,
+          useEnglish ? translatedGroup : originalGroup?.fields,
+          vocabGroupFields
+        );
+        for (const section of group.sections || []) {
+          setAvailableText(
+            section,
+            useEnglish ? translatedGroup?.sections?.[section.id] : originalGroup?.sections?.[section.id],
+            ["title"]
+          );
+        }
+        for (const item of group.items || []) {
+          if (useEnglish) {
+            setAvailableText(item, vocabEnglish.items?.[item.id], ["meaning"]);
+            if (typeof vocabEnglish.items?.[item.id]?.note === "string") {
+              item.tip = vocabEnglish.items[item.id].note;
+            }
+          } else {
+            setAvailableText(item, originalGroup?.items?.[item.id], ["meaning", "tip"]);
+          }
         }
       }
 

@@ -249,10 +249,17 @@ const learningUnits = [
   },
   {
     id: "basic-phrases",
-    title: "第三单元：日常用语与词汇",
-    subtitle: "问候、人称代词、称呼、数字、动物等",
-    description: "选择一个常用主题，点进去再一行一行学习词形。",
-    bullets: ["主题小课", "一行一词", "词形辨认", "键盘输入"],
+    get title() { return t("vocab.unitTitle"); },
+    get subtitle() { return t("vocab.unitSubtitle"); },
+    get description() { return t("vocab.unitDescription"); },
+    get bullets() {
+      return [
+        t("vocab.unitBulletTopics"),
+        t("vocab.unitBulletRows"),
+        t("vocab.unitBulletRecognition"),
+        t("vocab.unitBulletKeyboard")
+      ];
+    },
     groups: vocabGroups,
     actionTarget: "vocab"
   },
@@ -294,11 +301,18 @@ const unitExperience = {
     nextUnitId: "basic-phrases"
   },
   "basic-phrases": {
-    recommended: "按主题小课学日常用语和词汇，一行一行看词形。",
-    steps: ["选择主题小课", "一行一行看词", "做词形辨认", "完成键盘输入"],
-    reviewLabel: "复习主题词",
+    get recommended() { return t("vocab.recommended"); },
+    get steps() {
+      return [
+        t("vocab.stepTopic"),
+        t("vocab.stepWords"),
+        t("vocab.stepRecognition"),
+        t("vocab.stepKeyboard")
+      ];
+    },
+    get reviewLabel() { return t("vocab.review"); },
     reviewTarget: "vocab",
-    nextLabel: "进入第四单元",
+    get nextLabel() { return t("vocab.enterUnit4"); },
     nextUnitId: "grammar-basics"
   },
   "grammar-basics": {
@@ -1302,9 +1316,13 @@ function hasLearningActivity(scope, id) {
 }
 
 function renderLearnedMarker(scope, id) {
-  return hasLearningActivity(scope, id)
-    ? '<span class="learned-marker" aria-label="已学习">✓ 已学</span>'
-    : "";
+  if (!hasLearningActivity(scope, id)) {
+    return "";
+  }
+  if (scope === "vocab") {
+    return `<span class="learned-marker" aria-label="${t("vocab.learnedAria")}">✓ ${t("vocab.learned")}</span>`;
+  }
+  return '<span class="learned-marker" aria-label="已学习">✓ 已学</span>';
 }
 
 function renderLearningMap(summaries) {
@@ -1455,6 +1473,18 @@ function comboMistakeFeedback(target, picked) {
   }
 
   return t("combo.mistakePicked", {
+    target: target.value,
+    picked: picked.value,
+    latin: target.latin
+  });
+}
+
+function vocabMistakeFeedback(target, picked) {
+  if (!picked) {
+    return t("vocab.mistakeMissing", { target: target.value, latin: target.latin });
+  }
+
+  return t("vocab.mistakePicked", {
     target: target.value,
     picked: picked.value,
     latin: target.latin
@@ -1863,7 +1893,9 @@ function renderUnitNextActions(unitId, primaryClass = "primary-button") {
     ? t("alphabet.nextStep")
     : unitId === "combos"
       ? t("combo.nextStep")
-      : "下一步建议";
+      : unitId === "basic-phrases"
+        ? t("vocab.nextStep")
+        : "下一步建议";
 
   return `
     <article class="card next-action-card">
@@ -2494,11 +2526,11 @@ function renderVocabTopicCard(group, action = "open-vocab-group") {
       data-action="${action}"
       data-id="${group.id}"
       type="button"
-      aria-label="进入${group.title}"
+      aria-label="${t("vocab.openTopic", { title: group.title })}"
     >
       <span>
         <strong>${group.title}</strong>
-        <small>${group.items.length} 个词</small>
+        <small>${t("vocab.wordCount", { count: group.items.length })}</small>
       </span>
       <span class="topic-end">
         ${renderLearnedMarker("vocab", group.id)}
@@ -3773,7 +3805,7 @@ function renderVocabRows(group, activeId) {
   const itemsById = Object.fromEntries(group.items.map((item) => [item.id, item]));
 
   return `
-    <div class="vocab-row-list" aria-label="本课词汇">
+    <div class="vocab-row-list" aria-label="${t("vocab.rowsAria")}">
       ${
         group.sections?.length
           ? group.sections
@@ -3783,7 +3815,7 @@ function renderVocabRows(group, activeId) {
                   <section class="vocab-subgroup">
                     <div class="vocab-subgroup-title">
                       <strong>${section.title}</strong>
-                      <small>${sectionItems.length} 个词</small>
+                      <small>${t("vocab.wordCount", { count: sectionItems.length })}</small>
                     </div>
                     ${sectionItems.map((item) => renderVocabRow(item, activeId)).join("")}
                   </section>
@@ -3807,7 +3839,7 @@ function renderVocabLesson() {
     `
       ${topBar(
         group.title,
-        "第三单元：日常用语与词汇",
+        t("vocab.unitTitle"),
         "",
         `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="${t("common.back")}">←</button>`
       )}
@@ -3815,26 +3847,26 @@ function renderVocabLesson() {
         <article class="card vocab-lesson-card">
           <div class="section-row">
             <div>
-              <p class="caption">本课词汇</p>
-              <h2 class="section-title unit-goal-text">${group.title} · ${group.items.length} 个词</h2>
+              <p class="caption">${t("vocab.lessonWords")}</p>
+              <h2 class="section-title unit-goal-text">${group.title} · ${t("vocab.wordCount", { count: group.items.length })}</h2>
               ${section ? `<p class="caption">${section.title}</p>` : ""}
             </div>
           </div>
-          <p class="muted compact-note">点维语词播放；点右侧解释选择词。中文仅预览，不设唯一答案。</p>
+          <p class="muted compact-note">${t("vocab.lessonInstruction")}</p>
           ${renderVocabRows(group, item.id)}
         </article>
 
         <div class="item-progress">
           <span class="step-state">${position.label}</span>
-          <strong>当前：${state.preferences.showLatin ? `${item.latin} · ` : ""}${item.meaning}</strong>
+          <strong>${t("vocab.current", { value: `${state.preferences.showLatin ? `${item.latin} · ` : ""}${item.meaning}` })}</strong>
         </div>
 
         <div class="action-grid vocab-action-grid">
           <button class="secondary-button" data-action="go" data-target="vocabRecognition" type="button">
-            辨认
+            ${t("vocab.recognition")}
           </button>
           <button class="primary-button" data-action="go" data-target="vocabKeyboard" type="button">
-            键盘
+            ${t("vocab.keyboard")}
           </button>
         </div>
       </section>
@@ -3854,16 +3886,16 @@ function renderVocabRecognition() {
   return screen(
     `
       ${topBar(
-        "词形辨认",
+        t("vocab.recognitionTitle"),
         group.title,
         "",
         `<button class="back-button" data-action="go" data-target="vocab" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
-          <p class="caption">选择正确词形</p>
-          <h2 class="section-title">请选择 ${item.latin} 的词形</h2>
-          <p class="muted">中文预览：${item.meaning}。本题只确认词形。</p>
+          <p class="caption">${t("vocab.chooseWordForm")}</p>
+          <h2 class="section-title">${t("vocab.choosePrompt", { latin: item.latin })}</h2>
+          <p class="muted">${t("vocab.meaningPreview", { meaning: item.meaning })}</p>
         </article>
         <div class="choice-grid">
           ${choices
@@ -3883,7 +3915,7 @@ function renderVocabRecognition() {
                     <strong>${choice.latin}</strong>
                     <span class="caption">${choice.meaning}</span>
                   </span>
-                  <span class="step-state">${selected ? (correctChoice ? "正确" : "再想想") : "选择"}</span>
+                  <span class="step-state">${selected ? (correctChoice ? t("vocab.correct") : t("vocab.tryAgain")) : t("vocab.choose")}</span>
                 </button>
               `;
             })
@@ -3893,13 +3925,13 @@ function renderVocabRecognition() {
           hasPicked
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? `答对了。这里确认的是 ${item.value} 的词形。`
-                  : itemMistakeFeedback(item, picked, "词形")
+                  ? t("vocab.recognitionCorrect", { value: item.value })
+                  : vocabMistakeFeedback(item, picked)
               }</div>`
             : ""
         }
         <button class="primary-button" data-action="go" data-target="vocabKeyboard" type="button">
-          继续键盘
+          ${t("vocab.continueKeyboard")}
         </button>
       </section>
     `,
@@ -3918,14 +3950,14 @@ function renderVocabKeyboard() {
   return screen(
     `
       ${topBar(
-        "词形键盘",
+        t("vocab.keyboardTitle"),
         group.title,
         "",
         `<button class="back-button" data-action="go" data-target="vocab" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
-          <p class="caption">请输入这个词形</p>
+          <p class="caption">${t("vocab.keyboardPrompt")}</p>
           <div class="section-row">
             <strong class="uyghur">${item.value}</strong>
             <span class="caption">${item.latin}</span>
@@ -3934,12 +3966,12 @@ function renderVocabKeyboard() {
         <input
           class="rtl-input uyghur"
           value="${state.keyboardValue}"
-          aria-label="维吾尔语词形输入框"
+          aria-label="${t("vocab.inputAria")}"
           readonly
           dir="rtl"
         />
         ${renderKeyboardGuide(keyboardParts, item.value)}
-        <div class="practice-key-row" aria-label="本组词形快捷键">
+        <div class="practice-key-row" aria-label="${t("vocab.groupKeysAria")}">
           ${sectionItems
             .map(
               (choice) => `
@@ -3950,7 +3982,7 @@ function renderVocabKeyboard() {
             )
             .join("")}
         </div>
-        <div class="practice-key-row" aria-label="当前词形拆分键">
+        <div class="practice-key-row" aria-label="${t("vocab.partKeysAria")}">
           ${item.parts
             .map(
               (part) => `
@@ -3962,20 +3994,20 @@ function renderVocabKeyboard() {
             .join("")}
         </div>
         <div class="tool-row">
-          <button class="secondary-button" data-action="backspace" type="button">删除</button>
-          <button class="secondary-button" data-action="clear-input" type="button">清空</button>
+          <button class="secondary-button" data-action="backspace" type="button">${t("vocab.backspace")}</button>
+          <button class="secondary-button" data-action="clear-input" type="button">${t("vocab.clear")}</button>
         </div>
         ${
           hasInput
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? "输入正确。这个词形已完成本轮练习。"
-                  : `继续输入，目标词形是 ${item.value}。`
+                  ? t("vocab.keyboardCorrect")
+                  : t("vocab.keyboardContinue", { value: item.value })
               }</div>`
-            : `<div class="feedback">提示：可以直接点击 <span class="uyghur">${item.value}</span>，也可以按拆分键慢慢输入。</div>`
+            : `<div class="feedback">${t("vocab.keyboardTip", { value: `<span class="uyghur">${item.value}</span>` })}</div>`
         }
         <button class="primary-button" data-action="go" data-target="vocabComplete" type="button">
-          完成这一组
+          ${t("vocab.finishGroup")}
         </button>
       </section>
     `,
@@ -3992,23 +4024,23 @@ function renderVocabComplete() {
 
   return screen(
     `
-      ${topBar("第三单元完成", group.title)}
+      ${topBar(t("vocab.completeTitle"), group.title)}
       <section class="stack">
         <article class="card review-card">
-          <p class="caption">本次练习</p>
+          <p class="caption">${t("vocab.completePractice")}</p>
           <h2 class="screen-title">
             <span class="uyghur">${groupValues}</span>
           </h2>
-          <p class="muted">你辨认并输入了 ${item.value}。可以回到学习路径选择下一组内容。</p>
+          <p class="muted">${t("vocab.completeSummary", { value: item.value })}</p>
         </article>
         <div class="metric-grid">
-          <div class="metric"><strong>${sectionItems.length}</strong><span>${section ? section.title : "词形"}</span></div>
-          <div class="metric"><strong>1</strong><span>输入</span></div>
-          <div class="metric"><strong>词义</strong><span>理解</span></div>
+          <div class="metric"><strong>${sectionItems.length}</strong><span>${section ? section.title : t("vocab.completeWordForms")}</span></div>
+          <div class="metric"><strong>1</strong><span>${t("vocab.completeInput")}</span></div>
+          <div class="metric"><strong>${t("vocab.completeMeaning")}</strong><span>${t("vocab.completeUnderstanding")}</span></div>
         </div>
         ${renderUnitNextActions("basic-phrases")}
         <button class="secondary-button" data-action="go" data-target="learn" type="button">
-          学习路径
+          ${t("vocab.learningPath")}
         </button>
       </section>
     `,

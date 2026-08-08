@@ -11,6 +11,7 @@ const i18nScriptPaths = [
   "prototype/i18n/ui-messages.js",
   "prototype/i18n/alphabet-en.js",
   "prototype/i18n/combo-en.js",
+  "prototype/i18n/vocab-en.js",
   "prototype/i18n/course-en.js",
   "prototype/i18n/runtime.js"
 ];
@@ -51,6 +52,7 @@ const expectedVersionedAssets = [
   "./i18n/ui-messages.js?v=20260809-bilingual",
   "./i18n/alphabet-en.js?v=20260809-bilingual-alphabet",
   "./i18n/combo-en.js?v=20260809-bilingual-combos",
+  "./i18n/vocab-en.js?v=20260809-bilingual-vocab",
   "./i18n/course-en.js?v=20260809-bilingual-alphabet",
   "./i18n/runtime.js?v=20260809-bilingual",
   "./audio-controller.js?v=20260728-uly-transliteration",
@@ -655,6 +657,10 @@ const requiredGlobalMessageKeys = [
   "home.continue", "home.today", "home.progress",
   "settings.title", "settings.learning", "settings.audio", "settings.account",
   "settings.reminder", "settings.showLatin", "settings.autoplay",
+  "vocab.unitTitle", "vocab.lessonWords", "vocab.lessonInstruction", "vocab.current",
+  "vocab.recognitionTitle", "vocab.chooseWordForm", "vocab.recognitionCorrect", "vocab.continueKeyboard",
+  "vocab.keyboardTitle", "vocab.keyboardPrompt", "vocab.inputAria", "vocab.keyboardCorrect",
+  "vocab.finishGroup", "vocab.completeTitle", "vocab.completeSummary", "vocab.learningPath",
   "common.back", "common.previous", "common.next", "common.cancel", "common.confirm",
   "audio.play", "audio.playing", "audio.unavailable", "audio.humanRecording",
   "error.storage", "error.cloud", "error.avatar", "progress.count"
@@ -940,11 +946,70 @@ for (const [screenName, html] of Object.entries(englishComboScreens)) {
   );
 }
 
+vm.runInContext(
+  `
+    state.selectedUnitId = "basic-phrases";
+    state.selectedVocabGroupId = "greetings";
+    state.currentVocabItemId = "yaxshimusiz";
+    state.selectedPicture = "rahmat";
+    state.keyboardValue = "ياخشى";
+  `,
+  context
+);
+const englishVocabScreens = {
+  unit: renderState("state.learningProgress.vocab.greetings = { viewed: true }; state.screen = 'unit'"),
+  lesson: renderState("state.screen = 'vocab'"),
+  recognition: renderState("state.selectedPicture = 'assalamu'; state.screen = 'vocabRecognition'"),
+  keyboard: renderState("state.keyboardValue = 'ياخشى'; state.screen = 'vocabKeyboard'"),
+  completion: renderState("state.screen = 'vocabComplete'")
+};
+includesAll(
+  englishVocabScreens.unit,
+  ["Unit 3: Everyday phrases and vocabulary", "Greetings", "Personal pronouns", "Family and forms of address", "Numbers", "Animals", "Learned"],
+  "English vocabulary unit overview"
+);
+includesAll(
+  englishVocabScreens.lesson,
+  ["Unit 3: Everyday phrases and vocabulary", "Greetings", "Lesson vocabulary", "Everyday greetings", "15 words", "Hello; how are you?", "Current:", "Recognize", "Keyboard"],
+  "English vocabulary lesson"
+);
+includesAll(
+  englishVocabScreens.recognition,
+  ["Recognize word forms", "Choose the correct word form", "Choose the word form for yaxshimusiz", "Meaning: Hello; how are you?", "Try again", "The target word form is ياخشىمۇسىز. You chose ئەسسالامۇ ئەلەيكۇم.", "Continue to keyboard"],
+  "English vocabulary recognition"
+);
+includesAll(
+  englishVocabScreens.keyboard,
+  ["Word-form keyboard", "Type this word form", "Uyghur word-form input", "Word-form shortcuts for this section", "Current word-form parts", "Keyboard steps", "Entered: ياخشى", "Backspace", "Clear", "Keep typing. The target word form is ياخشىمۇسىز.", "Finish this group"],
+  "English vocabulary keyboard"
+);
+includesAll(
+  englishVocabScreens.completion,
+  ["Unit 3 complete", "This practice", "You recognized and typed ياخشىمۇسىز.", "Everyday greetings", "Input", "Meaning", "Understanding", "Next step", "Review vocabulary", "Enter Unit 4", "Learning path"],
+  "English vocabulary completion"
+);
+for (const [screenName, html] of Object.entries(englishVocabScreens)) {
+  assert.ok(
+    !/[\u3400-\u9fff]/u.test(html),
+    `English vocabulary ${screenName} screen should not contain Chinese learner copy`
+  );
+}
+
 setLanguage("zh");
 assert.equal(
   vm.runInContext(`formExampleItems.find((item) => item.value === "كىتاب").meaning`, context),
   "书",
   "switching back to Chinese should rebuild the original derived form-example text"
+);
+assert.equal(
+  vm.runInContext(`vocabGroups.find((group) => group.id === "greetings").items.find((item) => item.id === "yaxshimusiz").meaning`, context),
+  "你好、你好吗",
+  "switching back to Chinese should restore the original vocabulary meaning"
+);
+assert.equal(
+  vm.runInContext(`vocabGroups.find((group) => group.id === "greetings").items.find((item) => item.id === "yaxshimusiz").tip`, context),
+  "先分成 ياخشى、مۇ、سىز 三块看。",
+  "switching back to Chinese should restore the original vocabulary tip"
 );
 const restoredChineseAlphabetHtml = renderState("state.screen = 'group'");
 includesAll(
