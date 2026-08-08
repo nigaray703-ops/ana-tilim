@@ -354,53 +354,57 @@ const letterLoopSteps = [
 
 const initialCloudTimestamp = new Date().toISOString();
 
+function createDefaultLocalProgressState(timestamp = new Date().toISOString()) {
+  return {
+    screen: "welcome",
+    currentLetterId: "be",
+    selectedGroupId: "dot-bone",
+    currentComboItemId: "ba",
+    selectedComboGroupId: "open-a",
+    currentVocabItemId: "yaxshimusiz",
+    selectedVocabGroupId: "greetings",
+    currentPracticeItemId: "practice-listen-be",
+    selectedPracticeGroupId: "listening-loop",
+    selectedReadingUnitId: "sentence-patterns",
+    selectedReadingGroupId: "sentence-this-that",
+    selectedUnitId: "letters",
+    favorite: false,
+    learningProgress: emptyLearningProgress(),
+    mistakes: [],
+    writingChecks: [],
+    localProfile: {
+      displayName: "",
+      avatarDataUrl: ""
+    },
+    preferences: { ...DEFAULT_PREFERENCES },
+    dailyActivity: { date: "", completedIds: [] },
+    modifiedAt: timestamp,
+    preferencesUpdatedAt: timestamp,
+    favoriteUpdatedAt: timestamp
+  };
+}
+
+const localProgressFieldNames = Object.freeze(
+  Object.keys(createDefaultLocalProgressState(initialCloudTimestamp))
+);
+
 const state = {
-  screen: "welcome",
+  ...createDefaultLocalProgressState(initialCloudTimestamp),
   selectedPicture: "",
   selectedListening: "",
   practiceAudioPlayed: false,
   keyboardValue: "",
   keyboardShift: false,
-  currentLetterId: "be",
-  selectedGroupId: "dot-bone",
-  currentComboItemId: "ba",
-  selectedComboGroupId: "open-a",
-  currentVocabItemId: "yaxshimusiz",
-  selectedVocabGroupId: "greetings",
-  currentPracticeItemId: "practice-listen-be",
-  selectedPracticeGroupId: "listening-loop",
-  selectedReadingUnitId: "sentence-patterns",
-  selectedReadingGroupId: "sentence-this-that",
   practiceSpoken: false,
-  writingChecks: [],
   emailAuthExpanded: false,
   emailCodeSent: false,
   authMode: "login",
   authEmail: "",
   avatarUploading: false,
   profileNameEditing: false,
-  localProfile: {
-    displayName: "",
-    avatarDataUrl: ""
-  },
-  learningProgress: {
-    letters: {},
-    combos: {},
-    vocab: {},
-    practice: {},
-    reading: {}
-  },
-  mistakes: [],
-  selectedUnitId: "letters",
   showGuide: true,
-  favorite: false,
-  preferences: { ...DEFAULT_PREFERENCES },
-  dailyActivity: { date: "", completedIds: [] },
   clearLearningConfirmation: false,
   pendingProgressImport: null,
-  modifiedAt: initialCloudTimestamp,
-  preferencesUpdatedAt: initialCloudTimestamp,
-  favoriteUpdatedAt: initialCloudTimestamp,
   syncDirty: false
 };
 
@@ -411,6 +415,7 @@ const toast = document.querySelector("#toast");
 let toastTimer = null;
 let activeAudio = null;
 let lastAutoplayKey = "";
+let progressImportSelectionGeneration = 0;
 let cloudSync = null;
 let cloudStatus = { phase: "local", error: "" };
 
@@ -451,6 +456,87 @@ function recordDailyActivity(activityId, date = new Date()) {
   }
 }
 
+function applyLocalProgressData(saved) {
+  if (!saved || typeof saved !== "object") {
+    return false;
+  }
+
+  state.preferences = normalizePreferences(saved.preferences);
+
+  if (
+    saved.dailyActivity &&
+    typeof saved.dailyActivity === "object" &&
+    typeof saved.dailyActivity.date === "string" &&
+    Array.isArray(saved.dailyActivity.completedIds)
+  ) {
+    state.dailyActivity = {
+      date: saved.dailyActivity.date,
+      completedIds: saved.dailyActivity.completedIds.filter((id) => typeof id === "string")
+    };
+  }
+
+  const fields = [
+    "screen",
+    "currentLetterId",
+    "selectedGroupId",
+    "currentComboItemId",
+    "selectedComboGroupId",
+    "currentVocabItemId",
+    "selectedVocabGroupId",
+    "currentPracticeItemId",
+    "selectedPracticeGroupId",
+    "selectedReadingUnitId",
+    "selectedReadingGroupId",
+    "selectedUnitId",
+    "modifiedAt",
+    "preferencesUpdatedAt",
+    "favoriteUpdatedAt"
+  ];
+
+  fields.forEach((field) => {
+    if (typeof saved[field] === "string") {
+      state[field] = saved[field];
+    }
+  });
+  if (state.screen === "settings") {
+    state.screen = "profile";
+  }
+
+  if (typeof saved.favorite === "boolean") {
+    state.favorite = saved.favorite;
+  }
+
+  if (saved.learningProgress && typeof saved.learningProgress === "object") {
+    state.learningProgress = {
+      letters: saved.learningProgress.letters || {},
+      combos: saved.learningProgress.combos || {},
+      vocab: saved.learningProgress.vocab || {},
+      practice: saved.learningProgress.practice || {},
+      reading: saved.learningProgress.reading || {}
+    };
+  }
+
+  if (Array.isArray(saved.mistakes)) {
+    state.mistakes = saved.mistakes.slice(0, 24);
+  }
+
+  if (Array.isArray(saved.writingChecks)) {
+    state.writingChecks = saved.writingChecks.slice(0, 3);
+  }
+
+  if (saved.localProfile && typeof saved.localProfile === "object") {
+    state.localProfile = {
+      displayName: typeof saved.localProfile.displayName === "string" ? saved.localProfile.displayName.slice(0, 40) : "",
+      avatarDataUrl:
+        typeof saved.localProfile.avatarDataUrl === "string" && saved.localProfile.avatarDataUrl.startsWith("data:image/")
+          ? saved.localProfile.avatarDataUrl
+          : ""
+    };
+  }
+
+  return true;
+}
+
 function hydrateLocalProgress() {
   const storage = localStorageSafe();
   if (!storage) {
@@ -458,83 +544,7 @@ function hydrateLocalProgress() {
   }
 
   try {
-    const saved = JSON.parse(storage.getItem(progressStorageKey) || "{}");
-    if (!saved || typeof saved !== "object") {
-      return;
-    }
-
-    state.preferences = normalizePreferences(saved.preferences);
-
-    if (
-      saved.dailyActivity &&
-      typeof saved.dailyActivity === "object" &&
-      typeof saved.dailyActivity.date === "string" &&
-      Array.isArray(saved.dailyActivity.completedIds)
-    ) {
-      state.dailyActivity = {
-        date: saved.dailyActivity.date,
-        completedIds: saved.dailyActivity.completedIds.filter((id) => typeof id === "string")
-      };
-    }
-
-    const fields = [
-      "screen",
-      "currentLetterId",
-      "selectedGroupId",
-      "currentComboItemId",
-      "selectedComboGroupId",
-      "currentVocabItemId",
-      "selectedVocabGroupId",
-      "currentPracticeItemId",
-      "selectedPracticeGroupId",
-      "selectedReadingUnitId",
-      "selectedReadingGroupId",
-      "selectedUnitId",
-      "modifiedAt",
-      "preferencesUpdatedAt",
-      "favoriteUpdatedAt"
-    ];
-
-    fields.forEach((field) => {
-      if (typeof saved[field] === "string") {
-        state[field] = saved[field];
-      }
-    });
-    if (state.screen === "settings") {
-      state.screen = "profile";
-    }
-
-    if (typeof saved.favorite === "boolean") {
-      state.favorite = saved.favorite;
-    }
-
-    if (saved.learningProgress && typeof saved.learningProgress === "object") {
-      state.learningProgress = {
-        letters: saved.learningProgress.letters || {},
-        combos: saved.learningProgress.combos || {},
-        vocab: saved.learningProgress.vocab || {},
-        practice: saved.learningProgress.practice || {},
-        reading: saved.learningProgress.reading || {}
-      };
-    }
-
-    if (Array.isArray(saved.mistakes)) {
-      state.mistakes = saved.mistakes.slice(0, 24);
-    }
-
-    if (Array.isArray(saved.writingChecks)) {
-      state.writingChecks = saved.writingChecks.slice(0, 3);
-    }
-
-    if (saved.localProfile && typeof saved.localProfile === "object") {
-      state.localProfile = {
-        displayName: typeof saved.localProfile.displayName === "string" ? saved.localProfile.displayName.slice(0, 40) : "",
-        avatarDataUrl:
-          typeof saved.localProfile.avatarDataUrl === "string" && saved.localProfile.avatarDataUrl.startsWith("data:image/")
-            ? saved.localProfile.avatarDataUrl
-            : ""
-      };
-    }
+    applyLocalProgressData(JSON.parse(storage.getItem(progressStorageKey) || "{}"));
   } catch {
     // Ignore damaged local progress and keep the default starter state.
   }
@@ -550,41 +560,30 @@ function saveLocalProgress() {
 
   try {
     storage.setItem(progressStorageKey, JSON.stringify(saved));
-    if (state.syncDirty && typeof cloudSync?.scheduleSync === "function") {
-      cloudSync.scheduleSync(buildCloudSnapshot());
-      state.syncDirty = false;
-    }
-    return true;
   } catch {
     return false;
   }
+
+  if (state.syncDirty && typeof cloudSync?.scheduleSync === "function") {
+    try {
+      cloudSync.scheduleSync(buildCloudSnapshot());
+      state.syncDirty = false;
+    } catch {
+      // Local persistence succeeded; keep syncDirty for the next cloud retry.
+    }
+  }
+
+  return true;
 }
 
 function buildLocalProgressData() {
-  return {
-    screen: state.screen,
-    currentLetterId: state.currentLetterId,
-    selectedGroupId: state.selectedGroupId,
-    currentComboItemId: state.currentComboItemId,
-    selectedComboGroupId: state.selectedComboGroupId,
-    currentVocabItemId: state.currentVocabItemId,
-    selectedVocabGroupId: state.selectedVocabGroupId,
-    currentPracticeItemId: state.currentPracticeItemId,
-    selectedPracticeGroupId: state.selectedPracticeGroupId,
-    selectedReadingUnitId: state.selectedReadingUnitId,
-    selectedReadingGroupId: state.selectedReadingGroupId,
-    selectedUnitId: state.selectedUnitId,
-    favorite: state.favorite,
-    learningProgress: state.learningProgress,
-    mistakes: state.mistakes,
-    writingChecks: state.writingChecks,
-    localProfile: state.localProfile,
-    preferences: state.preferences,
-    dailyActivity: state.dailyActivity,
-    modifiedAt: state.modifiedAt,
-    preferencesUpdatedAt: state.preferencesUpdatedAt,
-    favoriteUpdatedAt: state.favoriteUpdatedAt
-  };
+  return Object.fromEntries(
+    localProgressFieldNames.map((field) => [field, state[field]])
+  );
+}
+
+function resetPersistedLocalProgressState() {
+  Object.assign(state, createDefaultLocalProgressState());
 }
 
 function exportLocalProgress() {
@@ -608,21 +607,32 @@ function importLocalProgressText(text) {
 }
 
 function confirmLocalProgressImport() {
-  const storage = localStorageSafe();
-  if (!storage) {
+  if (!localStorageSafe()) {
     throw new Error("当前浏览器不能保存学习记录");
   }
   if (!state.pendingProgressImport) {
     throw new Error("请先选择学习记录文件");
   }
-  storage.setItem(progressStorageKey, JSON.stringify(state.pendingProgressImport.data));
-  hydrateLocalProgress();
+  const previousProgressState = JSON.parse(JSON.stringify(buildLocalProgressData()));
+  const previousSyncDirty = state.syncDirty;
+
+  try {
+    resetPersistedLocalProgressState();
+    applyLocalProgressData(state.pendingProgressImport.data);
+    state.screen = "profile";
+    markCloudDirty("learning");
+    markCloudDirty("preferences");
+    markCloudDirty("favorite");
+    if (!saveLocalProgress()) {
+      throw new Error("导入失败，未能保存完整学习记录");
+    }
+  } catch (error) {
+    Object.assign(state, previousProgressState);
+    state.syncDirty = previousSyncDirty;
+    throw error;
+  }
+
   state.pendingProgressImport = null;
-  state.screen = "profile";
-  markCloudDirty("learning");
-  markCloudDirty("preferences");
-  markCloudDirty("favorite");
-  saveLocalProgress();
 }
 
 function progressEditionName(edition) {
@@ -5271,6 +5281,7 @@ document.addEventListener("click", (event) => {
   }
 
   if (action === "cancel-import-progress") {
+    progressImportSelectionGeneration += 1;
     state.pendingProgressImport = null;
     render({ persist: false });
     showToast("已取消导入");
@@ -5278,6 +5289,7 @@ document.addEventListener("click", (event) => {
   }
 
   if (action === "confirm-import-progress") {
+    progressImportSelectionGeneration += 1;
     try {
       confirmLocalProgressImport();
       render();
@@ -5951,15 +5963,18 @@ document.addEventListener("change", (event) => {
   if (input?.id === "progress-import-input") {
     const file = input.files?.[0];
     if (!file) return;
+    const selectionGeneration = ++progressImportSelectionGeneration;
     state.pendingProgressImport = null;
     file
       .text()
       .then((text) => {
+        if (selectionGeneration !== progressImportSelectionGeneration) return;
         importLocalProgressText(text);
         render({ persist: false });
         showToast("请确认导入学习记录");
       })
       .catch((error) => {
+        if (selectionGeneration !== progressImportSelectionGeneration) return;
         state.pendingProgressImport = null;
         render({ persist: false });
         showToast(error?.message || "导入失败，请检查文件");
