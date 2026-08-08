@@ -273,6 +273,7 @@ const persistedScreenIds = new Set([
   "latinLetterClasses",
   "latinVowelCompare",
   "latinDictation",
+  "latinWritingForms",
   "letter",
   "group",
   "writing",
@@ -497,6 +498,9 @@ const state = {
   latinDictationIndex: 0,
   latinDictationRevealed: false,
   latinWritingForm: 0,
+  latinWritingLetterId: "aa",
+  latinWritingGuideVisible: true,
+  latinWritingComparisonRevealed: false,
   practiceSpoken: false,
   emailAuthExpanded: false,
   emailCodeSent: false,
@@ -1937,13 +1941,21 @@ function renderWritingComparison({ value, parts, forms = [] }) {
 function renderWritingCanvas(value, label = "手写板", options = {}) {
   const fallbackId = options.fallbackId || "";
   const fallbackMessage = options.fallbackMessage || "";
+  const guideVisible = typeof options.guideVisible === "boolean" ? options.guideVisible : state.showGuide;
+  const latinWritingHooks = options.latinWritingHooks === true;
 
   return `
-    <div class="writing-pad ${state.showGuide ? "" : "hide-guide"}" aria-label="${escapeHtml(label)}">
-      <span class="uyghur guide">${displayStandaloneLetterGlyph(value)}</span>
+    <div
+      class="writing-pad ${guideVisible ? "" : "hide-guide"}"
+      aria-label="${escapeHtml(label)}"
+      ${latinWritingHooks ? "data-latin-writing-pad" : ""}
+    >
+      <span class="uyghur guide" ${latinWritingHooks ? "data-latin-writing-guide" : ""}>${escapeHtml(displayStandaloneLetterGlyph(value))}</span>
       <canvas
         class="writing-canvas"
         data-writing-canvas
+        ${latinWritingHooks ? "data-latin-writing-canvas" : ""}
+        ${latinWritingHooks ? 'data-writing-unavailable-selector="[data-latin-writing-canvas-only]"' : ""}
         ${fallbackId ? `data-writing-fallback-id="${escapeHtml(fallbackId)}"` : ""}
         width="640"
         height="360"
@@ -2236,11 +2248,18 @@ function initializeWritingCanvases() {
     const context = canvas.getContext && canvas.getContext("2d");
     const fallbackId = canvas.dataset?.writingFallbackId || "";
     const fallback = fallbackId ? document.querySelector?.(`#${fallbackId}`) : null;
+    const unavailableSelector = canvas.dataset?.writingUnavailableSelector || "";
+    const canvasOnlyControls = unavailableSelector
+      ? document.querySelectorAll?.(unavailableSelector) || []
+      : [];
     if (!context || !canvas.getBoundingClientRect) {
       canvas.hidden = true;
       if (fallback) {
         fallback.hidden = false;
       }
+      canvasOnlyControls.forEach((control) => {
+        control.hidden = true;
+      });
       return;
     }
 
@@ -2248,6 +2267,9 @@ function initializeWritingCanvases() {
     if (fallback) {
       fallback.hidden = true;
     }
+    canvasOnlyControls.forEach((control) => {
+      control.hidden = false;
+    });
 
     const ratio = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
@@ -2378,6 +2400,7 @@ function render({ persist = true } = {}) {
     latinLetterClasses: renderLatinLetterClasses,
     latinVowelCompare: renderLatinVowelCompare,
     latinDictation: renderLatinDictation,
+    latinWritingForms: renderLatinWritingForms,
     letter: renderGroupLesson,
     group: renderGroupLesson,
     writing: renderPracticeHub,
@@ -3836,7 +3859,12 @@ function renderLatinDictationAnswer(letter) {
           )
           .join("")}
       </div>
-      <p class="caption">下一阶段可查看并练习该字母的全部形式。</p>
+      <button
+        class="secondary-button"
+        data-action="open-latin-writing-forms"
+        data-letter-id="${escapeHtml(letter.id || "")}"
+        type="button"
+      >练习这个字母的全部形式</button>
     </article>
   `;
 }
@@ -3914,6 +3942,181 @@ function renderLatinDictation() {
           <button class="secondary-button" data-action="go" data-target="unit" type="button">返回本单元</button>
           <button class="primary-button" data-action="next-latin-dictation" type="button">下一题</button>
         </div>
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function currentLatinWritingLetter() {
+  const letterId = latinDictationLetterIds.includes(state.latinWritingLetterId)
+    ? state.latinWritingLetterId
+    : latinDictationLetterIds[0];
+  return letterDetails[letterId];
+}
+
+function currentLatinWritingForm() {
+  const letter = currentLatinWritingLetter();
+  const forms = Array.isArray(letter.forms) ? letter.forms : [];
+  const lastIndex = Math.max(0, forms.length - 1);
+  const index = Math.max(0, Math.min(lastIndex, Number(state.latinWritingForm) || 0));
+  return { letter, forms, index, form: forms[index] || { label: "", value: letter.letter } };
+}
+
+function renderLatinWritingComparison(letter, form) {
+  return `
+    <article class="latin-writing-comparison card" aria-label="字母形式自我对照">
+      <p class="caption">标准形式 · <span data-latin-writing-comparison-label>${escapeHtml(form.label)}</span></p>
+      <strong class="uyghur latin-writing-comparison-glyph" data-latin-writing-comparison-glyph>${escapeHtml(form.value)}</strong>
+      <p>保留画布上的笔迹，自己对照形状与连接位置，不做自动判分。</p>
+      <p class="caption">${escapeHtml(letter.writingHint)}</p>
+    </article>
+  `;
+}
+
+function updateLatinWritingFormView() {
+  const { forms, index, form } = currentLatinWritingForm();
+  state.latinWritingForm = index;
+
+  const referenceGlyph = document.querySelector?.("[data-latin-writing-reference-glyph]");
+  const guideGlyph = document.querySelector?.("[data-latin-writing-guide]");
+  const referenceLabel = document.querySelector?.("[data-latin-writing-reference-label]");
+  const formCount = document.querySelector?.("[data-latin-writing-form-count]");
+  const canvas = document.querySelector?.("[data-latin-writing-canvas]");
+  if (referenceGlyph) referenceGlyph.textContent = form.value;
+  if (guideGlyph) guideGlyph.textContent = form.value;
+  if (referenceLabel) referenceLabel.textContent = form.label;
+  if (formCount) formCount.textContent = `${index + 1} / ${forms.length}`;
+  canvas?.setAttribute?.("aria-label", `${form.label} 手写板`);
+
+  document.querySelectorAll?.("[data-latin-writing-form-tab]").forEach((tab, tabIndex) => {
+    const selected = tabIndex === index;
+    tab.setAttribute?.("aria-selected", selected ? "true" : "false");
+    tab.setAttribute?.("tabindex", selected ? "0" : "-1");
+    tab.classList?.toggle("active", selected);
+  });
+
+  if (state.latinWritingComparisonRevealed) {
+    const comparisonRegion = document.querySelector?.("[data-latin-writing-comparison-region]");
+    if (comparisonRegion) {
+      const { letter } = currentLatinWritingForm();
+      comparisonRegion.innerHTML = renderLatinWritingComparison(letter, form);
+    }
+  }
+}
+
+function toggleLatinWritingGuide() {
+  state.latinWritingGuideVisible = !state.latinWritingGuideVisible;
+  const pad = document.querySelector?.("[data-latin-writing-pad]");
+  const guide = document.querySelector?.("[data-latin-writing-guide]");
+  const button = document.querySelector?.("[data-latin-writing-guide-toggle]");
+  pad?.classList?.toggle("hide-guide", !state.latinWritingGuideVisible);
+  guide?.setAttribute?.("aria-hidden", state.latinWritingGuideVisible ? "false" : "true");
+  if (button) {
+    button.textContent = state.latinWritingGuideVisible ? "隐藏参考" : "显示参考";
+    button.setAttribute?.("aria-pressed", state.latinWritingGuideVisible ? "true" : "false");
+  }
+}
+
+function revealLatinWritingComparison() {
+  state.latinWritingComparisonRevealed = true;
+  markProgress("latinWriting", "forms", "completed");
+  const comparisonRegion = document.querySelector?.("[data-latin-writing-comparison-region]");
+  if (comparisonRegion) {
+    if (comparisonRegion.innerHTML) {
+      comparisonRegion.innerHTML = "";
+    }
+    comparisonRegion.hidden = false;
+    const insertComparison = () => {
+      const { letter, form } = currentLatinWritingForm();
+      comparisonRegion.innerHTML = renderLatinWritingComparison(letter, form);
+    };
+    if (typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(insertComparison);
+    } else {
+      window.setTimeout(insertComparison, 0);
+    }
+    saveLocalProgress();
+    return;
+  }
+  render();
+}
+
+function renderLatinWritingForms() {
+  const { letter, forms, index, form } = currentLatinWritingForm();
+
+  return screen(
+    `
+      ${topBar(
+        "字母形式书写参考",
+        learningUnitTitle("latin-keyboard-writing"),
+        "",
+        `<button class="back-button" data-action="go" data-target="latinDictation" type="button" aria-label="返回默写题">←</button>`
+      )}
+      <section class="stack latin-writing-forms" data-latin-writing-forms data-letter-id="${escapeHtml(letter.id)}">
+        <article class="card latin-writing-reference-card">
+          <div class="section-row">
+            <div>
+              <p class="caption">ULY ${escapeHtml(letter.latin)}</p>
+              <h2>${escapeHtml(letter.latin)} · ${forms.length} 项真实形式</h2>
+            </div>
+            <span class="step-state" data-latin-writing-form-count>${index + 1} / ${forms.length}</span>
+          </div>
+          <div class="latin-writing-form-tabs" role="tablist" aria-label="${escapeHtml(letter.latin)} 字母形式">
+            ${forms
+              .map(
+                (item, formIndex) => `
+                  <button
+                    class="latin-writing-form-tab ${formIndex === index ? "active" : ""}"
+                    data-action="select-latin-writing-form"
+                    data-latin-writing-form-tab
+                    data-form-index="${formIndex}"
+                    role="tab"
+                    aria-selected="${formIndex === index ? "true" : "false"}"
+                    aria-label="${escapeHtml(`${item.label} ${item.value}`)}"
+                    type="button"
+                  >
+                    <span>${escapeHtml(item.label)}</span>
+                    <strong class="uyghur">${escapeHtml(item.value)}</strong>
+                  </button>
+                `
+              )
+              .join("")}
+          </div>
+          <div class="latin-writing-current-reference" role="tabpanel">
+            <span data-latin-writing-reference-label>${escapeHtml(form.label)}</span>
+            <strong class="uyghur" data-latin-writing-reference-glyph>${escapeHtml(form.value)}</strong>
+          </div>
+          <p>${escapeHtml(letter.writingHint)}</p>
+        </article>
+        <article class="card latin-writing-practice-card">
+          <p class="caption" data-latin-writing-canvas-only>自由书写</p>
+          ${renderWritingCanvas(form.value, `${form.label} 手写板`, {
+            fallbackId: "latin-writing-canvas-fallback",
+            fallbackMessage: "当前浏览器不能自由书写，仍可切换真实字母形式并揭晓对照",
+            guideVisible: state.latinWritingGuideVisible,
+            latinWritingHooks: true
+          })}
+          <div class="action-grid latin-writing-controls">
+            <button
+              class="secondary-button"
+              data-action="toggle-latin-writing-guide"
+              data-latin-writing-guide-toggle
+              data-latin-writing-canvas-only
+              aria-pressed="${state.latinWritingGuideVisible ? "true" : "false"}"
+              type="button"
+            >${state.latinWritingGuideVisible ? "隐藏参考" : "显示参考"}</button>
+            <button class="secondary-button" data-action="clear-latin-writing-canvas" data-latin-writing-canvas-only type="button">清空重写</button>
+            <button class="primary-button" data-action="reveal-latin-writing-comparison" type="button">揭晓对照</button>
+          </div>
+          <div
+            data-latin-writing-comparison-region
+            aria-live="polite"
+            aria-atomic="true"
+            ${state.latinWritingComparisonRevealed ? "" : "hidden"}
+          >${state.latinWritingComparisonRevealed ? renderLatinWritingComparison(letter, form) : ""}</div>
+        </article>
+        <button class="secondary-button" data-action="go" data-target="latinDictation" type="button">返回同一道默写题</button>
       </section>
     `,
     "learn"
@@ -5812,6 +6015,40 @@ document.addEventListener("click", (event) => {
 
   if (action === "reveal-latin-dictation-answer") {
     revealLatinDictationAnswer();
+    return;
+  }
+
+  if (action === "open-latin-writing-forms") {
+    const currentLetter = currentLatinDictationLetter();
+    const letterId = latinDictationLetterIds.includes(button.dataset.letterId)
+      ? button.dataset.letterId
+      : currentLetter.id;
+    state.latinWritingLetterId = letterId;
+    state.latinWritingForm = 0;
+    state.latinWritingGuideVisible = true;
+    state.latinWritingComparisonRevealed = false;
+    goTo("latinWritingForms");
+    return;
+  }
+
+  if (action === "select-latin-writing-form") {
+    state.latinWritingForm = Number(button.dataset.formIndex) || 0;
+    updateLatinWritingFormView();
+    return;
+  }
+
+  if (action === "toggle-latin-writing-guide") {
+    toggleLatinWritingGuide();
+    return;
+  }
+
+  if (action === "clear-latin-writing-canvas") {
+    clearWritingCanvases();
+    return;
+  }
+
+  if (action === "reveal-latin-writing-comparison") {
+    revealLatinWritingComparison();
     return;
   }
 
