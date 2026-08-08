@@ -167,6 +167,7 @@ assert.ok(!bottomNavStyle.includes("position: fixed;"), "bottom navigation shoul
 assert.ok(bottomNavStyle.includes("background: var(--cream);"), "bottom navigation background should be opaque so page cards do not bleed through");
 assert.ok(styleSource.includes("@media (min-width: 720px)"), "prototype should include a tablet layout breakpoint");
 const tabletMedia = styleSource.slice(styleSource.indexOf("@media (min-width: 720px)"));
+const desktopWelcomeStyle = tabletMedia.match(/\.hero-content\.with-auth\s*\{(?<body>[^}]*)\}/)?.groups?.body || "";
 assert.ok(tabletMedia.includes("width: min(100%, var(--content-max-width));"), "tablet layout should stop using the narrow phone shell width");
 assert.ok(tabletMedia.includes("padding-left: calc(var(--nav-rail-width) + 28px);"), "tablet content should leave room for the side navigation rail");
 assert.ok(tabletMedia.includes("width: var(--nav-rail-width);"), "tablet navigation should become a side rail");
@@ -284,12 +285,20 @@ const playedAudioSources = [];
 let audioPlayShouldReject = false;
 let profileDisplayNameValue = "";
 let profileDisplayNameFocused = false;
+let authPanelToggleFocused = false;
 const context = {
   console,
   document: {
     querySelector(selector) {
       if (selector === "#app") return app;
       if (selector === "#toast") return toast;
+      if (selector === '[data-action="toggle-auth-panel"]') {
+        return {
+          focus() {
+            authPanelToggleFocused = true;
+          }
+        };
+      }
       if (selector === "#profile-display-name") {
         return {
           get value() {
@@ -991,6 +1000,26 @@ assert.match(
   /<button class="primary-button" data-action="continue-local"[^>]*>\s*直接开始学习\s*<\/button>/,
   "guest learning should be the welcome screen primary action"
 );
+vm.runInContext(
+  `
+    globalThis.cloudSyncBeforeSignedInCopyTest = cloudSync;
+    cloudSync = { session() { return { user: { email: "restored@example.com" } }; } };
+  `,
+  context
+);
+const signedInWelcomeCopyHtml = renderState("state.screen = 'welcome'; state.authPanelExpanded = false");
+includesAll(signedInWelcomeCopyHtml, ["继续学习", "查看同步状态"], "signed-in welcome copy");
+assert.ok(!signedInWelcomeCopyHtml.includes("可选：登录后跨设备同步"), "signed-in welcome copy should not invite another login");
+vm.runInContext("cloudSync = globalThis.cloudSyncBeforeSignedInCopyTest", context);
+renderState("state.screen = 'welcome'; state.authPanelExpanded = false");
+const collapsedAuthRegionTag = collapsedWelcomeHtml.match(/<[^>]+id="welcome-auth-panel"[^>]*>/)?.[0] || "";
+assert.ok(collapsedAuthRegionTag.includes("hidden"), "collapsed auth control should keep a hidden aria-controls target in the DOM");
+const authDisclosureButton = collapsedWelcomeHtml.match(/<button[\s\S]*?data-action="toggle-auth-panel"[\s\S]*?<\/button>/)?.[0] || "";
+assert.ok(
+  authDisclosureButton.includes('aria-controls="welcome-auth-panel"') &&
+    authDisclosureButton.includes('type="button"'),
+  "the auth disclosure should remain a native button with a valid controlled target"
+);
 assert.ok(
   !collapsedWelcomeHtml.includes('data-action="password-login"') &&
     !collapsedWelcomeHtml.includes('data-action="password-register"') &&
@@ -1004,14 +1033,18 @@ assert.ok(
   "overseas welcome should use the centered layout with an auth panel"
 );
 
+authPanelToggleFocused = false;
 clickDataset({ action: "toggle-auth-panel" });
 assert.equal(vm.runInContext("state.authPanelExpanded", context), true, "the optional sync button should expand authentication");
+assert.equal(authPanelToggleFocused, true, "expanding authentication should return focus to its disclosure button");
 const expandedLoginHtml = app.innerHTML;
 includesAll(
   expandedLoginHtml,
   ["登录", "注册", "邮箱", "密码", "登录并继续学习", "使用 Google 登录", "使用邮箱验证码", "登录后自动同步"],
   "expanded welcome authentication"
 );
+const expandedAuthRegionTag = expandedLoginHtml.match(/<[^>]+id="welcome-auth-panel"[^>]*>/)?.[0] || "";
+assert.ok(expandedAuthRegionTag && !expandedAuthRegionTag.includes("hidden"), "expanded aria-controls target should be visible");
 assert.ok(expandedLoginHtml.includes('type="password"'), "expanded welcome should provide password login");
 assert.ok(
   expandedLoginHtml.includes('autocomplete="current-password"'),
@@ -1051,8 +1084,10 @@ assertGuestActionPrecedesAuthSubmits(
   ["password-register", "cloud-google-login", "request-email-otp"],
   "expanded email-code authentication"
 );
+authPanelToggleFocused = false;
 clickDataset({ action: "toggle-auth-panel" });
 assert.equal(vm.runInContext("state.authPanelExpanded", context), false, "the optional sync button should collapse authentication again");
+assert.equal(authPanelToggleFocused, true, "collapsing authentication should return focus to its disclosure button");
 assert.ok(!app.innerHTML.includes('id="auth-email"'), "collapsed authentication should leave no hidden form in the DOM");
 
 assert.deepEqual(
@@ -1100,8 +1135,36 @@ assert.equal(
   "邮箱或密码不正确"
 );
 
+vm.runInContext(
+  `
+    globalThis.cloudSyncBeforeSignedInWelcome = cloudSync;
+    cloudSync = {
+      session() {
+        return { user: { email: "restored@example.com" } };
+      }
+    };
+  `,
+  context
+);
+const signedInWelcomeHtml = renderState("state.screen = 'welcome'; state.authPanelExpanded = false");
+includesAll(signedInWelcomeHtml, ["继续学习", "查看同步状态"], "signed-in welcome screen");
+assert.ok(!signedInWelcomeHtml.includes("可选：登录后跨设备同步"), "signed-in welcome should not invite another login");
+assert.ok(!signedInWelcomeHtml.includes("直接开始学习"), "signed-in welcome should not describe the learner as a guest");
+clickDataset({ action: "continue-local" });
+assert.equal(vm.runInContext("state.screen", context), "home", "signed-in learning should continue to home");
+assert.equal(toast.textContent, "继续学习，进度将自动同步", "signed-in welcome CTA should preserve cloud-sync meaning");
+
+vm.runInContext("cloudSync = globalThis.cloudSyncBeforeSignedInWelcome", context);
+renderState("state.screen = 'welcome'; state.authPanelExpanded = false");
 clickDataset({ action: "continue-local" });
 assert.equal(vm.runInContext("state.screen", context), "home", "local learning should enter without login");
+assert.equal(toast.textContent, "已进入本地学习模式", "guest learning should retain its local-mode explanation");
+
+assert.ok(
+  desktopWelcomeStyle.includes("grid-template-columns: minmax(0, 1fr);") &&
+    desktopWelcomeStyle.includes("width: min(100%, 620px);"),
+  "desktop welcome should keep the guest CTA, disclosure, and authentication in one visual column"
+);
 
 vm.runInContext("state.preferences = normalizePreferences(null)", context);
 const profileHtml = renderState("state.screen = 'profile'");
