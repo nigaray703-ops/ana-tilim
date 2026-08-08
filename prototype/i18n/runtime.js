@@ -3,6 +3,8 @@
   const originalsByCourse = new WeakMap();
   const detailFields = ["type", "cue", "connection", "soundHint", "writingHint", "example"];
   const exampleFields = ["label", "meaning", "noteTitle", "note"];
+  const comboGroupFields = ["title", "goal", "status"];
+  const comboItemFields = ["type", "rule", "hint", "review", "meaning"];
   let currentLanguage = "en";
 
   function supported(value) {
@@ -72,6 +74,24 @@
           group.id,
           { title: group.title, goal: group.goal, status: group.status }
         ])
+      ),
+      comboGroups: Object.fromEntries(
+        (courseData.comboGroups || []).map((group) => [
+          group.id,
+          {
+            fields: Object.fromEntries(comboGroupFields.map((field) => [field, group[field]])),
+            items: Object.fromEntries(
+              (group.items || []).map((item) => [
+                item.id,
+                Object.fromEntries(
+                  comboItemFields
+                    .filter((field) => Object.prototype.hasOwnProperty.call(item, field))
+                    .map((field) => [field, item[field]])
+                )
+              ])
+            )
+          }
+        ])
       )
     };
 
@@ -123,10 +143,36 @@
     return missing;
   }
 
+  function missingComboEnglish(courseData, catalog) {
+    const missing = [];
+    for (const group of courseData.comboGroups || []) {
+      for (const field of comboGroupFields) {
+        if (typeof catalog?.groups?.[group.id]?.[field] !== "string") {
+          missing.push(`combos.groups.${group.id}.${field}`);
+        }
+      }
+      for (const item of group.items || []) {
+        for (const field of comboItemFields) {
+          if (
+            Object.prototype.hasOwnProperty.call(item, field) &&
+            typeof catalog?.items?.[item.id]?.[field] !== "string"
+          ) {
+            missing.push(`combos.items.${item.id}.${field}`);
+          }
+        }
+      }
+    }
+    return missing;
+  }
+
   function createCourseLocalizer(courseData, englishCatalog) {
     const original = captureCourse(courseData);
     const alphabetEnglish = englishCatalog?.alphabet || englishCatalog || {};
-    const missing = missingAlphabetEnglish(courseData, alphabetEnglish);
+    const comboEnglish = englishCatalog?.combos || {};
+    const missing = [
+      ...missingAlphabetEnglish(courseData, alphabetEnglish),
+      ...missingComboEnglish(courseData, comboEnglish)
+    ];
 
     function apply(language) {
       const useEnglish = language === "en";
@@ -158,6 +204,22 @@
           useEnglish ? alphabetEnglish.groups?.[group.id] : original.groups[group.id],
           ["title", "goal", "status"]
         );
+      }
+
+      for (const group of courseData.comboGroups || []) {
+        const originalGroup = original.comboGroups[group.id];
+        setAvailableText(
+          group,
+          useEnglish ? comboEnglish.groups?.[group.id] : originalGroup?.fields,
+          comboGroupFields
+        );
+        for (const item of group.items || []) {
+          setAvailableText(
+            item,
+            useEnglish ? comboEnglish.items?.[item.id] : originalGroup?.items?.[item.id],
+            comboItemFields
+          );
+        }
       }
 
       return useEnglish ? "en" : "zh";

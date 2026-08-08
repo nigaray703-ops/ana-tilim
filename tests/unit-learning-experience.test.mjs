@@ -10,6 +10,7 @@ const courseDataAggregatorPath = "prototype/course-data.js";
 const i18nScriptPaths = [
   "prototype/i18n/ui-messages.js",
   "prototype/i18n/alphabet-en.js",
+  "prototype/i18n/combo-en.js",
   "prototype/i18n/course-en.js",
   "prototype/i18n/runtime.js"
 ];
@@ -49,6 +50,7 @@ const expectedVersionedAssets = [
   "./course-data.js?v=20260728-uly-transliteration",
   "./i18n/ui-messages.js?v=20260809-bilingual",
   "./i18n/alphabet-en.js?v=20260809-bilingual-alphabet",
+  "./i18n/combo-en.js?v=20260809-bilingual-combos",
   "./i18n/course-en.js?v=20260809-bilingual-alphabet",
   "./i18n/runtime.js?v=20260809-bilingual",
   "./audio-controller.js?v=20260728-uly-transliteration",
@@ -879,6 +881,62 @@ for (const [screenName, html] of Object.entries(englishAlphabetScreens)) {
   assert.ok(
     !/[\u3400-\u9fff]/u.test(html),
     `English alphabet ${screenName} screen should not contain Chinese course or interface text`
+  );
+}
+
+vm.runInContext(
+  `
+    state.selectedUnitId = "combos";
+    state.selectedComboGroupId = "connection-breaks";
+    state.currentComboItemId = "dada-connection";
+    state.selectedPicture = "reng-connection";
+    state.keyboardValue = "د";
+    state.showGuide = true;
+  `,
+  context
+);
+const englishComboScreens = {
+  lesson: renderState("state.screen = 'combo'"),
+  recognition: renderState("state.screen = 'comboRecognition'"),
+  building: renderState("state.keyboardValue = 'ب'; state.screen = 'comboBuild'"),
+  writing: renderState("state.screen = 'comboWriting'"),
+  keyboard: renderState("state.keyboardValue = 'ب'; state.screen = 'comboKeyboard'"),
+  completion: renderState("state.screen = 'comboComplete'")
+};
+includesAll(
+  englishComboScreens.lesson,
+  ["Unit 2: Basic combinations", "Letters that break connections", "Connection-break word form", "Dad; a family form of address", "Break it down", "Actual connected form", "does not connect forward", "Recognize", "Build", "Writing", "Keyboard"],
+  "English combination lesson"
+);
+includesAll(
+  englishComboScreens.recognition,
+  ["Recognize combinations", "Choose the correct combination", "Choose the word form for dada", "Try again", "Continue to keyboard"],
+  "English combination recognition"
+);
+includesAll(
+  englishComboScreens.building,
+  ["Build a combination", "Build the whole from its parts", "Current build", "Backspace", "Clear", "The target combination is دادا. You chose ب. Compare it with the ULY guide dada.", "Continue to keyboard"],
+  "English combination building"
+);
+includesAll(
+  englishComboScreens.writing,
+  ["Write a combination", "Target combination", "Hide guide", "Clear pad", "Continue to keyboard"],
+  "English combination writing"
+);
+includesAll(
+  englishComboScreens.keyboard,
+  ["Combination keyboard", "Type this combination", "Uyghur combination input", "Keyboard steps", "Remove the incorrect part first", "Backspace", "Clear", "Keep typing. The target combination is دادا.", "Finish this group"],
+  "English combination keyboard"
+);
+includesAll(
+  englishComboScreens.completion,
+  ["Unit 2 complete", "This practice", "Combinations", "Input", "Word form", "Understanding", "Next step", "Review combinations", "Enter Unit 3", "Learning path"],
+  "English combination completion"
+);
+for (const [screenName, html] of Object.entries(englishComboScreens)) {
+  assert.ok(
+    !/[\u3400-\u9fff]/u.test(html),
+    `English combination ${screenName} screen should not contain Chinese course or interface text`
   );
 }
 

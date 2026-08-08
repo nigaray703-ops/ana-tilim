@@ -232,10 +232,18 @@ const learningUnits = [
   },
   {
     id: "combos",
-    title: "第二单元：基础组合",
-    subtitle: "基础组合、三字母连接和断开规则",
-    description: "先做两字母组合，再加入三字母和断开连接例子，比较同一个字母在词里的形态变化。",
-    bullets: ["开口组合", "轻声组合", "三字母连接", "断开规则", "拆开再合上"],
+    get title() { return t("combo.unitTitle"); },
+    get subtitle() { return t("combo.unitSubtitle"); },
+    get description() { return t("combo.unitDescription"); },
+    get bullets() {
+      return [
+        t("combo.unitBulletOpen"),
+        t("combo.unitBulletSoft"),
+        t("combo.unitBulletThree"),
+        t("combo.unitBulletBreaks"),
+        t("combo.unitBulletBuild")
+      ];
+    },
     groups: basicComboGroups,
     actionTarget: "combo"
   },
@@ -271,11 +279,18 @@ const unitExperience = {
     nextUnitId: "combos"
   },
   combos: {
-    recommended: "先练两字母组合，再看三字母连接和断开规则，从右往左拆分再合上。",
-    steps: ["看两字母组合", "看三字母连接", "找断开字母", "做组合辨认和键盘输入"],
-    reviewLabel: "复习组合",
+    get recommended() { return t("combo.recommended"); },
+    get steps() {
+      return [
+        t("combo.stepTwo"),
+        t("combo.stepThree"),
+        t("combo.stepBreaks"),
+        t("combo.stepPractice")
+      ];
+    },
+    get reviewLabel() { return t("combo.review"); },
     reviewTarget: "combo",
-    nextLabel: "进入第三单元",
+    get nextLabel() { return t("combo.enterUnit3"); },
     nextUnitId: "basic-phrases"
   },
   "basic-phrases": {
@@ -835,7 +850,7 @@ function unitIdForComboGroup() {
 }
 
 function unitNameForComboGroup() {
-  return "第二单元";
+  return t("combo.unitName");
 }
 
 function currentComboUnit() {
@@ -1434,6 +1449,18 @@ function itemMistakeFeedback(target, picked, label = "词形") {
   return `目标${label}是 ${target.value}，你选了 ${picked.value}。先对照转写：${target.latin}。`;
 }
 
+function comboMistakeFeedback(target, picked) {
+  if (!picked) {
+    return t("combo.mistakeMissing", { target: target.value, latin: target.latin });
+  }
+
+  return t("combo.mistakePicked", {
+    target: target.value,
+    picked: picked.value,
+    latin: target.latin
+  });
+}
+
 function keyboardGuideState(parts, targetValue, currentValue = state.keyboardValue) {
   let remaining = currentValue;
   let completeCount = 0;
@@ -1832,7 +1859,11 @@ function renderUnitNextActions(unitId, primaryClass = "primary-button") {
   const experience = currentUnitExperience(unitId);
   const nextUnit = learningUnits.find((unit) => unit.id === experience.nextUnitId);
   const shouldOpenNextUnit = Boolean(nextUnit) && experience.nextTarget !== "learn";
-  const caption = unitId === "letters" ? t("alphabet.nextStep") : "下一步建议";
+  const caption = unitId === "letters"
+    ? t("alphabet.nextStep")
+    : unitId === "combos"
+      ? t("combo.nextStep")
+      : "下一步建议";
 
   return `
     <article class="card next-action-card">
@@ -3227,17 +3258,17 @@ function comboPartConnectsForward(part) {
   return Boolean(comboLetterDetail(part)) && !comboNonForwardJoiningCharacters.has(comboPartBaseCharacter(part));
 }
 
-function comboPartFormValue(part, label) {
+function comboPartFormValue(part, formId) {
   const letter = comboLetterDetail(part);
   if (!letter) {
     return part;
   }
 
-  if (comboBareLetterIds[part] && label === "独立式") {
+  if (comboBareLetterIds[part] && formId === "isolated") {
     return part;
   }
 
-  return letter.forms.find((form) => form.label === label)?.value || part;
+  return letter.forms.find((form) => form.id === formId)?.value || part;
 }
 
 function comboPartDetail(item, index) {
@@ -3246,31 +3277,35 @@ function comboPartDetail(item, index) {
   const next = item.parts[index + 1];
   const connectsPrevious = Boolean(previous) && comboPartConnectsForward(previous) && comboPartAcceptsConnection(part);
   const connectsNext = Boolean(next) && comboPartConnectsForward(part) && comboPartAcceptsConnection(next);
-  let label = "独立式";
+  let formId = "isolated";
+  let label = t("combo.formIsolated");
 
   if (connectsPrevious && connectsNext) {
-    label = "双连式";
+    formId = "dual-joined";
+    label = t("combo.formMedial");
   } else if (connectsPrevious) {
-    label = "前连式";
+    formId = "left-joined";
+    label = t("combo.formFinal");
   } else if (connectsNext) {
-    label = "后连式";
+    formId = "right-joined";
+    label = t("combo.formInitial");
   }
 
-  let connection = "不接前一个字母，后面也断开。";
+  let connection = t("combo.connectionNeither");
   if (connectsPrevious && connectsNext) {
-    connection = "接前一个字母，也接后一个字母。";
+    connection = t("combo.connectionBoth");
   } else if (connectsPrevious) {
-    connection = "接前一个字母，不再接后面。";
+    connection = t("combo.connectionPrevious");
   } else if (connectsNext) {
-    connection = "不接前面，接后一个字母。";
+    connection = t("combo.connectionNext");
   } else if (index === 0 && item.parts.length > 1) {
-    connection = "在词首位置，但这个字母后面通常不继续连接。";
+    connection = t("combo.connectionInitialBreak");
   }
 
   return {
     part,
     label,
-    form: comboPartFormValue(part, label),
+    form: comboPartFormValue(part, formId),
     connection
   };
 }
@@ -3282,16 +3317,16 @@ function renderComboParts(item) {
         const detail = comboPartDetail(item, index);
         return `
         <span class="combo-part">
-          <span class="combo-part-index">第 ${index + 1} 个字母</span>
+          <span class="combo-part-index">${t("combo.partIndex", { count: index + 1 })}</span>
           <span class="combo-part-flow">
             <span class="combo-part-source">
               <strong class="uyghur">${detail.part}</strong>
-              <small>原字母</small>
+              <small>${t("combo.sourceLetter")}</small>
             </span>
             <span class="combo-part-arrow" aria-hidden="true">→</span>
             <span class="combo-part-form">
               <strong class="uyghur">${detail.form}</strong>
-              <small>${detail.label}写法</small>
+              <small>${t("combo.formWriting", { form: detail.label })}</small>
             </span>
           </span>
           <small class="combo-part-note">${detail.connection}</small>
@@ -3322,7 +3357,7 @@ function renderComboLesson() {
           ${renderComboSelector(group.items, item.id)}
         </div>
 
-        ${renderItemProgress(position.label, "当前组合在本组的位置")}
+        ${renderItemProgress(position.label, t("combo.position"))}
         ${renderAdjacentNav({
           previous: position.previous,
           next: position.next,
@@ -3339,36 +3374,37 @@ function renderComboLesson() {
         </div>
 
         <article class="card">
-          <p class="caption">拆开看</p>
-          <h2 class="section-title">实际连写形</h2>
-          <div class="combo-parts" aria-label="组合拆分">
+          <p class="caption">${t("combo.breakDown")}</p>
+          <h2 class="section-title">${t("combo.connectedForm")}</h2>
+          <div class="combo-parts" aria-label="${t("combo.partsAria")}">
             ${renderComboParts(item)}
           </div>
-          <p class="muted">从右往左：${item.rule}</p>
+          <p class="caption">${t("combo.readDirection")}</p>
+          <p class="muted">${item.rule}</p>
         </article>
 
         ${
           item.meaning
             ? `<article class="card review-card">
-                <p class="caption">词义预览</p>
+                <p class="caption">${t("combo.meaningPreview")}</p>
                 <h2 class="section-title">${item.meaning}</h2>
               </article>`
             : ""
         }
 
         <article class="card">
-          <p class="caption">学习小点</p>
+          <p class="caption">${t("combo.learningPoints")}</p>
           <div class="lesson-point-list">
             <div class="lesson-point">
-              <strong>怎么读</strong>
+              <strong>${t("combo.howToRead")}</strong>
               <span>${
                 state.preferences.showLatin
-                  ? `先用 ${item.latin} 做过渡提示，正式发音以后接真人音频。`
-                  : "先听真人音频，再跟着音频练习发音。"
+                  ? t("combo.readWithLatin", { latin: item.latin })
+                  : t("combo.readWithAudio")
               }</span>
             </div>
             <div class="lesson-point">
-              <strong>怎么看</strong>
+              <strong>${t("combo.howToSee")}</strong>
               <span>${item.hint}</span>
             </div>
           </div>
@@ -3376,16 +3412,16 @@ function renderComboLesson() {
 
         <div class="action-grid">
           <button class="secondary-button" data-action="go" data-target="comboRecognition" type="button">
-            辨认
+            ${t("combo.recognize")}
           </button>
           <button class="secondary-button" data-action="go" data-target="comboBuild" type="button">
-            拼接
+            ${t("combo.build")}
           </button>
           <button class="secondary-button" data-action="go" data-target="comboWriting" type="button">
-            书写
+            ${t("combo.writing")}
           </button>
           <button class="primary-button" data-action="go" data-target="comboKeyboard" type="button">
-            键盘
+            ${t("combo.keyboard")}
           </button>
         </div>
       </section>
@@ -3401,19 +3437,21 @@ function renderComboRecognition() {
   const hasPicked = Boolean(state.selectedPicture);
   const picked = choices.find((choice) => choice.id === state.selectedPicture);
   const isCorrect = picked && picked.id === item.id;
-  const prompt = item.meaning ? `请选择 ${item.latin} 的词形` : `哪一个读作 ${item.prompt}？`;
+  const prompt = item.meaning
+    ? t("combo.chooseMeaning", { latin: item.latin })
+    : t("combo.chooseReading", { prompt: item.prompt });
 
   return screen(
     `
       ${topBar(
-        "组合辨认",
+        t("combo.recognitionTitle"),
         group.title,
         "",
         `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
-          <p class="caption">选择正确组合</p>
+          <p class="caption">${t("combo.chooseCorrect")}</p>
           <h2 class="section-title">${prompt}</h2>
         </article>
         <div class="choice-grid">
@@ -3434,7 +3472,7 @@ function renderComboRecognition() {
                     <strong>${choice.latin}</strong>
                     <span class="caption">${choice.type}</span>
                   </span>
-                  <span class="step-state">${selected ? (correctChoice ? "正确" : "再想想") : "选择"}</span>
+                  <span class="step-state">${selected ? (correctChoice ? t("combo.correct") : t("combo.tryAgain")) : t("combo.choose")}</span>
                 </button>
               `;
             })
@@ -3444,13 +3482,13 @@ function renderComboRecognition() {
           hasPicked
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? `答对了。${item.value} 现在只作为 ${item.type} 学习。`
-                  : itemMistakeFeedback(item, picked, "组合")
+                  ? t("combo.recognitionCorrect", { value: item.value, type: item.type })
+                  : comboMistakeFeedback(item, picked)
               }</div>`
             : ""
         }
         <button class="primary-button" data-action="go" data-target="comboKeyboard" type="button">
-          继续键盘
+          ${t("combo.continueKeyboard")}
         </button>
       </section>
     `,
@@ -3468,29 +3506,29 @@ function renderComboBuild() {
   return screen(
     `
       ${topBar(
-        "组合拼接",
+        t("combo.buildTitle"),
         group.title,
         "",
         `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
-          <p class="caption">从部分拼成整体</p>
+          <p class="caption">${t("combo.buildWhole")}</p>
           <h2 class="section-title">
             <span class="uyghur">${item.parts.join(" + ")}</span>
           </h2>
-          <p class="muted">按顺序点击下面的部分，拼成 <span class="uyghur">${item.value}</span>。先理解结构，再进入键盘输入。</p>
+          <p class="muted">${t("combo.buildInstruction", { value: `<span class="uyghur">${item.value}</span>` })}</p>
         </article>
         <article class="card">
-          <p class="caption">当前拼接</p>
+          <p class="caption">${t("combo.currentBuild")}</p>
           <div class="letter-focus compact-focus">
             <div>
               <div class="uyghur letter-big combo-big">${state.keyboardValue || "…"}</div>
-              <p class="caption">目标：${item.latin}</p>
+              <p class="caption">${t("combo.targetLatin", { latin: item.latin })}</p>
             </div>
           </div>
         </article>
-        <div class="practice-key-row" aria-label="组合拼接按钮">
+        <div class="practice-key-row" aria-label="${t("combo.buildAria")}">
           ${item.parts
             .map(
               (part) => `
@@ -3502,22 +3540,22 @@ function renderComboBuild() {
             .join("")}
         </div>
         <div class="tool-row">
-          <button class="secondary-button" data-action="backspace" type="button">删除</button>
-          <button class="secondary-button" data-action="clear-input" type="button">清空</button>
+          <button class="secondary-button" data-action="backspace" type="button">${t("combo.backspace")}</button>
+          <button class="secondary-button" data-action="clear-input" type="button">${t("combo.clear")}</button>
         </div>
         ${
           hasInput
             ? `<div class="feedback ${isCorrect ? "good" : isOffTrack ? "bad" : ""}">${
                 isCorrect
-                  ? `拼接正确：${item.value}。`
+                  ? t("combo.buildCorrect", { value: item.value })
                   : isOffTrack
-                    ? itemMistakeFeedback(item, { value: state.keyboardValue }, "组合")
-                    : `继续拼接，目标是 ${item.value}。`
+                    ? comboMistakeFeedback(item, { value: state.keyboardValue })
+                    : t("combo.buildContinue", { value: item.value })
               }</div>`
-            : `<div class="feedback">先点 <span class="uyghur">${item.parts[0]}</span>，再继续点后面的部分。</div>`
+            : `<div class="feedback">${t("combo.buildStart", { part: `<span class="uyghur">${item.parts[0]}</span>` })}</div>`
         }
         <button class="primary-button" data-action="go" data-target="comboKeyboard" type="button">
-          继续键盘
+          ${t("combo.continueKeyboard")}
         </button>
       </section>
     `,
@@ -3533,7 +3571,7 @@ function renderComboWriting() {
   return screen(
     `
       ${topBar(
-        "组合书写",
+        t("combo.writingTitle"),
         group.title,
         "",
         `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="${t("common.back")}">←</button>`
@@ -3542,14 +3580,14 @@ function renderComboWriting() {
         <article class="card">
           <div class="section-row">
             <div>
-              <p class="caption">目标组合</p>
+              <p class="caption">${t("combo.targetCombination")}</p>
               <h2 class="section-title"><span class="uyghur">${item.value}</span></h2>
             </div>
             <button class="ghost-button" data-action="toggle-guide" type="button">
-              ${state.showGuide ? "隐藏参考" : "显示参考"}
+              ${state.showGuide ? t("combo.hideGuide") : t("combo.showGuide")}
             </button>
           </div>
-          <p class="muted">${item.latin}。先看整体，再按拆分顺序写。</p>
+          <p class="muted">${t("combo.writingInstruction", { latin: item.latin })}</p>
         </article>
         ${renderWritingCoach({
           value: item.value,
@@ -3557,16 +3595,16 @@ function renderComboWriting() {
           hint: item.hint,
           mode: "word"
         })}
-        ${renderWritingCanvas(item.value, `${unit.title}手写板`)}
+        ${renderWritingCanvas(item.value, t("combo.canvasAria", { unit: unit.title }))}
         <div class="tool-row">
-          <button class="secondary-button" data-action="clear-canvas" type="button">清空画布</button>
+          <button class="secondary-button" data-action="clear-canvas" type="button">${t("combo.clearCanvas")}</button>
           <button class="secondary-button" data-action="toggle-guide" type="button">
-            ${state.showGuide ? "隐藏参考" : "显示参考"}
+            ${state.showGuide ? t("combo.hideGuide") : t("combo.showGuide")}
           </button>
         </div>
-        <div class="feedback">写完可以清空重写，也可以继续做键盘输入。</div>
+        <div class="feedback">${t("combo.writingFeedback")}</div>
         <button class="primary-button" data-action="go" data-target="comboKeyboard" type="button">
-          继续键盘
+          ${t("combo.continueKeyboard")}
         </button>
       </section>
     `,
@@ -3584,14 +3622,14 @@ function renderComboKeyboard() {
   return screen(
     `
       ${topBar(
-        "组合键盘",
+        t("combo.keyboardTitle"),
         group.title,
         "",
         `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
-          <p class="caption">请输入这个组合</p>
+          <p class="caption">${t("combo.keyboardPrompt")}</p>
           <div class="section-row">
             <strong class="uyghur">${item.value}</strong>
             <span class="caption">${item.latin}</span>
@@ -3600,12 +3638,12 @@ function renderComboKeyboard() {
         <input
           class="rtl-input uyghur"
           value="${state.keyboardValue}"
-          aria-label="维吾尔语组合输入框"
+          aria-label="${t("combo.inputAria")}"
           readonly
           dir="rtl"
         />
         ${renderKeyboardGuide(keyboardParts, item.value)}
-        <div class="practice-key-row" aria-label="本组组合快捷键">
+        <div class="practice-key-row" aria-label="${t("combo.groupKeysAria")}">
           ${group.items
             .map(
               (choice) => `
@@ -3616,7 +3654,7 @@ function renderComboKeyboard() {
             )
             .join("")}
         </div>
-        <div class="practice-key-row" aria-label="当前组合拆分键">
+        <div class="practice-key-row" aria-label="${t("combo.partKeysAria")}">
           ${item.parts
             .map(
               (part) => `
@@ -3627,7 +3665,7 @@ function renderComboKeyboard() {
             )
             .join("")}
         </div>
-        <div class="keyboard-grid" aria-label="维吾尔语虚拟键盘">
+        <div class="keyboard-grid" aria-label="${t("combo.keyboardAria")}">
           ${keyboardRows
             .flat()
             .map(
@@ -3638,20 +3676,20 @@ function renderComboKeyboard() {
               `
             )
             .join("")}
-          <button class="key-button utility" data-action="backspace" type="button">删除</button>
-          <button class="key-button utility" data-action="clear-input" type="button">清空</button>
+          <button class="key-button utility" data-action="backspace" type="button">${t("combo.backspace")}</button>
+          <button class="key-button utility" data-action="clear-input" type="button">${t("combo.clear")}</button>
         </div>
         ${
           hasInput
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? "输入正确。你已经完成这组组合练习。"
-                  : `继续输入，目标组合是 ${item.value}。`
+                  ? t("combo.keyboardCorrect")
+                  : t("combo.keyboardContinue", { value: item.value })
               }</div>`
-            : `<div class="feedback">提示：可以直接点击 <span class="uyghur">${item.value}</span>，也可以按拆分键慢慢输入。</div>`
+            : `<div class="feedback">${t("combo.keyboardTip", { value: `<span class="uyghur">${item.value}</span>` })}</div>`
         }
         <button class="primary-button" data-action="go" data-target="comboComplete" type="button">
-          完成这一组
+          ${t("combo.finishGroup")}
         </button>
       </section>
     `,
@@ -3667,23 +3705,23 @@ function renderComboComplete() {
 
   return screen(
     `
-      ${topBar(`${unitNameForComboGroup(group.id)}完成`, group.title)}
+      ${topBar(t("combo.completeTitle"), group.title)}
       <section class="stack">
         <article class="card">
-          <p class="caption">本次练习</p>
+          <p class="caption">${t("combo.completePractice")}</p>
           <h2 class="screen-title">
             <span class="uyghur">${groupValues}</span>
           </h2>
-          <p class="muted">你拆分并输入了 ${item.value}。继续复习这一组，熟悉字母连接和断开规律。</p>
+          <p class="muted">${t("combo.completeSummary", { value: item.value })}</p>
         </article>
         <div class="metric-grid">
-          <div class="metric"><strong>${group.items.length}</strong><span>组合</span></div>
-          <div class="metric"><strong>1</strong><span>输入</span></div>
-          <div class="metric"><strong>词形</strong><span>理解</span></div>
+          <div class="metric"><strong>${group.items.length}</strong><span>${t("combo.completeCombinations")}</span></div>
+          <div class="metric"><strong>1</strong><span>${t("combo.completeInput")}</span></div>
+          <div class="metric"><strong>${t("combo.completeWordForm")}</strong><span>${t("combo.completeUnderstanding")}</span></div>
         </div>
         ${renderUnitNextActions(unit.id)}
         <button class="secondary-button" data-action="go" data-target="learn" type="button">
-          学习路径
+          ${t("combo.learningPath")}
         </button>
       </section>
     `,
