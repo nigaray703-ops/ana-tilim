@@ -583,45 +583,40 @@ assert.deepEqual(
   []
 );
 
-includesAll(
-  renderState("state.screen = 'welcome'"),
-  [
-    "从字母、发音、书写到键盘输入，一步一步学会自己的母语。",
-    "无需登录，直接开始学习",
-    "登录",
-    "注册",
-    "邮箱",
-    "密码",
-    "登录并继续学习",
-    "使用 Google 登录",
-    "使用邮箱验证码",
-    "登录后自动同步"
-  ],
-  "welcome screen"
-);
-assert.ok(!app.innerHTML.includes("测试账号"), "welcome screen should not expose the removed mock account");
-assert.ok(app.innerHTML.includes('type="password"'), "welcome should provide password login");
-assert.ok(
-  app.innerHTML.includes('autocomplete="current-password"'),
-  "login password should use current-password autocomplete"
-);
-assert.ok(!app.innerHTML.includes("<br>"), "welcome screen should not force the hero copy onto manual line breaks");
+const forbiddenInternationalAuthUi = [
+  'role="tablist"',
+  'id="password-auth-name"',
+  'id="password-auth-email"',
+  'id="password-auth-password"',
+  'id="password-auth-confirm"',
+  'data-action="password-login"',
+  'data-action="password-register"',
+  'data-action="show-email-login"',
+  'data-action="request-email-otp"',
+  'data-action="verify-email-otp"',
+  'id="auth-email"',
+  'id="auth-code"'
+];
 
-const registerHtml = renderState("state.screen = 'welcome'; state.authMode = 'register'");
-includesAll(
-  registerHtml,
-  [
-    "昵称",
-    "确认密码",
-    "注册并开始学习",
-    "当前暂不支持邮件找回密码，请保存好密码"
-  ],
-  "registration form"
-);
-assert.ok(
-  registerHtml.includes('autocomplete="new-password"'),
-  "registration passwords should use new-password autocomplete"
-);
+function assertGuestAndGoogleOnly(html, label) {
+  includesAll(
+    html,
+    [
+      "本地游客模式",
+      "无需登录即可学习，进度保存在当前设备。",
+      "使用 Google 登录"
+    ],
+    label
+  );
+  for (const forbidden of forbiddenInternationalAuthUi) {
+    assert.ok(!html.includes(forbidden), `${label} should not render ${forbidden}`);
+  }
+}
+
+const welcomeHtml = renderState("state.screen = 'welcome'");
+assertGuestAndGoogleOnly(welcomeHtml, "international welcome authentication");
+assert.ok(welcomeHtml.includes('data-action="continue-local"'));
+assert.ok(welcomeHtml.includes("登录后自动同步"));
 
 assert.deepEqual(
   JSON.parse(
@@ -673,6 +668,8 @@ assert.equal(vm.runInContext("state.screen", context), "home", "local learning s
 
 vm.runInContext("state.preferences = normalizePreferences(null)", context);
 const profileHtml = renderState("state.screen = 'profile'");
+assertGuestAndGoogleOnly(profileHtml, "international profile authentication");
+assert.ok(profileHtml.includes("清除学习记录"));
 includesAll(
   profileHtml,
   [
@@ -687,9 +684,7 @@ includesAll(
     "显示拉丁转写",
     "自动播放",
     "清除学习记录",
-    "从相册选择头像",
-    "使用 Google 登录",
-    "使用邮箱验证码"
+    "从相册选择头像"
   ],
   "profile account and settings"
 );
@@ -739,6 +734,8 @@ vm.runInContext(
   context
 );
 const signedInProfileHtml = renderState("state.screen = 'profile'");
+includesAll(signedInProfileHtml, ["learner@example.com", "退出登录"], "signed-in Google account");
+assert.ok(!signedInProfileHtml.includes("使用 Google 登录"));
 assert.match(
   signedInProfileHtml,
   /<input[^>]+id="profile-display-name"[^>]+maxlength="40"[^>]*>/,
