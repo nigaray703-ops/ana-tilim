@@ -324,6 +324,7 @@ const keyboardRows = [
 const progressStorageKey = "ana-tilim-progress";
 const guestBackupStorageKey = "ana-tilim-guest-progress-backup";
 const i18n = window.ANA_TILIM_I18N;
+const t = i18n.t;
 const serializedProgress = window.localStorage?.getItem("ana-tilim-progress") || "";
 const savedLanguage = i18n.readSavedLanguage(serializedProgress);
 const systemLanguages = window.navigator?.languages || [window.navigator?.language].filter(Boolean);
@@ -1761,9 +1762,9 @@ function renderAudioFocus({ audio, label, title, hint, hideFile = false, hideCap
   `;
 }
 
-function renderAdjacentNav({ previous, next, action, previousLabel = "上一个", nextLabel = "下一个" }) {
+function renderAdjacentNav({ previous, next, action, previousLabel = t("common.previous"), nextLabel = t("common.next") }) {
   return `
-    <div class="adjacent-nav" aria-label="前后切换">
+    <div class="adjacent-nav" aria-label="${t("common.adjacent")}">
       <button
         class="secondary-button"
         data-action="${action}"
@@ -1996,6 +1997,17 @@ function screen(content, active = "home") {
   `;
 }
 
+function languageSwitcher(compact = false) {
+  return `
+    <div class="language-switcher ${compact ? "is-compact" : ""}" role="group" aria-label="${t("language.label")}">
+      ${["zh", "en"].map((language) => `
+        <button type="button" data-action="set-language" data-language="${language}"
+          aria-pressed="${state.interfaceLanguage === language}">
+          ${compact ? (language === "zh" ? "中文" : "EN") : t(language === "zh" ? "language.chinese" : "language.english")}
+        </button>`).join("")}
+    </div>`;
+}
+
 function topBar(title, subtitle, action = "", leading = "") {
   return `
     <header class="top-row">
@@ -2014,14 +2026,14 @@ function topBar(title, subtitle, action = "", leading = "") {
 
 function bottomNav(active) {
   const items = [
-    ["home", "首页", iconHome()],
-    ["library", "字母", iconLibrary()],
-    ["learn", "学习", iconBook()],
-    ["profile", "我的", iconUser()]
+    ["home", t("nav.home"), iconHome()],
+    ["library", t("nav.alphabet"), iconLibrary()],
+    ["learn", t("nav.learn"), iconBook()],
+    ["profile", t("nav.profile"), iconUser()]
   ];
 
   return `
-    <nav class="bottom-nav" aria-label="主导航">
+    <nav class="bottom-nav" aria-label="${t("nav.label")}">
       ${items
         .map(
           ([target, label, icon]) => `
@@ -2096,23 +2108,23 @@ function cloudAccountProfile() {
 
 function cloudStatusLabel() {
   const labels = {
-    local: "本地模式",
-    ready: "本地模式",
-    "signing-in": "正在登录",
-    registering: "正在注册",
-    "sending-code": "正在发送验证码",
-    "code-sent": "验证码已发送",
-    "verifying-code": "正在验证",
-    "uploading-avatar": "正在上传头像",
-    "signed-in": "已登录",
-    syncing: "正在同步",
-    synced: "已同步",
-    "waiting-network": "当前离线，等待同步",
-    "sync-error": "同步失败，将自动重试",
-    "update-required": "应用版本过旧，请先更新",
-    error: "登录失败，请重试"
+    local: t("auth.local"),
+    ready: t("auth.local"),
+    "signing-in": t("auth.signingIn"),
+    registering: t("auth.registering"),
+    "sending-code": t("auth.sendingCode"),
+    "code-sent": t("auth.codeSent"),
+    "verifying-code": t("auth.verifying"),
+    "uploading-avatar": t("auth.uploadingAvatar"),
+    "signed-in": t("auth.signedIn"),
+    syncing: t("auth.syncing"),
+    synced: t("auth.synced"),
+    "waiting-network": t("auth.offline"),
+    "sync-error": t("auth.syncError"),
+    "update-required": t("auth.updateRequired"),
+    error: t("auth.loginError")
   };
-  return labels[cloudStatus.phase] || "本地模式";
+  return labels[cloudStatus.phase] || t("auth.local");
 }
 
 function renderCloudAuthControls() {
@@ -2123,18 +2135,18 @@ function renderCloudAuthControls() {
         <strong>${escapeHtml(accountEmail)}</strong>
         <small>${cloudStatusLabel()}</small>
       </div>
-      <button class="secondary-button" data-action="cloud-sign-out" type="button">退出登录</button>
+      <button class="secondary-button" data-action="cloud-sign-out" type="button">${t("auth.signOut")}</button>
     `;
   }
 
   return `
     <div class="cloud-account-summary">
-      <strong>本地游客模式</strong>
-      <small>无需登录即可学习，进度保存在当前设备。</small>
+      <strong>${t("auth.guestTitle")}</strong>
+      <small>${t("auth.guestDetail")}</small>
     </div>
     <div class="auth-actions">
       <button class="primary-button" data-action="cloud-google-login" type="button">
-        使用 Google 登录
+        ${t("auth.google")}
       </button>
     </div>
     <p class="caption auth-status-copy">${cloudStatusLabel()}</p>
@@ -2151,19 +2163,19 @@ function validatePasswordAuthFields({
   const normalizedName = displayName.trim();
   const normalizedEmail = email.trim();
   if (mode === "register" && !normalizedName) {
-    return { ok: false, message: "请输入昵称" };
+    return { ok: false, message: t("auth.invalidNickname") };
   }
   if (mode === "register" && normalizedName.length > 40) {
-    return { ok: false, message: "昵称不能超过 40 个字符" };
+    return { ok: false, message: t("auth.nicknameTooLong") };
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-    return { ok: false, message: "请输入有效的邮箱地址" };
+    return { ok: false, message: t("auth.invalidEmail") };
   }
   if (password.length < 8) {
-    return { ok: false, message: "密码至少需要 8 个字符" };
+    return { ok: false, message: t("auth.shortPassword") };
   }
   if (mode === "register" && password !== confirmPassword) {
-    return { ok: false, message: "两次输入的密码不一致" };
+    return { ok: false, message: t("auth.passwordMismatch") };
   }
   return {
     ok: true,
@@ -2177,19 +2189,19 @@ function validatePasswordAuthFields({
 
 function passwordAuthErrorMessage(error, mode) {
   const message = String(error?.message || "").toLowerCase();
-  if (message.includes("invalid login credentials")) return "邮箱或密码不正确";
+  if (message.includes("invalid login credentials")) return t("auth.invalidCredentials");
   if (message.includes("already registered") || message.includes("already been registered")) {
-    return "这个邮箱已经注册";
+    return t("auth.alreadyRegistered");
   }
-  if (message.includes("email not confirmed")) return "请先完成邮箱确认";
-  if (message.includes("注册需要邮箱确认")) return "注册需要邮箱确认，请检查登录设置";
-  return mode === "register" ? "注册失败，请稍后重试" : "登录失败，请稍后重试";
+  if (message.includes("email not confirmed")) return t("auth.emailNotConfirmed");
+  if (message.includes("注册需要邮箱确认")) return t("auth.confirmationRequired");
+  return mode === "register" ? t("auth.registerError") : t("auth.loginError");
 }
 
 function validateDisplayName(value) {
   const name = String(value || "").trim();
-  if (!name) return { ok: false, message: "请输入名称" };
-  if (name.length > 40) return { ok: false, message: "名称不能超过 40 个字符" };
+  if (!name) return { ok: false, message: t("auth.nameRequired") };
+  if (name.length > 40) return { ok: false, message: t("auth.nameTooLong") };
   return { ok: true, value: name };
 }
 
@@ -2203,18 +2215,18 @@ function renderWelcome() {
           <h1>Ana Tilim</h1>
           <div class="uyghur uyghur-title">ئانا تىلىم</div>
           <p class="hero-copy">
-            从字母、发音、书写到键盘输入，一步一步学会自己的母语。
+            ${t("welcome.title")}
           </p>
           <button class="ghost-button" data-action="continue-local" type="button">
-            无需登录，直接开始学习
+            ${t("welcome.continueGuest")}
           </button>
         </div>
 
         <article class="card auth-panel">
           <div>
-            <p class="caption">登录后自动同步</p>
-            <h2 class="section-title">${accountEmail ? "学习记录已同步" : "保存你的学习进度"}</h2>
-            <p class="muted">${accountEmail ? `已登录 ${escapeHtml(accountEmail)}` : "换设备也能继续学习；不登录不会影响课程使用。"}</p>
+            <p class="caption">${t("welcome.subtitle")}</p>
+            <h2 class="section-title">${accountEmail ? t("welcome.synced") : t("welcome.saveProgress")}</h2>
+            <p class="muted">${accountEmail ? t("welcome.signedInAs", { email: escapeHtml(accountEmail) }) : t("welcome.syncDetail")}</p>
           </div>
           ${renderCloudAuthControls()}
         </article>
@@ -2229,7 +2241,7 @@ function renderHome() {
   const today = todayGoalProgress();
   const nextAction = {
     detail: currentRecommendation.recommended,
-    button: "继续学习",
+    button: t("home.continue"),
     action: "open-unit",
     id: unit.id,
     target: ""
@@ -2237,13 +2249,13 @@ function renderHome() {
 
   return screen(
     `
-      ${topBar("早上好", "今天继续 8 分钟就很好")}
+      ${topBar(t("home.greeting"), t("home.subtitle"), languageSwitcher(true))}
 
       <section class="stack wide-gap home-center">
         <article class="card today-progress-card">
           <div class="section-row">
             <div>
-              <p class="caption">今日进度</p>
+              <p class="caption">${t("home.progress")}</p>
               <h2 class="section-title">${unit.title.replace("：", " · ")}</h2>
             </div>
             <span class="step-state">${today.completed} / ${today.goal}</span>
@@ -2267,8 +2279,8 @@ function renderHome() {
           state.preferences.learningReminder && !today.complete
             ? `
               <aside class="card learning-reminder-card" role="status">
-                <strong>今日学习提醒</strong>
-                <span>还差 ${today.goal - today.completed} 个完成今日目标</span>
+                <strong>${t("home.reminder")}</strong>
+                <span>${t("home.remaining", { count: today.goal - today.completed })}</span>
               </aside>
             `
             : ""
@@ -2284,7 +2296,7 @@ function renderHome() {
 function renderLearnPath() {
   return screen(
     `
-      ${topBar("学习单元", "先认识字母，再学连接、词汇、句型和阅读")}
+      ${topBar(t("learn.title"), t("learn.subtitle"))}
       <section class="stack">
         <div class="path-list">
           ${learningUnits
@@ -2467,7 +2479,7 @@ function renderVocabUnitDetail(unit) {
         unit.title,
         unit.subtitle,
         "",
-        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <div class="vocab-topic-list">
@@ -2486,7 +2498,7 @@ function renderReadingUnitDetail(unit) {
         unit.title,
         unit.subtitle,
         "",
-        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <div class="reading-topic-list">
@@ -2522,7 +2534,7 @@ function renderUnitDetail() {
         unit.title,
         unit.subtitle,
         "",
-        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <div class="path-list">
@@ -2610,7 +2622,7 @@ function renderGroupLesson() {
         group.title,
         "第一单元：认识字母",
         `<button class="icon-button" data-action="toggle-favorite" type="button" aria-label="收藏">${state.favorite ? "★" : "☆"}</button>`,
-        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <div class="alphabet-strip compact">
@@ -2711,7 +2723,7 @@ function renderLetterWriting() {
         "书写练习",
         "先描摹，再自己写",
         "",
-        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
@@ -2769,7 +2781,7 @@ function renderPicturePractice() {
         "点位辨认",
         currentGroup().title,
         "",
-        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
@@ -2834,7 +2846,7 @@ function renderListeningPractice() {
         "听音选择",
         currentGroup().title,
         "",
-        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         ${renderAudioFocus({
@@ -2900,7 +2912,7 @@ function renderLetterOddPractice() {
         "找不同",
         currentGroup().title,
         "",
-        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
@@ -2962,7 +2974,7 @@ function renderLetterSoundChoice() {
         "读音选择",
         currentGroup().title,
         "",
-        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         ${renderAudioFocus({
@@ -3025,7 +3037,7 @@ function renderKeyboardPractice() {
         "键盘输入",
         currentGroup().title,
         "",
-        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
@@ -3261,7 +3273,7 @@ function renderComboLesson() {
         group.title,
         unit.title,
         "",
-        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <div class="alphabet-strip compact">
@@ -3355,7 +3367,7 @@ function renderComboRecognition() {
         "组合辨认",
         group.title,
         "",
-        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
@@ -3417,7 +3429,7 @@ function renderComboBuild() {
         "组合拼接",
         group.title,
         "",
-        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
@@ -3482,7 +3494,7 @@ function renderComboWriting() {
         "组合书写",
         group.title,
         "",
-        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
@@ -3533,7 +3545,7 @@ function renderComboKeyboard() {
         "组合键盘",
         group.title,
         "",
-        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
@@ -3717,7 +3729,7 @@ function renderVocabLesson() {
         group.title,
         "第三单元：日常用语与词汇",
         "",
-        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card vocab-lesson-card">
@@ -3765,7 +3777,7 @@ function renderVocabRecognition() {
         "词形辨认",
         group.title,
         "",
-        `<button class="back-button" data-action="go" data-target="vocab" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="vocab" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
@@ -3829,7 +3841,7 @@ function renderVocabKeyboard() {
         "词形键盘",
         group.title,
         "",
-        `<button class="back-button" data-action="go" data-target="vocab" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="vocab" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
@@ -3981,7 +3993,7 @@ function renderReadingLesson() {
         group.title,
         unit.title,
         "",
-        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         ${
@@ -4248,7 +4260,7 @@ function renderPracticeSession() {
           group.title,
           isReviewPractice ? "首页：今日复习" : "字母：专项练习",
           "",
-          `<button class="back-button" data-action="go" data-target="${practiceBackTarget}" type="button" aria-label="返回">←</button>`
+          `<button class="back-button" data-action="go" data-target="${practiceBackTarget}" type="button" aria-label="${t("common.back")}">←</button>`
         )}
         <section class="stack">
           ${renderPracticeModeCard(group, null)}
@@ -4306,7 +4318,7 @@ function renderPracticeSession() {
         group.title,
         isReviewPractice ? "首页：今日复习" : "字母：专项练习",
         "",
-        `<button class="back-button" data-action="go" data-target="${practiceBackTarget}" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="${practiceBackTarget}" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
@@ -4444,19 +4456,19 @@ function renderPracticeComplete() {
 function renderLibrary() {
   return screen(
     `
-      ${topBar("字母库", "第一单元全部字母")}
+      ${topBar(t("library.title"), t("library.subtitle"))}
       <section class="stack">
         <article class="card compact-library-card">
           <div class="section-row">
             <div>
-              <p class="caption">完整字母表</p>
-              <h2 class="section-title">32 个字母</h2>
+              <p class="caption">${t("library.fullAlphabet")}</p>
+              <h2 class="section-title">${t("library.letterCount")}</h2>
             </div>
           </div>
         </article>
 
         <article class="card">
-          <div class="letter-library-grid" aria-label="字母库紧凑目录">
+          <div class="letter-library-grid" aria-label="${t("library.directory")}">
             ${allUnitOneLetters()
               .map(
                 (letter) => `
@@ -4480,8 +4492,8 @@ function renderLibrary() {
         <article class="card">
           <div class="section-row">
             <div>
-              <p class="caption">字母练习</p>
-              <h2 class="section-title">听、读、写、键盘</h2>
+              <p class="caption">${t("library.practice")}</p>
+              <h2 class="section-title">${t("library.practiceModes")}</h2>
             </div>
           </div>
           <div class="path-list">
@@ -4506,9 +4518,9 @@ function renderProfileHero(progress, reviewCount) {
   const accountEmail = cloudAccountEmail();
   const accountProfile = cloudAccountProfile();
   const avatarUrl = accountProfile.avatarUrl;
-  const displayName = accountProfile.displayName || "Ana Tilim 学习者";
+  const displayName = accountProfile.displayName || t("profile.learner");
   const avatarContent = avatarUrl
-    ? `<img src="${escapeHtml(avatarUrl)}" alt="学习头像" />`
+    ? `<img src="${escapeHtml(avatarUrl)}" alt="${t("profile.avatarAlt")}" />`
     : `<span aria-hidden="true">AT</span>`;
 
   return `
@@ -4521,32 +4533,32 @@ function renderProfileHero(progress, reviewCount) {
               id="profile-avatar-input"
               type="file"
               accept="image/*"
-              aria-label="从相册选择头像"
+              aria-label="${t("profile.chooseAvatarAria")}"
               ${accountEmail && !state.avatarUploading ? "" : "disabled"}
             />
-            <span>${state.avatarUploading ? "上传中…" : "选择头像"}</span>
+            <span>${state.avatarUploading ? t("profile.uploading") : t("profile.chooseAvatar")}</span>
           </label>
         </div>
         <div class="profile-account">
-          <p class="caption">学习账号</p>
+          <p class="caption">${t("profile.account")}</p>
           <h2 class="section-title">${escapeHtml(displayName)}</h2>
-          <p class="muted">${accountEmail ? escapeHtml(accountEmail) : "无需登录也可学习"}</p>
+          <p class="muted">${accountEmail ? escapeHtml(accountEmail) : t("profile.guestDetail")}</p>
         </div>
         <span class="step-state profile-status">${cloudStatusLabel()}</span>
       </div>
-      <div class="metric-grid profile-account-metrics" aria-label="个人学习概览">
-        <div class="metric"><strong>${streakDays}</strong><span>连续学习</span></div>
-        <div class="metric"><strong>${reviewCount}</strong><span>今日待复习</span></div>
-        <div class="metric"><strong>${progress.completed} / ${progress.total}</strong><span>总进度</span></div>
+      <div class="metric-grid profile-account-metrics" aria-label="${t("profile.overview")}">
+        <div class="metric"><strong>${streakDays}</strong><span>${t("profile.streak")}</span></div>
+        <div class="metric"><strong>${reviewCount}</strong><span>${t("profile.reviewToday")}</span></div>
+        <div class="metric"><strong>${progress.completed} / ${progress.total}</strong><span>${t("profile.totalProgress")}</span></div>
       </div>
       <div class="profile-progress-row">
-        <span>个人学习状态</span>
+        <span>${t("profile.status")}</span>
         <strong>${progress.percent}%</strong>
       </div>
       <div class="progress-track" aria-hidden="true">
         <div class="progress-fill" style="--value: ${progress.percent}%"></div>
       </div>
-      <p class="caption">${accountEmail ? "学习记录会自动同步到云端。" : "登录后可自动保存并跨设备同步学习记录。"}</p>
+      <p class="caption">${accountEmail ? t("profile.cloudSync") : t("profile.cloudPrompt")}</p>
     </article>
   `;
 }
@@ -4557,12 +4569,12 @@ function renderProfileMemoryCard(reviewCount) {
     <article class="card profile-memory-card">
       <div class="section-row">
         <div>
-          <p class="caption">记忆练习</p>
-          <h2 class="section-title">${hasReview ? "先复习今天容易忘的内容" : "今天可以继续巩固基础内容"}</h2>
+          <p class="caption">${t("profile.memory")}</p>
+          <h2 class="section-title">${hasReview ? t("profile.reviewHeading") : t("profile.foundationHeading")}</h2>
         </div>
-        <span class="step-state">${reviewCount} 项</span>
+        <span class="step-state">${t("profile.reviewCount", { count: reviewCount })}</span>
       </div>
-      <p class="muted">${hasReview ? "错题会优先进入复习队列，后续登录版会按间隔重复自动安排下次复习。" : "当前没有待复习错题，后续登录版会按记忆状态生成每日复习队列。"}</p>
+      <p class="muted">${hasReview ? t("profile.reviewDetail") : t("profile.foundationDetail")}</p>
       <button
         class="primary-button"
         data-action="${hasReview ? "open-practice-group" : "go"}"
@@ -4570,7 +4582,7 @@ function renderProfileMemoryCard(reviewCount) {
         data-target="${hasReview ? "" : "library"}"
         type="button"
       >
-        ${hasReview ? "开始今日复习" : "去字母练习"}
+        ${hasReview ? t("profile.startReview") : t("profile.goAlphabet")}
       </button>
     </article>
   `;
@@ -4619,41 +4631,45 @@ function renderSettingsPanel() {
   return `
     <article class="card profile-settings-card">
       <div>
-        <p class="caption">设置</p>
-        <h2 class="section-title" id="learning-preferences-title">学习偏好</h2>
+        <p class="caption">${t("settings.title")}</p>
+        <h2 class="section-title" id="learning-preferences-title">${t("settings.learning")}</h2>
       </div>
 
       <section class="profile-setting-group" aria-labelledby="learning-preferences-title">
+        <div class="profile-setting-block language-setting">
+          <strong>${t("language.label")}</strong>
+          ${languageSwitcher()}
+        </div>
         ${renderToggleSetting({
-          label: "学习提醒",
-          detail: "未完成目标时在首页提醒",
+          label: t("settings.reminder"),
+          detail: t("settings.reminderDetail"),
           action: "toggle-learning-reminder",
           checked: preferences.learningReminder
         })}
         ${renderToggleSetting({
-          label: "显示拉丁转写",
-          detail: "在字母、词语和句子下显示 ULY 读法",
+          label: t("settings.showLatin"),
+          detail: t("settings.showLatinDetail"),
           action: "toggle-latin-transliteration",
           checked: preferences.showLatin
         })}
       </section>
 
       <section class="profile-setting-group" aria-labelledby="audio-preferences-title">
-        <h3 id="audio-preferences-title">音频</h3>
+        <h3 id="audio-preferences-title">${t("settings.audio")}</h3>
         ${renderToggleSetting({
-          label: "自动播放",
-          detail: "进入或切换学习内容时播放一次",
+          label: t("settings.autoplay"),
+          detail: t("settings.autoplayDetail"),
           action: "toggle-audio-autoplay",
           checked: preferences.audioAutoplay
         })}
       </section>
 
       <section class="profile-setting-group" aria-labelledby="account-settings-title">
-        <h3 id="account-settings-title">账号与数据</h3>
+        <h3 id="account-settings-title">${t("settings.account")}</h3>
         <div class="profile-setting-block profile-account-setting">
           <div>
-            <strong>当前账号</strong>
-            <small>${accountEmail ? escapeHtml(accountEmail) : "本地学习账号"}</small>
+            <strong>${t("settings.currentAccount")}</strong>
+            <small>${accountEmail ? escapeHtml(accountEmail) : t("settings.localAccount")}</small>
           </div>
           <span class="step-state">${cloudStatusLabel()}</span>
         </div>
@@ -4662,16 +4678,16 @@ function renderSettingsPanel() {
             ? `
               <div class="profile-name-editor">
                 <label class="auth-field" for="profile-display-name">
-                  <span>学习名称</span>
+                  <span>${t("settings.learningName")}</span>
                   <input
                     id="profile-display-name"
                     type="text"
                     maxlength="40"
                     autocomplete="name"
-                    value="${escapeHtml(accountProfile.displayName || "Ana Tilim 学习者")}"
+                    value="${escapeHtml(accountProfile.displayName || t("profile.learner"))}"
                   />
                 </label>
-                <button class="secondary-button" data-action="save-display-name" type="button">保存名称</button>
+                <button class="secondary-button" data-action="save-display-name" type="button">${t("settings.saveName")}</button>
               </div>
             `
             : ""
@@ -4681,17 +4697,17 @@ function renderSettingsPanel() {
           state.clearLearningConfirmation
             ? `
               <div class="clear-learning-confirmation" role="alert">
-                <strong>确认清除学习记录</strong>
-                <p>将清除课程进度、今日记录、错题、收藏和最近学习位置；账号与设置会保留。</p>
+                <strong>${t("settings.clearTitle")}</strong>
+                <p>${t("settings.clearDetail")}</p>
                 <div class="action-grid">
-                  <button class="secondary-button" data-action="cancel-clear-learning" type="button">取消</button>
-                  <button class="danger-button" data-action="confirm-clear-learning" type="button">确认清除</button>
+                  <button class="secondary-button" data-action="cancel-clear-learning" type="button">${t("common.cancel")}</button>
+                  <button class="danger-button" data-action="confirm-clear-learning" type="button">${t("settings.clearConfirm")}</button>
                 </div>
               </div>
             `
             : `
               <button class="danger-button" data-action="request-clear-learning" type="button">
-                清除学习记录
+                ${t("settings.clear")}
               </button>
             `
         }
@@ -4706,7 +4722,7 @@ function renderProfile() {
 
   return screen(
     `
-      ${topBar("我的", "个人学习状态")}
+      ${topBar(t("profile.title"), t("profile.subtitle"))}
       <section class="stack wide-gap profile-layout">
         ${renderProfileHero(progress, reviewCount)}
         ${renderSettingsPanel()}
@@ -4729,7 +4745,7 @@ function showToast(message) {
 function playAudio(src, label, { autoplay = false } = {}) {
   if (!src) {
     if (!autoplay) {
-      showToast("暂无可播放音频");
+      showToast(t("audio.unavailable"));
     }
     return false;
   }
@@ -4742,12 +4758,12 @@ function playAudio(src, label, { autoplay = false } = {}) {
     .play()
     .then(() => {
       if (!autoplay) {
-        showToast(`${label || "内容"}：播放中`);
+        showToast(t("audio.playing", { label: label || t("common.content") }));
       }
     })
     .catch(() => {
       if (!autoplay) {
-        showToast("音频文件不能播放，请检查文件");
+        showToast(t("audio.fileError"));
       }
     });
   return true;
@@ -4806,24 +4822,35 @@ document.addEventListener("click", (event) => {
 
   const action = button.dataset.action;
 
+  if (action === "set-language") {
+    const language = button.dataset.language;
+    if (language !== "zh" && language !== "en") {
+      return;
+    }
+    applyInterfaceLanguage(language, { explicit: true });
+    render();
+    showToast(t("language.changed"));
+    return;
+  }
+
   if (action === "toggle-learning-reminder") {
     setPreference("learningReminder", !state.preferences.learningReminder);
     render();
-    showToast(state.preferences.learningReminder ? "学习提醒已开启" : "学习提醒已关闭");
+    showToast(t(state.preferences.learningReminder ? "toast.reminderOn" : "toast.reminderOff"));
     return;
   }
 
   if (action === "toggle-latin-transliteration") {
     setPreference("showLatin", !state.preferences.showLatin);
     render();
-    showToast(state.preferences.showLatin ? "拉丁转写已显示" : "拉丁转写已隐藏");
+    showToast(t(state.preferences.showLatin ? "toast.latinOn" : "toast.latinOff"));
     return;
   }
 
   if (action === "toggle-audio-autoplay") {
     setPreference("audioAutoplay", !state.preferences.audioAutoplay);
     render();
-    showToast(state.preferences.audioAutoplay ? "自动播放已开启" : "自动播放已关闭");
+    showToast(t(state.preferences.audioAutoplay ? "toast.autoplayOn" : "toast.autoplayOff"));
     return;
   }
 
@@ -4846,11 +4873,11 @@ document.addEventListener("click", (event) => {
       restoreLearningRecordSnapshot(previousRecords);
       state.clearLearningConfirmation = false;
       render();
-      showToast("清除失败，原记录已保留");
+      showToast(t("error.storage"));
       return;
     }
     render();
-    showToast("学习记录已清除");
+    showToast(t("toast.recordsCleared"));
     return;
   }
 
@@ -4858,7 +4885,7 @@ document.addEventListener("click", (event) => {
     state.screen = "home";
     saveLocalProgress();
     render();
-    showToast("已进入本地学习模式");
+    showToast(t("toast.localMode"));
     return;
   }
 
@@ -4894,7 +4921,7 @@ document.addEventListener("click", (event) => {
         state.screen = "home";
         state.authEmail = "";
         render();
-        showToast("登录成功，学习记录将自动同步");
+        showToast(t("toast.loginSuccess"));
       })
       .catch((error) => showToast(passwordAuthErrorMessage(error, "login")));
     return;
@@ -4914,7 +4941,7 @@ document.addEventListener("click", (event) => {
     }
     const backup = backupGuestProgress();
     if (!backup.ok) {
-      showToast("游客进度备份失败，请稍后重试");
+      showToast(t("toast.guestBackupError"));
       return;
     }
     state.authEmail = validation.values.email;
@@ -4932,7 +4959,7 @@ document.addEventListener("click", (event) => {
         state.authMode = "login";
         state.authEmail = "";
         render();
-        showToast("注册成功，从第一单元开始学习");
+        showToast(t("toast.registerSuccess"));
       })
       .catch((error) => {
         restoreGuestProgressBackup(backup.previousValue);
@@ -4950,7 +4977,7 @@ document.addEventListener("click", (event) => {
       ?.signInWithGoogle(redirectTo)
       .catch(() => {
         setAuthRedirectPending(false);
-        showToast("Google 登录暂时不可用，请稍后重试");
+        showToast(t("toast.googleError"));
       });
     return;
   }
@@ -4958,7 +4985,7 @@ document.addEventListener("click", (event) => {
   if (action === "request-email-otp") {
     const email = document.querySelector("#auth-email")?.value?.trim() || "";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      showToast("请输入有效的邮箱地址");
+      showToast(t("auth.invalidEmail"));
       return;
     }
     state.authEmail = email;
@@ -4967,16 +4994,16 @@ document.addEventListener("click", (event) => {
       .then(() => {
         state.emailCodeSent = true;
         render();
-        showToast("验证码已发送，请检查邮箱");
+        showToast(t("toast.codeSent"));
       })
-      .catch(() => showToast("验证码发送失败，请稍后重试"));
+      .catch(() => showToast(t("toast.codeError")));
     return;
   }
 
   if (action === "verify-email-otp") {
     const code = document.querySelector("#auth-code")?.value?.trim() || "";
     if (!/^\d{6}$/.test(code)) {
-      showToast("请输入 6 位验证码");
+      showToast(t("toast.invalidCode"));
       return;
     }
     cloudSync
@@ -4985,9 +5012,9 @@ document.addEventListener("click", (event) => {
         state.emailCodeSent = false;
         state.emailAuthExpanded = false;
         render();
-        showToast("登录成功，学习记录将自动同步");
+        showToast(t("toast.loginSuccess"));
       })
-      .catch(() => showToast("验证码不正确或已过期"));
+      .catch(() => showToast(t("toast.expiredCode")));
     return;
   }
 
@@ -4996,9 +5023,9 @@ document.addEventListener("click", (event) => {
       ?.signOut()
       .then(() => {
         render();
-        showToast("已退出登录，本地学习记录仍然保留");
+        showToast(t("toast.signedOut"));
       })
-      .catch(() => showToast("退出登录失败，请稍后重试"));
+      .catch(() => showToast(t("toast.signOutError")));
     return;
   }
 
@@ -5014,9 +5041,9 @@ document.addEventListener("click", (event) => {
       ?.updateDisplayName(validation.value)
       .then(() => {
         render();
-        showToast("名称已更新");
+        showToast(t("toast.nameUpdated"));
       })
-      .catch(() => showToast("名称保存失败，请稍后重试"));
+      .catch(() => showToast(t("toast.nameError")));
     return;
   }
 
@@ -5435,7 +5462,7 @@ document.addEventListener("click", (event) => {
     state.favorite = !state.favorite;
     markCloudDirty("favorite");
     render();
-    showToast(state.favorite ? "已加入收藏" : "已取消收藏");
+    showToast(t(state.favorite ? "toast.favoriteOn" : "toast.favoriteOff"));
     return;
   }
 
@@ -5449,7 +5476,7 @@ document.addEventListener("click", (event) => {
   }
 
   if (action === "toast") {
-    showToast("这个功能会在正式版加入");
+    showToast(t("toast.comingSoon"));
   }
 });
 
@@ -5460,15 +5487,15 @@ document.addEventListener("change", (event) => {
   const file = input.files?.[0];
   if (!file) return;
   if (!cloudAccountEmail()) {
-    showToast("请先登录后再更换头像");
+    showToast(t("toast.avatarLogin"));
     return;
   }
   if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) {
-    showToast("请选择 JPG、PNG、WebP 或 GIF 图片");
+    showToast(t("toast.avatarType"));
     return;
   }
   if (file.size > 5 * 1024 * 1024) {
-    showToast("头像图片不能超过 5MB");
+    showToast(t("toast.avatarSize"));
     return;
   }
 
@@ -5479,12 +5506,12 @@ document.addEventListener("change", (event) => {
     .then(() => {
       state.avatarUploading = false;
       render();
-      showToast("头像已更新");
+      showToast(t("toast.avatarUpdated"));
     })
     .catch(() => {
       state.avatarUploading = false;
       render();
-      showToast("头像上传失败，请稍后重试");
+      showToast(t("error.avatar"));
     });
 });
 
@@ -5521,7 +5548,7 @@ function initializeCloudAuthentication() {
   });
   cloudStatus = cloudSync.status();
   cloudSync.start().catch(() => {
-    cloudStatus = { phase: "error", error: "登录服务暂时不可用" };
+    cloudStatus = { phase: "error", error: t("error.cloud") };
     render();
   });
   if (typeof window.addEventListener === "function") {

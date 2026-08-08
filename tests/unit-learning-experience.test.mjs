@@ -33,16 +33,6 @@ const courseDataSources = Object.fromEntries(
 const courseDataGuide = fs.readFileSync(courseDataGuidePath, "utf8");
 const appSource = fs.readFileSync("prototype/app.js", "utf8");
 const styleSource = fs.readFileSync("prototype/styles.css", "utf8");
-const bottomNavSource = appSource.slice(
-  appSource.indexOf("function bottomNav"),
-  appSource.indexOf("function iconHome")
-);
-assert.deepEqual(
-  [...bottomNavSource.matchAll(/\["([^"]+)", "([^"]+)"/g)].map((match) => match.slice(1, 3)),
-  [["home", "首页"], ["library", "字母"], ["learn", "学习"], ["profile", "我的"]],
-  "bottom navigation should expose exactly the four final learner destinations in order"
-);
-
 assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode should not leave unreachable CSS");
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
@@ -152,6 +142,9 @@ assert.ok(homeCenterStyle.includes("align-content: center;"), "home content shou
 assert.ok(homeCenterStyle.includes("align-items: start;"), "home content should keep natural card heights while centered");
 const homeCenterChildStyle = styleSource.match(/^\.home-center > \*\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
 assert.ok(homeCenterChildStyle.includes("width: 100%;"), "home cards should fill the centered home column");
+assert.ok(homeCenterChildStyle.includes("min-width: 0;"), "home cards should shrink within the phone content column");
+const homeCenterGrandchildStyle = styleSource.match(/^\.home-center > \* > \*\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
+assert.ok(homeCenterGrandchildStyle.includes("min-width: 0;"), "home card content should shrink without clipping long English copy");
 const stepStateStyle = styleSource.match(/^\.step-state\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
 for (const declaration of ["overflow: visible;", "text-overflow: clip;", "min-width: max-content;", "flex: 0 0 auto;"]) {
   assert.ok(stepStateStyle.includes(declaration), `status labels should include ${declaration}`);
@@ -615,6 +608,10 @@ function renderState(script) {
   return app.innerHTML;
 }
 
+function setLanguage(language) {
+  vm.runInContext(`applyInterfaceLanguage(${JSON.stringify(language)}, { explicit: true }); render();`, context);
+}
+
 function assertLearnerCopyClean(screenName) {
   for (const phrase of ["待审校", "待母语者审校", "待来源审校", "已校对", "待修改", "展示项"]) {
     assert.ok(!app.innerHTML.includes(phrase), `${screenName} should hide ${phrase}`);
@@ -643,6 +640,151 @@ function savedProgress() {
   assert.ok(storage["ana-tilim-progress"], "local progress should be saved");
   return JSON.parse(storage["ana-tilim-progress"]);
 }
+
+const requiredGlobalMessageKeys = [
+  "nav.home", "nav.alphabet", "nav.learn", "nav.profile",
+  "language.label", "language.chinese", "language.english",
+  "welcome.title", "welcome.subtitle", "welcome.continueGuest",
+  "auth.guestTitle", "auth.guestDetail", "auth.google", "auth.signOut",
+  "home.continue", "home.today", "home.progress",
+  "settings.title", "settings.learning", "settings.audio", "settings.account",
+  "settings.reminder", "settings.showLatin", "settings.autoplay",
+  "common.back", "common.previous", "common.next", "common.cancel", "common.confirm",
+  "audio.play", "audio.playing", "audio.unavailable", "audio.humanRecording",
+  "error.storage", "error.cloud", "error.avatar", "progress.count"
+];
+for (const language of ["zh", "en"]) {
+  context.window.ANA_TILIM_I18N.setLanguage(language);
+  for (const key of requiredGlobalMessageKeys) {
+    assert.ok(context.window.ANA_TILIM_I18N.t(key), `${language} should define ${key}`);
+  }
+}
+
+setLanguage("zh");
+vm.runInContext(
+  `
+    state.screen = "group";
+    state.selectedUnitId = "letters";
+    state.selectedGroupId = "dot-bone";
+    state.currentLetterId = "pe";
+    state.selectedPicture = "be";
+    state.keyboardValue = "ب";
+    render();
+  `,
+  context
+);
+const learningStateBeforeLanguageSwitch = vm.runInContext(
+  `JSON.stringify({
+    screen: state.screen,
+    selectedUnitId: state.selectedUnitId,
+    selectedGroupId: state.selectedGroupId,
+    currentLetterId: state.currentLetterId,
+    selectedPicture: state.selectedPicture,
+    keyboardValue: state.keyboardValue
+  })`,
+  context
+);
+setLanguage("en");
+assert.equal(
+  vm.runInContext(
+    `JSON.stringify({
+      screen: state.screen,
+      selectedUnitId: state.selectedUnitId,
+      selectedGroupId: state.selectedGroupId,
+      currentLetterId: state.currentLetterId,
+      selectedPicture: state.selectedPicture,
+      keyboardValue: state.keyboardValue
+    })`,
+    context
+  ),
+  learningStateBeforeLanguageSwitch,
+  "manually switching from Chinese to the opposing English language should preserve the current learning state"
+);
+assert.equal(vm.runInContext("state.preferences.uiLanguage", context), "en");
+assert.equal(savedProgress().preferences.uiLanguage, "en");
+
+const englishWelcomeHtml = renderState("state.screen = 'welcome'");
+includesAll(
+  englishWelcomeHtml,
+  ["Continue as guest", "Local guest mode", "Continue with Google"],
+  "English welcome and guest authentication"
+);
+const englishHomeHtml = renderState("state.screen = 'home'");
+includesAll(
+  englishHomeHtml,
+  ["Home", "Alphabet", "Learn", "Profile"],
+  "English home navigation"
+);
+assert.deepEqual(
+  ["Home", "Alphabet", "Learn", "Profile"].map((label) => englishHomeHtml.indexOf(label)),
+  ["Home", "Alphabet", "Learn", "Profile"].map((label) => englishHomeHtml.indexOf(label)).toSorted((left, right) => left - right),
+  "bottom navigation should keep Home, Alphabet, Learn, and Profile in order"
+);
+const englishProfileHtml = renderState("state.screen = 'profile'");
+includesAll(
+  englishProfileHtml,
+  ["Learning preferences", "Chinese", "English"],
+  "English profile settings"
+);
+
+const compactLanguageControl = vm.runInContext("languageSwitcher(true)", context);
+assert.ok(compactLanguageControl.includes('aria-label="Language"'));
+assert.equal(
+  (compactLanguageControl.match(/data-action="set-language"/g) || []).length,
+  2,
+  "the compact language control should render exactly two language buttons"
+);
+assert.equal(
+  (compactLanguageControl.match(/aria-pressed="true"/g) || []).length,
+  1,
+  "the compact language control should expose exactly one active language"
+);
+assert.ok(englishHomeHtml.includes(compactLanguageControl), "the Home greeting row should include the compact language control");
+assert.ok(
+  !renderState("state.screen = 'learn'").includes('class="language-switcher is-compact"'),
+  "course and learning-path top bars should not repeat the compact language control"
+);
+assert.ok(!compactLanguageControl.includes("🇨🇳") && !compactLanguageControl.includes("🇬🇧"), "language controls should not use flag icons");
+
+const languageSwitcherStyle = styleSource.match(/^\.language-switcher\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
+assert.ok(languageSwitcherStyle.includes("width: max-content;"), "language controls should use intrinsic width");
+const fullLanguageButtonStyle = styleSource.match(/^\.language-switcher:not\(\.is-compact\) button\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
+assert.ok(fullLanguageButtonStyle.includes("min-height: 44px;"), "Profile language buttons should meet the 44px touch target");
+assert.ok(
+  /\.language-switcher button:focus-visible\s*\{[^}]*outline:/s.test(styleSource),
+  "language buttons should expose a visible keyboard focus indicator"
+);
+const phoneLanguageStyle = styleSource.match(/@media \(max-width: 719px\)\s*\{(?<body>[\s\S]*?)\n\}/m)?.groups?.body || "";
+assert.ok(
+  /\.brand-lockup\s*\{[^}]*min-width:\s*0;/s.test(phoneLanguageStyle),
+  "the Home brand lockup should be allowed to shrink at phone width"
+);
+assert.ok(
+  phoneLanguageStyle.includes("overflow-wrap: anywhere;"),
+  "long English headings and buttons should wrap safely on phones"
+);
+const phoneSectionTitleStyle = phoneLanguageStyle.match(/\.section-title:not\(\.unit-goal-text\)\s*\{(?<body>[^}]*)\}/m)?.groups?.body || "";
+assert.ok(
+  phoneSectionTitleStyle.includes("white-space: normal;") &&
+    phoneSectionTitleStyle.includes("text-overflow: clip;") &&
+    phoneSectionTitleStyle.includes("overflow-wrap: anywhere;"),
+  "long English section headings should override the desktop ellipsis rule on phones"
+);
+
+setLanguage("zh");
+vm.runInContext("state.screen = 'home'; render();", context);
+clickDataset({ action: "set-language", language: "en" });
+assert.equal(vm.runInContext("state.interfaceLanguage", context), "en", "the language control should switch the live interface");
+assert.equal(savedProgress().preferences.uiLanguage, "en", "the language control should persist the explicit preference");
+assert.ok(app.innerHTML.includes("Good morning"), "the language control should rerender the current screen");
+assert.equal(toast.textContent, "Interface language changed to English", "the switch toast should use the newly selected language");
+clickDataset({ action: "set-language", language: "fr" });
+assert.equal(vm.runInContext("state.interfaceLanguage", context), "en", "unsupported language controls should be ignored");
+assert.equal(toast.textContent, "Interface language changed to English", "an invalid language control should not show another toast");
+assert.equal(vm.runInContext('playAudio("", "Lesson")', context), false);
+assert.equal(toast.textContent, "No audio available", "audio errors should use the selected interface language");
+
+setLanguage("zh");
 
 vm.runInContext(
   `
