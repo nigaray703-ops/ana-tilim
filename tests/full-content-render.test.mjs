@@ -47,6 +47,7 @@ context.globalThis = context;
 vm.createContext(context);
 
 for (const scriptPath of [
+  "prototype/app-config.js",
   "prototype/uly-transliteration.js",
   "prototype/course-data/alphabet-data.js",
   "prototype/course-data/combo-data.js",
@@ -54,6 +55,10 @@ for (const scriptPath of [
   "prototype/course-data/practice-data.js",
   "prototype/course-data/reading-data.js",
   "prototype/course-data.js",
+  "prototype/uyghur-keyboard.js",
+  "prototype/sentence-morphemes.js",
+  "prototype/sentence-glossary.js",
+  "prototype/progress-transfer.js",
   "prototype/cloud-config.js",
   "prototype/cloud-sync.js",
   "prototype/app.js"
@@ -173,6 +178,6 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
   }
 }
 
-assert.equal(renderCount, 464, "full UI audit should render every main screen, unit, lesson item, reading group, and practice item");
+assert.equal(renderCount, 462, "full UI audit should render every retained main screen, unit, lesson item, reading group, and practice item");
 
 console.log(`full content render checks passed (${renderCount} states)`);

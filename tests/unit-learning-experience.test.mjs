@@ -7,6 +7,7 @@ const courseDataGuidePath = "课程/00-课程数据编辑与审校说明.md";
 const courseDataIntegrityTestPath = "tests/course-data-integrity.test.mjs";
 const projectCheckScriptPath = "scripts/check-project.mjs";
 const courseDataAggregatorPath = "prototype/course-data.js";
+const uyghurKeyboardPath = "prototype/uyghur-keyboard.js";
 const courseDataScriptPaths = [
   "prototype/uly-transliteration.js",
   "prototype/course-data/alphabet-data.js",
@@ -16,6 +17,7 @@ const courseDataScriptPaths = [
   "prototype/course-data/reading-data.js"
 ];
 assert.ok(fs.existsSync(courseDataAggregatorPath), "course data aggregator should exist");
+assert.ok(fs.existsSync(uyghurKeyboardPath), "focused Uyghur keyboard mapping module should exist");
 for (const scriptPath of courseDataScriptPaths) {
   assert.ok(fs.existsSync(scriptPath), `${scriptPath} should exist as a focused course data file`);
 }
@@ -43,7 +45,7 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260729-password-auth",
+  "./styles.css?v=20260809-scheherazade-font",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
@@ -52,17 +54,19 @@ const expectedVersionedAssets = [
   "./course-data/practice-data.js?v=20260728-learned-markers",
   "./course-data/reading-data.js?v=20260728-uly-transliteration",
   "./course-data.js?v=20260728-uly-transliteration",
-  "./sentence-glossary.js?v=20260808-word-glosses",
+  "./uyghur-keyboard.js?v=20260809-phone-morphemes",
+  "./sentence-morphemes.js?v=20260809-word-formation",
+  "./sentence-glossary.js?v=20260809-word-formation",
   "./progress-transfer.js?v=20260808-local-progress",
   "./audio-controller.js?v=20260728-uly-transliteration",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260729-password-auth",
-  "./app.js?v=20260729-password-auth-4"
+  "./app.js?v=20260809-responsive-dark-keyboard"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
-    /(?:href|src)="(?<url>(?:\.\/(?:styles\.css|app-config\.js|uly-transliteration\.js|course-data\/[^"]+\.js|course-data\.js|sentence-glossary\.js|progress-transfer\.js|audio-controller\.js|cloud-config\.js|cloud-sync\.js|app\.js)[^"]*|https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2\.110\.8))"/g
+    /(?:href|src)="(?<url>(?:\.\/(?:styles\.css|app-config\.js|uly-transliteration\.js|course-data\/[^"]+\.js|course-data\.js|uyghur-keyboard\.js|sentence-morphemes\.js|sentence-glossary\.js|progress-transfer\.js|audio-controller\.js|cloud-config\.js|cloud-sync\.js|app\.js)[^"]*|https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2\.110\.8))"/g
   )
 ].map((match) => match.groups.url);
 assert.deepEqual(
@@ -231,6 +235,7 @@ const htmlScriptOrder = [
   "prototype/app-config.js",
   ...courseDataScriptPaths,
   courseDataAggregatorPath,
+  uyghurKeyboardPath,
   "prototype/sentence-glossary.js",
   "prototype/progress-transfer.js",
   "prototype/cloud-config.js",
@@ -266,22 +271,38 @@ function makeElement(id) {
 const app = makeElement("app");
 const toast = makeElement("toast");
 let clickHandler = null;
+let keydownHandler = null;
 const storage = {};
 const sessionStorageValues = {};
 let storageWritesFail = false;
 const playedAudioSources = [];
 let audioPlayShouldReject = false;
+let profileDisplayNameValue = "";
+let profileDisplayNameFocused = false;
 const context = {
   console,
   document: {
     querySelector(selector) {
       if (selector === "#app") return app;
       if (selector === "#toast") return toast;
+      if (selector === "#profile-display-name") {
+        return {
+          get value() {
+            return profileDisplayNameValue;
+          },
+          focus() {
+            profileDisplayNameFocused = true;
+          }
+        };
+      }
       return null;
     },
     addEventListener(eventName, handler) {
       if (eventName === "click") {
         clickHandler = handler;
+      }
+      if (eventName === "keydown") {
+        keydownHandler = handler;
       }
     }
   },
@@ -290,6 +311,10 @@ const context = {
       return 1;
     },
     clearTimeout() {},
+    requestAnimationFrame(callback) {
+      callback();
+      return 1;
+    },
     sessionStorage: {
       getItem(key) {
         return Object.prototype.hasOwnProperty.call(sessionStorageValues, key)
@@ -335,11 +360,38 @@ for (const scriptPath of courseDataScriptPaths) {
   vm.runInContext(fs.readFileSync(scriptPath, "utf8"), context, { filename: scriptPath });
 }
 vm.runInContext(fs.readFileSync(courseDataAggregatorPath, "utf8"), context, { filename: courseDataAggregatorPath });
+vm.runInContext(fs.readFileSync(uyghurKeyboardPath, "utf8"), context, { filename: uyghurKeyboardPath });
+vm.runInContext(fs.readFileSync("prototype/sentence-morphemes.js", "utf8"), context, { filename: "prototype/sentence-morphemes.js" });
 vm.runInContext(fs.readFileSync("prototype/sentence-glossary.js", "utf8"), context, { filename: "prototype/sentence-glossary.js" });
 vm.runInContext(fs.readFileSync("prototype/progress-transfer.js", "utf8"), context, { filename: "prototype/progress-transfer.js" });
 vm.runInContext(fs.readFileSync("prototype/cloud-config.js", "utf8"), context, { filename: "prototype/cloud-config.js" });
 vm.runInContext(fs.readFileSync("prototype/cloud-sync.js", "utf8"), context, { filename: "prototype/cloud-sync.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
+
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(window.ANA_TILIM_UYGHUR_KEYBOARD.rows.map((row) => row.map((key) => key.value)))", context)),
+  [
+    ["چ", "ۋ", "ې", "ر", "ت", "ي", "ۇ", "ڭ", "و", "پ"],
+    ["ھ", "س", "د", "ا", "ە", "ى", "ق", "ك", "ل"],
+    ["ز", "ش", "غ", "ۈ", "ب", "ن", "م", "،", ".", "ئ"]
+  ],
+  "Uyghur virtual keyboard should match the standard physical QWERTY rows"
+);
+assert.equal(vm.runInContext("window.ANA_TILIM_UYGHUR_KEYBOARD.keyForCode('KeyK', true).value", context), "ۆ");
+assert.equal(vm.runInContext("window.ANA_TILIM_UYGHUR_KEYBOARD.keyForCode('Space', false)?.value", context), " ", "standard keyboard should map the physical Space key");
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(window.ANA_TILIM_UYGHUR_KEYBOARD.keystrokesForText('ئە'))", context)),
+  [
+    { code: "Slash", shifted: false, value: "ئ" },
+    { code: "KeyG", shifted: false, value: "ە" }
+  ],
+  "keyboard guide should decompose a target into real physical keystrokes"
+);
+assert.equal(
+  vm.runInContext("window.ANA_TILIM_UYGHUR_KEYBOARD.keystrokesForText('كۆپ رەھمەت').map((stroke) => stroke.value).join('')", context),
+  "كۆپ رەھمەت",
+  "the keyboard should type multi-word learning targets without dropping spaces"
+);
 
 const defaultPreferences = JSON.parse(
   vm.runInContext("JSON.stringify(normalizePreferences(null))", context)
@@ -615,6 +667,10 @@ assert.ok(
   "login password should use current-password autocomplete"
 );
 assert.ok(!app.innerHTML.includes("<br>"), "welcome screen should not force the hero copy onto manual line breaks");
+assert.ok(
+  app.innerHTML.includes('class="hero-content with-auth"'),
+  "overseas welcome should use the centered layout with an auth panel"
+);
 
 const registerHtml = renderState("state.screen = 'welcome'; state.authMode = 'register'");
 includesAll(
@@ -718,9 +774,75 @@ assert.match(
   "My should provide a photo-library compatible image picker"
 );
 assert.ok(
+  !profileHtml.match(/id="profile-avatar-input"[^>]+disabled/),
+  "local learners should be able to choose an avatar without signing in"
+);
+assert.ok(
   !profileHtml.includes('capture="camera"'),
   "the avatar picker should not force the camera instead of the photo library"
 );
+
+vm.runInContext(
+  `
+    state.localProfile = {
+      displayName: "已保存昵称",
+      avatarDataUrl: "data:image/png;base64,kept-avatar"
+    };
+  `,
+  context
+);
+let localProfileHtml = renderState("state.screen = 'profile'");
+assert.match(
+  localProfileHtml,
+  /data-action="edit-display-name"/,
+  "local learners should edit their nickname from the profile heading"
+);
+assert.match(localProfileHtml, /aria-label="修改昵称"/, "the pencil action should have an accessible name");
+assert.doesNotMatch(localProfileHtml, /id="profile-display-name"/, "the nickname input should stay hidden until requested");
+assert.doesNotMatch(localProfileHtml, /class="profile-name-editor"/, "the settings card should not repeat the old nickname editor");
+assert.doesNotMatch(
+  localProfileHtml,
+  /data-action="save-display-name"[^>]*>保存昵称/,
+  "the settings card should not repeat the old nickname save button"
+);
+
+clickDataset({ action: "edit-display-name" });
+assert.equal(profileDisplayNameFocused, true, "opening nickname editing should focus the inline input");
+localProfileHtml = app.innerHTML;
+assert.match(
+  localProfileHtml,
+  /id="profile-display-name"[^>]+value="已保存昵称"/,
+  "inline nickname editing should preserve the current saved value"
+);
+assert.match(localProfileHtml, /data-action="cancel-display-name"/, "inline nickname editing should provide cancel");
+
+clickDataset({ action: "cancel-display-name" });
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.localProfile)", context)),
+  {
+    displayName: "已保存昵称",
+    avatarDataUrl: "data:image/png;base64,kept-avatar"
+  },
+  "canceling nickname editing should preserve the saved nickname and avatar"
+);
+
+profileDisplayNameFocused = false;
+clickDataset({ action: "edit-display-name" });
+profileDisplayNameValue = "  新昵称  ";
+clickDataset({ action: "save-display-name" });
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.localProfile)", context)),
+  {
+    displayName: "新昵称",
+    avatarDataUrl: "data:image/png;base64,kept-avatar"
+  },
+  "saving an inline nickname should preserve the existing avatar"
+);
+assert.deepEqual(savedProgress().localProfile, {
+  displayName: "新昵称",
+  avatarDataUrl: "data:image/png;base64,kept-avatar"
+});
+assert.doesNotMatch(app.innerHTML, /id="profile-display-name"/, "successful save should close the inline editor");
 
 vm.runInContext(
   `
@@ -750,14 +872,14 @@ vm.runInContext(
 const signedInProfileHtml = renderState("state.screen = 'profile'");
 assert.match(
   signedInProfileHtml,
-  /<input[^>]+id="profile-display-name"[^>]+maxlength="40"[^>]*>/,
-  "signed-in learners should be able to edit their display name"
+  /data-action="edit-display-name"/,
+  "signed-in learners should edit their display name from the profile heading"
 );
-assert.match(
-  signedInProfileHtml,
-  /<button[^>]+data-action="save-display-name"[^>]*>[\s\S]*?保存名称[\s\S]*?<\/button>/,
-  "signed-in learners should be able to save their display name"
-);
+assert.doesNotMatch(signedInProfileHtml, /id="profile-display-name"/, "signed-in editor should stay collapsed by default");
+clickDataset({ action: "edit-display-name" });
+assert.match(app.innerHTML, /id="profile-display-name"[^>]+value="Nigar"/, "signed-in editing should prefill the cloud name");
+assert.match(app.innerHTML, /data-action="save-display-name"[^>]*>[\s\S]*?保存/, "signed-in editing should provide save");
+clickDataset({ action: "cancel-display-name" });
 assert.deepEqual(
   JSON.parse(vm.runInContext(`JSON.stringify(validateDisplayName("   "))`, context)),
   { ok: false, message: "请输入名称" }
@@ -1086,7 +1208,7 @@ assert.equal(
 audioPlayShouldReject = false;
 
 assert.ok(
-  /profile-hero-card[\s\S]*学习账号[\s\S]*profile-settings-card/.test(profileHtml),
+  /profile-hero-card[\s\S]*(?:学习账号|本地学习)[\s\S]*profile-settings-card/.test(profileHtml),
   "My should render the full-width settings card after the account overview"
 );
 assert.ok(!profileHtml.includes("每日目标"), "My should remove the daily-goal setting block");
@@ -1127,7 +1249,7 @@ assert.ok(
 );
 assert.ok(!profileHtml.includes("profile-metric-grid"), "profile metrics should be nested under the learning account card");
 assert.ok(
-  /profile-hero-card[\s\S]*学习账号[\s\S]*profile-account-metrics[\s\S]*连续学习[\s\S]*今日待复习[\s\S]*总进度/.test(profileHtml),
+  /profile-hero-card[\s\S]*(?:学习账号|本地学习)[\s\S]*profile-account-metrics[\s\S]*连续学习[\s\S]*今日待复习[\s\S]*总进度/.test(profileHtml),
   "profile metrics should appear directly below the learning account section"
 );
 assert.ok(!profileHtml.includes("录音与上传"), "profile screen should no longer lead with recording/upload tooling");
@@ -1340,9 +1462,9 @@ assert.ok(grammarReadingLineStyle.includes("background: var(--paper);"), "gramma
 assert.ok(!grammarReadingLineStyle.includes("linear-gradient"), "grammar sentence cards should not keep the blue gradient background");
 const readingValueStyle = styleSource.match(/^\.reading-value\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
 assert.ok(
-  readingValueStyle.includes('font-family: "Times New Roman", Arial, sans-serif;') &&
+  readingValueStyle.includes('font-family: "Scheherazade New", "Noto Naskh Arabic", serif;') &&
     readingValueStyle.includes("font-weight: 600;"),
-  "all reading sentences should use the selected Times New Roman semibold style"
+  "all reading sentences should use the bundled Scheherazade New semibold style"
 );
 const latinTransliterationStyle =
   styleSource.match(/^\.latin-transliteration\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
@@ -1549,8 +1671,8 @@ assert.ok(
   formExampleWordTextStyle.includes("font-size: 28px;") &&
     formExampleWordTextStyle.includes("font-weight: 500;") &&
     formExampleWordTextStyle.includes("color: #000;") &&
-    formExampleWordTextStyle.includes('font-family: Arial, "Times New Roman",'),
-  "letter form words should use the PDF-like Arial shape that keeps medial mim visible"
+    formExampleWordTextStyle.includes('font-family: "Scheherazade New", "Noto Naskh Arabic", serif;'),
+  "letter form words should use the bundled Scheherazade New shape"
 );
 const formExampleAudioWordStyle = styleSource.match(/\.form-example-audio-word\s*\{[^}]*\}/)?.[0] || "";
 assert.ok(
@@ -1694,9 +1816,12 @@ const letterSoundChoiceHtml = renderState(
 );
 includesAll(
   letterSoundChoiceHtml,
-  ["读音选择", "选择正确字母", "b", "audio-focus", "letter-focus-play"],
+  ["读音选择", "选择正确字母", "b", "audio-focus", "audio-only-focus", "letter-focus-play", ">听</button>"],
   "letter sound-choice exercise"
 );
+for (const hiddenAudioText of ["播放或查看读音", "真人音频：", "音频待录", "音频未生成时"]) {
+  assert.ok(!letterSoundChoiceHtml.includes(hiddenAudioText), `letter sound-choice should hide audio helper text ${hiddenAudioText}`);
+}
 assert.ok(!app.innerHTML.includes('<div class="audio-strip">'), "letter sound-choice should put the listen button in the gradient card");
 const letterSoundChoiceGrid = letterSoundChoiceHtml.match(/<div class="choice-grid">([\s\S]*?)<\/div>\s*<button class="primary-button"/)?.[1] || "";
 assert.equal(
@@ -1828,6 +1953,12 @@ clickDataset({ action: "go", target: "listening" });
 clickDataset({ action: "pick-listening", id: "be" });
 clickDataset({ action: "go", target: "keyboard" });
 includesAll(app.innerHTML, ["键盘步骤", "第 1 步", "点击 ب", "还差 1 键"], "letter keyboard guide");
+includesAll(
+  app.innerHTML,
+  ['aria-label="维吾尔语标准键盘"', "uyghur-keyboard-row row-top", "uyghur-keyboard-row row-home", "uyghur-keyboard-row row-bottom", 'data-physical-key="Q"', 'data-action="toggle-keyboard-shift"'],
+  "real Uyghur keyboard layout"
+);
+assert.ok(!app.innerHTML.includes('aria-label="本组字母快捷键"'), "real keyboard should replace the redundant group shortcut row");
 clickDataset({ action: "key", key: "ب" });
 includesAll(app.innerHTML, ["已完成", "完成课程"], "completed letter keyboard guide");
 clickDataset({ action: "go", target: "complete" });
@@ -1903,7 +2034,7 @@ includesAll(app.innerHTML, ["第 2 步", "点击 ا", "已输入 ب"], "combo ke
 
 includesAll(
   renderState("state.screen = 'vocabKeyboard'; state.selectedVocabGroupId = 'family'; state.currentVocabItemId = 'ana-family'; state.keyboardValue = ''"),
-  ["键盘步骤", "ئا → ن → ا", "点击 ئا", "还差 3 键"],
+  ["键盘步骤", "ئ → ا → ن → ا", "点击 ئ", "还差 4 键"],
   "vocab keyboard guide"
 );
 
@@ -1979,14 +2110,14 @@ assert.equal(savedProgress().learningProgress.practice["writing-loop"].completed
 
 includesAll(
   renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'keyboard-loop'; state.currentPracticeItemId = 'practice-keyboard-kaf'; state.keyboardValue = ''; state.mistakes = []"),
-  ["随机字母键盘", "键盘工具", "practice-target-card", "letter-focus-play", "data-key=\"ك\"", "删除", "清空"],
-  "practice random keyboard"
+  ["维吾尔语标准键盘", "键盘工具", "practice-target-card", "letter-focus-play", "data-key=\"ك\"", "删除", "بوشلۇق"],
+  "practice standard keyboard"
 );
 assert.equal((app.innerHTML.match(/data-action="play-audio"/g) || []).length, 1, "practice keyboard should keep one listen button in the gradient target card");
 assert.ok(!app.innerHTML.includes("audio-focus"), "practice keyboard should not show a separate audio strip below the target card");
-assert.equal((app.innerHTML.match(/data-action="key"/g) || []).length, 25, "practice keyboard should show 25 random letter keys");
-for (const removedPhrase of ["键盘步骤", "点击 ك", "还差 1 键", "当前复习项快捷键", "next-key", "done-key", "提示："]) {
-  assert.ok(!app.innerHTML.includes(removedPhrase), `practice random keyboard should remove ${removedPhrase}`);
+assert.equal((app.innerHTML.match(/data-physical-key=/g) || []).length, 28, "practice keyboard should show 27 visible character keys plus the Space key");
+for (const removedPhrase of ["键盘步骤", "点击 ك", "还差 1 键", "当前复习项快捷键", "done-key", "提示："]) {
+  assert.ok(!app.innerHTML.includes(removedPhrase), `practice standard keyboard should remove ${removedPhrase}`);
 }
 clickDataset({ action: "key", key: "ب" });
 assert.equal(vm.runInContext("state.mistakes.length", context), 1, "wrong practice keyboard key should enter local mistakes");
@@ -1996,6 +2127,60 @@ renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = '
 assert.ok(!app.innerHTML.includes("输入正确。本轮键盘练习完成。"), "practice random keyboard should not show correct-input feedback");
 assert.ok(!app.innerHTML.includes("对比正确写法"), "practice keyboard entry should not show writing comparison");
 assert.ok(!app.innerHTML.includes("完成后评价"), "practice keyboard entry should not show writing self-check");
+
+renderState("state.screen = 'keyboard'; state.selectedGroupId = 'vowels-basic'; state.currentLetterId = 'ae'; state.keyboardValue = ''");
+assert.ok(app.innerHTML.includes('data-physical-key="Space"'), "the virtual keyboard should display a real Space key");
+assert.ok(app.innerHTML.includes(">بوشلۇق</button>"), "the Space key should use the real Uyghur phone-keyboard label");
+assert.match(app.innerHTML, /class="key-button utility keyboard-shift/, "the phone keyboard should place a Shift key beside the third letter row");
+assert.match(app.innerHTML, /data-action="backspace"[^>]*aria-label="删除"/, "the phone keyboard should place a labelled Backspace key beside the third letter row");
+assert.match(app.innerHTML, /data-action="key"[^>]*data-key="ئ"/, "the teaching keyboard should keep a visible Hamza key");
+assert.doesNotMatch(app.innerHTML, />يوللا<\/button>/, "the learning keyboard should omit the phone submit key");
+assert.doesNotMatch(app.innerHTML, />123<\/button>/, "the learning keyboard should omit the numeric-layer context key");
+assert.doesNotMatch(app.innerHTML, /aria-label="表情键（仅展示）"/, "the learning keyboard should omit the emoji context key");
+assert.match(app.innerHTML, /data-action="go"[^>]*data-target="complete"[^>]*disabled[^>]*>\s*完成课程\s*<\/button>/, "the site-style completion button should remain disabled before the target is complete");
+assert.doesNotMatch(styleSource, /\.uyghur-keyboard\s*\{[^}]*overflow-x:\s*auto/, "the phone keyboard should not require horizontal scrolling");
+assert.doesNotMatch(styleSource, /\.uyghur-keyboard\s*\{[^}]*background:\s*#242529/s, "the learning keyboard should not use the dark phone shell");
+assert.match(styleSource, /\.uyghur-keyboard\s*\{[^}]*background:\s*linear-gradient/s, "the learning keyboard should use the site's light surface treatment");
+assert.match(styleSource, /\.uyghur-keyboard \.key-button\.next-key\s*\{[^}]*background:\s*#fff0c8/s, "the next connection key should use the gold guided state");
+assert.match(styleSource, /\.uyghur-keyboard \.keyboard-shift\.active\s*\{[^}]*background:\s*var\(--mint\)/s, "the pressed Shift key should use the site's mint active state");
+assert.match(styleSource, /@font-face\s*\{[^}]*font-family:\s*"Scheherazade New"[^}]*ScheherazadeNew-Regular\.woff2/s, "the prototype should self-host the regular Uyghur font");
+assert.match(styleSource, /@font-face\s*\{[^}]*font-family:\s*"Scheherazade New"[^}]*ScheherazadeNew-Bold\.woff2/s, "the prototype should self-host the bold Uyghur font");
+assert.match(styleSource, /\.uyghur\s*\{[^}]*font-family:\s*"Scheherazade New"/s, "all Uyghur text should prefer the bundled Scheherazade New font");
+assert.match(styleSource, /\.form-example-word \.form-example-word-text\s*\{[^}]*font-family:\s*"Scheherazade New"/s, "connected example words should use the same bundled Uyghur font");
+assert.ok(app.innerHTML.includes("还差 2 键"), "compound Uyghur letters should count real physical keystrokes");
+assert.ok(app.innerHTML.includes("第 1 步：点击 ئ"), "compound Uyghur letters should guide the hamza carrier first");
+assert.ok(!app.innerHTML.includes("第 1 步：点击 ئە"), "the keyboard guide must not ask for a combined glyph that is not a physical key");
+assert.ok(app.innerHTML.includes("按顺序点击"), "compound Uyghur letters should explain the physical key sequence");
+renderState("state.screen = 'keyboard'; state.selectedGroupId = 'vowels-basic'; state.currentLetterId = 'ae'; state.keyboardValue = 'ئ'");
+assert.ok(app.innerHTML.includes("还差 1 键"), "the guide should count the remaining physical key after the first stroke");
+assert.ok(app.innerHTML.includes("第 2 步：点击 ە"), "the guide should advance to the vowel key after hamza");
+renderState("state.screen = 'keyboard'; state.selectedGroupId = 'vowels-basic'; state.currentLetterId = 'ae'; state.keyboardValue = 'ئە'");
+assert.match(app.innerHTML, /data-action="go"[^>]*data-target="complete"(?![^>]*disabled)[^>]*>\s*完成课程\s*<\/button>/, "the site-style completion button should become enabled after the target is complete");
+renderState("state.screen = 'keyboard'; state.selectedGroupId = 'vowels-basic'; state.currentLetterId = 'ae'; state.keyboardValue = ''; state.keyboardShift = true");
+assert.ok(app.innerHTML.includes("keyboard-shift active next-key"), "Shift should be highlighted when it must be turned off for the next key");
+assert.ok(!/physical-key next-key[^>]*data-code="Slash"/.test(app.innerHTML), "a physical key must not be highlighted while Shift would output the wrong character");
+renderState("state.screen = 'keyboard'; state.selectedGroupId = 'vowels-basic'; state.currentLetterId = 'ae'; state.keyboardValue = ''; state.keyboardShift = false");
+keydownHandler({
+  code: "Slash",
+  key: "/",
+  shiftKey: false,
+  ctrlKey: false,
+  altKey: false,
+  metaKey: false,
+  target: { matches() { return false; } },
+  preventDefault() {}
+});
+keydownHandler({
+  code: "KeyG",
+  key: "g",
+  shiftKey: false,
+  ctrlKey: false,
+  altKey: false,
+  metaKey: false,
+  target: { matches() { return false; } },
+  preventDefault() {}
+});
+assert.equal(vm.runInContext("state.keyboardValue", context), "ئە", "physical keyboard keys should type the mapped Uyghur target");
 
 includesAll(
   renderState("state.screen = 'vocabComplete'"),
@@ -2050,13 +2235,42 @@ assert.ok(
   "morpheme source order should keep the root before the suffix"
 );
 assert.ok(schoolGloss.includes('class="morpheme-direction"'), "morpheme breakdown should use a right-to-left direction arrow");
-assert.equal(vm.runInContext("renderSentenceGlosses('رەھمەت.')", context), "", "a single indivisible word should not repeat its meaning in a gloss panel");
-assert.equal(vm.runInContext("renderVocabMorphemeBreakdown('رەھمەت')", context), "", "plain vocabulary should not show a redundant breakdown");
+const kitabingizGloss = vm.runInContext("renderSentenceGlosses('كىتابىڭىز بارمۇ؟')", context);
 includesAll(
-  vm.runInContext("renderVocabMorphemeBreakdown('ياخشىمۇسىز')", context),
-  ["vocab-morpheme-breakdown", 'data-morpheme="ياخشى"', 'data-morpheme="مۇ"', 'data-morpheme="سىز"'],
-  "decomposable vocabulary breakdown"
+  kitabingizGloss,
+  ["كىتاب + ـىڭىز → كىتابىڭىز", "词干末尾不变", "您的（第二人称礼貌或复数物主后缀）"],
+  "word-local possessive formation"
 );
+assert.equal(vm.runInContext("renderSentenceGlosses('رەھمەت.')", context), "", "a single indivisible word should not repeat its meaning in a gloss panel");
+const inlineVocabGlosses = renderState(
+  "state.screen = 'vocab'; state.selectedVocabGroupId = 'greetings'; state.currentVocabItemId = 'yaxshimusiz'"
+);
+assert.doesNotMatch(
+  inlineVocabGlosses,
+  /class="vocab-morpheme-breakdown"|data-morpheme=/,
+  "vocabulary rows should not show morpheme breakdowns"
+);
+assert.doesNotMatch(
+  inlineVocabGlosses,
+  /逐词与词素参考/,
+  "vocabulary lessons should not repeat the active word in a bottom gloss panel"
+);
+const vocabGroupIds = JSON.parse(vm.runInContext("JSON.stringify(vocabGroups.map((group) => group.id))", context));
+for (const groupId of vocabGroupIds) {
+  const vocabLessonHtml = renderState(
+    `state.screen = 'vocab'; state.selectedVocabGroupId = ${JSON.stringify(groupId)}; state.currentVocabItemId = vocabGroups.find((group) => group.id === ${JSON.stringify(groupId)}).items[0].id`
+  );
+  assert.doesNotMatch(
+    vocabLessonHtml,
+    /class="item-progress"/,
+    `${groupId} vocabulary lesson should not show a redundant current-item status bar`
+  );
+  assert.doesNotMatch(
+    vocabLessonHtml,
+    /class="vocab-morpheme-breakdown"|data-morpheme=/,
+    `${groupId} vocabulary lesson should not show morpheme breakdowns`
+  );
+}
 const wordGlossStyle = styleSource.match(/^\.word-glosses\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
 assert.ok(wordGlossStyle.includes("direction: rtl;"), "word glosses should begin at the right edge");
 assert.ok(wordGlossStyle.includes("justify-content: center;"), "word glosses should be centered");

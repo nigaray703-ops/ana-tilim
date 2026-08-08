@@ -217,6 +217,7 @@ const context = {
 context.globalThis = context;
 vm.createContext(context);
 for (const scriptPath of [
+  "prototype/app-config.js",
   "prototype/uly-transliteration.js",
   "prototype/course-data/alphabet-data.js",
   "prototype/course-data/combo-data.js",
@@ -227,6 +228,10 @@ for (const scriptPath of [
   vm.runInContext(fs.readFileSync(scriptPath, "utf8"), context, { filename: scriptPath });
 }
 vm.runInContext(fs.readFileSync("prototype/course-data.js", "utf8"), context, { filename: "prototype/course-data.js" });
+vm.runInContext(fs.readFileSync("prototype/uyghur-keyboard.js", "utf8"), context, { filename: "prototype/uyghur-keyboard.js" });
+vm.runInContext(fs.readFileSync("prototype/sentence-morphemes.js", "utf8"), context, { filename: "prototype/sentence-morphemes.js" });
+vm.runInContext(fs.readFileSync("prototype/sentence-glossary.js", "utf8"), context, { filename: "prototype/sentence-glossary.js" });
+vm.runInContext(fs.readFileSync("prototype/progress-transfer.js", "utf8"), context, { filename: "prototype/progress-transfer.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
 
 const coverageCategories = JSON.parse(
@@ -236,7 +241,7 @@ const expectedAudioCoverage = {
   alphabet: { total: 32, recorded: 32, pending: 0 },
   "form-example": { total: 126, recorded: 126, pending: 0 },
   combo: { total: 34, recorded: 34, pending: 0 },
-  vocab: { total: 209, recorded: 209, pending: 0 },
+  vocab: { total: 207, recorded: 207, pending: 0 },
   reading: { total: 164, recorded: 164, pending: 0 }
 };
 const allCoverageTargets = coverageCategories.flatMap((category) => category.items);
@@ -246,9 +251,9 @@ assert.deepEqual(
   ["alphabet", "form-example", "combo", "vocab", "reading"],
   "audio coverage catalog should include every content type that needs its own recording"
 );
-assert.equal(allCoverageTargets.length, 565, "audio coverage catalog should list all 565 audio targets");
-assert.equal(new Set(allCoverageTargets.map((item) => item.id)).size, 565, "audio coverage target IDs should be unique");
-assert.equal(allCoverageTargets.filter((item) => item.existingAudio).length, 565, "audio coverage catalog should recognize all 565 connected recordings");
+assert.equal(allCoverageTargets.length, 563, "audio coverage catalog should list all 563 retained audio targets");
+assert.equal(new Set(allCoverageTargets.map((item) => item.id)).size, 563, "audio coverage target IDs should be unique");
+assert.equal(allCoverageTargets.filter((item) => item.existingAudio).length, 563, "audio coverage catalog should recognize all 563 connected recordings");
 assert.equal(allCoverageTargets.filter((item) => !item.existingAudio).length, 0, "audio coverage catalog should have no pending recordings");
 
 const formExampleTargets = coverageCategories.find((category) => category.id === "form-example").items;
