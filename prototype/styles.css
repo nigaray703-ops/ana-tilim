@@ -91,7 +91,59 @@ button {
 }
 
 .top-row {
+  min-width: 0;
   margin-bottom: 14px;
+}
+
+.language-switcher {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 3px;
+  width: max-content;
+  max-width: 100%;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  flex: 0 0 auto;
+}
+
+.language-switcher button {
+  min-width: 48px;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--ink-soft);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.language-switcher button[aria-pressed="true"] {
+  color: var(--ink);
+  background: var(--teal-soft);
+}
+
+.language-switcher button:focus-visible {
+  outline: 3px solid rgba(14, 155, 177, 0.45);
+  outline-offset: 2px;
+}
+
+.language-switcher.is-compact button {
+  min-width: 38px;
+  min-height: 34px;
+  padding: 6px 8px;
+}
+
+.language-switcher:not(.is-compact) button {
+  min-height: 44px;
+}
+
+.language-setting {
+  justify-items: start;
 }
 
 .brand-lockup {
@@ -474,6 +526,11 @@ button {
 
 .home-center > * {
   width: 100%;
+  min-width: 0;
+}
+
+.home-center > * > * {
+  min-width: 0;
 }
 
 .metric-grid {
@@ -2668,6 +2725,29 @@ button {
 }
 
 @media (max-width: 719px) {
+  .brand-lockup {
+    min-width: 0;
+  }
+
+  .brand-name,
+  .brand-subtitle,
+  .primary-button,
+  .secondary-button,
+  .danger-button,
+  .ghost-button {
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .section-title:not(.unit-goal-text) {
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
   .lesson-step {
     grid-template-columns: 34px minmax(0, 1fr);
     min-height: 0;

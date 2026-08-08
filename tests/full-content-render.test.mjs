@@ -24,6 +24,7 @@ const toast = makeElement("toast");
 const context = {
   console,
   document: {
+    documentElement: { lang: "" },
     querySelector(selector) {
       if (selector === "#app") return app;
       if (selector === "#toast") return toast;
@@ -32,6 +33,7 @@ const context = {
     addEventListener() {}
   },
   window: {
+    navigator: { languages: ["en-NZ"], language: "en-NZ" },
     setTimeout() {
       return 1;
     },
@@ -54,6 +56,14 @@ for (const scriptPath of [
   "prototype/course-data/practice-data.js",
   "prototype/course-data/reading-data.js",
   "prototype/course-data.js",
+  "prototype/i18n/ui-messages.js",
+  "prototype/i18n/alphabet-en.js",
+  "prototype/i18n/combo-en.js",
+  "prototype/i18n/vocab-en.js",
+  "prototype/i18n/practice-en.js",
+  "prototype/i18n/reading-en.js",
+  "prototype/i18n/course-en.js",
+  "prototype/i18n/runtime.js",
   "prototype/cloud-config.js",
   "prototype/cloud-sync.js",
   "prototype/app.js"
@@ -63,6 +73,7 @@ for (const scriptPath of [
 
 const courseData = context.window.ANA_TILIM_COURSE;
 let renderCount = 0;
+let auditLanguage = "zh";
 const forbiddenLearnerCopy = [
   "待审校",
   "待母语者审校",
@@ -88,13 +99,16 @@ function renderState(assignments, label, expectedText = "") {
   assert.ok(app.innerHTML.trim(), `${label} should render content`);
   assert.doesNotMatch(app.innerHTML, />\s*(?:undefined|null|NaN)\s*</, `${label} should not expose missing values`);
   assertLearnerCopyClean(label);
+  if (auditLanguage === "en") {
+    assert.doesNotMatch(
+      app.innerHTML.replaceAll(">中文<", "><"),
+      /[\u3400-\u9fff]/u,
+      `${label} should not expose Chinese learner copy in English mode`
+    );
+  }
   if (expectedText) {
     assert.ok(app.innerHTML.includes(expectedText), `${label} should include ${expectedText}`);
   }
-}
-
-for (const screen of ["welcome", "home", "learn", "writing", "library", "profile"]) {
-  renderState({ screen }, `${screen} screen`);
 }
 
 assert.equal(
@@ -112,67 +126,79 @@ assert.equal(
   "successful login should automatically open the home screen"
 );
 
-for (const unitId of [
-  "letters",
-  "combos",
-  "basic-phrases",
-  ...courseData.readingUnits.map((unit) => unit.id)
-]) {
-  renderState({ screen: "unit", selectedUnitId: unitId }, `${unitId} unit`);
-}
+function renderLanguage(language) {
+  auditLanguage = language;
+  vm.runInContext(`applyInterfaceLanguage(${JSON.stringify(language)});`, context);
 
-for (const group of courseData.alphabetGroups) {
-  for (const letter of group.letters) {
-    renderState(
-      { screen: "group", selectedGroupId: group.id, currentLetterId: letter.id },
-      `letter ${letter.id}`,
-      courseData.letterDetails[letter.id].letter
-    );
+  for (const screen of ["welcome", "home", "learn", "writing", "library", "profile"]) {
+    renderState({ screen }, `${language} ${screen} screen`);
   }
-}
 
-for (const group of courseData.comboGroups) {
-  for (const item of group.items) {
-    renderState(
-      { screen: "combo", selectedComboGroupId: group.id, currentComboItemId: item.id },
-      `combo ${item.id}`,
-      item.value
-    );
+  for (const unitId of [
+    "letters",
+    "combos",
+    "basic-phrases",
+    ...courseData.readingUnits.map((unit) => unit.id)
+  ]) {
+    renderState({ screen: "unit", selectedUnitId: unitId }, `${language} ${unitId} unit`);
   }
-}
 
-for (const group of courseData.vocabGroups) {
-  for (const item of group.items) {
-    renderState(
-      { screen: "vocab", selectedVocabGroupId: group.id, currentVocabItemId: item.id },
-      `vocabulary ${item.id}`,
-      item.value
-    );
+  for (const group of courseData.alphabetGroups) {
+    for (const letter of group.letters) {
+      renderState(
+        { screen: "group", selectedGroupId: group.id, currentLetterId: letter.id },
+        `${language} letter ${letter.id}`,
+        courseData.letterDetails[letter.id].letter
+      );
+    }
   }
-}
 
-for (const unit of courseData.readingUnits) {
-  for (const group of unit.groups) {
-    renderState(
-      { screen: "reading", selectedReadingUnitId: unit.id, selectedReadingGroupId: group.id },
-      `reading group ${group.id}`
-    );
+  for (const group of courseData.comboGroups) {
     for (const item of group.items) {
-      assert.ok(app.innerHTML.includes(item.value), `reading group ${group.id} should render ${item.id}`);
+      renderState(
+        { screen: "combo", selectedComboGroupId: group.id, currentComboItemId: item.id },
+        `${language} combo ${item.id}`,
+        item.value
+      );
+    }
+  }
+
+  for (const group of courseData.vocabGroups) {
+    for (const item of group.items) {
+      renderState(
+        { screen: "vocab", selectedVocabGroupId: group.id, currentVocabItemId: item.id },
+        `${language} vocabulary ${item.id}`,
+        item.value
+      );
+    }
+  }
+
+  for (const unit of courseData.readingUnits) {
+    for (const group of unit.groups) {
+      renderState(
+        { screen: "reading", selectedReadingUnitId: unit.id, selectedReadingGroupId: group.id },
+        `${language} reading group ${group.id}`
+      );
+      for (const item of group.items) {
+        assert.ok(app.innerHTML.includes(item.value), `${language} reading group ${group.id} should render ${item.id}`);
+      }
+    }
+  }
+
+  for (const group of courseData.practiceGroups.filter((item) => item.mode !== "review")) {
+    for (const item of group.items) {
+      renderState(
+        { screen: "practiceSession", selectedPracticeGroupId: group.id, currentPracticeItemId: item.id },
+        `${language} practice ${item.id}`,
+        group.mode === "listen" ? "" : item.value
+      );
     }
   }
 }
 
-for (const group of courseData.practiceGroups.filter((item) => item.mode !== "review")) {
-  for (const item of group.items) {
-    renderState(
-      { screen: "practiceSession", selectedPracticeGroupId: group.id, currentPracticeItemId: item.id },
-      `practice ${item.id}`,
-      group.mode === "listen" ? "" : item.value
-    );
-  }
-}
+renderLanguage("zh");
+renderLanguage("en");
 
-assert.equal(renderCount, 464, "full UI audit should render every main screen, unit, lesson item, reading group, and practice item");
+assert.equal(renderCount, 928, "full UI audit should render every main screen, unit, lesson item, reading group, and practice item in both languages");
 
 console.log(`full content render checks passed (${renderCount} states)`);

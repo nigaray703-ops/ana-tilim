@@ -69,6 +69,16 @@ const supportedFormExampleLabels = new Set([
   "前连式",
   "隔音前连式"
 ]);
+const formIdByLabel = {
+  "独立式": "isolated",
+  "简单独立式": "simple-isolated",
+  "后连式": "right-joined",
+  "简单后连式": "simple-right-joined",
+  "双连式": "dual-joined",
+  "隔音双连式": "hamza-dual-joined",
+  "前连式": "left-joined",
+  "隔音前连式": "hamza-left-joined"
+};
 const sourceBackedFormExampleWords = {
   aa: ["ئانا", "قارا", "ئالما", "خەلقئارا"],
   ae: ["ئەدەبىيات", "رەسىم", "مەن", "مەشئەل"],
@@ -333,10 +343,13 @@ for (const [key, letter] of Object.entries(letterDetails)) {
     assertText(letter[field], `letter detail ${key}.${field}`);
   }
   assert.ok([2, 4, 8].includes(letter.forms.length), `letter detail ${key} should include the complete 2, 4, or 8 writing forms`);
+  assertUnique(letter.forms.map((form) => form.id), `letter detail ${key} form ids`);
   for (const form of letter.forms) {
+    assertText(form.id, `letter detail ${key} form id`);
     assertText(form.label, `letter detail ${key} form label`);
     assertText(form.value, `letter detail ${key} form value`);
     assert.ok(supportedFormExampleLabels.has(form.label), `letter detail ${key} form label ${form.label} should follow the source table labels`);
+    assert.equal(form.id, formIdByLabel[form.label], `letter detail ${key} form ${form.label} should use its semantic id`);
   }
   if (letter.type === "辅音") {
     assert.ok(
@@ -351,8 +364,15 @@ for (const [key, letter] of Object.entries(letterDetails)) {
     letter.forms.map((form) => form.label).join("|"),
     `letter detail ${key} form examples should follow the form table order`
   );
+  assertUnique(letter.formExamples.map((example) => example.id), `letter detail ${key} form example ids`);
   const formByLabel = Object.fromEntries(letter.forms.map((form) => [form.label, form.value]));
   for (const example of letter.formExamples) {
+    assertText(example.id, `letter detail ${key} form example id`);
+    assert.equal(
+      example.id,
+      `${key}:${formIdByLabel[example.label]}`,
+      `letter detail ${key} ${example.label} example should use its letter and form ids`
+    );
     assert.equal(example.form, formByLabel[example.label], `letter detail ${key} ${example.label} example should match the form table`);
     if (example.note) {
       assertText(example.note, `letter detail ${key} form example note`);
