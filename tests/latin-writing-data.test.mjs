@@ -142,6 +142,7 @@ for (const scriptPath of [
   "prototype/course-data.js",
   "prototype/unit-order.js",
   "prototype/uyghur-keyboard.js",
+  "prototype/latin-keyboard.js",
   "prototype/sentence-morphemes.js",
   "prototype/sentence-glossary.js",
   "prototype/progress-transfer.js",

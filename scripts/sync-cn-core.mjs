@@ -13,7 +13,8 @@ const cnSiteRoot = process.env.ANA_TILIM_CN_SITE
 const indexPath = path.join(cnSiteRoot, "index.html");
 const indexSource = fs.readFileSync(indexPath, "utf8");
 const unitOrderScriptPattern = /<script\b[^>]*\bsrc=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g;
-const latinWritingScriptPattern = /<script\b[^>]*\bsrc=["']\.\/course-data\/latin-writing-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/g;
+const latinKeyboardScriptPattern = /<script\b[^>]*\bsrc=["']\.\/latin-keyboard\.js(?:\?[^"']*)?["'][^>]*><\/script>/g;
+const latinWritingScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/course-data\/latin-writing-data\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
 const appScriptPattern = /^([ \t]*)(<script\b[^>]*\bsrc=["']\.\/app\.js(?:\?[^"']*)?["'][^>]*><\/script>)/m;
 const appScriptMatch = appScriptPattern.exec(indexSource);
 
@@ -61,6 +62,30 @@ if (unitOrderScripts.length === 0) {
   indexUpdateMessages.push("Updated index.html: normalized unit-order.js before app.js");
 } else {
   indexUpdateMessages.push("Index already loads unit-order.js");
+}
+
+const standardLatinKeyboardScript = '<script src="./latin-keyboard.js?v=20260809-latin-qwerty"></script>';
+const latinKeyboardScripts = normalizedIndex.match(latinKeyboardScriptPattern) || [];
+const appMatchBeforeLatinKeyboard = appScriptPattern.exec(normalizedIndex);
+
+if (latinKeyboardScripts.length === 0) {
+  const insertion = `${appMatchBeforeLatinKeyboard[1]}${standardLatinKeyboardScript}\n`;
+  normalizedIndex = `${normalizedIndex.slice(0, appMatchBeforeLatinKeyboard.index)}${insertion}${normalizedIndex.slice(appMatchBeforeLatinKeyboard.index)}`;
+  indexUpdateMessages.push("Updated index.html: added latin-keyboard.js before app.js");
+} else if (latinKeyboardScripts.length === 1 && normalizedIndex.indexOf(latinKeyboardScripts[0]) > appMatchBeforeLatinKeyboard.index) {
+  const indexWithoutMisplacedScript = normalizedIndex.replace(latinKeyboardScripts[0], "");
+  const appMatchAfterRemoval = appScriptPattern.exec(indexWithoutMisplacedScript);
+  const insertion = `${appMatchAfterRemoval[1]}${standardLatinKeyboardScript}\n`;
+  normalizedIndex = `${indexWithoutMisplacedScript.slice(0, appMatchAfterRemoval.index)}${insertion}${indexWithoutMisplacedScript.slice(appMatchAfterRemoval.index)}`;
+  indexUpdateMessages.push("Updated index.html: moved latin-keyboard.js before app.js");
+} else if (latinKeyboardScripts.length > 1) {
+  const indexWithoutDuplicateScripts = normalizedIndex.replace(latinKeyboardScriptPattern, "");
+  const appMatchAfterRemoval = appScriptPattern.exec(indexWithoutDuplicateScripts);
+  const normalizedInsertion = `${appMatchAfterRemoval[1]}${standardLatinKeyboardScript}\n`;
+  normalizedIndex = `${indexWithoutDuplicateScripts.slice(0, appMatchAfterRemoval.index)}${normalizedInsertion}${indexWithoutDuplicateScripts.slice(appMatchAfterRemoval.index)}`;
+  indexUpdateMessages.push("Updated index.html: normalized latin-keyboard.js before app.js");
+} else {
+  indexUpdateMessages.push("Index already loads latin-keyboard.js");
 }
 
 function preflightTargetPath(targetPath) {

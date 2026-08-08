@@ -24,6 +24,7 @@ function snapshot(overrides = {}) {
     preferencesUpdatedAt: "2026-07-28T00:00:00.000Z",
     favoriteUpdatedAt: "2026-07-28T00:00:00.000Z",
     learningProgress: {
+      latinWriting: {},
       letters: {},
       combos: {},
       vocab: {},
@@ -42,6 +43,7 @@ function snapshot(overrides = {}) {
   const merged = mergeSnapshots(
     snapshot({
       learningProgress: {
+        latinWriting: { qwerty: { completed: true } },
         letters: { first: { completed: true } },
         combos: {},
         vocab: {},
@@ -52,6 +54,7 @@ function snapshot(overrides = {}) {
     snapshot({
       modifiedAt: "2026-07-28T01:00:00.000Z",
       learningProgress: {
+        latinWriting: {},
         letters: {},
         combos: { open: { completed: true } },
         vocab: {},
@@ -62,6 +65,11 @@ function snapshot(overrides = {}) {
   );
   assert.equal(merged.learningProgress.letters.first.completed, true);
   assert.equal(merged.learningProgress.combos.open.completed, true);
+  assert.equal(
+    merged.learningProgress.latinWriting.qwerty.completed,
+    true,
+    "Latin QWERTY completion should survive cloud normalization and merge"
+  );
 }
 
 {
@@ -695,6 +703,54 @@ function createSupabaseFake({ remoteRow = null, selectError = null } = {}) {
   await controller.start();
   assert.deepEqual(order, ["apply", "save"], "merged learning should be saved locally first");
   assert.equal(calls.upserts.length, 1, "the merged snapshot should then be written to cloud");
+}
+
+{
+  const remote = snapshot({
+    learningProgress: {
+      latinWriting: {},
+      letters: {},
+      combos: {},
+      vocab: {},
+      practice: {},
+      reading: {},
+      futureScope: { unsafe: { completed: true } }
+    }
+  });
+  const { client, calls } = createSupabaseFake({
+    remoteRow: {
+      schema_version: 1,
+      payload: remote,
+      client_updated_at: remote.modifiedAt,
+      updated_at: remote.modifiedAt
+    }
+  });
+  const phases = [];
+  let applied = false;
+  let saved = false;
+  let validated = 0;
+  const controller = createCloudSync({
+    supabaseClient: client,
+    getLocalSnapshot: () => snapshot(),
+    validateSnapshot(value) {
+      validated += 1;
+      assert.ok(value.learningProgress.futureScope, "the validator should receive raw remote data before normalization");
+      throw new Error("unknown cloud progress scope");
+    },
+    applyMergedSnapshot() {
+      applied = true;
+    },
+    saveMergedSnapshot() {
+      saved = true;
+    },
+    onStatus: (status) => phases.push(status.phase)
+  });
+  await controller.start();
+  assert.equal(validated, 1, "remote cloud data should be validated once before merge");
+  assert.equal(applied, false, "invalid remote cloud data should not be applied locally");
+  assert.equal(saved, false, "invalid remote cloud data should not be saved locally");
+  assert.equal(calls.upserts.length, 0, "invalid remote cloud data should not overwrite the remote row");
+  assert.equal(phases.at(-1), "sync-error");
 }
 
 {

@@ -12,7 +12,10 @@ vm.runInContext(fs.readFileSync(modulePath, "utf8"), context, { filename: module
 const api = context.window.ANA_TILIM_PROGRESS_TRANSFER;
 const sample = {
   screen: "home",
-  learningProgress: { letters: { "dot-bone": { completed: true } } },
+  learningProgress: {
+    latinWriting: { qwerty: { completed: true } },
+    letters: { "dot-bone": { completed: true } }
+  },
   preferences: { showLatin: true }
 };
 assert.throws(
@@ -92,6 +95,7 @@ const currentProgressData = {
   selectedUnitId: "letters",
   favorite: true,
   learningProgress: {
+    latinWriting: { qwerty: { completed: true } },
     letters: { "dot-bone": { viewed: true, completed: true } },
     combos: {},
     vocab: {},
@@ -159,6 +163,11 @@ function envelopeWithData(data) {
 }
 
 const malformedNestedCases = [
+  [
+    "unknown progress scopes remain rejected",
+    { learningProgress: { futureScope: {} } },
+    /learningProgress 包含未知字段 futureScope/
+  ],
   [
     "a learning progress bucket must be a plain object",
     { learningProgress: { letters: "bad" } },
