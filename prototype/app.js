@@ -5,6 +5,15 @@ if (!courseData) {
 }
 
 const { alphabetLetters, letterDetails, alphabetGroups, alphabetAudioItems, comboGroups, vocabGroups, practiceGroups, readingUnits } = courseData;
+const i18n = window.ANA_TILIM_I18N;
+const courseLocalizer = i18n.createCourseLocalizer(courseData, window.ANA_TILIM_COURSE_EN);
+const serializedProgress = window.localStorage?.getItem("ana-tilim-progress") || "";
+const savedLanguage = i18n.readSavedLanguage(serializedProgress);
+const systemLanguages = window.navigator?.languages || [window.navigator?.language].filter(Boolean);
+const initialInterfaceLanguage = i18n.resolveLanguage(savedLanguage, systemLanguages);
+i18n.setLanguage(initialInterfaceLanguage);
+courseLocalizer.apply(initialInterfaceLanguage);
+document.documentElement.lang = initialInterfaceLanguage;
 
 function voiceFileBase(file) {
   return file.replace(/^human_/, "voice_").replace(/\.[^.]+$/, "");
@@ -96,7 +105,7 @@ function buildFormExampleItems() {
   return [...byValue.values()];
 }
 
-const formExampleItems = buildFormExampleItems();
+let formExampleItems = buildFormExampleItems();
 const comboAudioItems = comboGroups
   .flatMap((group) => group.items)
   .filter((item) => connectedComboAudioIds.has(item.id))
@@ -323,14 +332,7 @@ const keyboardRows = [
 
 const progressStorageKey = "ana-tilim-progress";
 const guestBackupStorageKey = "ana-tilim-guest-progress-backup";
-const i18n = window.ANA_TILIM_I18N;
 const t = i18n.t;
-const serializedProgress = window.localStorage?.getItem("ana-tilim-progress") || "";
-const savedLanguage = i18n.readSavedLanguage(serializedProgress);
-const systemLanguages = window.navigator?.languages || [window.navigator?.language].filter(Boolean);
-const initialInterfaceLanguage = i18n.resolveLanguage(savedLanguage, systemLanguages);
-i18n.setLanguage(initialInterfaceLanguage);
-document.documentElement.lang = initialInterfaceLanguage;
 const DEFAULT_PREFERENCES = Object.freeze({
   audioAutoplay: false,
   dailyGoal: 10,
@@ -744,6 +746,8 @@ function applyInterfaceLanguage(language, { explicit = false } = {}) {
   const effectiveLanguage = i18n.resolveLanguage(language, systemLanguages);
   state.interfaceLanguage = effectiveLanguage;
   i18n.setLanguage(effectiveLanguage);
+  courseLocalizer.apply(effectiveLanguage);
+  formExampleItems = buildFormExampleItems();
   document.documentElement.lang = effectiveLanguage;
 
   if (explicit) {
@@ -1387,10 +1391,18 @@ function recordItemMistake(kind, target, picked, source) {
 
 function letterMistakeFeedback(target, picked) {
   if (!picked) {
-    return `目标是 ${displayStandaloneLetterGlyph(target.letter)}，线索是 ${target.cue}。`;
+    return t("alphabet.mistakeMissing", {
+      target: displayStandaloneLetterGlyph(target.letter),
+      targetCue: target.cue
+    });
   }
 
-  return `目标是 ${displayStandaloneLetterGlyph(target.letter)}：${target.cue}；你选了 ${displayStandaloneLetterGlyph(picked.letter)}：${picked.cue}。先看点在上方还是下方，再看点数。`;
+  return t("alphabet.mistakePicked", {
+    target: displayStandaloneLetterGlyph(target.letter),
+    targetCue: target.cue,
+    picked: displayStandaloneLetterGlyph(picked.letter),
+    pickedCue: picked.cue
+  });
 }
 
 function oddLetterForCurrent() {
@@ -1440,18 +1452,22 @@ function keyboardGuideState(parts, targetValue, currentValue = state.keyboardVal
 function renderKeyboardGuide(parts, targetValue) {
   const guide = keyboardGuideState(parts, targetValue);
   const stepText = guide.isComplete
-    ? "已完成"
+    ? t("keyboard.complete")
     : guide.isOffTrack
-      ? "先删除错误部分"
-      : `第 ${guide.completeCount + 1} 步：点击 ${guide.nextPart}`;
-  const inputText = guide.currentValue ? `已输入 ${guide.currentValue}` : "已输入 未输入";
-  const countText = guide.isComplete ? "已完成" : `还差 ${guide.remainingCount} 键`;
+      ? t("keyboard.removeWrong")
+      : t("keyboard.nextStep", { step: guide.completeCount + 1, key: guide.nextPart });
+  const inputText = guide.currentValue
+    ? t("keyboard.entered", { value: guide.currentValue })
+    : t("keyboard.notEntered");
+  const countText = guide.isComplete
+    ? t("keyboard.complete")
+    : t("keyboard.keysRemaining", { count: guide.remainingCount });
 
   return `
     <article class="card keyboard-guide-card">
       <div class="section-row">
         <div>
-          <p class="caption">键盘步骤</p>
+          <p class="caption">${t("keyboard.steps")}</p>
           <h2 class="section-title">
             <span class="uyghur">${parts.join(" → ")}</span>
           </h2>
@@ -1516,22 +1532,24 @@ function practiceKeyboardChoices(item) {
 }
 
 const writingCheckOptions = [
-  { id: "shape", label: "主体稳定" },
-  { id: "dots", label: "点位正确" },
-  { id: "spacing", label: "连接清楚" }
+  { id: "shape", labelKey: "writing.shapeStable" },
+  { id: "dots", labelKey: "writing.dotsCorrect" },
+  { id: "spacing", labelKey: "writing.connectionsClear" }
 ];
 
 function renderWritingCoach({ value, parts, hint, mode = "letter" }) {
   const partText = parts && parts.length > 1 ? parts.join(" → ") : value;
-  const startText = mode === "letter" ? "先看主体轮廓，再决定点的位置。" : `拆分描摹：${partText}`;
+  const startText = mode === "letter"
+    ? t("writing.letterStart")
+    : t("writing.splitStart", { parts: partText });
 
   return `
     <article class="card writing-coach-card">
-      <p class="caption">书写步骤</p>
+      <p class="caption">${t("writing.steps")}</p>
       <div class="lesson-point-list">
-        <div class="lesson-point"><strong>起笔</strong><span>${startText}</span></div>
-        <div class="lesson-point"><strong>方向</strong><span>从右往左写，先主体后点位，最后检查连接。</span></div>
-        <div class="lesson-point"><strong>自查</strong><span>${hint}</span></div>
+        <div class="lesson-point"><strong>${t("writing.start")}</strong><span>${startText}</span></div>
+        <div class="lesson-point"><strong>${t("writing.direction")}</strong><span>${t("writing.directionDetail")}</span></div>
+        <div class="lesson-point"><strong>${t("writing.selfCheck")}</strong><span>${hint}</span></div>
       </div>
     </article>
   `;
@@ -1541,18 +1559,18 @@ function renderWritingComparison({ value, parts, forms = [] }) {
   const comparisonItems = forms.length
     ? forms.map((form) => ({ label: form.label, value: form.value }))
     : [
-        { label: "整体", value },
-        ...(parts || []).map((part, index) => ({ label: `部分 ${index + 1}`, value: part }))
+        { label: t("writing.whole"), value },
+        ...(parts || []).map((part, index) => ({ label: t("writing.part", { count: index + 1 }), value: part }))
       ];
 
   return `
     <article class="card writing-comparison-card">
       <div class="section-row">
         <div>
-          <p class="caption">对比正确写法</p>
+          <p class="caption">${t("writing.compare")}</p>
           <h2 class="section-title"><span class="uyghur">${displayStandaloneLetterGlyph(value)}</span></h2>
         </div>
-        <span class="step-state">${comparisonItems.length} 项</span>
+        <span class="step-state">${t("writing.itemCount", { count: comparisonItems.length })}</span>
       </div>
       <div class="writing-example-grid">
         ${comparisonItems
@@ -1570,7 +1588,7 @@ function renderWritingComparison({ value, parts, forms = [] }) {
   `;
 }
 
-function renderWritingCanvas(value, label = "手写板") {
+function renderWritingCanvas(value, label = t("alphabet.canvas")) {
   return `
     <div class="writing-pad ${state.showGuide ? "" : "hide-guide"}" aria-label="${label}">
       <span class="uyghur guide">${displayStandaloneLetterGlyph(value)}</span>
@@ -1586,10 +1604,10 @@ function renderWritingSelfCheck() {
     <article class="card writing-self-check-card">
       <div class="section-row">
         <div>
-          <p class="caption">完成后评价</p>
-          <h2 class="section-title">自查完成 ${checkedCount} / ${writingCheckOptions.length}</h2>
+          <p class="caption">${t("writing.reviewCaption")}</p>
+          <h2 class="section-title">${t("writing.reviewProgress", { completed: checkedCount, total: writingCheckOptions.length })}</h2>
         </div>
-        <span class="step-state">${checkedCount === writingCheckOptions.length ? "完成" : "自查"}</span>
+        <span class="step-state">${checkedCount === writingCheckOptions.length ? t("writing.complete") : t("writing.selfCheck")}</span>
       </div>
       <div class="writing-check-grid">
         ${writingCheckOptions
@@ -1601,7 +1619,7 @@ function renderWritingSelfCheck() {
                 data-id="${item.id}"
                 type="button"
               >
-                ${item.label}
+                ${t(item.labelKey)}
               </button>
             `
           )
@@ -2569,7 +2587,7 @@ function renderFormExampleWord(example) {
     return `<strong class="uyghur form-example-word-text" aria-label="${example.word}"${targetDataAttributes}>${example.word}</strong>`;
   }
 
-  return `<button class="uyghur form-example-word-text form-example-audio-word" data-action="play-audio" data-audio-src="${audio.outputPath}" data-audio-label="${example.word}"${targetDataAttributes} type="button" aria-label="播放 ${example.word}">${example.word}</button>`;
+  return `<button class="uyghur form-example-word-text form-example-audio-word" data-action="play-audio" data-audio-src="${audio.outputPath}" data-audio-label="${example.word}"${targetDataAttributes} type="button" aria-label="${t("audio.play")} ${example.word}">${example.word}</button>`;
 }
 
 function renderLetterFormExamples(letter) {
@@ -2581,8 +2599,8 @@ function renderLetterFormExamples(letter) {
         <article class="card letter-form-example-card">
           <div class="section-row">
             <div>
-              <p class="caption">写法例词</p>
-              <h2 class="section-title">${letter.formExamples.length} 种位置写法</h2>
+              <p class="caption">${t("alphabet.formExamples")}</p>
+              <h2 class="section-title">${t("alphabet.formCount", { count: letter.formExamples.length })}</h2>
             </div>
           </div>
       <div class="letter-form-example-grid">
@@ -2604,10 +2622,10 @@ function renderLetterFormExamples(letter) {
                       `
                       : example.noteType === "rule"
                         ? `
-                          <strong class="form-example-rule">${example.noteTitle || "书写规则"}</strong>
+                          <strong class="form-example-rule">${example.noteTitle || t("alphabet.writingRule")}</strong>
                           <small class="form-example-note">${example.note || ""}</small>
                         `
-                        : '<small class="form-example-empty">无例词</small>'
+                        : `<small class="form-example-empty">${t("alphabet.noExample")}</small>`
                   }
                 </div>
               </div>
@@ -2629,8 +2647,8 @@ function renderGroupLesson() {
     `
       ${topBar(
         group.title,
-        "第一单元：认识字母",
-        `<button class="icon-button" data-action="toggle-favorite" type="button" aria-label="收藏">${state.favorite ? "★" : "☆"}</button>`,
+        t("alphabet.unitTitle"),
+        `<button class="icon-button" data-action="toggle-favorite" type="button" aria-label="${t("alphabet.favorite")}">${state.favorite ? "★" : "☆"}</button>`,
         `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
@@ -2652,7 +2670,7 @@ function renderGroupLesson() {
             .join("")}
         </div>
 
-        ${renderItemProgress(position.label, "当前字母在本组的位置")}
+        ${renderItemProgress(position.label, t("alphabet.currentPosition"))}
         ${renderAdjacentNav({
           previous: position.previous,
           next: position.next,
@@ -2681,40 +2699,40 @@ function renderGroupLesson() {
         </div>
         ${renderLetterFormExamples(letter)}
         <article class="card">
-          <p class="caption">学习小点</p>
+          <p class="caption">${t("alphabet.learningPoints")}</p>
           <div class="lesson-point-list">
             <div class="lesson-point">
-              <strong>认形</strong>
+              <strong>${t("alphabet.shape")}</strong>
               <span>${letter.cue}</span>
             </div>
             <div class="lesson-point">
-              <strong>连接</strong>
+              <strong>${t("alphabet.connections")}</strong>
               <span>${letter.connection}</span>
             </div>
             <div class="lesson-point">
-              <strong>书写</strong>
+              <strong>${t("alphabet.writing")}</strong>
               <span>${letter.writingHint}</span>
             </div>
           </div>
         </article>
         <div class="action-grid">
           <button class="secondary-button" data-action="go" data-target="letterWriting" type="button">
-            描摹
+            ${t("alphabet.trace")}
           </button>
           <button class="secondary-button" data-action="go" data-target="picture" type="button">
-            辨认
+            ${t("alphabet.recognize")}
           </button>
           <button class="secondary-button" data-action="go" data-target="letterOdd" type="button">
-            找不同
+            ${t("alphabet.findDifferent")}
           </button>
           <button class="secondary-button" data-action="go" data-target="letterSound" type="button">
-            读音选择
+            ${t("alphabet.soundChoice")}
           </button>
           <button class="secondary-button" data-action="go" data-target="listening" type="button">
-            听音
+            ${t("alphabet.listen")}
           </button>
           <button class="primary-button" data-action="go" data-target="keyboard" type="button">
-            键盘
+            ${t("alphabet.keyboard")}
           </button>
         </div>
       </section>
@@ -2729,8 +2747,8 @@ function renderLetterWriting() {
   return screen(
     `
       ${topBar(
-        "书写练习",
-        "先描摹，再自己写",
+        t("alphabet.writingTitle"),
+        t("alphabet.writingSubtitle"),
         "",
         `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
       )}
@@ -2738,11 +2756,11 @@ function renderLetterWriting() {
         <article class="card">
           <div class="section-row">
             <div>
-              <p class="caption">目标字母</p>
-              <h2 class="section-title">描摹 <span class="uyghur">${displayStandaloneLetterGlyph(letter.letter)}</span></h2>
+              <p class="caption">${t("alphabet.targetLetter")}</p>
+              <h2 class="section-title">${t("alphabet.traceLetter")} <span class="uyghur">${displayStandaloneLetterGlyph(letter.letter)}</span></h2>
             </div>
             <button class="ghost-button" data-action="toggle-guide" type="button">
-              ${state.showGuide ? "隐藏参考" : "显示参考"}
+              ${state.showGuide ? t("alphabet.hideGuide") : t("alphabet.showGuide")}
             </button>
           </div>
         </article>
@@ -2752,16 +2770,16 @@ function renderLetterWriting() {
           hint: letter.writingHint,
           mode: "letter"
         })}
-        ${renderWritingCanvas(letter.letter, "字母手写板")}
+        ${renderWritingCanvas(letter.letter, t("alphabet.canvas"))}
         ${renderWritingComparison({
           value: letter.letter,
           parts: [letter.letter],
           forms: letter.forms
         })}
         <div class="tool-row">
-          <button class="secondary-button" data-action="clear-canvas" type="button">清空画布</button>
+          <button class="secondary-button" data-action="clear-canvas" type="button">${t("alphabet.clearCanvas")}</button>
           <button class="secondary-button" data-action="toggle-guide" type="button">
-            ${state.showGuide ? "隐藏参考" : "显示参考"}
+            ${state.showGuide ? t("alphabet.hideGuide") : t("alphabet.showGuide")}
           </button>
         </div>
         ${renderWritingSelfCheck()}
@@ -2769,7 +2787,7 @@ function renderLetterWriting() {
           ${letter.writingHint}
         </div>
         <button class="primary-button" data-action="go" data-target="picture" type="button">
-          完成描摹
+          ${t("alphabet.finishTracing")}
         </button>
       </section>
     `,
@@ -2787,16 +2805,16 @@ function renderPicturePractice() {
   return screen(
     `
       ${topBar(
-        "点位辨认",
+        t("alphabet.recognitionTitle"),
         currentGroup().title,
         "",
         `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
-          <p class="caption">选择正确字母</p>
+          <p class="caption">${t("alphabet.chooseLetter")}</p>
           <h2 class="section-title">
-            哪一个符合：${letter.cue}？
+            ${t("alphabet.cueQuestion", { cue: letter.cue })}
           </h2>
         </article>
         <div class="choice-grid">
@@ -2815,9 +2833,9 @@ function renderPicturePractice() {
                   <span class="choice-art uyghur">${displayStandaloneLetterGlyph(choice.letter)}</span>
                   <span>
                     <strong>${choice.cue}</strong>
-                    <span class="caption">${choice.type}，${choice.latin}</span>
+                    <span class="caption">${t("alphabet.letterType", { type: choice.type, latin: choice.latin })}</span>
                   </span>
-                  <span class="step-state">${selected ? (correctChoice ? "正确" : "再想想") : "选择"}</span>
+                  <span class="step-state">${selected ? (correctChoice ? t("alphabet.correct") : t("alphabet.tryAgain")) : t("alphabet.choose")}</span>
                 </button>
               `;
             })
@@ -2827,13 +2845,13 @@ function renderPicturePractice() {
           hasPicked
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? `答对了。${displayStandaloneLetterGlyph(letter.letter)} 的关键是 ${letter.cue}。`
+                  ? t("alphabet.cueCorrect", { letter: displayStandaloneLetterGlyph(letter.letter), cue: letter.cue })
                   : letterMistakeFeedback(letter, picked)
               }</div>`
             : ""
         }
         <button class="primary-button" data-action="go" data-target="listening" type="button">
-          继续听力
+          ${t("alphabet.continueListening")}
         </button>
       </section>
     `,
@@ -2852,7 +2870,7 @@ function renderListeningPractice() {
   return screen(
     `
       ${topBar(
-        "听音选择",
+        t("alphabet.listeningTitle"),
         currentGroup().title,
         "",
         `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
@@ -2860,9 +2878,9 @@ function renderListeningPractice() {
       <section class="stack">
         ${renderAudioFocus({
           audio,
-          label: "听音练习",
-          title: "听音练习",
-          hint: "先听声音，再从下面选择。",
+          label: t("alphabet.listeningExercise"),
+          title: t("alphabet.listeningExercise"),
+          hint: t("alphabet.listeningHint"),
           hideFile: true
         })}
         <div class="choice-grid">
@@ -2881,9 +2899,9 @@ function renderListeningPractice() {
                   <span class="choice-art uyghur">${displayStandaloneLetterGlyph(choice.letter)}</span>
                   <span>
                     <strong class="uyghur">${displayStandaloneLetterGlyph(choice.letter)}</strong>
-                    <span class="caption">字母，${choice.latin}</span>
+                    <span class="caption">${t("alphabet.letterLabel", { latin: choice.latin })}</span>
                   </span>
-                  <span class="step-state">${selected ? (correctChoice ? "正确" : "再听") : "选择"}</span>
+                  <span class="step-state">${selected ? (correctChoice ? t("alphabet.correct") : t("alphabet.listenAgain")) : t("alphabet.choose")}</span>
                 </button>
               `;
             })
@@ -2893,13 +2911,13 @@ function renderListeningPractice() {
           hasPicked
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? "听对了。下一步用键盘输入这个字母。"
+                  ? t("alphabet.listeningCorrect")
                   : letterMistakeFeedback(letter, picked)
               }</div>`
             : ""
         }
         <button class="primary-button" data-action="go" data-target="keyboard" type="button">
-          继续键盘
+          ${t("alphabet.continueKeyboard")}
         </button>
       </section>
     `,
@@ -2918,18 +2936,18 @@ function renderLetterOddPractice() {
   return screen(
     `
       ${topBar(
-        "找不同",
+        t("alphabet.findDifferent"),
         currentGroup().title,
         "",
         `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
-          <p class="caption">相似字母对比</p>
+          <p class="caption">${t("alphabet.oddCompare")}</p>
           <h2 class="section-title">
-            目标 ${displayStandaloneLetterGlyph(letter.letter)}，找出：${target.cue}
+            ${t("alphabet.oddPrompt", { letter: displayStandaloneLetterGlyph(letter.letter), cue: target.cue })}
           </h2>
-          <p class="muted">先看点在上面还是下面，再看点数。这个题型专门练容易混的字母。</p>
+          <p class="muted">${t("alphabet.oddHint")}</p>
         </article>
         <div class="choice-grid">
           ${choices
@@ -2945,7 +2963,7 @@ function renderLetterOddPractice() {
                   type="button"
                 >
                   <span class="choice-art uyghur">${displayStandaloneLetterGlyph(choice.letter)}</span>
-                  <span class="step-state">${selected ? (correctChoice ? "正确" : "再看") : "选择"}</span>
+                  <span class="step-state">${selected ? (correctChoice ? t("alphabet.correct") : t("alphabet.lookAgain")) : t("alphabet.choose")}</span>
                 </button>
               `;
             })
@@ -2955,13 +2973,13 @@ function renderLetterOddPractice() {
           hasPicked
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? `找对了：${displayStandaloneLetterGlyph(target.letter)} 是 ${target.cue}。`
+                  ? t("alphabet.oddCorrect", { letter: displayStandaloneLetterGlyph(target.letter), cue: target.cue })
                   : letterMistakeFeedback(target, picked)
               }</div>`
             : ""
         }
         <button class="primary-button" data-action="go" data-target="letterSound" type="button">
-          继续读音选择
+          ${t("alphabet.continueSoundChoice")}
         </button>
       </section>
     `,
@@ -2980,7 +2998,7 @@ function renderLetterSoundChoice() {
   return screen(
     `
       ${topBar(
-        "读音选择",
+        t("alphabet.soundTitle"),
         currentGroup().title,
         "",
         `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
@@ -2989,12 +3007,12 @@ function renderLetterSoundChoice() {
         ${renderAudioFocus({
           audio,
           label: letter.letter,
-          title: `播放或查看读音：${letter.latin}`,
-          hint: "音频未生成时，先用转写提示做读音选择练习。"
+          title: t("alphabet.playSound", { latin: letter.latin }),
+          hint: t("alphabet.soundHint")
         })}
         <article class="card">
-          <p class="caption">选择正确字母</p>
-          <h2 class="section-title">哪一个读作 ${letter.latin}？</h2>
+          <p class="caption">${t("alphabet.chooseLetter")}</p>
+          <h2 class="section-title">${t("alphabet.soundQuestion", { latin: letter.latin })}</h2>
         </article>
         <div class="choice-grid">
           ${choices
@@ -3020,13 +3038,13 @@ function renderLetterSoundChoice() {
           hasPicked
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? `选对了：${displayStandaloneLetterGlyph(letter.letter)} 对应 ${letter.latin}。`
+                  ? t("alphabet.soundCorrect", { letter: displayStandaloneLetterGlyph(letter.letter), latin: letter.latin })
                   : letterMistakeFeedback(letter, picked)
               }</div>`
             : ""
         }
         <button class="primary-button" data-action="go" data-target="keyboard" type="button">
-          继续键盘
+          ${t("alphabet.continueKeyboard")}
         </button>
       </section>
     `,
@@ -3043,14 +3061,14 @@ function renderKeyboardPractice() {
   return screen(
     `
       ${topBar(
-        "键盘输入",
+        t("alphabet.keyboardTitle"),
         currentGroup().title,
         "",
         `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
-          <p class="caption">请输入这个字母</p>
+          <p class="caption">${t("alphabet.keyboardPrompt")}</p>
           <div class="section-row">
             <strong class="uyghur">${displayStandaloneLetterGlyph(letter.letter)}</strong>
             <span class="caption">${letter.latin}</span>
@@ -3059,12 +3077,12 @@ function renderKeyboardPractice() {
         <input
           class="rtl-input uyghur"
           value="${state.keyboardValue}"
-          aria-label="维吾尔语输入框"
+          aria-label="${t("alphabet.inputAria")}"
           readonly
           dir="rtl"
         />
         ${renderKeyboardGuide(keyboardParts, letter.letter)}
-        <div class="practice-key-row" aria-label="本组字母快捷键">
+        <div class="practice-key-row" aria-label="${t("alphabet.groupKeysAria")}">
           ${currentGroupLetters()
             .map(
               (item) => `
@@ -3075,7 +3093,7 @@ function renderKeyboardPractice() {
             )
             .join("")}
         </div>
-        <div class="keyboard-grid" aria-label="维吾尔语虚拟键盘">
+        <div class="keyboard-grid" aria-label="${t("alphabet.keyboardAria")}">
           ${keyboardRows
             .flat()
             .map(
@@ -3086,20 +3104,20 @@ function renderKeyboardPractice() {
               `
             )
             .join("")}
-          <button class="key-button utility" data-action="backspace" type="button">删除</button>
-          <button class="key-button utility" data-action="clear-input" type="button">清空</button>
+          <button class="key-button utility" data-action="backspace" type="button">${t("alphabet.backspace")}</button>
+          <button class="key-button utility" data-action="clear-input" type="button">${t("alphabet.clearInput")}</button>
         </div>
         ${
           hasInput
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? "输入正确。你已经完成这一课。"
-                  : `继续输入，目标字母是 ${displayStandaloneLetterGlyph(letter.letter)}。`
+                  ? t("alphabet.keyboardCorrect")
+                  : t("alphabet.keyboardContinue", { letter: displayStandaloneLetterGlyph(letter.letter) })
               }</div>`
-            : `<div class="feedback">提示：点击 <span class="uyghur">${displayStandaloneLetterGlyph(letter.letter)}</span>。</div>`
+            : `<div class="feedback">${t("alphabet.keyboardTip", { letter: `<span class="uyghur">${displayStandaloneLetterGlyph(letter.letter)}</span>` })}</div>`
         }
         <button class="primary-button" data-action="go" data-target="complete" type="button">
-          完成课程
+          ${t("alphabet.finishCourse")}
         </button>
       </section>
     `,

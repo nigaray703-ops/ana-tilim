@@ -9,6 +9,8 @@ const projectCheckScriptPath = "scripts/check-project.mjs";
 const courseDataAggregatorPath = "prototype/course-data.js";
 const i18nScriptPaths = [
   "prototype/i18n/ui-messages.js",
+  "prototype/i18n/alphabet-en.js",
+  "prototype/i18n/course-en.js",
   "prototype/i18n/runtime.js"
 ];
 const courseDataScriptPaths = [
@@ -46,6 +48,8 @@ const expectedVersionedAssets = [
   "./course-data/reading-data.js?v=20260728-uly-transliteration",
   "./course-data.js?v=20260728-uly-transliteration",
   "./i18n/ui-messages.js?v=20260809-bilingual",
+  "./i18n/alphabet-en.js?v=20260809-bilingual-alphabet",
+  "./i18n/course-en.js?v=20260809-bilingual-alphabet",
   "./i18n/runtime.js?v=20260809-bilingual",
   "./audio-controller.js?v=20260728-uly-transliteration",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
@@ -814,6 +818,56 @@ for (const chineseChrome of ['aria-label="播放', "播放发音", ">听</button
     `English reusable audio chrome should not include ${chineseChrome}`
   );
 }
+
+vm.runInContext(
+  `
+    state.selectedUnitId = "letters";
+    state.selectedGroupId = "dot-bone";
+    state.currentLetterId = "be";
+    state.selectedPicture = "pe";
+    state.selectedListening = "pe";
+    state.keyboardValue = "پ";
+  `,
+  context
+);
+assert.equal(
+  vm.runInContext(`formExampleItems.find((item) => item.value === "كىتاب").meaning`, context),
+  "book",
+  "switching to English should rebuild derived form-example text"
+);
+const englishAlphabetScreens = {
+  group: renderState("state.screen = 'group'"),
+  letterWriting: renderState("state.screen = 'letterWriting'"),
+  picture: renderState("state.screen = 'picture'"),
+  listening: renderState("state.screen = 'listening'"),
+  letterOdd: renderState("state.screen = 'letterOdd'"),
+  letterSound: renderState("state.screen = 'letterSound'"),
+  keyboard: renderState("state.screen = 'keyboard'")
+};
+includesAll(
+  englishAlphabetScreens.group,
+  ["Consonant", "One dot below", "Isolated form", "book", "Shape", "Connections", "Writing"],
+  "English alphabet letter lesson"
+);
+for (const [screenName, html] of Object.entries(englishAlphabetScreens)) {
+  assert.ok(
+    !/[\u3400-\u9fff]/u.test(html),
+    `English alphabet ${screenName} screen should not contain Chinese course or interface text`
+  );
+}
+
+setLanguage("zh");
+assert.equal(
+  vm.runInContext(`formExampleItems.find((item) => item.value === "كىتاب").meaning`, context),
+  "书",
+  "switching back to Chinese should rebuild the original derived form-example text"
+);
+const restoredChineseAlphabetHtml = renderState("state.screen = 'group'");
+includesAll(
+  restoredChineseAlphabetHtml,
+  ["辅音", "下方一个点", "独立式", "书", "认形", "连接", "书写"],
+  "restored Chinese alphabet letter lesson"
+);
 
 setLanguage("zh");
 
