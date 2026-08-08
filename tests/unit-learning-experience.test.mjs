@@ -3266,16 +3266,70 @@ const classificationCards = [...app.innerHTML.matchAll(/<article\s+class="latin-
 assert.equal(classificationCards.length, 32, "classification should render exactly 32 letter cards total");
 const classificationIds = classificationCards.map((match) => match.groups.attributes.match(/data-letter-id="([^"]+)"/)?.[1]);
 assert.equal(new Set(classificationIds).size, 32, "classification cards should use 32 unique letter IDs");
+const classificationAudioLabels = [];
 for (const [index, card] of classificationCards.entries()) {
   const letterId = classificationIds[index];
   const detail = context.window.ANA_TILIM_COURSE.letterDetails[letterId];
   const expectedAudioPath = vm.runInContext(`alphabetAudioByLetterId[${JSON.stringify(letterId)}].outputPath`, context);
+  const audioLabel = card.groups.body.match(/class="[^"]*latin-letter-audio[^"]*"[\s\S]*?aria-label="([^"]+)"/)?.[1];
   assert.ok(detail, `classification card ${letterId} should resolve through letterDetails`);
+  assert.equal(audioLabel, `播放 ${detail.letter}，ULY ${detail.latin}`, `classification audio ${letterId} should name its glyph and ULY target`);
+  classificationAudioLabels.push(audioLabel);
   assert.ok(card.groups.attributes.includes('data-has-forms="true"'), `${letterId} should confirm existing letterDetails forms`);
   includesAll(card.groups.body, [detail.letter, detail.latin, detail.cue, `data-audio-src="${expectedAudioPath}"`], `classification card ${letterId}`);
   assert.ok(!card.groups.body.includes(detail.connection), `${letterId} should not duplicate connection prose on the compact card`);
   assert.ok(!card.groups.body.includes(detail.writingHint), `${letterId} should not duplicate writing prose on the compact card`);
 }
+assert.equal(new Set(classificationAudioLabels).size, 32, "classification audio controls should have 32 unique accessible names");
+assert.match(
+  vm.runInContext("renderAudioButton({ audio: null, label: 'x' })", context),
+  /aria-label="播放发音"/,
+  "existing renderAudioButton callers should retain the default accessible name"
+);
+vm.runInContext(
+  `
+    globalThis.savedEditorialAa = letterDetails.aa;
+    globalThis.savedEditorialAaAudio = alphabetAudioByLetterId.aa;
+    letterDetails.aa = {
+      ...letterDetails.aa,
+      id: 'aa" data-editorial-injected="true',
+      letter: 'ئا<&"',
+      latin: 'a<&"',
+      cue: 'cue <img src=x> & "'
+    };
+    alphabetAudioByLetterId.aa = {
+      ...alphabetAudioByLetterId.aa,
+      outputPath: './letter" data-audio-injected="true'
+    };
+    state.screen = 'latinLetterClasses';
+    render();
+  `,
+  context
+);
+const editorialClassificationCard = [...app.innerHTML.matchAll(/<article\s+class="latin-letter-card"(?<attributes>[^>]*)>(?<body>[\s\S]*?)<\/article>/g)][0];
+assert.ok(
+  editorialClassificationCard.groups.attributes.includes('data-letter-id="aa&quot; data-editorial-injected=&quot;true"'),
+  "classification editorial IDs should stay inside their data attribute"
+);
+assert.doesNotMatch(editorialClassificationCard[0], /\sdata-editorial-injected="true"/, "classification IDs should not inject attributes");
+includesAll(
+  editorialClassificationCard.groups.body,
+  [
+    'data-audio-src="./letter&quot; data-audio-injected=&quot;true"',
+    'data-audio-label="ئا&lt;&amp;&quot;"',
+    'aria-label="播放 ئا&lt;&amp;&quot;，ULY a&lt;&amp;&quot;"',
+    'ئا&lt;&amp;&quot;',
+    'a&lt;&amp;&quot;',
+    'cue &lt;img src=x&gt; &amp; &quot;'
+  ],
+  "escaped classification editorial card"
+);
+assert.doesNotMatch(editorialClassificationCard[0], /\sdata-audio-injected="true"/, "audio paths should not inject attributes");
+assert.ok(!editorialClassificationCard[0].includes("&amp;lt;"), "classification content should be escaped exactly once");
+vm.runInContext(
+  "letterDetails.aa = globalThis.savedEditorialAa; alphabetAudioByLetterId.aa = globalThis.savedEditorialAaAudio; render()",
+  context
+);
 assert.match(
   styleSource,
   /\.latin-letter-grid\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(auto-fit, minmax\(140px, 1fr\)\);/s,
@@ -3296,7 +3350,11 @@ vm.runInContext(
   context
 );
 const classificationAaWithoutAudio = app.innerHTML.match(/<article\s+class="latin-letter-card"[^>]*data-letter-id="aa"[^>]*>(?<body>[\s\S]*?)<\/article>/)?.groups?.body || "";
-includesAll(classificationAaWithoutAudio, ["音频待录", 'data-audio-src=""', "disabled"], "classification missing-audio policy");
+includesAll(
+  classificationAaWithoutAudio,
+  ["音频待录", 'data-audio-src=""', "disabled", 'aria-label="播放 ئا，ULY a"'],
+  "classification missing-audio policy"
+);
 vm.runInContext("alphabetAudioByLetterId.aa = globalThis.savedClassificationAaAudio; render()", context);
 
 renderState("state.screen = 'latinLetterClasses'; state.preferences.showLatin = false");
@@ -3341,13 +3399,39 @@ for (const [comparisonIndex, expectedComparison] of expectedVowelComparisons.ent
     const letterId = expectedComparison.letterIds[cardIndex];
     const detail = context.window.ANA_TILIM_COURSE.letterDetails[letterId];
     const expectedAudioPath = vm.runInContext(`alphabetAudioByLetterId[${JSON.stringify(letterId)}].outputPath`, context);
+    const audioLabel = card.groups.body.match(/class="[^"]*latin-letter-audio[^"]*"[\s\S]*?aria-label="([^"]+)"/)?.[1];
+    assert.equal(audioLabel, `播放 ${detail.letter}，ULY ${detail.latin}`, `comparison audio ${letterId} should name its glyph and ULY target`);
     includesAll(
       card.groups.body,
       [detail.letter, detail.latin, expectedComparison.focus, `data-audio-src="${expectedAudioPath}"`],
       `vowel comparison card ${letterId}`
     );
   }
+  const pairAudioLabels = comparisonCards.map(
+    (card) => card.groups.body.match(/class="[^"]*latin-letter-audio[^"]*"[\s\S]*?aria-label="([^"]+)"/)?.[1]
+  );
+  assert.equal(new Set(pairAudioLabels).size, 2, `comparison ${expectedComparison.id} should expose two distinct audio names`);
 }
+
+const escapedComparisonCard = vm.runInContext(
+  `typeof renderLatinVowelComparisonCard === "function"
+    ? renderLatinVowelComparisonCard("aa", {
+        id: 'a-e" data-pair-injected="true',
+        focus: 'focus <img src=x> & "'
+      })
+    : ""`,
+  context
+);
+assert.ok(
+  escapedComparisonCard.includes('data-comparison-id="a-e&quot; data-pair-injected=&quot;true"'),
+  "comparison editorial IDs should stay inside their data attributes"
+);
+assert.doesNotMatch(escapedComparisonCard, /\sdata-pair-injected="true"/, "comparison IDs should not inject attributes");
+assert.ok(
+  escapedComparisonCard.includes('辨认重点：focus &lt;img src=x&gt; &amp; &quot;'),
+  "comparison focus should render as escaped editorial text"
+);
+assert.ok(!escapedComparisonCard.includes("&amp;lt;"), "comparison content should be escaped exactly once");
 
 renderState("state.screen = 'latinVowelCompare'; state.latinVowelComparisonIndex = 0; state.preferences.showLatin = false");
 assert.equal((app.innerHTML.match(/class="latin-letter-uly"/g) || []).length, 2, "vowel comparison ULY should ignore the global hide-Latin preference");
