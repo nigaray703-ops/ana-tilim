@@ -3527,14 +3527,68 @@ for (const form of oeDictationDetail.forms) {
 }
 assert.doesNotMatch(hiddenOeDictationExercise, /accuracy|准确率|得分|分数/i, "dictation should not invent scoring");
 const hiddenOeAnswerRegionTag = hiddenOeDictationExercise.match(/<div\s+data-latin-dictation-answer-region[^>]*>/)?.[0] || "";
+const dictationAnnouncementOrder = [];
+let observedDictationAnswerHtml = "";
+let observedDictationAnswerHidden = true;
+Object.defineProperties(latinDictationAnswerRegion, {
+  innerHTML: {
+    configurable: true,
+    get() { return observedDictationAnswerHtml; },
+    set(value) {
+      observedDictationAnswerHtml = String(value);
+      dictationAnnouncementOrder.push(observedDictationAnswerHtml ? "answer:inserted" : "answer:empty");
+    }
+  },
+  hidden: {
+    configurable: true,
+    get() { return observedDictationAnswerHidden; },
+    set(value) {
+      observedDictationAnswerHidden = Boolean(value);
+      dictationAnnouncementOrder.push(`hidden:${observedDictationAnswerHidden}`);
+    }
+  }
+});
+latinDictationAnswerRegion.focus = () => dictationAnnouncementOrder.push("focus");
 latinDictationAnswerRegion.innerHTML = "";
 latinDictationAnswerRegion.hidden = true;
+dictationAnnouncementOrder.length = 0;
+const originalRequestAnimationFrame = context.window.requestAnimationFrame;
+let queuedDictationAnnouncement = null;
+context.window.requestAnimationFrame = (callback) => {
+  dictationAnnouncementOrder.push("frame:scheduled");
+  queuedDictationAnnouncement = callback;
+  return 2;
+};
+const dictationAppHtmlBeforeReveal = app.innerHTML;
+const progressWritesBeforeDictationReveal = progressStorageWriteCount;
 clickDataset({ action: "reveal-latin-dictation-answer" });
 assert.equal(vm.runInContext("state.latinDictationRevealed", context), true, "reveal should update only transient dictation state");
 assert.equal(latinDictationAnswerRegion.hidden, false, "reveal should expose the answer region without replacing the live canvas");
+assert.equal(latinDictationAnswerRegion.innerHTML, "", "reveal should first expose an empty live region before inserting its answer");
+assert.equal(app.innerHTML, dictationAppHtmlBeforeReveal, "reveal should keep the root markup and live Canvas identity unchanged");
+assert.equal(typeof queuedDictationAnnouncement, "function", "answer insertion should wait for the next animation frame");
+assert.deepEqual(
+  dictationAnnouncementOrder,
+  ["hidden:false", "frame:scheduled"],
+  "the empty live region should become visible before answer insertion is scheduled"
+);
+assert.equal(progressStorageWriteCount, progressWritesBeforeDictationReveal + 1, "reveal should persist its one completion update immediately");
+assert.deepEqual(
+  savedProgress().learningProgress.latinWriting.dictation,
+  { completed: true },
+  "dictation completion should be saved even while the polite announcement is queued"
+);
 assert.match(hiddenOeAnswerRegionTag, /\shidden(?:\s|>)/, "the unrevealed live answer region should start hidden");
 assert.match(hiddenOeAnswerRegionTag, /aria-live="polite"/, "the real reveal click should announce the inserted answer politely");
 assert.match(hiddenOeAnswerRegionTag, /aria-atomic="true"/, "the answer announcement should include the complete self-check region");
+queuedDictationAnnouncement();
+context.window.requestAnimationFrame = originalRequestAnimationFrame;
+assert.deepEqual(
+  dictationAnnouncementOrder,
+  ["hidden:false", "frame:scheduled", "answer:inserted"],
+  "the next frame should insert the complete answer without stealing focus"
+);
+assert.equal(app.innerHTML, dictationAppHtmlBeforeReveal, "answer insertion should still preserve the root and live Canvas");
 includesAll(
   latinDictationAnswerRegion.innerHTML,
   [

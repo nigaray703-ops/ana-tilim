@@ -3848,8 +3848,18 @@ function revealLatinDictationAnswer() {
 
   const answerRegion = document.querySelector?.("[data-latin-dictation-answer-region]");
   if (answerRegion) {
-    answerRegion.innerHTML = renderLatinDictationAnswer(letter);
+    if (answerRegion.innerHTML) {
+      answerRegion.innerHTML = "";
+    }
     answerRegion.hidden = false;
+    const insertAnswer = () => {
+      answerRegion.innerHTML = renderLatinDictationAnswer(letter);
+    };
+    if (typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(insertAnswer);
+    } else {
+      window.setTimeout(insertAnswer, 0);
+    }
     saveLocalProgress();
     return;
   }
