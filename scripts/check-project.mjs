@@ -105,6 +105,11 @@ const checks = [
     args: ["tests/human-audio.test.mjs"]
   },
   {
+    label: "test: brand assets",
+    command: node,
+    args: ["tests/brand-assets.test.mjs"]
+  },
+  {
     label: "test: full content render",
     command: node,
     args: ["tests/full-content-render.test.mjs"]
