@@ -142,10 +142,6 @@ button {
   min-height: 44px;
 }
 
-.language-setting {
-  justify-items: start;
-}
-
 .brand-lockup {
   display: flex;
   align-items: center;
@@ -2584,6 +2580,36 @@ button {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.74);
+}
+
+.language-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.language-setting label {
+  min-width: 0;
+}
+
+.language-select {
+  flex: 0 0 auto;
+  min-width: 150px;
+  min-height: 44px;
+  padding: 8px 34px 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.language-select:focus-visible {
+  outline: 3px solid rgba(14, 155, 177, 0.45);
+  outline-offset: 2px;
 }
 
 .profile-setting-block > div:first-child,

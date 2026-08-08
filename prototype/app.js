@@ -2227,6 +2227,15 @@ function languageSwitcher(compact = false) {
     </div>`;
 }
 
+function profileLanguageSelect() {
+  return `
+    <select id="profile-language-select" class="language-select"
+      data-action="set-language-select" aria-label="${t("language.label")}">
+      ${["zh", "en"].map((language) => `
+        <option value="${language}"${state.interfaceLanguage === language ? " selected" : ""}>${t(language === "zh" ? "language.chinese" : "language.english")}</option>`).join("")}
+    </select>`;
+}
+
 function topBar(title, subtitle, action = "", leading = "") {
   return `
     <header class="top-row">
@@ -4872,8 +4881,8 @@ function renderSettingsPanel() {
 
       <section class="profile-setting-group" aria-labelledby="learning-preferences-title">
         <div class="profile-setting-block language-setting">
-          <strong>${t("language.label")}</strong>
-          ${languageSwitcher()}
+          <label for="profile-language-select"><strong>${t("language.label")}</strong></label>
+          ${profileLanguageSelect()}
         </div>
         ${renderToggleSetting({
           label: t("settings.reminder"),
@@ -5717,6 +5726,14 @@ document.addEventListener("click", (event) => {
 
 document.addEventListener("change", (event) => {
   const input = event.target;
+  if (input?.dataset?.action === "set-language-select") {
+    const language = input.value;
+    if (language !== "zh" && language !== "en") return;
+    applyInterfaceLanguage(language, { explicit: true });
+    render();
+    showToast(t("language.changed"));
+    return;
+  }
   if (input?.id !== "profile-avatar-input") return;
 
   const file = input.files?.[0];
