@@ -204,6 +204,76 @@ for (const [latinDictationIndex, letterId] of latinDictationLetterIds.entries())
   }
 }
 
+let latinWritingRealFormCount = 0;
+for (const letterId of latinDictationLetterIds) {
+  const letter = courseData.letterDetails[letterId];
+  for (const [latinWritingForm, form] of letter.forms.entries()) {
+    renderState(
+      {
+        screen: "latinWritingForms",
+        selectedUnitId: "latin-keyboard-writing",
+        latinWritingLetterId: letterId,
+        latinWritingForm,
+        latinWritingGuideVisible: true,
+        latinWritingComparisonRevealed: false
+      },
+      `Latin writing form ${letterId} ${latinWritingForm}`,
+      form.value
+    );
+    latinWritingRealFormCount += 1;
+    assert.equal(
+      (app.innerHTML.match(/data-latin-writing-form-tab/g) || []).length,
+      letter.forms.length,
+      `Latin writing ${letterId} should keep its exact real form count`
+    );
+    assert.equal(
+      (app.innerHTML.match(/role="tab"[^>]*aria-selected="true"/g) || []).length,
+      1,
+      `Latin writing ${letterId} form ${latinWritingForm} should select exactly one tab`
+    );
+    for (const sourceForm of letter.forms) {
+      assert.ok(app.innerHTML.includes(sourceForm.label), `Latin writing ${letterId} should show ${sourceForm.label}`);
+      assert.ok(app.innerHTML.includes(sourceForm.value), `Latin writing ${letterId} should show ${sourceForm.value}`);
+    }
+  }
+}
+assert.equal(latinWritingRealFormCount, 126, "full UI audit should enumerate all audited 2/4/8 real letter forms");
+
+for (const letterId of ["dal", "oe", "ee"]) {
+  const letter = courseData.letterDetails[letterId];
+  const lastFormIndex = letter.forms.length - 1;
+  renderState(
+    {
+      screen: "latinWritingForms",
+      selectedUnitId: "latin-keyboard-writing",
+      latinWritingLetterId: letterId,
+      latinWritingForm: lastFormIndex,
+      latinWritingGuideVisible: false,
+      latinWritingComparisonRevealed: false
+    },
+    `Latin writing hidden guide ${letterId}`,
+    letter.forms[lastFormIndex].value
+  );
+  assert.match(app.innerHTML, /writing-pad hide-guide/, `Latin writing ${letterId} should render a hidden-guide state`);
+
+  renderState(
+    {
+      screen: "latinWritingForms",
+      selectedUnitId: "latin-keyboard-writing",
+      latinWritingLetterId: letterId,
+      latinWritingForm: lastFormIndex,
+      latinWritingGuideVisible: true,
+      latinWritingComparisonRevealed: true
+    },
+    `Latin writing revealed comparison ${letterId}`,
+    "不做自动判分"
+  );
+  assert.ok(
+    app.innerHTML.includes(letter.forms[lastFormIndex].label),
+    `Latin writing revealed comparison ${letterId} should use the selected real source label`
+  );
+}
+
 for (const group of courseData.alphabetGroups) {
   for (const letter of group.letters) {
     renderState(
@@ -256,6 +326,6 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
   }
 }
 
-assert.equal(renderCount, 536, "full UI audit should render every retained main screen, Latin writing stage, lesson item, reading group, and practice item");
+assert.equal(renderCount, 668, "full UI audit should render every retained main screen, real 2/4/8 form state, lesson item, reading group, and practice item");
 
 console.log(`full content render checks passed (${renderCount} states)`);

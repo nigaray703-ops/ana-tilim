@@ -261,12 +261,32 @@ for (let index = 0; index < htmlScriptOrder.length - 1; index += 1) {
 }
 
 function makeElement(id) {
+  const classes = new Set();
+  const attributes = {};
   return {
     id,
     innerHTML: "",
     textContent: "",
     dataset: {},
-    classList: { add() {}, remove() {} },
+    hidden: false,
+    attributes,
+    classList: {
+      add(...names) { names.forEach((name) => classes.add(name)); },
+      remove(...names) { names.forEach((name) => classes.delete(name)); },
+      toggle(name, force) {
+        const shouldAdd = force === undefined ? !classes.has(name) : Boolean(force);
+        if (shouldAdd) classes.add(name);
+        else classes.delete(name);
+        return shouldAdd;
+      },
+      contains(name) { return classes.has(name); }
+    },
+    setAttribute(name, value) {
+      attributes[name] = String(value);
+    },
+    getAttribute(name) {
+      return Object.prototype.hasOwnProperty.call(attributes, name) ? attributes[name] : null;
+    },
     querySelector() {
       return null;
     },
@@ -280,6 +300,7 @@ function makeElement(id) {
 function makeWritingCanvas({ contextAvailable = true } = {}) {
   const listeners = {};
   const calls = [];
+  const attributes = {};
   const drawingContext = {
     setTransform(...args) { calls.push(["setTransform", ...args]); },
     beginPath() { calls.push(["beginPath"]); },
@@ -306,6 +327,12 @@ function makeWritingCanvas({ contextAvailable = true } = {}) {
     addEventListener(eventName, handler) {
       listeners[eventName] = handler;
     },
+    setAttribute(name, value) {
+      attributes[name] = String(value);
+    },
+    getAttribute(name) {
+      return Object.prototype.hasOwnProperty.call(attributes, name) ? attributes[name] : null;
+    },
     setPointerCapture() {},
     releasePointerCapture() {}
   };
@@ -318,6 +345,18 @@ const latinDictationAnswerRegion = makeElement("latin-dictation-answer-region");
 latinDictationAnswerRegion.hidden = true;
 const latinDictationCanvasFallback = makeElement("latin-dictation-canvas-fallback");
 latinDictationCanvasFallback.hidden = true;
+const latinWritingReferenceGlyph = makeElement("latin-writing-reference-glyph");
+const latinWritingGuide = makeElement("latin-writing-guide");
+const latinWritingReferenceLabel = makeElement("latin-writing-reference-label");
+const latinWritingFormCount = makeElement("latin-writing-form-count");
+const latinWritingPad = makeElement("latin-writing-pad");
+const latinWritingGuideToggle = makeElement("latin-writing-guide-toggle");
+const latinWritingComparisonRegion = makeElement("latin-writing-comparison-region");
+latinWritingComparisonRegion.hidden = true;
+const latinWritingCanvasFallback = makeElement("latin-writing-canvas-fallback");
+latinWritingCanvasFallback.hidden = true;
+let latinWritingFormTabsForTest = [];
+let latinWritingCanvasOnlyForTest = [];
 let writingCanvasesForTest = [];
 let clickHandler = null;
 let keydownHandler = null;
@@ -361,10 +400,22 @@ const context = {
       if (selector === "#latin-dictation-canvas-fallback") {
         return latinDictationCanvasFallback;
       }
+      if (selector === "[data-latin-writing-reference-glyph]") return latinWritingReferenceGlyph;
+      if (selector === "[data-latin-writing-guide]") return latinWritingGuide;
+      if (selector === "[data-latin-writing-reference-label]") return latinWritingReferenceLabel;
+      if (selector === "[data-latin-writing-form-count]") return latinWritingFormCount;
+      if (selector === "[data-latin-writing-pad]") return latinWritingPad;
+      if (selector === "[data-latin-writing-guide-toggle]") return latinWritingGuideToggle;
+      if (selector === "[data-latin-writing-comparison-region]") return latinWritingComparisonRegion;
+      if (selector === "[data-latin-writing-canvas]") return writingCanvasesForTest[0] || null;
+      if (selector === "#latin-writing-canvas-fallback") return latinWritingCanvasFallback;
       return null;
     },
     querySelectorAll(selector) {
-      return selector === "[data-writing-canvas]" ? writingCanvasesForTest : [];
+      if (selector === "[data-writing-canvas]") return writingCanvasesForTest;
+      if (selector === "[data-latin-writing-form-tab]") return latinWritingFormTabsForTest;
+      if (selector === "[data-latin-writing-canvas-only]") return latinWritingCanvasOnlyForTest;
+      return [];
     },
     addEventListener(eventName, handler) {
       if (eventName === "click") {
@@ -3707,6 +3758,7 @@ writingCanvasesForTest = [];
 
 const escapedLatinDictationAnswer = vm.runInContext(
   `renderLatinDictationAnswer({
+    id: 'oe" data-letter-injected="true',
     letter: 'ئۆ<&"',
     forms: [{ label: 'form" data-form-injected="true', value: 'ـۆ<&"' }]
   })`,
@@ -3716,12 +3768,14 @@ includesAll(
   escapedLatinDictationAnswer,
   [
     'ئۆ&lt;&amp;&quot;',
+    'data-letter-id="oe&quot; data-letter-injected=&quot;true"',
     'form&quot; data-form-injected=&quot;true',
     'ـۆ&lt;&amp;&quot;'
   ],
   "escaped dictation answer"
 );
 assert.doesNotMatch(escapedLatinDictationAnswer, /\sdata-form-injected="true"/, "dictation form labels should not inject attributes");
+assert.doesNotMatch(escapedLatinDictationAnswer, /\sdata-letter-injected="true"/, "dictation letter IDs should not inject attributes");
 assert.ok(!escapedLatinDictationAnswer.includes("&amp;lt;"), "dictation answer fields should be escaped exactly once");
 
 assert.match(
@@ -3743,6 +3797,26 @@ assert.match(
   styleSource,
   /@media \(max-width: 560px\)[\s\S]*?\.latin-dictation-navigation\s*\{[^}]*grid-template-columns:\s*1fr;/s,
   "dictation navigation should stack on narrow phones"
+);
+assert.match(
+  styleSource,
+  /\.latin-writing-forms\s*\{[^}]*min-width:\s*0;[^}]*overflow-x:\s*clip;/s,
+  "the forms page should contain its own horizontal layout"
+);
+assert.match(
+  styleSource,
+  /\.latin-writing-form-tabs\s*\{[^}]*max-width:\s*100%;[^}]*overflow-x:\s*auto;/s,
+  "real form tabs should scroll only inside their own container"
+);
+assert.match(
+  styleSource,
+  /\.latin-writing-form-tab\s*\{[^}]*flex:\s*0 0 auto;[^}]*min-width:\s*min\(150px, 72vw\);/s,
+  "2/4/8 real form tabs should remain readable without widening the page"
+);
+assert.match(
+  styleSource,
+  /@media \(max-width: 560px\)[\s\S]*?\.latin-writing-controls\s*\{[^}]*grid-template-columns:\s*1fr;/s,
+  "forms controls should stack on narrow phones"
 );
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(Object.keys(state.learningProgress.latinWriting).sort())", context)),
@@ -3774,6 +3848,283 @@ assert.deepEqual(
   { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 4, total: 5 },
   "the course progress summary should include the completed dictation step and retain a five-step denominator"
 );
+
+assert.equal(
+  vm.runInContext("persistedScreenIds.has('latinWritingForms')", context),
+  true,
+  "the real letter-form reference should be a stable persisted screen"
+);
+const realFormRepresentativeIds = ["dal", "oe", "ee"];
+for (const letterId of realFormRepresentativeIds) {
+  const detail = context.window.ANA_TILIM_COURSE.letterDetails[letterId];
+  const expectedCount = letterId === "dal" ? 2 : letterId === "oe" ? 4 : 8;
+  assert.equal(detail.forms.length, expectedCount, `${letterId} should retain its audited real form count`);
+  const formsHtml = renderState(
+    `state.screen = 'latinWritingForms'; state.latinWritingLetterId = '${letterId}'; state.latinWritingForm = 0; state.latinWritingGuideVisible = true; state.latinWritingComparisonRevealed = false`
+  );
+  assert.equal(
+    (formsHtml.match(/data-latin-writing-form-tab/g) || []).length,
+    detail.forms.length,
+    `${letterId} should render one tab for every real source form`
+  );
+  for (const form of detail.forms) {
+    includesAll(formsHtml, [form.label, form.value], `${letterId} real form reference`);
+  }
+  assert.ok(
+    formsHtml.includes(`<h2>${detail.latin} · ${detail.forms.length} 项真实形式</h2>`),
+    `${letterId} learner heading should use its ULY label instead of an internal ID`
+  );
+  assert.match(formsHtml, /role="tablist"/, `${letterId} forms should expose a tablist`);
+  assert.match(formsHtml, /role="tab"[^>]*aria-selected="true"/, `${letterId} should expose one selected form tab`);
+  assert.doesNotMatch(formsHtml, /data-audio|audio-button|data-action="play-audio"/i, `${letterId} forms should not add audio controls`);
+  assert.doesNotMatch(formsHtml, /stroke-player|data-action="(?:play|pause|replay)-stroke|(?:播放|暂停|重播|逐笔)笔画/i);
+}
+assert.doesNotMatch(
+  renderState("state.screen = 'latinWritingForms'; state.latinWritingLetterId = 'dal'; state.latinWritingForm = 0"),
+  />\s*(?:后连式|双连式|简单独立式)\s*</,
+  "a two-form letter must not invent generic form tabs"
+);
+const escapedLatinWritingComparison = vm.runInContext(
+  `renderLatinWritingComparison(
+    { writingHint: 'hint <img src=x> & "' },
+    { label: 'form" data-form-injected="true', value: 'ـۆ<&"' }
+  )`,
+  context
+);
+includesAll(
+  escapedLatinWritingComparison,
+  [
+    'form&quot; data-form-injected=&quot;true',
+    'ـۆ&lt;&amp;&quot;',
+    'hint &lt;img src=x&gt; &amp; &quot;'
+  ],
+  "escaped Latin writing comparison"
+);
+assert.doesNotMatch(escapedLatinWritingComparison, /\sdata-form-injected="true"/, "form comparison data should not inject attributes");
+assert.ok(!escapedLatinWritingComparison.includes("&amp;lt;"), "form comparison fields should be escaped exactly once");
+const oeDictationAnswerWithFormsEntry = vm.runInContext(
+  "renderLatinDictationAnswer(letterDetails.oe)",
+  context
+);
+assert.match(
+  oeDictationAnswerWithFormsEntry,
+  /data-action="open-latin-writing-forms"[^>]*data-letter-id="oe"/,
+  "a revealed dictation answer should expose a real entry for its current letter"
+);
+renderState(
+  `state.screen = 'latinDictation'; state.latinDictationIndex = ${oeDictationIndex}; state.latinDictationRevealed = true; state.latinWritingForm = 7`
+);
+clickDataset({ action: "open-latin-writing-forms", letterId: "oe" });
+assert.equal(vm.runInContext("state.screen", context), "latinWritingForms", "the dictation entry should open the real forms screen");
+assert.equal(vm.runInContext("state.latinWritingLetterId", context), "oe", "the forms screen should keep the current dictation letter ID");
+assert.equal(vm.runInContext("state.latinWritingForm", context), 0, "opening a letter should select its first real form");
+assert.equal(vm.runInContext("state.latinWritingGuideVisible", context), true, "a new forms session should start with the guide visible");
+assert.equal(vm.runInContext("state.latinWritingComparisonRevealed", context), false, "a new forms session should not pre-reveal comparison");
+clickDataset({ action: "go", target: "latinDictation" });
+assert.equal(vm.runInContext("state.screen", context), "latinDictation", "back should return to the same dictation question");
+assert.equal(vm.runInContext("state.latinDictationIndex", context), oeDictationIndex, "returning should preserve the dictation question index");
+const formsLocalSnapshot = JSON.parse(vm.runInContext("JSON.stringify(buildLocalProgressData())", context));
+const formsCloudSnapshot = JSON.parse(vm.runInContext("JSON.stringify(buildCloudSnapshot())", context));
+for (const transientField of [
+  "latinWritingLetterId",
+  "latinWritingForm",
+  "latinWritingGuideVisible",
+  "latinWritingComparisonRevealed"
+]) {
+  assert.equal(Object.hasOwn(formsLocalSnapshot, transientField), false, `${transientField} should stay out of local progress`);
+  assert.equal(Object.hasOwn(formsCloudSnapshot, transientField), false, `${transientField} should stay out of cloud progress`);
+}
+
+const oeWritingCanvas = makeWritingCanvas();
+oeWritingCanvas.dataset.writingFallbackId = "latin-writing-canvas-fallback";
+writingCanvasesForTest = [oeWritingCanvas];
+latinWritingFormTabsForTest = oeDictationDetail.forms.map((_, formIndex) => {
+  const tab = makeElement(`latin-writing-form-${formIndex}`);
+  tab.dataset.formIndex = String(formIndex);
+  return tab;
+});
+const oeFormsHtml = renderState(
+  "state.screen = 'latinWritingForms'; state.latinWritingLetterId = 'oe'; state.latinWritingForm = 0; state.latinWritingGuideVisible = true; state.latinWritingComparisonRevealed = false"
+);
+includesAll(
+  oeFormsHtml,
+  [
+    "data-writing-canvas",
+    "data-latin-writing-guide",
+    'data-action="toggle-latin-writing-guide"',
+    'data-action="clear-latin-writing-canvas"',
+    'data-action="reveal-latin-writing-comparison"'
+  ],
+  "oe same-canvas form practice"
+);
+oeWritingCanvas.listeners.pointerdown({
+  clientX: 10,
+  clientY: 12,
+  pointerId: 3,
+  preventDefault() {}
+});
+oeWritingCanvas.listeners.pointermove({
+  clientX: 40,
+  clientY: 52,
+  pointerId: 3,
+  preventDefault() {}
+});
+oeWritingCanvas.listeners.pointerup({ pointerId: 3 });
+const oeFormsAppHtmlBeforeSwitch = app.innerHTML;
+const oeClearCallsBeforeSwitch = oeWritingCanvas.calls.filter(([name]) => name === "clearRect").length;
+clickDataset({ action: "select-latin-writing-form", formIndex: "2" });
+assert.equal(vm.runInContext("state.latinWritingForm", context), 2, "a real source form tab should update the selected index");
+assert.equal(app.innerHTML, oeFormsAppHtmlBeforeSwitch, "switching forms must not replace the root or live Canvas DOM");
+assert.equal(writingCanvasesForTest[0], oeWritingCanvas, "switching forms should preserve the same Canvas object");
+assert.equal(latinWritingReferenceGlyph.textContent, oeDictationDetail.forms[2].value, "large reference should follow the selected source form");
+assert.equal(latinWritingGuide.textContent, oeDictationDetail.forms[2].value, "faint Canvas guide should follow the selected source form");
+assert.equal(
+  oeWritingCanvas.getAttribute("aria-label"),
+  `${oeDictationDetail.forms[2].label} 手写板`,
+  "the live Canvas accessible name should follow the selected source form"
+);
+assert.equal(latinWritingReferenceLabel.textContent, oeDictationDetail.forms[2].label, "source form label should follow the selected tab");
+assert.equal(latinWritingFormCount.textContent, `3 / ${oeDictationDetail.forms.length}`, "form position should update locally");
+assert.equal(latinWritingFormTabsForTest[2].getAttribute("aria-selected"), "true", "selected tab should expose aria-selected true");
+assert.equal(latinWritingFormTabsForTest[0].getAttribute("aria-selected"), "false", "previous tab should expose aria-selected false");
+assert.equal(
+  oeWritingCanvas.calls.filter(([name]) => name === "clearRect").length,
+  oeClearCallsBeforeSwitch,
+  "switching a form must preserve existing strokes"
+);
+vm.runInContext("state.latinWritingForm = 99", context);
+clickDataset({ action: "select-latin-writing-form", formIndex: "99" });
+assert.equal(vm.runInContext("state.latinWritingForm", context), oeDictationDetail.forms.length - 1, "selected form index should clamp to real forms");
+
+const oeFormsHtmlBeforeGuideToggle = app.innerHTML;
+const oeClearCallsBeforeGuideToggle = oeWritingCanvas.calls.filter(([name]) => name === "clearRect").length;
+clickDataset({ action: "toggle-latin-writing-guide" });
+assert.equal(vm.runInContext("state.latinWritingGuideVisible", context), false, "guide toggle should hide only the faint reference");
+assert.equal(app.innerHTML, oeFormsHtmlBeforeGuideToggle, "guide toggle should preserve the root and live Canvas");
+assert.equal(latinWritingPad.classList.contains("hide-guide"), true, "guide toggle should hide the Canvas underlay locally");
+assert.equal(latinWritingGuideToggle.textContent, "显示参考", "guide control should describe the next available action");
+assert.equal(latinWritingGuideToggle.getAttribute("aria-pressed"), "false", "hidden guide should expose aria-pressed false");
+assert.equal(
+  oeWritingCanvas.calls.filter(([name]) => name === "clearRect").length,
+  oeClearCallsBeforeGuideToggle,
+  "hiding a guide must not clear learner strokes"
+);
+clickDataset({ action: "toggle-latin-writing-guide" });
+assert.equal(vm.runInContext("state.latinWritingGuideVisible", context), true, "guide should be restorable without redrawing the screen");
+assert.equal(latinWritingPad.classList.contains("hide-guide"), false, "restored guide should remove the local hidden class");
+clickDataset({ action: "clear-latin-writing-canvas" });
+assert.equal(
+  oeWritingCanvas.calls.filter(([name]) => name === "clearRect").length,
+  oeClearCallsBeforeGuideToggle + 1,
+  "clear rewrite should be the one form control that clears strokes"
+);
+
+const latinWritingAnnouncementOrder = [];
+let observedLatinWritingComparisonHtml = "";
+let observedLatinWritingComparisonHidden = true;
+Object.defineProperties(latinWritingComparisonRegion, {
+  innerHTML: {
+    configurable: true,
+    get() { return observedLatinWritingComparisonHtml; },
+    set(value) {
+      observedLatinWritingComparisonHtml = String(value);
+      latinWritingAnnouncementOrder.push(observedLatinWritingComparisonHtml ? "comparison:inserted" : "comparison:empty");
+    }
+  },
+  hidden: {
+    configurable: true,
+    get() { return observedLatinWritingComparisonHidden; },
+    set(value) {
+      observedLatinWritingComparisonHidden = Boolean(value);
+      latinWritingAnnouncementOrder.push(`hidden:${observedLatinWritingComparisonHidden}`);
+    }
+  }
+});
+latinWritingComparisonRegion.innerHTML = "";
+latinWritingComparisonRegion.hidden = true;
+latinWritingAnnouncementOrder.length = 0;
+let queuedLatinWritingAnnouncement = null;
+context.window.requestAnimationFrame = (callback) => {
+  latinWritingAnnouncementOrder.push("frame:scheduled");
+  queuedLatinWritingAnnouncement = callback;
+  return 3;
+};
+const formsProgressWritesBeforeReveal = progressStorageWriteCount;
+const oeFormsHtmlBeforeReveal = app.innerHTML;
+clickDataset({ action: "reveal-latin-writing-comparison" });
+assert.equal(vm.runInContext("state.latinWritingComparisonRevealed", context), true, "comparison reveal should update only transient state");
+assert.equal(latinWritingComparisonRegion.hidden, false, "comparison should expose its empty live region first");
+assert.equal(latinWritingComparisonRegion.innerHTML, "", "comparison answer should wait for the next frame");
+assert.equal(app.innerHTML, oeFormsHtmlBeforeReveal, "comparison reveal must preserve the live Canvas and strokes");
+assert.deepEqual(latinWritingAnnouncementOrder, ["hidden:false", "frame:scheduled"], "comparison should announce after exposure");
+assert.equal(typeof queuedLatinWritingAnnouncement, "function", "comparison insertion should be scheduled");
+assert.equal(progressStorageWriteCount, formsProgressWritesBeforeReveal + 1, "forms completion should save once immediately");
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.latinWriting.forms)", context)),
+  { completed: true },
+  "forms practice should record only a completed boolean"
+);
+queuedLatinWritingAnnouncement();
+context.window.requestAnimationFrame = originalRequestAnimationFrame;
+includesAll(
+  latinWritingComparisonRegion.innerHTML,
+  [oeDictationDetail.forms.at(-1).label, oeDictationDetail.forms.at(-1).value, "不做自动判分"],
+  "revealed live form comparison"
+);
+assert.deepEqual(
+  latinWritingAnnouncementOrder,
+  ["hidden:false", "frame:scheduled", "comparison:inserted"],
+  "the full comparison should be inserted in the exposed live region"
+);
+assert.doesNotMatch(latinWritingComparisonRegion.innerHTML, /正确|错误|accuracy|准确率|得分|分数|stroke/i);
+const comparisonHtmlBeforeFormSwitch = app.innerHTML;
+clickDataset({ action: "select-latin-writing-form", formIndex: "1" });
+assert.equal(app.innerHTML, comparisonHtmlBeforeFormSwitch, "revealed comparison form switching should still preserve Canvas identity");
+includesAll(
+  latinWritingComparisonRegion.innerHTML,
+  [oeDictationDetail.forms[1].label, oeDictationDetail.forms[1].value],
+  "synchronized revealed form comparison"
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(unitProgressSummaries().find((item) => item.label.includes('拉丁键盘与字母书写强化')))", context)),
+  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 5, total: 5 },
+  "revealing the forms comparison should complete the fifth stable step"
+);
+
+const unavailableLatinWritingCanvas = makeWritingCanvas({ contextAvailable: false });
+unavailableLatinWritingCanvas.dataset.writingFallbackId = "latin-writing-canvas-fallback";
+unavailableLatinWritingCanvas.dataset.writingUnavailableSelector = "[data-latin-writing-canvas-only]";
+const canvasOnlyCaption = makeElement("latin-writing-canvas-caption");
+const canvasOnlyGuideButton = makeElement("latin-writing-guide-button");
+const canvasOnlyClearButton = makeElement("latin-writing-clear-button");
+latinWritingCanvasOnlyForTest = [canvasOnlyCaption, canvasOnlyGuideButton, canvasOnlyClearButton];
+writingCanvasesForTest = [unavailableLatinWritingCanvas];
+latinWritingCanvasFallback.hidden = true;
+const unavailableLatinWritingHtml = renderState(
+  "state.screen = 'latinWritingForms'; state.latinWritingLetterId = 'ee'; state.latinWritingForm = 7; state.latinWritingGuideVisible = true; state.latinWritingComparisonRevealed = false"
+);
+assert.equal(unavailableLatinWritingCanvas.hidden, true, "unavailable forms Canvas should hide only the unusable drawing surface");
+assert.equal(latinWritingCanvasFallback.hidden, false, "unavailable forms Canvas should show accurate neutral fallback copy");
+assert.ok(latinWritingCanvasOnlyForTest.every((control) => control.hidden), "free-writing and clear controls should hide without Canvas");
+includesAll(
+  unavailableLatinWritingHtml,
+  [
+    ...context.window.ANA_TILIM_COURSE.letterDetails.ee.forms.flatMap((form) => [form.label, form.value]),
+    context.window.ANA_TILIM_COURSE.letterDetails.ee.writingHint,
+    "当前浏览器不能自由书写，仍可切换真实字母形式并揭晓对照",
+    'data-action="reveal-latin-writing-comparison"',
+    'data-target="latinDictation"'
+  ],
+  "no-Canvas real forms reference"
+);
+writingCanvasesForTest = [];
+latinWritingCanvasOnlyForTest = [];
+
+vm.runInContext("state.showGuide = false; state.latinWritingGuideVisible = true", context);
+assert.match(vm.runInContext("renderWritingCanvas('ب')", context), /writing-pad hide-guide/, "old first-unit Canvas should retain showGuide semantics");
+vm.runInContext("state.showGuide = true; state.latinWritingGuideVisible = false", context);
+assert.doesNotMatch(vm.runInContext("renderWritingCanvas('ب')", context), /writing-pad hide-guide/, "Latin guide state must not leak into old Canvas screens");
+vm.runInContext("state.showGuide = true", context);
 vm.runInContext("state.preferences.showLatin = true; state.screen = 'latinKeyboardIntro'; render()", context);
 
 vm.runInContext("state.latinKeyboardValue = ''; render()", context);

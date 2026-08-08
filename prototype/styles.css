@@ -2809,6 +2809,103 @@ button {
   line-height: 1.2;
 }
 
+.latin-writing-forms {
+  width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.latin-writing-reference-card,
+.latin-writing-practice-card,
+.latin-writing-comparison {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.latin-writing-form-tabs {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 100%;
+  padding: 2px 0 8px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+
+.latin-writing-form-tab {
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  min-width: min(150px, 72vw);
+  min-height: 78px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: var(--paper);
+  text-align: center;
+}
+
+.latin-writing-form-tab.active {
+  border-color: var(--teal);
+  background: var(--teal-soft);
+  box-shadow: inset 0 0 0 1px var(--teal);
+}
+
+.latin-writing-form-tab span {
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: normal;
+}
+
+.latin-writing-form-tab strong {
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.latin-writing-current-reference {
+  display: grid;
+  place-items: center;
+  gap: 5px;
+  min-height: 130px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(145deg, var(--mint-soft), var(--gold-soft));
+  text-align: center;
+}
+
+.latin-writing-current-reference span {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.latin-writing-current-reference strong,
+.latin-writing-comparison-glyph {
+  font-size: clamp(56px, 15vw, 96px);
+  line-height: 1.15;
+  text-align: center;
+}
+
+.latin-writing-controls {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.latin-writing-comparison {
+  margin-top: 12px;
+  background: var(--mint-soft);
+  text-align: center;
+}
+
+.latin-writing-comparison p {
+  margin: 0;
+  line-height: 1.5;
+}
+
 .writing-canvas-fallback {
   position: relative;
   z-index: 3;
@@ -2848,6 +2945,10 @@ button {
   }
 
   .latin-dictation-navigation {
+    grid-template-columns: 1fr;
+  }
+
+  .latin-writing-controls {
     grid-template-columns: 1fr;
   }
 
