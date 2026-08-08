@@ -2953,7 +2953,10 @@ function renderPicturePractice() {
                   data-action="pick-picture"
                   data-id="${choice.id}"
                   type="button"
-                  aria-label="${t("practice.choiceAria", { count: index + 1 })}"
+                  aria-label="${t("alphabet.choiceAria", {
+                    count: index + 1,
+                    letter: displayStandaloneLetterGlyph(choice.letter)
+                  })}"
                 >
                   <span class="choice-art uyghur">${displayStandaloneLetterGlyph(choice.letter)}</span>
                 </button>
@@ -3015,7 +3018,10 @@ function renderListeningPractice() {
                   data-action="pick-listening"
                   data-id="${choice.id}"
                   type="button"
-                  aria-label="${t("practice.choiceAria", { count: index + 1 })}"
+                  aria-label="${t("alphabet.choiceAria", {
+                    count: index + 1,
+                    letter: displayStandaloneLetterGlyph(choice.letter)
+                  })}"
                 >
                   <span class="choice-art uyghur">${displayStandaloneLetterGlyph(choice.letter)}</span>
                 </button>
