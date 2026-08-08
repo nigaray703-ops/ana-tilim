@@ -1027,6 +1027,19 @@ for (const [screenName, html] of Object.entries(englishPracticeScreens)) {
     `English practice ${screenName} screen should not contain Chinese course or interface text`
   );
 }
+const englishViewedPracticeList = renderState("state.learningProgress.practice['listening-loop'] = { viewed: true }; state.screen = 'library'");
+assert.ok(
+  englishViewedPracticeList.includes('aria-label="Learned">✓ Learned'),
+  "English practice list should localize the learned marker after viewed progress exists"
+);
+assert.ok(
+  !englishViewedPracticeList.includes("已学") && !englishViewedPracticeList.includes("已学习"),
+  "English practice list should not show the Chinese learned marker after viewed progress exists"
+);
+assert.ok(
+  !/[\u3400-\u9fff]/u.test(englishViewedPracticeList),
+  "English practice list with viewed progress should not contain Chinese course or interface text"
+);
 
 setLanguage("zh");
 assert.equal(

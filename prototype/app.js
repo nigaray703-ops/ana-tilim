@@ -1319,7 +1319,7 @@ function renderLearnedMarker(scope, id) {
   if (!hasLearningActivity(scope, id)) {
     return "";
   }
-  if (scope === "vocab") {
+  if (scope === "vocab" || scope === "practice") {
     return `<span class="learned-marker" aria-label="${t("vocab.learnedAria")}">✓ ${t("vocab.learned")}</span>`;
   }
   return '<span class="learned-marker" aria-label="已学习">✓ 已学</span>';
