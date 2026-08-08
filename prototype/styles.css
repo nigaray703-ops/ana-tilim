@@ -240,6 +240,7 @@ button {
 
 .hero-content,
 .hero-intro,
+.auth-disclosure,
 .auth-panel {
   display: grid;
   gap: 14px;
@@ -298,6 +299,20 @@ button {
 .auth-panel {
   width: 100%;
   text-align: left;
+}
+
+.auth-disclosure {
+  width: 100%;
+}
+
+.auth-panel-toggle {
+  white-space: normal;
+}
+
+.local-backup-note {
+  width: min(100%, 330px);
+  margin: 0 auto;
+  line-height: 1.5;
 }
 
 .auth-panel > div:first-child,
