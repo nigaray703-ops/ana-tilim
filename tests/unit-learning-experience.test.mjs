@@ -2310,6 +2310,11 @@ assert.equal(
   3,
   "point-identification options should render every group letter as a letter-only button"
 );
+includesAll(
+  letterPictureChoiceGrid,
+  ['aria-label="字母选项 1：ب"', 'aria-label="字母选项 2：پ"', 'aria-label="字母选项 3：ت"'],
+  "point-identification accessibility names"
+);
 for (const hiddenAnswer of ["<strong>", "class=\"caption\"", "class=\"step-state\"", ">选择<", "下方一个点", "下方三个点", "上方两个点", "辅音，b", "辅音，p"]) {
   assert.ok(!letterPictureChoiceGrid.includes(hiddenAnswer), `point-identification options should hide answer hint ${hiddenAnswer}`);
 }
@@ -2342,9 +2347,33 @@ assert.equal(
   3,
   "letter listening options should render every group letter as a letter-only button"
 );
+includesAll(
+  listeningPracticeChoiceGrid,
+  ['aria-label="字母选项 1：ب"', 'aria-label="字母选项 2：پ"', 'aria-label="字母选项 3：ت"'],
+  "letter listening accessibility names"
+);
 for (const hiddenAnswer of ["<strong>", "class=\"caption\"", "class=\"step-state\"", ">选择<", "辅音，b", "辅音，p", "字母 b", "字母 p"]) {
   assert.ok(!listeningPracticeChoiceGrid.includes(hiddenAnswer), `letter listening options should hide answer hint ${hiddenAnswer}`);
 }
+
+setLanguage("en");
+const englishPictureAccessibilityHtml = renderState(
+  "state.screen = 'picture'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'; state.selectedPicture = ''"
+);
+const englishListeningAccessibilityHtml = renderState(
+  "state.screen = 'listening'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'; state.selectedListening = ''"
+);
+for (const [html, label] of [
+  [englishPictureAccessibilityHtml, "English point-identification accessibility names"],
+  [englishListeningAccessibilityHtml, "English letter-listening accessibility names"]
+]) {
+  includesAll(
+    html,
+    ['aria-label="Letter choice 1: ب"', 'aria-label="Letter choice 2: پ"', 'aria-label="Letter choice 3: ت"'],
+    label
+  );
+}
+setLanguage("zh");
 
 const letterSoundChoiceHtml = renderState(
   "state.screen = 'letterSound'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'; state.selectedListening = ''; state.mistakes = []"
