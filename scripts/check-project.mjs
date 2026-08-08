@@ -5,6 +5,26 @@ const node = process.execPath;
 
 const checks = [
   {
+    label: "syntax: edition config",
+    command: node,
+    args: ["--check", "prototype/app-config.js"]
+  },
+  {
+    label: "syntax: sentence morphemes",
+    command: node,
+    args: ["--check", "prototype/sentence-morphemes.js"]
+  },
+  {
+    label: "syntax: sentence glossary",
+    command: node,
+    args: ["--check", "prototype/sentence-glossary.js"]
+  },
+  {
+    label: "syntax: local progress transfer",
+    command: node,
+    args: ["--check", "prototype/progress-transfer.js"]
+  },
+  {
     label: "syntax: ULY transliteration",
     command: node,
     args: ["--check", "prototype/uly-transliteration.js"]
@@ -68,6 +88,26 @@ const checks = [
     label: "test: ULY transliteration",
     command: node,
     args: ["tests/uly-transliteration.test.mjs"]
+  },
+  {
+    label: "test: edition config",
+    command: node,
+    args: ["tests/app-edition-config.test.mjs"]
+  },
+  {
+    label: "test: content policy",
+    command: node,
+    args: ["tests/content-policy.test.mjs"]
+  },
+  {
+    label: "test: sentence glossary",
+    command: node,
+    args: ["tests/sentence-glossary.test.mjs"]
+  },
+  {
+    label: "test: local progress transfer",
+    command: node,
+    args: ["tests/local-progress-transfer.test.mjs"]
   },
   {
     label: "test: audio controller",

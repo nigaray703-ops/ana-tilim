@@ -1,6 +1,7 @@
 const courseData = window.ANA_TILIM_COURSE;
 const sentenceGlossary = window.ANA_TILIM_SENTENCE_GLOSSARY;
 const progressTransfer = window.ANA_TILIM_PROGRESS_TRANSFER;
+const uyghurKeyboard = window.ANA_TILIM_UYGHUR_KEYBOARD;
 const appConfig = Object.freeze({
   edition: "global",
   brandName: "Ana Tilim",
@@ -12,7 +13,7 @@ const appConfig = Object.freeze({
   ...(window.ANA_TILIM_APP_CONFIG || {})
 });
 
-if (!courseData || !sentenceGlossary || !progressTransfer) {
+if (!courseData || !sentenceGlossary || !progressTransfer || !uyghurKeyboard) {
   throw new Error("Learning data modules failed to load.");
 }
 
@@ -341,13 +342,6 @@ readingUnits.forEach((unit, index) => {
   }
 });
 
-const keyboardRows = [
-  ["ق", "و", "ې", "ر", "ت"],
-  ["ي", "ۇ", "ڭ", "ا", "س"],
-  ["د", "ف", "گ", "ھ", "ج"],
-  ["ك", "ل", "ز", "خ", "ب"]
-];
-
 const progressStorageKey = appConfig.progressStorageKey;
 const guestBackupStorageKey = appConfig.backupStorageKey;
 const DEFAULT_PREFERENCES = Object.freeze({
@@ -389,6 +383,7 @@ const state = {
   selectedListening: "",
   practiceAudioPlayed: false,
   keyboardValue: "",
+  keyboardShift: false,
   currentLetterId: "be",
   selectedGroupId: "dot-bone",
   currentComboItemId: "ba",
@@ -406,6 +401,11 @@ const state = {
   authMode: "login",
   authEmail: "",
   avatarUploading: false,
+  profileNameEditing: false,
+  localProfile: {
+    displayName: "",
+    avatarDataUrl: ""
+  },
   learningProgress: {
     letters: {},
     combos: {},
@@ -547,6 +547,16 @@ function hydrateLocalProgress() {
     if (Array.isArray(saved.writingChecks)) {
       state.writingChecks = saved.writingChecks.slice(0, 3);
     }
+
+    if (saved.localProfile && typeof saved.localProfile === "object") {
+      state.localProfile = {
+        displayName: typeof saved.localProfile.displayName === "string" ? saved.localProfile.displayName.slice(0, 40) : "",
+        avatarDataUrl:
+          typeof saved.localProfile.avatarDataUrl === "string" && saved.localProfile.avatarDataUrl.startsWith("data:image/")
+            ? saved.localProfile.avatarDataUrl
+            : ""
+      };
+    }
   } catch {
     // Ignore damaged local progress and keep the default starter state.
   }
@@ -590,6 +600,7 @@ function buildLocalProgressData() {
     learningProgress: state.learningProgress,
     mistakes: state.mistakes,
     writingChecks: state.writingChecks,
+    localProfile: state.localProfile,
     preferences: state.preferences,
     dailyActivity: state.dailyActivity,
     modifiedAt: state.modifiedAt,
@@ -1471,6 +1482,17 @@ function itemMistakeFeedback(target, picked, label = "词形") {
   return `目标${label}是 ${target.value}，你选了 ${picked.value}。先对照转写：${target.latin}。`;
 }
 
+function physicalKeyboardParts(targetValue) {
+  const strokes = uyghurKeyboard.keystrokesForText(targetValue);
+  const parts = strokes.map((stroke) => stroke.value);
+
+  return parts.join("") === targetValue ? parts : Array.from(targetValue);
+}
+
+function keyboardPartLabel(part) {
+  return part === " " ? "空格" : part;
+}
+
 function keyboardGuideState(parts, targetValue, currentValue = state.keyboardValue) {
   let remaining = currentValue;
   let completeCount = 0;
@@ -1502,11 +1524,16 @@ function keyboardGuideState(parts, targetValue, currentValue = state.keyboardVal
 
 function renderKeyboardGuide(parts, targetValue) {
   const guide = keyboardGuideState(parts, targetValue);
+  const nextStroke = nextPhysicalKeyboardStroke(targetValue);
+  const needsShiftToggle = Boolean(nextStroke) && Boolean(state.keyboardShift) !== nextStroke.shifted;
+  const nextPartLabel = keyboardPartLabel(guide.nextPart);
   const stepText = guide.isComplete
     ? "已完成"
     : guide.isOffTrack
       ? "先删除错误部分"
-      : `第 ${guide.completeCount + 1} 步：点击 ${guide.nextPart}`;
+      : needsShiftToggle
+        ? `第 ${guide.completeCount + 1} 步：先点击 Shift，再点击 ${nextPartLabel}`
+        : `第 ${guide.completeCount + 1} 步：点击 ${nextPartLabel}`;
   const inputText = guide.currentValue ? `已输入 ${guide.currentValue}` : "已输入 未输入";
   const countText = guide.isComplete ? "已完成" : `还差 ${guide.remainingCount} 键`;
 
@@ -1516,7 +1543,7 @@ function renderKeyboardGuide(parts, targetValue) {
         <div>
           <p class="caption">键盘步骤</p>
           <h2 class="section-title">
-            <span class="uyghur">${parts.join(" → ")}</span>
+            <span class="uyghur">${parts.map(keyboardPartLabel).join(" → ")}</span>
           </h2>
         </div>
         <span class="step-state">${countText}</span>
@@ -1541,6 +1568,69 @@ function guidedKeyClass(key, parts, targetValue) {
   }
 
   return "";
+}
+
+function nextPhysicalKeyboardStroke(targetValue, currentValue = state.keyboardValue) {
+  if (!targetValue.startsWith(currentValue)) return null;
+  const strokes = uyghurKeyboard.keystrokesForText(targetValue);
+  let consumed = "";
+
+  for (const stroke of strokes) {
+    if (consumed === currentValue) return stroke;
+    consumed += stroke.value;
+  }
+
+  return null;
+}
+
+function renderUyghurKeyboard(targetValue = "") {
+  const nextStroke = nextPhysicalKeyboardStroke(targetValue);
+  const shiftMatchesNextStroke = Boolean(nextStroke) && Boolean(state.keyboardShift) === nextStroke.shifted;
+  const needsShiftToggle = Boolean(nextStroke) && !shiftMatchesNextStroke;
+  const isSpaceNext = shiftMatchesNextStroke && nextStroke?.code === "Space";
+  const isComplete = Boolean(targetValue) && state.keyboardValue === targetValue;
+  const [topRow, homeRow, physicalBottomRow] = uyghurKeyboard.rows;
+  const bottomRow = physicalBottomRow.filter((key) =>
+    ["KeyZ", "KeyX", "KeyC", "KeyV", "KeyB", "KeyN", "KeyM", "Slash"].includes(key.code)
+  );
+
+  const renderLetterKey = (key) => {
+    const output = state.keyboardShift && key.shiftedValue ? key.shiftedValue : key.value;
+    const isNext = shiftMatchesNextStroke && nextStroke?.code === key.code;
+    return `
+      <button
+        class="key-button uyghur physical-key ${isNext ? "next-key" : ""}"
+        data-action="key"
+        data-key="${escapeHtml(output)}"
+        data-code="${key.code}"
+        data-physical-key="${key.physical}"
+        type="button"
+        aria-label="${key.physical} 键，输入 ${escapeHtml(output)}"
+      >
+        <small>${key.physical}</small>
+        <strong>${escapeHtml(output)}</strong>
+      </button>
+    `;
+  };
+
+  return `
+    <div class="uyghur-keyboard" aria-label="维吾尔语标准键盘">
+      <div class="uyghur-keyboard-row row-top">
+        ${topRow.map(renderLetterKey).join("")}
+      </div>
+      <div class="uyghur-keyboard-row row-home">
+        ${homeRow.map(renderLetterKey).join("")}
+      </div>
+      <div class="uyghur-keyboard-row row-bottom">
+        <button class="key-button utility keyboard-shift ${state.keyboardShift ? "active" : ""} ${needsShiftToggle ? "next-key" : ""}" data-action="toggle-keyboard-shift" type="button" aria-label="Shift" aria-pressed="${state.keyboardShift}">⇧</button>
+        ${bottomRow.map(renderLetterKey).join("")}
+        <button class="key-button utility keyboard-backspace" data-action="backspace" type="button" aria-label="删除">⌫</button>
+      </div>
+      <div class="uyghur-keyboard-tools" aria-label="键盘工具">
+        <button class="key-button utility keyboard-space uyghur ${isSpaceNext ? "next-key" : ""}" data-action="key" data-key=" " data-code="Space" data-physical-key="Space" type="button" aria-label="Space 键，输入空格">بوشلۇق</button>
+      </div>
+    </div>
+  `;
 }
 
 function seededNumber(seedText) {
@@ -1679,6 +1769,7 @@ function resetPracticeState() {
   state.selectedListening = "";
   state.practiceAudioPlayed = false;
   state.keyboardValue = "";
+  state.keyboardShift = false;
   state.writingChecks = [];
 }
 
@@ -1808,11 +1899,19 @@ function renderAudioWord({ value, audio, className = "" }) {
   `;
 }
 
-function renderAudioFocus({ audio, label, title, hint, hideFile = false, hideCaption = false, className = "" }) {
+function renderAudioFocus({ audio, label, title, hint, hideFile = false, hideCaption = false, buttonOnly = false, className = "" }) {
   const canPlay = isAudioPlayable(audio);
   const audioInfo = canPlay ? (hideFile ? `${audio.statusLabel}。` : `${audio.statusLabel}：${audio.file}。`) : "";
   const caption = hideCaption ? "" : canPlay ? `${audioInfo}${hint}` : "音频待录，暂不播放。";
-  const classes = ["letter-focus", "audio-focus", className].filter(Boolean).join(" ");
+  const classes = ["letter-focus", "audio-focus", buttonOnly ? "audio-only-focus" : "", className].filter(Boolean).join(" ");
+
+  if (buttonOnly) {
+    return `
+      <div class="${classes}">
+        ${renderAudioButton({ audio, label, className: "letter-focus-play" })}
+      </div>
+    `;
+  }
 
   return `
     <div class="${classes}">
@@ -2358,7 +2457,7 @@ function renderWelcome() {
   const accountEmail = cloudAccountEmail();
   return `
     <div class="hero view without-nav">
-      <div class="hero-content">
+      <div class="hero-content ${appConfig.cloudEnabled ? "with-auth" : "local-only"}">
         <div class="hero-intro">
           <img class="hero-logo" src="${escapeHtml(appConfig.logoPath)}" alt="${escapeHtml(appConfig.brandName)} logo" />
           <h1>${escapeHtml(appConfig.brandName)}</h1>
@@ -3130,7 +3229,8 @@ function renderLetterSoundChoice() {
           audio,
           label: letter.letter,
           title: `播放或查看读音：${letter.latin}`,
-          hint: "音频未生成时，先用转写提示做读音选择练习。"
+          hint: "音频未生成时，先用转写提示做读音选择练习。",
+          buttonOnly: true
         })}
         <article class="card">
           <p class="caption">选择正确字母</p>
@@ -3178,7 +3278,7 @@ function renderKeyboardPractice() {
   const letter = currentLetter();
   const isCorrect = state.keyboardValue === letter.letter;
   const hasInput = state.keyboardValue.length > 0;
-  const keyboardParts = [letter.letter];
+  const keyboardParts = physicalKeyboardParts(letter.letter);
 
   return screen(
     `
@@ -3204,31 +3304,7 @@ function renderKeyboardPractice() {
           dir="rtl"
         />
         ${renderKeyboardGuide(keyboardParts, letter.letter)}
-        <div class="practice-key-row" aria-label="本组字母快捷键">
-          ${currentGroupLetters()
-            .map(
-              (item) => `
-                <button class="key-button uyghur ${guidedKeyClass(item.letter, keyboardParts, letter.letter)}" data-action="key" data-key="${item.letter}" type="button">
-                  ${displayStandaloneLetterGlyph(item.letter)}
-                </button>
-              `
-            )
-            .join("")}
-        </div>
-        <div class="keyboard-grid" aria-label="维吾尔语虚拟键盘">
-          ${keyboardRows
-            .flat()
-            .map(
-              (key) => `
-                <button class="key-button uyghur ${guidedKeyClass(key, keyboardParts, letter.letter)}" data-action="key" data-key="${key}" type="button">
-                  ${key}
-                </button>
-              `
-            )
-            .join("")}
-          <button class="key-button utility" data-action="backspace" type="button">删除</button>
-          <button class="key-button utility" data-action="clear-input" type="button">清空</button>
-        </div>
+        ${renderUyghurKeyboard(letter.letter)}
         ${
           hasInput
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
@@ -3236,9 +3312,9 @@ function renderKeyboardPractice() {
                   ? "输入正确。你已经完成这一课。"
                   : `继续输入，目标字母是 ${displayStandaloneLetterGlyph(letter.letter)}。`
               }</div>`
-            : `<div class="feedback">提示：点击 <span class="uyghur">${displayStandaloneLetterGlyph(letter.letter)}</span>。</div>`
+            : `<div class="feedback">提示：按顺序点击 <span class="uyghur">${keyboardParts.map(keyboardPartLabel).join("、")}</span>，橙色键是下一步。</div>`
         }
-        <button class="primary-button" data-action="go" data-target="complete" type="button">
+        <button class="primary-button" data-action="go" data-target="complete" type="button" ${isCorrect ? "" : "disabled"}>
           完成课程
         </button>
       </section>
@@ -3688,7 +3764,7 @@ function renderComboKeyboard() {
   const item = currentComboItem();
   const isCorrect = state.keyboardValue === item.value;
   const hasInput = state.keyboardValue.length > 0;
-  const keyboardParts = item.parts;
+  const keyboardParts = physicalKeyboardParts(item.value);
 
   return screen(
     `
@@ -3736,20 +3812,7 @@ function renderComboKeyboard() {
             )
             .join("")}
         </div>
-        <div class="keyboard-grid" aria-label="维吾尔语虚拟键盘">
-          ${keyboardRows
-            .flat()
-            .map(
-              (key) => `
-                <button class="key-button uyghur ${guidedKeyClass(key, keyboardParts, item.value)}" data-action="key" data-key="${key}" type="button">
-                  ${key}
-                </button>
-              `
-            )
-            .join("")}
-          <button class="key-button utility" data-action="backspace" type="button">删除</button>
-          <button class="key-button utility" data-action="clear-input" type="button">清空</button>
-        </div>
+        ${renderUyghurKeyboard(item.value)}
         ${
           hasInput
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
@@ -3830,7 +3893,6 @@ function renderVocabRow(item, activeId) {
     >
       <div class="vocab-word-cell">
         ${renderAudioWord({ value: item.value, audio })}
-        ${renderVocabMorphemeBreakdown(item.value)}
       </div>
       <button
         class="vocab-row-main"
@@ -3876,8 +3938,6 @@ function renderVocabLesson() {
   const group = currentVocabGroup();
   const item = currentVocabItem();
   const section = currentVocabSection();
-  const sectionItems = currentVocabSectionItems();
-  const position = itemPosition(sectionItems, item.id);
 
   return screen(
     `
@@ -3898,13 +3958,7 @@ function renderVocabLesson() {
           </div>
           <p class="muted compact-note">点维语词播放；点右侧解释选择词。中文仅预览，不设唯一答案。</p>
           ${renderVocabRows(group, item.id)}
-          ${renderSentenceGlosses(item.value)}
         </article>
-
-        <div class="item-progress">
-          <span class="step-state">${position.label}</span>
-          <strong>当前：${state.preferences.showLatin ? `${item.latin} · ` : ""}${item.meaning}</strong>
-        </div>
 
         <div class="action-grid vocab-action-grid">
           <button class="secondary-button" data-action="go" data-target="vocabRecognition" type="button">
@@ -3990,7 +4044,7 @@ function renderVocabKeyboard() {
   const sectionItems = currentVocabSectionItems();
   const isCorrect = state.keyboardValue === item.value;
   const hasInput = state.keyboardValue.length > 0;
-  const keyboardParts = item.parts;
+  const keyboardParts = physicalKeyboardParts(item.value);
 
   return screen(
     `
@@ -4038,10 +4092,7 @@ function renderVocabKeyboard() {
             )
             .join("")}
         </div>
-        <div class="tool-row">
-          <button class="secondary-button" data-action="backspace" type="button">删除</button>
-          <button class="secondary-button" data-action="clear-input" type="button">清空</button>
-        </div>
+        ${renderUyghurKeyboard(item.value)}
         ${
           hasInput
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
@@ -4149,31 +4200,36 @@ function renderReadingLine(unit, item) {
   `;
 }
 
-function renderGlossSegments(segments) {
+function renderGlossSegments(segments, formation = null) {
   if (!segments?.length) return "";
 
   return `
-    <div class="morpheme-glosses" aria-label="词素拆解" dir="rtl">
-      ${segments
-        .map(
-          (segment) => `
-            <span class="morpheme-gloss" data-morpheme="${escapeHtml(segment.word)}">
-              <b class="uyghur" dir="rtl">${escapeHtml(segment.word)}</b>
-              <small dir="ltr">${escapeHtml(segment.latin)}</small>
-              <em dir="ltr">${escapeHtml(segment.meaning)}</em>
-            </span>
+    <div class="morpheme-breakdown">
+      <div class="morpheme-glosses" aria-label="词素拆解" dir="rtl">
+        ${segments
+          .map(
+            (segment) => `
+              <span class="morpheme-gloss" data-morpheme="${escapeHtml(segment.word)}">
+                <b class="uyghur" dir="rtl">${escapeHtml(segment.word)}</b>
+                <small dir="ltr">${escapeHtml(segment.latin)}</small>
+                <em dir="ltr">${escapeHtml(segment.meaning)}</em>
+              </span>
+            `
+          )
+          .join('<span class="morpheme-direction" aria-hidden="true">←</span>')}
+      </div>
+      ${
+        formation
+          ? `
+            <div class="morpheme-formation">
+              <b class="uyghur" dir="rtl">${escapeHtml(formation.formula)}</b>
+              <small dir="ltr">${escapeHtml(formation.note)}</small>
+            </div>
           `
-        )
-        .join('<span class="morpheme-direction" aria-hidden="true">←</span>')}
+          : ""
+      }
     </div>
   `;
-}
-
-function renderVocabMorphemeBreakdown(value) {
-  const gloss = sentenceGlossary.glossToken(value);
-  if (!gloss?.segments?.length) return "";
-
-  return `<div class="vocab-morpheme-breakdown">${renderGlossSegments(gloss.segments)}</div>`;
 }
 
 function renderSentenceGlosses(value) {
@@ -4192,11 +4248,11 @@ function renderSentenceGlosses(value) {
         ${glosses
           .map(
             (gloss) => `
-              <span class="word-gloss" data-gloss-word="${escapeHtml(gloss.word)}">
+              <span class="word-gloss ${gloss.formation ? "has-formation" : ""}" data-gloss-word="${escapeHtml(gloss.word)}">
                 <b class="uyghur" dir="rtl">${escapeHtml(gloss.word)}</b>
                 <small dir="ltr">${escapeHtml(gloss.latin)}</small>
                 <em dir="ltr">${escapeHtml(gloss.meaning)}</em>
-                ${renderGlossSegments(gloss.segments)}
+                ${renderGlossSegments(gloss.segments, gloss.formation)}
               </span>
             `
           )
@@ -4387,8 +4443,6 @@ function renderPracticeModeCard(group, item) {
   }
 
   if (group.mode === "keyboard") {
-    const keyboardChoices = practiceKeyboardChoices(item);
-
     return `
       <input
         class="rtl-input uyghur"
@@ -4397,21 +4451,7 @@ function renderPracticeModeCard(group, item) {
         readonly
         dir="rtl"
       />
-      <div class="keyboard-grid random-keyboard-grid" aria-label="随机字母键盘">
-        ${keyboardChoices
-          .map(
-            (key) => `
-              <button class="key-button uyghur" data-action="key" data-key="${key}" type="button">
-                ${key}
-              </button>
-            `
-          )
-          .join("")}
-      </div>
-      <div class="keyboard-utility-row" aria-label="键盘工具">
-        <button class="key-button utility" data-action="backspace" type="button">删除</button>
-        <button class="key-button utility" data-action="clear-input" type="button">清空</button>
-      </div>
+      ${renderUyghurKeyboard(item.value)}
     `;
   }
 
@@ -4744,33 +4784,13 @@ function profileStreakDays(progress) {
 
 function renderProfileHero(progress, reviewCount) {
   const streakDays = profileStreakDays(progress);
-  if (!appConfig.cloudEnabled) {
-    return `
-      <article class="card profile-hero-card">
-        <div class="profile-identity">
-          <div class="profile-avatar"><span aria-hidden="true">UT</span></div>
-          <div class="profile-account">
-            <p class="caption">本地学习</p>
-            <h2 class="section-title">${escapeHtml(appConfig.brandName)} 学习者</h2>
-            <p class="muted">学习进度保存在当前设备</p>
-          </div>
-          <span class="step-state profile-status">本地模式</span>
-        </div>
-        <div class="metric-grid profile-account-metrics" aria-label="个人学习概览">
-          <div class="metric"><strong>${streakDays}</strong><span>连续学习</span></div>
-          <div class="metric"><strong>${reviewCount}</strong><span>今日待复习</span></div>
-          <div class="metric"><strong>${progress.completed} / ${progress.total}</strong><span>总进度</span></div>
-        </div>
-        <div class="profile-progress-row"><span>个人学习状态</span><strong>${progress.percent}%</strong></div>
-        <div class="progress-track" aria-hidden="true"><div class="progress-fill" style="--value: ${progress.percent}%"></div></div>
-        <p class="caption">可使用下方导出功能备份学习记录。</p>
-      </article>
-    `;
-  }
   const accountEmail = cloudAccountEmail();
   const accountProfile = cloudAccountProfile();
-  const avatarUrl = accountProfile.avatarUrl;
-  const displayName = accountProfile.displayName || `${appConfig.brandName} 学习者`;
+  const usingCloudProfile = Boolean(appConfig.cloudEnabled && accountEmail);
+  const avatarUrl = usingCloudProfile ? accountProfile.avatarUrl : state.localProfile.avatarDataUrl;
+  const displayName =
+    (usingCloudProfile ? accountProfile.displayName : state.localProfile.displayName) ||
+    `${appConfig.brandName} 学习者`;
   const avatarContent = avatarUrl
     ? `<img src="${escapeHtml(avatarUrl)}" alt="学习头像" />`
     : `<span aria-hidden="true">${appConfig.brandName === "Ana Tilim" ? "AT" : "UT"}</span>`;
@@ -4780,21 +4800,21 @@ function renderProfileHero(progress, reviewCount) {
       <div class="profile-identity">
         <div class="profile-avatar-picker">
           <div class="profile-avatar">${avatarContent}</div>
-          <label class="profile-avatar-action ${accountEmail ? "" : "disabled"}">
+          <label class="profile-avatar-action">
             <input
               id="profile-avatar-input"
               type="file"
               accept="image/*"
               aria-label="从相册选择头像"
-              ${accountEmail && !state.avatarUploading ? "" : "disabled"}
+              ${state.avatarUploading ? "disabled" : ""}
             />
             <span>${state.avatarUploading ? "上传中…" : "选择头像"}</span>
           </label>
         </div>
         <div class="profile-account">
-          <p class="caption">学习账号</p>
-          <h2 class="section-title">${escapeHtml(displayName)}</h2>
-          <p class="muted">${accountEmail ? escapeHtml(accountEmail) : "无需登录也可学习"}</p>
+          <p class="caption">${usingCloudProfile ? "学习账号" : "本地学习"}</p>
+          ${renderProfileNameControl(displayName)}
+          <p class="muted">${usingCloudProfile ? escapeHtml(accountEmail) : "学习进度与个人资料保存在当前设备"}</p>
         </div>
         <span class="step-state profile-status">${cloudStatusLabel()}</span>
       </div>
@@ -4810,7 +4830,13 @@ function renderProfileHero(progress, reviewCount) {
       <div class="progress-track" aria-hidden="true">
         <div class="progress-fill" style="--value: ${progress.percent}%"></div>
       </div>
-      <p class="caption">${accountEmail ? "学习记录会自动同步到云端。" : "登录后可自动保存并跨设备同步学习记录。"}</p>
+      <p class="caption">${
+        usingCloudProfile
+          ? "学习记录会自动同步到云端。"
+          : appConfig.cloudEnabled
+            ? "无需登录即可修改昵称和头像；登录后学习记录可跨设备同步。"
+            : "可直接修改昵称和头像，并可使用导出功能备份学习记录。"
+      }</p>
     </article>
   `;
 }
@@ -4883,10 +4909,40 @@ function renderToggleSetting({ label, detail, action, checked }) {
   `;
 }
 
+function renderProfileNameControl(displayName) {
+  if (!state.profileNameEditing) {
+    return `
+      <div class="profile-name-heading">
+        <h2 class="section-title">${escapeHtml(displayName)}</h2>
+        <button class="profile-name-edit-button" data-action="edit-display-name" type="button" aria-label="修改昵称">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 20h4L19 9l-4-4L4 16v4Z" />
+            <path d="m13.5 6.5 4 4" />
+          </svg>
+        </button>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="profile-name-inline-editor">
+      <input
+        id="profile-display-name"
+        type="text"
+        maxlength="40"
+        autocomplete="name"
+        value="${escapeHtml(displayName)}"
+        aria-label="昵称"
+      />
+      <button class="profile-name-save" data-action="save-display-name" type="button">保存</button>
+      <button class="profile-name-cancel" data-action="cancel-display-name" type="button">取消</button>
+    </div>
+  `;
+}
+
 function renderSettingsPanel() {
   const preferences = state.preferences;
   const accountEmail = cloudAccountEmail();
-  const accountProfile = cloudAccountProfile();
 
   return `
     <article class="card profile-settings-card">
@@ -4932,25 +4988,6 @@ function renderSettingsPanel() {
           </div>
           <span class="step-state">${cloudStatusLabel()}</span>
         </div>
-        ${
-          accountEmail
-            ? `
-              <div class="profile-name-editor">
-                <label class="auth-field" for="profile-display-name">
-                  <span>学习名称</span>
-                  <input
-                    id="profile-display-name"
-                    type="text"
-                    maxlength="40"
-                    autocomplete="name"
-                    value="${escapeHtml(accountProfile.displayName || "Ana Tilim 学习者")}"
-                  />
-                </label>
-                <button class="secondary-button" data-action="save-display-name" type="button">保存名称</button>
-              </div>
-            `
-            : ""
-        }
         ${renderCloudAuthControls()}
         `
             : `
@@ -5088,6 +5125,32 @@ function handleCloudStatus(nextStatus) {
   render();
 }
 
+function appendKeyboardValue(value) {
+  const previousKeyboardValue = state.keyboardValue;
+  state.keyboardValue += value;
+  state.keyboardShift = false;
+  markCurrentLetterKeyboardIfCorrect();
+  if (state.screen === "comboKeyboard" && state.keyboardValue === currentComboItem().value) {
+    markProgress("combos", state.selectedComboGroupId, "keyboard");
+  }
+  if (state.screen === "vocabKeyboard" && state.keyboardValue === currentVocabItem().value) {
+    markProgress("vocab", state.selectedVocabGroupId, "keyboard");
+  }
+  if (state.screen === "practiceSession" && currentPracticeGroup().mode === "keyboard") {
+    const target = currentPracticeItem();
+    if (state.keyboardValue === target.value) {
+      markProgress("practice", state.selectedPracticeGroupId, "keyboard");
+    } else if (!previousKeyboardValue) {
+      recordItemMistake(
+        "practice",
+        target,
+        { id: `key-${value}`, value, latin: "键盘" },
+        "练习中心错题"
+      );
+    }
+  }
+}
+
 document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-action]");
   if (!button) {
@@ -5114,6 +5177,12 @@ document.addEventListener("click", (event) => {
     setPreference("audioAutoplay", !state.preferences.audioAutoplay);
     render();
     showToast(state.preferences.audioAutoplay ? "自动播放已开启" : "自动播放已关闭");
+    return;
+  }
+
+  if (action === "toggle-keyboard-shift") {
+    state.keyboardShift = !state.keyboardShift;
+    render();
     return;
   }
 
@@ -5302,6 +5371,19 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (action === "edit-display-name") {
+    state.profileNameEditing = true;
+    render();
+    window.requestAnimationFrame(() => document.querySelector("#profile-display-name")?.focus());
+    return;
+  }
+
+  if (action === "cancel-display-name") {
+    state.profileNameEditing = false;
+    render();
+    return;
+  }
+
   if (action === "save-display-name") {
     const validation = validateDisplayName(
       document.querySelector("#profile-display-name")?.value || ""
@@ -5310,9 +5392,18 @@ document.addEventListener("click", (event) => {
       showToast(validation.message);
       return;
     }
+    if (!cloudAccountEmail()) {
+      state.localProfile.displayName = validation.value;
+      state.profileNameEditing = false;
+      saveLocalProgress();
+      render();
+      showToast("昵称已更新");
+      return;
+    }
     cloudSync
       ?.updateDisplayName(validation.value)
       .then(() => {
+        state.profileNameEditing = false;
         render();
         showToast("名称已更新");
       })
@@ -5676,28 +5767,7 @@ document.addEventListener("click", (event) => {
   }
 
   if (action === "key") {
-    const previousKeyboardValue = state.keyboardValue;
-    state.keyboardValue += button.dataset.key;
-    markCurrentLetterKeyboardIfCorrect();
-    if (state.screen === "comboKeyboard" && state.keyboardValue === currentComboItem().value) {
-      markProgress("combos", state.selectedComboGroupId, "keyboard");
-    }
-    if (state.screen === "vocabKeyboard" && state.keyboardValue === currentVocabItem().value) {
-      markProgress("vocab", state.selectedVocabGroupId, "keyboard");
-    }
-    if (state.screen === "practiceSession" && currentPracticeGroup().mode === "keyboard") {
-      const target = currentPracticeItem();
-      if (state.keyboardValue === target.value) {
-        markProgress("practice", state.selectedPracticeGroupId, "keyboard");
-      } else if (!previousKeyboardValue) {
-        recordItemMistake(
-          "practice",
-          target,
-          { id: `key-${button.dataset.key}`, value: button.dataset.key, latin: "键盘" },
-          "练习中心错题"
-        );
-      }
-    }
+    appendKeyboardValue(button.dataset.key || "");
     render();
     return;
   }
@@ -5765,6 +5835,55 @@ document.addEventListener("click", (event) => {
   }
 });
 
+document.addEventListener("keydown", (event) => {
+  const onKeyboardLesson =
+    ["keyboard", "comboKeyboard", "vocabKeyboard"].includes(state.screen) ||
+    (state.screen === "practiceSession" && currentPracticeGroup().mode === "keyboard");
+  if (!onKeyboardLesson || event.ctrlKey || event.altKey || event.metaKey) return;
+  if (event.target?.matches?.("input, textarea, select, [contenteditable='true']")) return;
+
+  if (event.code === "Backspace") {
+    event.preventDefault();
+    state.keyboardValue = state.keyboardValue.slice(0, -1);
+    render();
+    return;
+  }
+
+  const mappedKey = uyghurKeyboard.keyForCode(event.code, event.shiftKey);
+  if (!mappedKey) return;
+  event.preventDefault();
+  appendKeyboardValue(mappedKey.value);
+  render();
+});
+
+function createLocalAvatarDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("头像读取失败"));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error("头像图片无法打开"));
+      image.onload = () => {
+        const size = Math.min(image.naturalWidth, image.naturalHeight);
+        const sourceX = Math.max(0, (image.naturalWidth - size) / 2);
+        const sourceY = Math.max(0, (image.naturalHeight - size) / 2);
+        const canvas = document.createElement("canvas");
+        canvas.width = 256;
+        canvas.height = 256;
+        const context = canvas.getContext("2d");
+        if (!context) {
+          reject(new Error("当前浏览器无法处理头像"));
+          return;
+        }
+        context.drawImage(image, sourceX, sourceY, size, size, 0, 0, 256, 256);
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      image.src = String(reader.result || "");
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 document.addEventListener("change", (event) => {
   const input = event.target;
   if (input?.id === "progress-import-input") {
@@ -5787,10 +5906,6 @@ document.addEventListener("change", (event) => {
 
   const file = input.files?.[0];
   if (!file) return;
-  if (!cloudAccountEmail()) {
-    showToast("请先登录后再更换头像");
-    return;
-  }
   if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) {
     showToast("请选择 JPG、PNG、WebP 或 GIF 图片");
     return;
@@ -5802,6 +5917,22 @@ document.addEventListener("change", (event) => {
 
   state.avatarUploading = true;
   render();
+  if (!cloudAccountEmail()) {
+    createLocalAvatarDataUrl(file)
+      .then((avatarDataUrl) => {
+        state.localProfile.avatarDataUrl = avatarDataUrl;
+        state.avatarUploading = false;
+        saveLocalProgress();
+        render();
+        showToast("头像已更新");
+      })
+      .catch((error) => {
+        state.avatarUploading = false;
+        render();
+        showToast(error?.message || "头像处理失败");
+      });
+    return;
+  }
   cloudSync
     ?.uploadAvatar(file)
     .then(() => {

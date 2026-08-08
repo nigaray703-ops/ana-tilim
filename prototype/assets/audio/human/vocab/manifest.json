@@ -65,30 +65,6 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 6,
-      "id": "assalamu",
-      "groupId": "greetings",
-      "value": "ئەسسالامۇ ئەلەيكۇم",
-      "latin": "essalamu eleykum",
-      "file": "human_vocab_assalamu.webm",
-      "outputPath": "./assets/audio/human/vocab/human_vocab_assalamu.webm",
-      "reviewStatus": "已接入",
-      "playable": true,
-      "statusLabel": "真人音频"
-    },
-    {
-      "order": 7,
-      "id": "waalaykum",
-      "groupId": "greetings",
-      "value": "ۋەئەلەيكۇم ئەسسالام",
-      "latin": "we'eleykum essalam",
-      "file": "human_vocab_waalaykum.webm",
-      "outputPath": "./assets/audio/human/vocab/human_vocab_waalaykum.webm",
-      "reviewStatus": "已接入",
-      "playable": true,
-      "statusLabel": "真人音频"
-    },
-    {
       "order": 8,
       "id": "xush-keldingiz",
       "groupId": "greetings",

@@ -1,3 +1,19 @@
+@font-face {
+  font-family: "Scheherazade New";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/ScheherazadeNew-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Scheherazade New";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/ScheherazadeNew-Bold.woff2") format("woff2");
+}
+
 :root {
   --ink: #162657;
   --ink-soft: #4f5d85;
@@ -265,9 +281,7 @@ button {
   font-weight: 700;
   line-height: 1.2;
   font-family:
-    "Geeza Pro", "GeezaPro", "SF Arabic",
-    "UKIJ Tuz Tom", "UKIJ Tuz", "ALKATIP Tor",
-    "Noto Naskh Arabic", "Scheherazade New", Arial, sans-serif;
+    "Scheherazade New", "Noto Naskh Arabic", serif;
 }
 
 .hero-copy {
@@ -284,6 +298,11 @@ button {
 .auth-panel {
   width: 100%;
   text-align: left;
+}
+
+.auth-panel > div:first-child,
+.auth-status-copy {
+  text-align: center;
 }
 
 .auth-field {
@@ -1331,9 +1350,7 @@ button {
 .uyghur {
   direction: rtl;
   font-family:
-    "SF Arabic", "Geeza Pro", "GeezaPro",
-    "UKIJ Tuz Tom", "UKIJ Tuz", "ALKATIP Tor",
-    "Noto Naskh Arabic", "Scheherazade New", Arial, sans-serif;
+    "Scheherazade New", "Noto Naskh Arabic", serif;
   letter-spacing: 0;
 }
 
@@ -1347,9 +1364,7 @@ button {
 .practice-drawing-pad .guide,
 .writing-pad .guide {
   font-family:
-    "Damascus", "Geeza Pro", "GeezaPro", "SF Arabic",
-    "UKIJ Tuz Tom", "UKIJ Tuz", "ALKATIP Tor",
-    "Noto Naskh Arabic", "Scheherazade New", Arial, sans-serif;
+    "Scheherazade New", "Noto Naskh Arabic", serif;
 }
 
 .letter-big {
@@ -1520,7 +1535,7 @@ button {
 .form-example-word .form-example-word-text {
   max-width: 100%;
   color: #000;
-  font-family: Arial, "Times New Roman", "Geeza Pro", sans-serif;
+  font-family: "Scheherazade New", "Noto Naskh Arabic", serif;
   font-size: 28px;
   font-weight: 500;
   line-height: 1.15;
@@ -1913,7 +1928,7 @@ button {
 }
 
 .reading-value {
-  font-family: "Times New Roman", Arial, sans-serif;
+  font-family: "Scheherazade New", "Noto Naskh Arabic", serif;
   font-size: 24px;
   font-weight: 600;
   line-height: 1.45;
@@ -1981,6 +1996,10 @@ button {
   text-align: center;
 }
 
+.word-gloss.has-formation {
+  width: min(100%, 330px);
+}
+
 .word-gloss > b {
   color: var(--ink);
   font-size: 17px;
@@ -2035,17 +2054,25 @@ button {
   font-weight: 900;
 }
 
-.vocab-morpheme-breakdown {
-  max-width: 100%;
+.morpheme-formation {
+  display: grid;
+  gap: 3px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(14, 155, 177, 0.28);
+  text-align: center;
 }
 
-.vocab-morpheme-breakdown .morpheme-glosses {
-  margin-top: 2px;
-  padding-top: 4px;
+.morpheme-formation b {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-.vocab-morpheme-breakdown .morpheme-gloss em {
-  max-width: 64px;
+.morpheme-formation small {
+  color: var(--ink-soft);
+  font-size: 9px;
+  line-height: 1.45;
 }
 
 .reading-intro-text {
@@ -2313,6 +2340,16 @@ button {
   margin-top: 2px;
 }
 
+.audio-only-focus {
+  min-height: 116px;
+  justify-content: center;
+  padding: 18px;
+}
+
+.audio-only-focus .letter-focus-play {
+  margin: 0;
+}
+
 .keyboard-guide-card .uyghur {
   font-size: 20px;
   line-height: 1.25;
@@ -2366,6 +2403,83 @@ button {
   grid-template-columns: repeat(5, 1fr);
 }
 
+.uyghur-keyboard {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+  padding: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, rgba(223, 246, 247, 0.82), rgba(255, 242, 207, 0.66) 58%, var(--paper));
+  box-shadow: 0 14px 32px rgba(22, 38, 87, 0.10);
+  direction: ltr;
+}
+
+.uyghur-keyboard-row,
+.uyghur-keyboard-tools {
+  display: grid;
+  gap: 7px;
+  width: 100%;
+}
+
+.uyghur-keyboard-row.row-top {
+  grid-template-columns: repeat(10, minmax(38px, 1fr));
+}
+
+.uyghur-keyboard-row.row-home {
+  grid-template-columns: repeat(9, minmax(38px, 1fr));
+  width: 90%;
+  margin-inline: auto;
+}
+
+.uyghur-keyboard-row.row-bottom {
+  grid-template-columns: 1.18fr repeat(8, minmax(38px, 1fr)) 1.18fr;
+}
+
+.uyghur-keyboard-tools {
+  grid-template-columns: minmax(0, 1fr);
+  width: min(62%, 420px);
+  margin-inline: auto;
+}
+
+.uyghur-keyboard-tools .key-button.utility {
+  grid-column: auto;
+}
+
+.physical-key {
+  position: relative;
+  display: grid;
+  min-height: 58px;
+  padding: 5px 6px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-bottom: 2px solid rgba(22, 38, 87, 0.14);
+  border-radius: 10px;
+}
+
+.physical-key small {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  color: var(--ink-soft);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 9px;
+  line-height: 1;
+}
+
+.physical-key strong {
+  font-size: 23px;
+  line-height: 1;
+}
+
+.keyboard-shift.active {
+  color: #fff;
+  background: var(--mint);
+}
+
 .random-keyboard-grid {
   grid-auto-rows: minmax(46px, auto);
 }
@@ -2403,6 +2517,112 @@ button {
   font-size: 12px;
   font-weight: 800;
   line-height: 1.2;
+}
+
+.uyghur-keyboard .key-button {
+  min-width: 0;
+  min-height: 58px;
+  padding: 6px 4px;
+  border-color: var(--line);
+  color: var(--ink);
+  background: var(--paper);
+  box-shadow: 0 2px 0 rgba(22, 38, 87, 0.13);
+  transition: transform 100ms ease, box-shadow 100ms ease, background-color 140ms ease;
+}
+
+.uyghur-keyboard .key-button.utility {
+  grid-column: auto;
+  font-size: 18px;
+}
+
+.uyghur-keyboard .key-button.next-key {
+  color: var(--ink);
+  background: #fff0c8;
+  box-shadow:
+    0 0 0 2px rgba(230, 172, 79, 0.58),
+    0 2px 0 rgba(22, 38, 87, 0.13);
+}
+
+.uyghur-keyboard .keyboard-shift,
+.uyghur-keyboard .keyboard-backspace {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--teal-soft);
+}
+
+.uyghur-keyboard .keyboard-shift.active {
+  color: #fff;
+  background: var(--mint);
+}
+
+.uyghur-keyboard .keyboard-space {
+  font-size: 18px;
+  color: var(--ink);
+  background: var(--mint-soft);
+}
+
+.uyghur-keyboard .key-button:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+@media (min-width: 561px) and (max-width: 900px) {
+  .uyghur-keyboard {
+    max-width: 680px;
+  }
+
+  .uyghur-keyboard .key-button,
+  .physical-key {
+    min-height: 54px;
+  }
+}
+
+@media (max-width: 560px) {
+  .uyghur-keyboard {
+    gap: 6px;
+    padding: 8px 6px;
+    border-radius: 14px;
+  }
+
+  .uyghur-keyboard-row,
+  .uyghur-keyboard-tools {
+    gap: 4px;
+  }
+
+  .uyghur-keyboard-row.row-top {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
+
+  .uyghur-keyboard-row.row-home {
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+    width: 92%;
+  }
+
+  .uyghur-keyboard-row.row-bottom {
+    grid-template-columns: 1.15fr repeat(8, minmax(0, 1fr)) 1.15fr;
+  }
+
+  .uyghur-keyboard .key-button,
+  .physical-key {
+    min-height: 48px;
+    padding: 4px 2px;
+    border-radius: 8px;
+  }
+
+  .physical-key small {
+    top: 3px;
+    left: 4px;
+    font-size: 7px;
+  }
+
+  .physical-key strong {
+    font-size: clamp(17px, 5.4vw, 22px);
+  }
+
+  .uyghur-keyboard .key-button.utility,
+  .uyghur-keyboard .keyboard-space {
+    font-size: 14px;
+  }
 }
 
 .word-row,
@@ -2512,6 +2732,102 @@ button {
 
 .profile-account {
   min-width: 0;
+}
+
+.profile-name-heading {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.profile-name-heading .section-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.profile-name-edit-button {
+  display: inline-grid;
+  flex: 0 0 32px;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--ink-soft);
+  background: transparent;
+  cursor: pointer;
+}
+
+.profile-name-edit-button:hover,
+.profile-name-edit-button:focus-visible {
+  color: var(--teal);
+  background: var(--cyan-soft);
+}
+
+.profile-name-edit-button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.9;
+}
+
+.profile-name-inline-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 5px;
+  width: min(100%, 520px);
+}
+
+.profile-name-inline-editor input {
+  min-width: 0;
+  height: 36px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+  font-weight: 800;
+}
+
+.profile-name-inline-editor input:focus {
+  border-color: var(--cyan);
+  outline: 3px solid rgba(14, 155, 177, 0.14);
+}
+
+.profile-name-save,
+.profile-name-cancel {
+  min-height: 32px;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--navy);
+  background: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.profile-name-save {
+  border-color: rgba(14, 155, 177, 0.35);
+  color: #fff;
+  background: var(--teal);
+}
+
+@media (max-width: 470px) {
+  .profile-name-inline-editor {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .profile-name-inline-editor input {
+    grid-column: 1 / -1;
+  }
 }
 
 .profile-status {
@@ -2868,23 +3184,31 @@ button {
   .hero {
     min-height: 100%;
     padding: 40px;
-    text-align: left;
+    text-align: center;
   }
 
   .hero-content {
     width: min(100%, 920px);
-    grid-template-columns: minmax(240px, 0.9fr) minmax(320px, 1fr);
     align-items: center;
   }
 
+  .hero-content.with-auth {
+    grid-template-columns: minmax(240px, 0.9fr) minmax(320px, 1fr);
+  }
+
+  .hero-content.local-only {
+    width: min(100%, 460px);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .hero-intro {
-    justify-items: start;
+    justify-items: center;
   }
 
   .hero-copy {
     width: min(100%, 380px);
-    margin-right: 0;
-    margin-left: 0;
+    margin-right: auto;
+    margin-left: auto;
   }
 
   .home-center {

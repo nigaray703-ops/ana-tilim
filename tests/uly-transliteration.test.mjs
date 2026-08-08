@@ -38,7 +38,7 @@ const wordCases = new Map([
   ["سۇس كۆك", "sus kök"],
   ["مېۋە", "mëwe"],
   ["سائەت", "sa'et"],
-  ["ئەسسالامۇ ئەلەيكۇم", "essalamu eleykum"]
+  ["ياخشىمۇسىز", "yaxshimusiz"]
 ]);
 
 for (const [source, expected] of wordCases) {

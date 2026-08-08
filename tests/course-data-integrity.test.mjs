@@ -106,8 +106,6 @@ const sourceBackedFormExampleWords = {
 const sourceBackedVocabSpellings = {
   yaxshimusiz: { value: "ياخشىمۇسىز", latin: "yaxshimusiz" },
   rahmat: { value: "رەھمەت", latin: "rehmet" },
-  assalamu: { value: "ئەسسالامۇ ئەلەيكۇم", latin: "essalamu eleykum" },
-  waalaykum: { value: "ۋەئەلەيكۇم ئەسسالام", latin: "we'eleykum essalam" },
   korushkunche: { value: "كۆرۈشكىچە", latin: "körüshkiche" },
   "aile-family": { value: "ئائىلە", latin: "a'ile" },
   "ana-family": { value: "ئانا", latin: "ana" },
@@ -474,7 +472,7 @@ const formExampleItems = Object.values(letterDetails).flatMap((letter) =>
 );
 
 assert.equal(comboItems.length, 34, "all 34 basic combinations should be available for ULY review");
-assert.equal(vocabItems.length, 209, "all 209 vocabulary items should be available for ULY review");
+assert.equal(vocabItems.length, 207, "all 207 retained vocabulary items should be available for ULY review");
 assert.equal(readingItems.length, 164, "all 164 reading items should be available for ULY review");
 
 for (const [label, items] of [
@@ -497,7 +495,7 @@ for (const [label, items] of [
 
 const canonicalUlyFixtures = new Map([
   ["ئائىلە", "a'ile"],
-  ["ئەسسالامۇ ئەلەيكۇم", "essalamu eleykum"],
+  ["ياخشىمۇسىز", "yaxshimusiz"],
   ["مېۋە", "mëwe"],
   ["سائەت", "sa'et"],
   ["خەلقئارا", "xelq'ara"]
@@ -648,9 +646,10 @@ assertVocabTopic({
 });
 assert.ok(vocabGroups.length >= 10 && vocabGroups.length <= 15, "vocab should include 10 to 15 compact daily topics");
 for (const group of vocabGroups) {
+  const minimumGroupItems = group.id === "greetings" ? 13 : 15;
   assert.ok(
-    group.items.length >= 15 && group.items.length <= 45,
-    `vocab group ${group.id} should include at least 15 words without becoming too large`
+    group.items.length >= minimumGroupItems && group.items.length <= 45,
+    `vocab group ${group.id} should include at least ${minimumGroupItems} words without becoming too large`
   );
   assertList(group.sections, `vocab group ${group.id} sections`);
   assert.ok(group.sections.length >= 2, `vocab group ${group.id} should be divided into smaller sections`);
