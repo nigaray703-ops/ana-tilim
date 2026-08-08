@@ -390,12 +390,102 @@ assert.deepEqual(globalUnits.map(({ id, title }) => [id, title]), [
   ["famous-quotes", "第九单元：名人名言"]
 ]);
 
+function createConfiguredAppVm(hiddenUnitIds) {
+  const configuredApp = makeElement("configured-app");
+  const configuredToast = makeElement("configured-toast");
+  const configuredStorage = {};
+  const configuredSessionStorage = {};
+  const configuredContext = {
+    console,
+    document: {
+      querySelector(selector) {
+        if (selector === "#app") return configuredApp;
+        if (selector === "#toast") return configuredToast;
+        return null;
+      },
+      addEventListener() {}
+    },
+    window: {
+      setTimeout() {
+        return 1;
+      },
+      clearTimeout() {},
+      requestAnimationFrame(callback) {
+        callback();
+        return 1;
+      },
+      localStorage: {
+        getItem(key) {
+          return Object.prototype.hasOwnProperty.call(configuredStorage, key) ? configuredStorage[key] : null;
+        },
+        setItem(key, value) {
+          configuredStorage[key] = String(value);
+        },
+        removeItem(key) {
+          delete configuredStorage[key];
+        }
+      },
+      sessionStorage: {
+        getItem(key) {
+          return Object.prototype.hasOwnProperty.call(configuredSessionStorage, key)
+            ? configuredSessionStorage[key]
+            : null;
+        },
+        setItem(key, value) {
+          configuredSessionStorage[key] = String(value);
+        },
+        removeItem(key) {
+          delete configuredSessionStorage[key];
+        }
+      }
+    },
+    Audio: function FakeAudio(src) {
+      this.src = src;
+      this.pause = () => {};
+      this.play = () => Promise.resolve();
+    }
+  };
+
+  configuredContext.globalThis = configuredContext;
+  vm.createContext(configuredContext);
+  vm.runInContext(fs.readFileSync("prototype/app-config.js", "utf8"), configuredContext, {
+    filename: "prototype/app-config.js"
+  });
+  configuredContext.window.ANA_TILIM_APP_CONFIG = Object.freeze({
+    ...configuredContext.window.ANA_TILIM_APP_CONFIG,
+    cloudEnabled: false,
+    hiddenUnitIds
+  });
+  for (const scriptPath of courseDataScriptPaths) {
+    vm.runInContext(fs.readFileSync(scriptPath, "utf8"), configuredContext, { filename: scriptPath });
+  }
+  for (const scriptPath of [
+    courseDataAggregatorPath,
+    unitOrderPath,
+    uyghurKeyboardPath,
+    "prototype/sentence-morphemes.js",
+    "prototype/sentence-glossary.js",
+    "prototype/progress-transfer.js",
+    "prototype/app.js"
+  ]) {
+    vm.runInContext(fs.readFileSync(scriptPath, "utf8"), configuredContext, { filename: scriptPath });
+  }
+
+  return {
+    app: configuredApp,
+    context: configuredContext,
+    render(script) {
+      vm.runInContext(`${script}; render();`, configuredContext);
+      return configuredApp.innerHTML;
+    }
+  };
+}
+
+const domesticApp = createConfiguredAppVm(["famous-quotes"]);
 const domesticUnits = JSON.parse(
   vm.runInContext(
-    `JSON.stringify(unitOrder.buildVisibleUnits(learningUnitCatalog, {
-      hiddenUnitIds: ["famous-quotes"]
-    }).map(({ id, title }) => ({ id, title })))`,
-    context
+    "JSON.stringify(learningUnits.map(({ id, title }) => ({ id, title })))",
+    domesticApp.context
   )
 );
 assert.deepEqual(domesticUnits.map(({ id, title }) => [id, title]), [
@@ -408,6 +498,88 @@ assert.deepEqual(domesticUnits.map(({ id, title }) => [id, title]), [
   ["short-stories", "第七单元：小故事"],
   ["uyghur-proverbs", "第八单元：维吾尔谚语"]
 ]);
+const domesticLearningPath = domesticApp.render("state.screen = 'learn'");
+assert.equal(
+  (domesticLearningPath.match(/class="lesson-step"/g) || []).length,
+  8,
+  "domestic learning path should render only the eight visible course cards"
+);
+assert.ok(!domesticLearningPath.includes("名人名言"), "domestic learning path should hide famous quotes");
+assert.ok(
+  domesticLearningPath.indexOf("第七单元：小故事") < domesticLearningPath.indexOf("第八单元：维吾尔谚语"),
+  "domestic learning path should keep visible cards in edition order"
+);
+assert.deepEqual(
+  JSON.parse(
+    vm.runInContext(
+      "JSON.stringify(unitProgressSummaries().map(({ unit, label }) => [unit, label]))",
+      domesticApp.context
+    )
+  ),
+  [
+    ["第一单元", "认识字母"],
+    ["第二单元", "基础组合"],
+    ["第三单元", "日常用语与词汇"],
+    ["第四单元", "语法入门"],
+    ["第五单元", "基础句型"],
+    ["第六单元", "对话小剧场"],
+    ["第七单元", "小故事"],
+    ["第八单元", "维吾尔谚语"]
+  ],
+  "domestic progress summaries should include only visible units"
+);
+const domesticProverbActions = vm.runInContext(
+  "renderUnitNextActions('uyghur-proverbs')",
+  domesticApp.context
+);
+assert.ok(domesticProverbActions.includes("回到学习路径"), "domestic proverb unit should be terminal");
+assert.match(
+  domesticProverbActions,
+  /data-action="go"[^>]*data-target="learn"[^>]*>[\s\S]*?回到学习路径/,
+  "domestic proverb terminal action should return to the learning path"
+);
+assert.ok(!domesticProverbActions.includes('data-id="famous-quotes"'), "domestic proverb unit should not navigate to hidden quotes");
+
+const shiftedApp = createConfiguredAppVm(["letters"]);
+assert.equal(
+  vm.runInContext("unitNameForComboGroup()", shiftedApp.context),
+  "第一单元",
+  "combo labels should derive their ordinal from visible units"
+);
+assert.ok(
+  shiftedApp.render("state.screen = 'comboComplete'").includes("第一单元完成"),
+  "combo completion should render the visible combo ordinal"
+);
+assert.ok(
+  shiftedApp.render("state.screen = 'vocab'").includes("第二单元：日常用语与词汇"),
+  "vocabulary lesson should render its visible title"
+);
+assert.ok(
+  shiftedApp.render("state.screen = 'vocabComplete'").includes("第二单元完成"),
+  "vocabulary completion should render its visible ordinal"
+);
+assert.ok(
+  shiftedApp.render(
+    "state.screen = 'reading'; state.selectedReadingUnitId = 'grammar-basics'; state.selectedReadingGroupId = 'grammar-word-order'"
+  ).includes("第三单元：语法入门"),
+  "reading lesson should render its visible unit title"
+);
+
+assert.equal(
+  vm.runInContext("currentUnitExperience('letters').recommended", context),
+  "先复习字母分组，再进入下一单元。",
+  "letter recommendation should not name a next unit that can move"
+);
+assert.equal(
+  vm.runInContext("currentUnitExperience('letters').steps.at(-1)", context),
+  "完成后进入下一单元",
+  "letter steps should not name a next unit that can move"
+);
+assert.equal(
+  vm.runInContext("currentUnitExperience('sentence-patterns').recommended", context),
+  "把日常用语与词汇中学过的常用词放进短句里。",
+  "sentence recommendation should not keep a stale vocabulary ordinal"
+);
 assert.equal(vm.runInContext("currentUnitExperience('short-stories').nextUnitId", context), "uyghur-proverbs");
 assert.equal(vm.runInContext("currentUnitExperience('uyghur-proverbs').nextUnitId", context), "famous-quotes");
 assert.equal(vm.runInContext("currentUnitExperience('famous-quotes').nextUnitId", context), null);
