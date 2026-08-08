@@ -12,6 +12,7 @@ const uyghurKeyboardPath = "prototype/uyghur-keyboard.js";
 const courseDataScriptPaths = [
   "prototype/uly-transliteration.js",
   "prototype/course-data/alphabet-data.js",
+  "prototype/course-data/latin-writing-data.js",
   "prototype/course-data/combo-data.js",
   "prototype/course-data/vocab-data.js",
   "prototype/course-data/practice-data.js",
@@ -51,6 +52,7 @@ const expectedVersionedAssets = [
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
+  "./course-data/latin-writing-data.js?v=20260809-latin-writing",
   "./course-data/combo-data.js?v=20260728-uly-transliteration",
   "./course-data/vocab-data.js?v=20260728-uly-transliteration",
   "./course-data/practice-data.js?v=20260728-learned-markers",
@@ -411,14 +413,15 @@ const globalUnits = JSON.parse(
 );
 assert.deepEqual(globalUnits.map(({ id, title }) => [id, title]), [
   ["letters", "第一单元：认识字母"],
-  ["combos", "第二单元：基础组合"],
-  ["basic-phrases", "第三单元：日常用语与词汇"],
-  ["grammar-basics", "第四单元：语法入门"],
-  ["sentence-patterns", "第五单元：基础句型"],
-  ["dialogue-theater", "第六单元：对话小剧场"],
-  ["short-stories", "第七单元：小故事"],
-  ["uyghur-proverbs", "第八单元：维吾尔谚语"],
-  ["famous-quotes", "第九单元：名人名言"]
+  ["latin-keyboard-writing", "第二单元：拉丁键盘与字母书写强化"],
+  ["combos", "第三单元：基础组合"],
+  ["basic-phrases", "第四单元：日常用语与词汇"],
+  ["grammar-basics", "第五单元：语法入门"],
+  ["sentence-patterns", "第六单元：基础句型"],
+  ["dialogue-theater", "第七单元：对话小剧场"],
+  ["short-stories", "第八单元：小故事"],
+  ["uyghur-proverbs", "第九单元：维吾尔谚语"],
+  ["famous-quotes", "第十单元：名人名言"]
 ]);
 
 function createConfiguredAppVm(hiddenUnitIds) {
@@ -534,23 +537,24 @@ const domesticUnits = JSON.parse(
 );
 assert.deepEqual(domesticUnits.map(({ id, title }) => [id, title]), [
   ["letters", "第一单元：认识字母"],
-  ["combos", "第二单元：基础组合"],
-  ["basic-phrases", "第三单元：日常用语与词汇"],
-  ["grammar-basics", "第四单元：语法入门"],
-  ["sentence-patterns", "第五单元：基础句型"],
-  ["dialogue-theater", "第六单元：对话小剧场"],
-  ["short-stories", "第七单元：小故事"],
-  ["uyghur-proverbs", "第八单元：维吾尔谚语"]
+  ["latin-keyboard-writing", "第二单元：拉丁键盘与字母书写强化"],
+  ["combos", "第三单元：基础组合"],
+  ["basic-phrases", "第四单元：日常用语与词汇"],
+  ["grammar-basics", "第五单元：语法入门"],
+  ["sentence-patterns", "第六单元：基础句型"],
+  ["dialogue-theater", "第七单元：对话小剧场"],
+  ["short-stories", "第八单元：小故事"],
+  ["uyghur-proverbs", "第九单元：维吾尔谚语"]
 ]);
 const domesticLearningPath = domesticApp.render("state.screen = 'learn'");
 assert.equal(
   (domesticLearningPath.match(/class="lesson-step"/g) || []).length,
-  8,
-  "domestic learning path should render only the eight visible course cards"
+  9,
+  "domestic learning path should render only the nine visible course cards"
 );
 assert.ok(!domesticLearningPath.includes("名人名言"), "domestic learning path should hide famous quotes");
 assert.ok(
-  domesticLearningPath.indexOf("第七单元：小故事") < domesticLearningPath.indexOf("第八单元：维吾尔谚语"),
+  domesticLearningPath.indexOf("第八单元：小故事") < domesticLearningPath.indexOf("第九单元：维吾尔谚语"),
   "domestic learning path should keep visible cards in edition order"
 );
 assert.deepEqual(
@@ -562,13 +566,14 @@ assert.deepEqual(
   ),
   [
     ["第一单元", "认识字母"],
-    ["第二单元", "基础组合"],
-    ["第三单元", "日常用语与词汇"],
-    ["第四单元", "语法入门"],
-    ["第五单元", "基础句型"],
-    ["第六单元", "对话小剧场"],
-    ["第七单元", "小故事"],
-    ["第八单元", "维吾尔谚语"]
+    ["第二单元", "拉丁键盘与字母书写强化"],
+    ["第三单元", "基础组合"],
+    ["第四单元", "日常用语与词汇"],
+    ["第五单元", "语法入门"],
+    ["第六单元", "基础句型"],
+    ["第七单元", "对话小剧场"],
+    ["第八单元", "小故事"],
+    ["第九单元", "维吾尔谚语"]
   ],
   "domestic progress summaries should include only visible units"
 );
@@ -587,25 +592,25 @@ assert.ok(!domesticProverbActions.includes('data-id="famous-quotes"'), "domestic
 const shiftedApp = createConfiguredAppVm(["letters"]);
 assert.equal(
   vm.runInContext("unitNameForComboGroup()", shiftedApp.context),
-  "第一单元",
+  "第二单元",
   "combo labels should derive their ordinal from visible units"
 );
 assert.ok(
-  shiftedApp.render("state.screen = 'comboComplete'").includes("第一单元完成"),
+  shiftedApp.render("state.screen = 'comboComplete'").includes("第二单元完成"),
   "combo completion should render the visible combo ordinal"
 );
 assert.ok(
-  shiftedApp.render("state.screen = 'vocab'").includes("第二单元：日常用语与词汇"),
+  shiftedApp.render("state.screen = 'vocab'").includes("第三单元：日常用语与词汇"),
   "vocabulary lesson should render its visible title"
 );
 assert.ok(
-  shiftedApp.render("state.screen = 'vocabComplete'").includes("第二单元完成"),
+  shiftedApp.render("state.screen = 'vocabComplete'").includes("第三单元完成"),
   "vocabulary completion should render its visible ordinal"
 );
 assert.ok(
   shiftedApp.render(
     "state.screen = 'reading'; state.selectedReadingUnitId = 'grammar-basics'; state.selectedReadingGroupId = 'grammar-word-order'"
-  ).includes("第三单元：语法入门"),
+  ).includes("第四单元：语法入门"),
   "reading lesson should render its visible unit title"
 );
 
@@ -638,14 +643,15 @@ assert.deepEqual(
   ),
   [
     ["第一单元", "认识字母"],
-    ["第二单元", "基础组合"],
-    ["第三单元", "日常用语与词汇"],
-    ["第四单元", "语法入门"],
-    ["第五单元", "基础句型"],
-    ["第六单元", "对话小剧场"],
-    ["第七单元", "小故事"],
-    ["第八单元", "维吾尔谚语"],
-    ["第九单元", "名人名言"]
+    ["第二单元", "拉丁键盘与字母书写强化"],
+    ["第三单元", "基础组合"],
+    ["第四单元", "日常用语与词汇"],
+    ["第五单元", "语法入门"],
+    ["第六单元", "基础句型"],
+    ["第七单元", "对话小剧场"],
+    ["第八单元", "小故事"],
+    ["第九单元", "维吾尔谚语"],
+    ["第十单元", "名人名言"]
   ]
 );
 
@@ -2324,13 +2330,14 @@ assert.ok(!app.innerHTML.includes("查看学习路径"), "removed practice tab s
 includesAll(
   renderState("state.screen = 'learn'"),
   [
-    "第三单元：日常用语与词汇",
-    "第四单元：语法入门",
-    "第五单元：基础句型",
-    "第六单元：对话小剧场",
-    "第七单元：小故事",
-    "第八单元：维吾尔谚语",
-    "第九单元：名人名言",
+    "第二单元：拉丁键盘与字母书写强化",
+    "第四单元：日常用语与词汇",
+    "第五单元：语法入门",
+    "第六单元：基础句型",
+    "第七单元：对话小剧场",
+    "第八单元：小故事",
+    "第九单元：维吾尔谚语",
+    "第十单元：名人名言",
     "问候、人称代词、称呼、数字、动物"
   ],
   "learning path with reading units"
@@ -2338,7 +2345,7 @@ includesAll(
 assertLearnerCopyClean("learning path");
 assert.ok(!app.innerHTML.includes("听说与书写强化"), "learning path should remove the old third practice unit");
 assert.ok(!app.innerHTML.includes("第三单元：字母连接规律"), "learning path should remove the separate connection unit");
-assert.equal((app.innerHTML.match(/class="lesson-step"/g) || []).length, 9, "learning path should show nine learning units");
+assert.equal((app.innerHTML.match(/class="lesson-step"/g) || []).length, 10, "learning path should show ten learning units");
 assert.ok(!app.innerHTML.includes("基础词组与主题词"), "learning path should not show the removed vocabulary title");
 assert.ok(!app.innerHTML.includes("选择训练组、完成一个目标、查看本轮结果"), "learning unit cards should not show the full step explanation");
 assert.ok(!app.innerHTML.includes("完整字母目录"), "learning path should not duplicate the full alphabet table");
@@ -2379,7 +2386,7 @@ for (const unitId of ["letters", "combos"]) {
 }
 includesAll(
   renderState("state.screen = 'unit'; state.selectedUnitId = 'combos'"),
-  ["第二单元：基础组合", "开口组合", "轻声组合", "连续连接：三字母", "连接会断开的字母"],
+  ["第三单元：基础组合", "开口组合", "轻声组合", "连续连接：三字母", "连接会断开的字母"],
   "second unit merged connection groups"
 );
 assert.ok(!app.innerHTML.includes("基础称呼预览"), "second unit should remove the duplicate family preview group");
@@ -2827,7 +2834,7 @@ assert.equal(vm.runInContext("state.currentComboItemId", context), "pa", "next c
 
 includesAll(
   renderState("state.screen = 'combo'; state.selectedComboGroupId = 'connection-breaks'; state.currentComboItemId = 'dada-connection'"),
-  ["第二单元：基础组合", "连接会断开的字母", "1 / 6", "دادا", "拆开看", "实际连写形", "独立式写法", "在词首位置，但这个字母后面通常不继续连接", "不接前一个字母，后面也断开"],
+  ["第三单元：基础组合", "连接会断开的字母", "1 / 6", "دادا", "拆开看", "实际连写形", "独立式写法", "在词首位置，但这个字母后面通常不继续连接", "不接前一个字母，后面也断开"],
   "connection lesson"
 );
 assert.ok(!app.innerHTML.includes("第三单元：字母连接规律"), "connection groups should render inside the second unit");
@@ -2844,7 +2851,7 @@ assert.equal(savedProgress().learningProgress.combos["open-a"].completed, true, 
 
 includesAll(
   renderState("state.screen = 'vocab'; state.selectedVocabGroupId = 'family'; state.currentVocabItemId = 'ana-family'"),
-  ["第三单元：日常用语与词汇", "本课词汇", "vocab-subgroup", "ئانا", 'class="latin-transliteration vocab-latin"', ">ana<", "妈妈、母亲", "点维语词播放；点右侧解释选择词"],
+  ["第四单元：日常用语与词汇", "本课词汇", "vocab-subgroup", "ئانا", 'class="latin-transliteration vocab-latin"', ">ana<", "妈妈、母亲", "点维语词播放；点右侧解释选择词"],
   "vocab lesson"
 );
 assertLearnerCopyClean("vocab lesson");
@@ -2959,7 +2966,7 @@ assert.ok(!lastAlphabetGroupComplete.includes("继续学习本单元下一课程
 const comboCompleteHtml = renderState("state.screen = 'comboComplete'; state.selectedComboGroupId = 'open-a'; state.currentComboItemId = 'ba'");
 includesAll(
   comboCompleteHtml,
-  ["继续学习本单元下一课程", "下一步建议", "复习组合", "进入第三单元"],
+  ["继续学习本单元下一课程", "下一步建议", "复习组合", "进入第四单元"],
   "unit two complete"
 );
 assert.ok(
@@ -3158,7 +3165,7 @@ assert.equal(vm.runInContext("state.keyboardValue", context), "ئە", "physical 
 
 includesAll(
   renderState("state.screen = 'vocabComplete'"),
-  ["下一步建议", "复习主题词", "进入第四单元"],
+  ["下一步建议", "复习主题词", "进入第五单元"],
   "unit three vocabulary complete"
 );
 

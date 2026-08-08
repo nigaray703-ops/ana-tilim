@@ -85,6 +85,11 @@ const checks = [
     args: ["--check", "prototype/course-data/alphabet-data.js"]
   },
   {
+    label: "syntax: latin writing data",
+    command: node,
+    args: ["--check", "prototype/course-data/latin-writing-data.js"]
+  },
+  {
     label: "syntax: combo data",
     command: node,
     args: ["--check", "prototype/course-data/combo-data.js"]
@@ -123,6 +128,11 @@ const checks = [
     label: "test: unit order",
     command: node,
     args: ["tests/unit-order.test.mjs"]
+  },
+  {
+    label: "test: latin writing course data",
+    command: node,
+    args: ["tests/latin-writing-data.test.mjs"]
   },
   {
     label: "test: content policy",

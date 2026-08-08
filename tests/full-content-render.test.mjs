@@ -50,6 +50,7 @@ for (const scriptPath of [
   "prototype/app-config.js",
   "prototype/uly-transliteration.js",
   "prototype/course-data/alphabet-data.js",
+  "prototype/course-data/latin-writing-data.js",
   "prototype/course-data/combo-data.js",
   "prototype/course-data/vocab-data.js",
   "prototype/course-data/practice-data.js",

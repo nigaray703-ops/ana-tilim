@@ -50,6 +50,7 @@ function aggregateReadingUnits(appConfig) {
       ANA_TILIM_APP_CONFIG: appConfig,
       ANA_TILIM_ULY: { normalizeCourseTransliterations: (course) => course },
       ANA_TILIM_ALPHABET: {},
+      ANA_TILIM_LATIN_WRITING: {},
       ANA_TILIM_COMBOS: {},
       ANA_TILIM_VOCAB: {},
       ANA_TILIM_PRACTICE: {},
@@ -87,6 +88,7 @@ const expectedCoreFiles = [
   "unit-order.js",
   "course-data.js",
   "course-data/alphabet-data.js",
+  "course-data/latin-writing-data.js",
   "course-data/combo-data.js",
   "course-data/vocab-data.js",
   "course-data/practice-data.js",
@@ -113,6 +115,7 @@ const domesticIndexFixture = `<!doctype html>
 <html>
   <body>
     <main data-domestic-marker="keep"></main>
+    <script src="./course-data/alphabet-data.js?v=cn-alphabet"></script>
     <script src="./course-data.js?v=cn-course"></script>
     <script src="./domestic-only.js?v=1"></script>
     <script src="./app.js?v=cn-app"></script>
@@ -159,14 +162,24 @@ for (const [relativePath, before] of excludedBeforeSync) {
 const secondSyncResult = runSync(syncTargetPath);
 assertCoreSyncPassed(secondSyncResult);
 const syncedDomesticIndex = fs.readFileSync(path.join(syncTargetPath, "index.html"), "utf8");
+const alphabetDataScriptIndex = syncedDomesticIndex.indexOf("./course-data/alphabet-data.js");
+const latinWritingDataScriptIndex = syncedDomesticIndex.indexOf("./course-data/latin-writing-data.js");
 const courseDataScriptIndex = syncedDomesticIndex.indexOf("./course-data.js");
 const unitOrderScriptIndex = syncedDomesticIndex.indexOf("./unit-order.js");
 const appScriptIndex = syncedDomesticIndex.indexOf("./app.js");
 assert.ok(
-  courseDataScriptIndex >= 0
+  alphabetDataScriptIndex >= 0
+    && alphabetDataScriptIndex < latinWritingDataScriptIndex
+    && latinWritingDataScriptIndex < courseDataScriptIndex
+    && courseDataScriptIndex >= 0
     && courseDataScriptIndex < unitOrderScriptIndex
     && unitOrderScriptIndex < appScriptIndex,
   "domestic scripts should load course data before unit order before app"
+);
+assert.equal(
+  [...syncedDomesticIndex.matchAll(/<script\s+[^>]*src=["']\.\/course-data\/latin-writing-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)].length,
+  1,
+  "repeated sync should leave exactly one domestic latin-writing-data script"
 );
 assert.equal(
   [...syncedDomesticIndex.matchAll(/<script\s+[^>]*src=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)].length,
@@ -189,9 +202,11 @@ fs.writeFileSync(path.join(misplacedUnitOrderTargetPath, "index.html"), `<!docty
 <html>
   <body>
     <main data-misplaced-domestic-marker="keep"></main>
+    <script src="./course-data/alphabet-data.js?v=cn-alphabet"></script>
     <script src="./course-data.js?v=cn-course"></script>
     <script src="./app.js?v=cn-app"></script>
     <script src="./domestic-after-app.js?v=1"></script>
+    <script src="./course-data/latin-writing-data.js?v=misplaced"></script>
     <script src="./unit-order.js?v=misplaced"></script>
   </body>
 </html>
@@ -202,12 +217,18 @@ const normalizedMisplacedIndex = fs.readFileSync(
   path.join(misplacedUnitOrderTargetPath, "index.html"),
   "utf8"
 );
+const normalizedMisplacedLatinWritingTags = [
+  ...normalizedMisplacedIndex.matchAll(/<script\s+[^>]*src=["']\.\/course-data\/latin-writing-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
+];
 const normalizedMisplacedUnitOrderTags = [
   ...normalizedMisplacedIndex.matchAll(/<script\s+[^>]*src=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
 ];
+assert.equal(normalizedMisplacedLatinWritingTags.length, 1, "sync should keep one normalized latin-writing-data tag");
 assert.equal(normalizedMisplacedUnitOrderTags.length, 1, "sync should keep one normalized unit-order tag");
 assert.ok(
-  normalizedMisplacedIndex.indexOf("./course-data.js") < normalizedMisplacedIndex.indexOf("./unit-order.js")
+  normalizedMisplacedIndex.indexOf("./course-data/alphabet-data.js") < normalizedMisplacedIndex.indexOf("./course-data/latin-writing-data.js")
+    && normalizedMisplacedIndex.indexOf("./course-data/latin-writing-data.js") < normalizedMisplacedIndex.indexOf("./course-data.js")
+    && normalizedMisplacedIndex.indexOf("./course-data.js") < normalizedMisplacedIndex.indexOf("./unit-order.js")
     && normalizedMisplacedIndex.indexOf("./unit-order.js") < normalizedMisplacedIndex.indexOf("./app.js"),
   "sync should move a misplaced unit-order tag before app.js"
 );
@@ -234,10 +255,13 @@ fs.writeFileSync(path.join(duplicateUnitOrderTargetPath, "index.html"), `<!docty
 <html>
   <body>
     <main data-duplicate-domestic-marker="keep"></main>
+    <script src="./course-data/alphabet-data.js?v=cn-alphabet"></script>
+    <script src="./course-data/latin-writing-data.js?v=old-before"></script>
     <script src="./course-data.js?v=cn-course"></script>
     <script src="./unit-order.js?v=old-before"></script>
     <script src="./domestic-duplicate-fixture.js?v=1"></script>
     <script src="./app.js?v=cn-app"></script>
+    <script src="./course-data/latin-writing-data.js?v=old-after"></script>
     <script src="./unit-order.js?v=old-after"></script>
   </body>
 </html>
@@ -248,17 +272,28 @@ const normalizedDuplicateIndex = fs.readFileSync(
   path.join(duplicateUnitOrderTargetPath, "index.html"),
   "utf8"
 );
+const normalizedDuplicateLatinWritingTags = [
+  ...normalizedDuplicateIndex.matchAll(/<script\s+[^>]*src=["']\.\/course-data\/latin-writing-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
+];
 const normalizedDuplicateUnitOrderTags = [
   ...normalizedDuplicateIndex.matchAll(/<script\s+[^>]*src=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
 ];
+assert.equal(normalizedDuplicateLatinWritingTags.length, 1, "sync should collapse duplicate latin-writing-data tags");
 assert.equal(normalizedDuplicateUnitOrderTags.length, 1, "sync should collapse duplicate unit-order tags");
+assert.equal(
+  normalizedDuplicateLatinWritingTags[0][0].trim(),
+  '<script src="./course-data/latin-writing-data.js?v=20260809-latin-writing"></script>',
+  "duplicate normalization should use the standard latin-writing-data tag"
+);
 assert.equal(
   normalizedDuplicateUnitOrderTags[0][0],
   '<script src="./unit-order.js?v=20260809-edition-unit-order"></script>',
   "duplicate normalization should use the standard unit-order tag"
 );
 assert.ok(
-  normalizedDuplicateIndex.indexOf("./course-data.js") < normalizedDuplicateIndex.indexOf("./unit-order.js")
+  normalizedDuplicateIndex.indexOf("./course-data/alphabet-data.js") < normalizedDuplicateIndex.indexOf("./course-data/latin-writing-data.js")
+    && normalizedDuplicateIndex.indexOf("./course-data/latin-writing-data.js") < normalizedDuplicateIndex.indexOf("./course-data.js")
+    && normalizedDuplicateIndex.indexOf("./course-data.js") < normalizedDuplicateIndex.indexOf("./unit-order.js")
     && normalizedDuplicateIndex.indexOf("./unit-order.js") < normalizedDuplicateIndex.indexOf("./app.js"),
   "duplicate normalization should place unit order before app.js"
 );
