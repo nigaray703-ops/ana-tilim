@@ -11,14 +11,8 @@
     throw new Error("Ana Tilim focused course data files failed to load.");
   }
 
-  const hiddenReadingUnitIds = new Set(appConfig.hiddenReadingUnitIds || []);
-  const readingUnitTitleOverrides = appConfig.readingUnitTitleOverrides || {};
-  const readingUnits = readingData.readingUnits
-    .filter((unit) => !hiddenReadingUnitIds.has(unit.id))
-    .map((unit) => ({
-      ...unit,
-      title: readingUnitTitleOverrides[unit.id] || unit.title
-    }));
+  const hiddenUnitIds = new Set(appConfig.hiddenUnitIds || appConfig.hiddenReadingUnitIds || []);
+  const readingUnits = readingData.readingUnits.filter((unit) => !hiddenUnitIds.has(unit.id));
 
   window.ANA_TILIM_COURSE = uly.normalizeCourseTransliterations({
     ...alphabetData,

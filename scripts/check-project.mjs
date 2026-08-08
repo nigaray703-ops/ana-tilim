@@ -15,6 +15,21 @@ const checks = [
     args: ["--check", "prototype/unit-order.js"]
   },
   {
+    label: "syntax: edition core allowlist",
+    command: node,
+    args: ["--check", "scripts/edition-core-files.mjs"]
+  },
+  {
+    label: "syntax: domestic core sync",
+    command: node,
+    args: ["--check", "scripts/sync-cn-core.mjs"]
+  },
+  {
+    label: "syntax: edition parity",
+    command: node,
+    args: ["--check", "scripts/check-edition-parity.mjs"]
+  },
+  {
     label: "syntax: sentence morphemes",
     command: node,
     args: ["--check", "prototype/sentence-morphemes.js"]
@@ -98,6 +113,11 @@ const checks = [
     label: "test: edition config",
     command: node,
     args: ["tests/app-edition-config.test.mjs"]
+  },
+  {
+    label: "check: edition core parity",
+    command: node,
+    args: ["scripts/check-edition-parity.mjs"]
   },
   {
     label: "test: unit order",
