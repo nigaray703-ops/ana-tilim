@@ -5,6 +5,166 @@
     cn: "Uyghur Tili 国内版",
     global: "Ana Tilim 海外版"
   });
+  const PROGRESS_SCOPES = Object.freeze(["letters", "combos", "vocab", "practice", "reading"]);
+  const PROGRESS_BOOLEAN_FIELDS = new Set([
+    "viewed",
+    "writing",
+    "recognition",
+    "keyboard",
+    "build",
+    "repeat",
+    "write",
+    "review",
+    "listen",
+    "completed"
+  ]);
+  const NAVIGATION_STRING_FIELDS = Object.freeze([
+    "screen",
+    "currentLetterId",
+    "selectedGroupId",
+    "currentComboItemId",
+    "selectedComboGroupId",
+    "currentVocabItemId",
+    "selectedVocabGroupId",
+    "currentPracticeItemId",
+    "selectedPracticeGroupId",
+    "selectedReadingUnitId",
+    "selectedReadingGroupId",
+    "selectedUnitId"
+  ]);
+
+  function isPlainObject(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+    const prototype = Object.getPrototypeOf(value);
+    return prototype === Object.prototype || prototype === null;
+  }
+
+  function requirePlainObject(value, path) {
+    if (!isPlainObject(value)) {
+      throw new Error(`${path} 必须是对象`);
+    }
+  }
+
+  function requireString(value, path) {
+    if (typeof value !== "string") {
+      throw new Error(`${path} 必须是字符串`);
+    }
+  }
+
+  function validateLearningProgress(value) {
+    requirePlainObject(value, "learningProgress");
+    for (const scope of Object.keys(value)) {
+      if (!PROGRESS_SCOPES.includes(scope)) {
+        throw new Error(`learningProgress 包含未知字段 ${scope}`);
+      }
+      const bucket = value[scope];
+      requirePlainObject(bucket, `learningProgress.${scope}`);
+      for (const [id, entry] of Object.entries(bucket)) {
+        const entryPath = `learningProgress.${scope}.${id}`;
+        requirePlainObject(entry, entryPath);
+        for (const [field, fieldValue] of Object.entries(entry)) {
+          if (PROGRESS_BOOLEAN_FIELDS.has(field)) {
+            if (typeof fieldValue !== "boolean") {
+              throw new Error(`${entryPath}.${field} 必须是布尔值`);
+            }
+          } else if (field === "listenCompletedIds") {
+            if (!Array.isArray(fieldValue)) {
+              throw new Error(`${entryPath}.listenCompletedIds 必须是数组`);
+            }
+            fieldValue.forEach((item, index) => requireString(item, `${entryPath}.listenCompletedIds[${index}]`));
+          } else {
+            throw new Error(`${entryPath} 包含未知字段 ${field}`);
+          }
+        }
+      }
+    }
+  }
+
+  function validateMistakes(value) {
+    if (!Array.isArray(value)) {
+      throw new Error("mistakes 必须是数组");
+    }
+    const requiredStringFields = [
+      "key",
+      "kind",
+      "kindLabel",
+      "targetId",
+      "pickedId",
+      "value",
+      "latin",
+      "source",
+      "note",
+      "createdAt"
+    ];
+    value.forEach((mistake, index) => {
+      const mistakePath = `mistakes[${index}]`;
+      requirePlainObject(mistake, mistakePath);
+      requiredStringFields.forEach((field) => requireString(mistake[field], `${mistakePath}.${field}`));
+      if (mistake.help !== undefined) {
+        requireString(mistake.help, `${mistakePath}.help`);
+      }
+      if (!Number.isInteger(mistake.attempts) || mistake.attempts < 1) {
+        throw new Error(`${mistakePath}.attempts 必须是正整数`);
+      }
+    });
+  }
+
+  function validateLocalProgressData(data) {
+    NAVIGATION_STRING_FIELDS.forEach((field) => {
+      if (data[field] !== undefined) requireString(data[field], field);
+    });
+    ["modifiedAt", "preferencesUpdatedAt", "favoriteUpdatedAt"].forEach((field) => {
+      if (data[field] !== undefined) requireString(data[field], field);
+    });
+    if (data.favorite !== undefined && typeof data.favorite !== "boolean") {
+      throw new Error("favorite 必须是布尔值");
+    }
+    if (data.learningProgress !== undefined) validateLearningProgress(data.learningProgress);
+    if (data.mistakes !== undefined) validateMistakes(data.mistakes);
+
+    if (data.writingChecks !== undefined) {
+      if (!Array.isArray(data.writingChecks)) {
+        throw new Error("writingChecks 必须是数组");
+      }
+      data.writingChecks.forEach((item, index) => requireString(item, `writingChecks[${index}]`));
+    }
+
+    if (data.localProfile !== undefined) {
+      requirePlainObject(data.localProfile, "localProfile");
+      ["displayName", "avatarDataUrl"].forEach((field) => {
+        if (data.localProfile[field] !== undefined) {
+          requireString(data.localProfile[field], `localProfile.${field}`);
+        }
+      });
+    }
+
+    if (data.preferences !== undefined) {
+      requirePlainObject(data.preferences, "preferences");
+      ["audioAutoplay", "learningReminder", "showLatin"].forEach((field) => {
+        if (data.preferences[field] !== undefined && typeof data.preferences[field] !== "boolean") {
+          throw new Error(`preferences.${field} 必须是布尔值`);
+        }
+      });
+      if (data.preferences.dailyGoal !== undefined && ![5, 10, 15].includes(data.preferences.dailyGoal)) {
+        throw new Error("preferences.dailyGoal 必须是 5、10 或 15");
+      }
+    }
+
+    if (data.dailyActivity !== undefined) {
+      requirePlainObject(data.dailyActivity, "dailyActivity");
+      if (data.dailyActivity.date !== undefined) {
+        requireString(data.dailyActivity.date, "dailyActivity.date");
+      }
+      if (data.dailyActivity.completedIds !== undefined) {
+        if (!Array.isArray(data.dailyActivity.completedIds)) {
+          throw new Error("dailyActivity.completedIds 必须是数组");
+        }
+        data.dailyActivity.completedIds.forEach((item, index) =>
+          requireString(item, `dailyActivity.completedIds[${index}]`)
+        );
+      }
+    }
+  }
 
   function createExportPayload(data, metadata = {}) {
     if (!Object.prototype.hasOwnProperty.call(EDITION_NAMES, metadata.edition)) {
@@ -34,7 +194,7 @@
     if (payload.version !== VERSION) {
       throw new Error("学习记录版本暂不支持");
     }
-    if (!payload.data || typeof payload.data !== "object" || Array.isArray(payload.data)) {
+    if (!isPlainObject(payload.data)) {
       throw new Error("学习数据缺失");
     }
     if (!Object.prototype.hasOwnProperty.call(EDITION_NAMES, payload.edition)) {
@@ -46,6 +206,7 @@
     if (expectedEdition && payload.edition !== expectedEdition) {
       throw new Error(`备份属于 ${EDITION_NAMES[payload.edition]}，不能导入 ${EDITION_NAMES[expectedEdition]}`);
     }
+    validateLocalProgressData(payload.data);
 
     return JSON.parse(JSON.stringify(payload));
   }
