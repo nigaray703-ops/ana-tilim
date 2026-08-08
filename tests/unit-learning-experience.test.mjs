@@ -278,6 +278,7 @@ let changeHandler = null;
 const storage = {};
 const sessionStorageValues = {};
 let storageWritesFail = false;
+let storageWriteFailurePredicate = null;
 const playedAudioSources = [];
 let audioPlayShouldReject = false;
 let profileDisplayNameValue = "";
@@ -340,6 +341,9 @@ const context = {
       },
       setItem(key, value) {
         if (storageWritesFail) {
+          throw new Error("localStorage write failed");
+        }
+        if (storageWriteFailurePredicate?.(key, String(value))) {
           throw new Error("localStorage write failed");
         }
         storage[key] = String(value);
@@ -848,16 +852,39 @@ function clickDataset(dataset) {
   });
 }
 
-async function selectProgressImport(text) {
+function triggerProgressImportFile(file) {
   assert.ok(changeHandler, "change handler should be registered");
   const input = {
     id: "progress-import-input",
-    files: [{ text: () => Promise.resolve(text) }],
+    files: [file],
     value: "selected.json"
   };
   changeHandler({ target: input });
+  return input;
+}
+
+async function selectProgressImport(text) {
+  const input = triggerProgressImportFile({ text: () => Promise.resolve(text) });
   await new Promise((resolve) => setImmediate(resolve));
   return input;
+}
+
+function deferredProgressFile() {
+  let resolveText;
+  let rejectText;
+  const textPromise = new Promise((resolve, reject) => {
+    resolveText = resolve;
+    rejectText = reject;
+  });
+  return {
+    file: { text: () => textPromise },
+    resolveText,
+    rejectText
+  };
+}
+
+async function flushProgressImport() {
+  await new Promise((resolve) => setImmediate(resolve));
 }
 
 function savedProgress() {
@@ -1126,6 +1153,9 @@ vm.runInContext(
     cloudSync = {
       scheduleSync() {
         globalThis.importCloudScheduleCount += 1;
+        if (globalThis.cloudScheduleShouldThrow) {
+          throw new Error("cloud schedule failed");
+        }
       },
       session() {
         return {
@@ -1145,6 +1175,7 @@ vm.runInContext(
       }
     };
     globalThis.importCloudScheduleCount = 0;
+    globalThis.cloudScheduleShouldThrow = false;
     cloudStatus = { phase: "signed-in", error: "" };
   `,
   context
@@ -1158,29 +1189,49 @@ includesAll(
 
 const storedBytesBeforeImport = '{ "screen": "home", "marker": "preserve exact bytes" }';
 storage["ana-tilim-progress"] = storedBytesBeforeImport;
+vm.runInContext(
+  `
+    state.currentLetterId = "te";
+    state.selectedGroupId = "vowels-basic";
+    state.currentComboItemId = "bala";
+    state.selectedComboGroupId = "closed-syllables";
+    state.currentVocabItemId = "ata";
+    state.selectedVocabGroupId = "family";
+    state.currentPracticeItemId = "practice-old";
+    state.selectedPracticeGroupId = "review-loop";
+    state.selectedReadingUnitId = "short-stories";
+    state.selectedReadingGroupId = "story-old";
+    state.selectedUnitId = "short-stories";
+    state.favorite = true;
+    state.mistakes = [{ kind: "old-mistake", targetId: "old" }];
+    state.writingChecks = [{ id: "old-writing" }];
+    state.localProfile = {
+      displayName: "Old Local Name",
+      avatarDataUrl: "data:image/png;base64,old-avatar"
+    };
+    state.preferences = {
+      audioAutoplay: true,
+      dailyGoal: 15,
+      learningReminder: true,
+      showLatin: false
+    };
+    state.dailyActivity = { date: "2026-08-08", completedIds: ["old-activity"] };
+    state.modifiedAt = "2026-08-08T00:00:00.000Z";
+    state.preferencesUpdatedAt = "2026-08-08T00:00:00.000Z";
+    state.favoriteUpdatedAt = "2026-08-08T00:00:00.000Z";
+    state.authMode = "register";
+    state.authEmail = "keep-session@example.com";
+  `,
+  context
+);
 const importedProgress = {
-  screen: "library",
-  selectedUnitId: "combos",
   learningProgress: {
     letters: { "dot-bone": { completed: true } },
     combos: {},
     vocab: {},
     practice: {},
     reading: {}
-  },
-  mistakes: [],
-  writingChecks: [],
-  favorite: false,
-  preferences: {
-    audioAutoplay: false,
-    dailyGoal: 10,
-    learningReminder: false,
-    showLatin: true
-  },
-  dailyActivity: { date: "2026-08-09", completedIds: ["letters:dot-bone:completed"] },
-  modifiedAt: "2026-08-09T01:02:03.000Z",
-  preferencesUpdatedAt: "2026-08-09T01:02:03.000Z",
-  favoriteUpdatedAt: "2026-08-09T01:02:03.000Z"
+  }
 };
 const globalImportText = JSON.stringify({
   format: "uyghur-tili-local-progress",
@@ -1260,18 +1311,206 @@ assert.equal(
 clickDataset({ action: "confirm-import-progress" });
 assert.equal(vm.runInContext("state.pendingProgressImport", context), null);
 assert.equal(vm.runInContext("state.screen", context), "profile");
+const replacedProgress = JSON.parse(storage["ana-tilim-progress"]);
 assert.equal(
-  JSON.parse(storage["ana-tilim-progress"]).learningProgress.letters["dot-bone"].completed,
+  replacedProgress.learningProgress.letters["dot-bone"].completed,
   true,
   "confirmation should replace local learning progress with the imported data"
 );
+assert.deepEqual(
+  {
+    currentLetterId: replacedProgress.currentLetterId,
+    selectedGroupId: replacedProgress.selectedGroupId,
+    currentComboItemId: replacedProgress.currentComboItemId,
+    selectedComboGroupId: replacedProgress.selectedComboGroupId,
+    currentVocabItemId: replacedProgress.currentVocabItemId,
+    selectedVocabGroupId: replacedProgress.selectedVocabGroupId,
+    currentPracticeItemId: replacedProgress.currentPracticeItemId,
+    selectedPracticeGroupId: replacedProgress.selectedPracticeGroupId,
+    selectedReadingUnitId: replacedProgress.selectedReadingUnitId,
+    selectedReadingGroupId: replacedProgress.selectedReadingGroupId,
+    selectedUnitId: replacedProgress.selectedUnitId
+  },
+  {
+    currentLetterId: "be",
+    selectedGroupId: "dot-bone",
+    currentComboItemId: "ba",
+    selectedComboGroupId: "open-a",
+    currentVocabItemId: "yaxshimusiz",
+    selectedVocabGroupId: "greetings",
+    currentPracticeItemId: "practice-listen-be",
+    selectedPracticeGroupId: "listening-loop",
+    selectedReadingUnitId: "sentence-patterns",
+    selectedReadingGroupId: "sentence-this-that",
+    selectedUnitId: "letters"
+  },
+  "missing navigation fields should reset to clean learner defaults instead of preserving old positions"
+);
+assert.deepEqual(replacedProgress.mistakes, [], "missing mistakes should not preserve old records");
+assert.deepEqual(replacedProgress.writingChecks, [], "missing writing checks should not preserve old records");
+assert.equal(replacedProgress.favorite, false, "missing favorite should reset instead of preserving the old value");
+assert.deepEqual(
+  replacedProgress.localProfile,
+  { displayName: "", avatarDataUrl: "" },
+  "missing local profile should reset instead of preserving old device identity"
+);
+assert.deepEqual(
+  replacedProgress.preferences,
+  { audioAutoplay: false, dailyGoal: 10, learningReminder: false, showLatin: true },
+  "missing preferences should use clean defaults"
+);
+assert.deepEqual(
+  replacedProgress.dailyActivity,
+  { date: "", completedIds: [] },
+  "missing daily activity should reset instead of preserving old activity"
+);
+assert.notEqual(replacedProgress.modifiedAt, "2026-08-08T00:00:00.000Z");
+assert.notEqual(replacedProgress.preferencesUpdatedAt, "2026-08-08T00:00:00.000Z");
+assert.notEqual(replacedProgress.favoriteUpdatedAt, "2026-08-08T00:00:00.000Z");
+assert.equal(vm.runInContext("state.authMode", context), "register", "import replacement should preserve auth mode");
 assert.equal(
-  Object.prototype.hasOwnProperty.call(JSON.parse(storage["ana-tilim-progress"]), "edition"),
+  vm.runInContext("state.authEmail", context),
+  "keep-session@example.com",
+  "import replacement should preserve in-memory auth session fields"
+);
+assert.equal(
+  Object.prototype.hasOwnProperty.call(replacedProgress, "edition"),
   false,
   "confirmation should store envelope.data rather than nesting the envelope"
 );
 assert.equal(vm.runInContext("globalThis.importCloudScheduleCount", context), 1);
 assert.equal(toast.textContent, "学习记录已导入");
+
+const storageAfterConfirmedImport = storage["ana-tilim-progress"];
+const slowImportText = JSON.stringify({
+  ...JSON.parse(globalImportText),
+  exportedAt: "2026-08-09T02:00:00.000Z"
+});
+const fastImportText = JSON.stringify({
+  ...JSON.parse(globalImportText),
+  exportedAt: "2026-08-09T03:00:00.000Z"
+});
+
+const slowFirstSelection = deferredProgressFile();
+const fastSecondSelection = deferredProgressFile();
+triggerProgressImportFile(slowFirstSelection.file);
+triggerProgressImportFile(fastSecondSelection.file);
+fastSecondSelection.resolveText(fastImportText);
+await flushProgressImport();
+assert.equal(
+  vm.runInContext("state.pendingProgressImport.exportedAt", context),
+  "2026-08-09T03:00:00.000Z",
+  "the later fast selection should become the pending preview"
+);
+slowFirstSelection.resolveText(slowImportText);
+await flushProgressImport();
+assert.equal(
+  vm.runInContext("state.pendingProgressImport.exportedAt", context),
+  "2026-08-09T03:00:00.000Z",
+  "a stale slow selection should not replace the newer preview"
+);
+assert.equal(
+  storage["ana-tilim-progress"],
+  storageAfterConfirmedImport,
+  "overlapping file reads should not change confirmed storage"
+);
+clickDataset({ action: "cancel-import-progress" });
+
+const staleErrorSelection = deferredProgressFile();
+const newerSuccessSelection = deferredProgressFile();
+triggerProgressImportFile(staleErrorSelection.file);
+triggerProgressImportFile(newerSuccessSelection.file);
+newerSuccessSelection.resolveText(fastImportText);
+await flushProgressImport();
+staleErrorSelection.rejectText(new Error("stale file read failed"));
+await flushProgressImport();
+assert.equal(
+  vm.runInContext("state.pendingProgressImport.exportedAt", context),
+  "2026-08-09T03:00:00.000Z",
+  "a stale read error should not clear the newer successful preview"
+);
+assert.equal(toast.textContent, "请确认导入学习记录");
+clickDataset({ action: "cancel-import-progress" });
+
+const canceledSelection = deferredProgressFile();
+triggerProgressImportFile(canceledSelection.file);
+clickDataset({ action: "cancel-import-progress" });
+canceledSelection.resolveText(slowImportText);
+await flushProgressImport();
+assert.equal(
+  vm.runInContext("state.pendingProgressImport", context),
+  null,
+  "canceling should invalidate an in-flight file read"
+);
+assert.equal(toast.textContent, "已取消导入");
+assert.equal(storage["ana-tilim-progress"], storageAfterConfirmedImport);
+
+const selectionFinishingAfterConfirm = deferredProgressFile();
+triggerProgressImportFile(selectionFinishingAfterConfirm.file);
+vm.runInContext(`importLocalProgressText(${JSON.stringify(fastImportText)}); render({ persist: false });`, context);
+clickDataset({ action: "confirm-import-progress" });
+const storageAfterSecondConfirmation = storage["ana-tilim-progress"];
+selectionFinishingAfterConfirm.resolveText(slowImportText);
+await flushProgressImport();
+assert.equal(
+  vm.runInContext("state.pendingProgressImport", context),
+  null,
+  "confirmation should invalidate any older in-flight file read"
+);
+assert.equal(
+  storage["ana-tilim-progress"],
+  storageAfterSecondConfirmation,
+  "a file read finishing after confirmation should not rewrite confirmed storage"
+);
+
+await selectProgressImport(fastImportText);
+const storageBeforeFailedImport = storage["ana-tilim-progress"];
+const persistedStateBeforeFailedImport = vm.runInContext("JSON.stringify(buildLocalProgressData())", context);
+storageWriteFailurePredicate = (key, value) =>
+  key === "ana-tilim-progress" && JSON.parse(value).screen === "profile";
+clickDataset({ action: "confirm-import-progress" });
+storageWriteFailurePredicate = null;
+assert.equal(
+  toast.textContent,
+  "导入失败，未能保存完整学习记录",
+  "a failed final storage write should not report a successful import"
+);
+assert.equal(
+  storage["ana-tilim-progress"],
+  storageBeforeFailedImport,
+  "a failed normalized write should preserve the exact previous storage bytes"
+);
+assert.equal(
+  vm.runInContext("JSON.stringify(buildLocalProgressData())", context),
+  persistedStateBeforeFailedImport,
+  "a failed normalized write should restore the previous in-memory persisted state"
+);
+assert.equal(
+  vm.runInContext("state.pendingProgressImport.exportedAt", context),
+  "2026-08-09T03:00:00.000Z",
+  "a failed final storage write should keep the parsed import available for retry"
+);
+clickDataset({ action: "confirm-import-progress" });
+assert.equal(vm.runInContext("state.pendingProgressImport", context), null, "retry should clear pending after storage recovers");
+
+await selectProgressImport(fastImportText);
+vm.runInContext("globalThis.cloudScheduleShouldThrow = true", context);
+clickDataset({ action: "confirm-import-progress" });
+vm.runInContext("globalThis.cloudScheduleShouldThrow = false", context);
+assert.equal(
+  toast.textContent,
+  "学习记录已导入",
+  "a cloud scheduling exception should not misreport successful local persistence as an import failure"
+);
+assert.equal(vm.runInContext("state.pendingProgressImport", context), null);
+assert.equal(JSON.parse(storage["ana-tilim-progress"]).screen, "profile");
+assert.equal(
+  vm.runInContext("state.syncDirty", context),
+  true,
+  "a failed cloud schedule should keep imported progress dirty for retry"
+);
+assert.equal(vm.runInContext("saveLocalProgress()", context), true, "local save should retry cloud scheduling after recovery");
+assert.equal(vm.runInContext("state.syncDirty", context), false, "a successful retry should clear the dirty flag");
 assert.match(
   signedInProfileHtml,
   /data-action="edit-display-name"/,
