@@ -5292,7 +5292,7 @@ document.addEventListener("click", (event) => {
     progressImportSelectionGeneration += 1;
     try {
       confirmLocalProgressImport();
-      render();
+      render({ persist: false });
       showToast("学习记录已导入");
     } catch (error) {
       showToast(error?.message || "导入失败，请检查文件");
@@ -5965,6 +5965,7 @@ document.addEventListener("change", (event) => {
     if (!file) return;
     const selectionGeneration = ++progressImportSelectionGeneration;
     state.pendingProgressImport = null;
+    render({ persist: false });
     file
       .text()
       .then((text) => {
