@@ -105,8 +105,10 @@ for (const screen of ["welcome", "home", "learn", "writing", "library", "profile
 
 renderState({ screen: "welcome", authPanelExpanded: false }, "collapsed welcome screen", "直接开始学习");
 assert.ok(app.innerHTML.includes("可选：登录后跨设备同步"), "collapsed welcome should expose the optional sync disclosure");
+assert.match(app.innerHTML, /id="welcome-auth-panel"[^>]*hidden/, "collapsed welcome should retain a hidden aria-controls target");
 assert.ok(!app.innerHTML.includes('data-action="password-login"'), "collapsed welcome should not render a login submit");
 renderState({ screen: "welcome", authPanelExpanded: true }, "expanded welcome screen", "登录并继续学习");
+assert.doesNotMatch(app.innerHTML.match(/<[^>]+id="welcome-auth-panel"[^>]*>/)?.[0] || "", /hidden/, "expanded auth target should be visible");
 assert.ok(
   app.innerHTML.indexOf('data-action="continue-local"') < app.innerHTML.indexOf('data-action="password-login"'),
   "expanded welcome should keep guest learning before authentication submits"

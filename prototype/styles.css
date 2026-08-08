@@ -241,6 +241,7 @@ button {
 .hero-content,
 .hero-intro,
 .auth-disclosure,
+.auth-panel-region,
 .auth-panel {
   display: grid;
   gap: 14px;
@@ -3208,7 +3209,8 @@ button {
   }
 
   .hero-content.with-auth {
-    grid-template-columns: minmax(240px, 0.9fr) minmax(320px, 1fr);
+    width: min(100%, 620px);
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .hero-content.local-only {

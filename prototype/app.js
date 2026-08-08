@@ -2496,7 +2496,7 @@ function renderWelcome() {
             从字母、发音、书写到键盘输入，一步一步学会自己的母语。
           </p>
           <button class="primary-button" data-action="continue-local" type="button">
-            ${appConfig.cloudEnabled ? "直接开始学习" : "开始学习"}
+            ${accountEmail ? "继续学习" : appConfig.cloudEnabled ? "直接开始学习" : "开始学习"}
           </button>
           ${
             appConfig.cloudEnabled
@@ -2514,19 +2514,21 @@ function renderWelcome() {
                   aria-expanded="${state.authPanelExpanded}"
                   aria-controls="welcome-auth-panel"
                   type="button"
-                >可选：登录后跨设备同步</button>
-                ${
-                  state.authPanelExpanded
-                    ? `<article class="card auth-panel" id="welcome-auth-panel">
-                        <div>
-                          <p class="caption">登录后自动同步</p>
-                          <h2 class="section-title">${accountEmail ? "学习记录已同步" : "保存你的学习进度"}</h2>
-                          <p class="muted">${accountEmail ? `已登录 ${escapeHtml(accountEmail)}` : "换设备也能继续学习；不登录不会影响课程使用。"}</p>
-                        </div>
-                        ${renderCloudAuthControls()}
-                      </article>`
-                    : ""
-                }
+                >${accountEmail ? "查看同步状态" : "可选：登录后跨设备同步"}</button>
+                <div class="auth-panel-region" id="welcome-auth-panel" ${state.authPanelExpanded ? "" : "hidden"}>
+                  ${
+                    state.authPanelExpanded
+                      ? `<article class="card auth-panel">
+                          <div>
+                            <p class="caption">登录后自动同步</p>
+                            <h2 class="section-title">${accountEmail ? "学习记录已同步" : "保存你的学习进度"}</h2>
+                            <p class="muted">${accountEmail ? `已登录 ${escapeHtml(accountEmail)}` : "换设备也能继续学习；不登录不会影响课程使用。"}</p>
+                          </div>
+                          ${renderCloudAuthControls()}
+                        </article>`
+                      : ""
+                  }
+                </div>
               </div>`
             : ""
         }
@@ -5280,16 +5282,18 @@ document.addEventListener("click", (event) => {
   }
 
   if (action === "continue-local") {
+    const continuingWithCloud = Boolean(cloudAccountEmail());
     state.screen = "home";
     saveLocalProgress();
     render();
-    showToast("已进入本地学习模式");
+    showToast(continuingWithCloud ? "继续学习，进度将自动同步" : "已进入本地学习模式");
     return;
   }
 
   if (action === "toggle-auth-panel") {
     state.authPanelExpanded = !state.authPanelExpanded;
     render();
+    window.requestAnimationFrame(() => document.querySelector('[data-action="toggle-auth-panel"]')?.focus());
     return;
   }
 
