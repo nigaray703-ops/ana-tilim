@@ -1120,6 +1120,7 @@ for (const selector of [
   ".lesson-step strong",
   ".lesson-step .caption",
   ".combo-part-note",
+  ".profile-account-metrics span",
   ".profile-setting-row strong",
   ".profile-setting-row small",
   ".nav-button"
