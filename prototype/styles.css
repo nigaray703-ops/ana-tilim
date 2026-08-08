@@ -2078,6 +2078,16 @@ button {
   font-weight: 900;
 }
 
+.play-dot .speaker-icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .play-dot:disabled,
 .play-dot.disabled {
   color: var(--ink-soft);

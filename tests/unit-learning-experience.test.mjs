@@ -1114,9 +1114,23 @@ const englishAudioChrome = vm.runInContext(
 );
 includesAll(
   englishAudioChrome,
-  ['aria-label="Play ب"', ">Play</button>", "Human recording", "No audio available"],
+  [
+    'aria-label="Play ب"',
+    'class="speaker-icon"',
+    'aria-hidden="true"',
+    'data-action="play-audio"'
+  ],
   "English reusable audio chrome"
 );
+assert.ok(!englishAudioChrome.includes(">Play</button>"));
+setLanguage("zh");
+const chineseSpeakerButton = vm.runInContext(
+  `renderAudioButton({ audio: { playable: true, outputPath: "./test.webm" }, label: "ب" })`,
+  context
+);
+assert.ok(chineseSpeakerButton.includes('aria-label="播放 ب"'));
+assert.ok(!chineseSpeakerButton.includes(">播放</button>"));
+setLanguage("en");
 for (const chineseChrome of ['aria-label="播放', "播放发音", ">听</button>", "真人音频", "音频待录"]) {
   assert.ok(
     !englishAudioChrome.includes(chineseChrome),

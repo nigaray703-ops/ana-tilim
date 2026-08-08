@@ -1855,6 +1855,16 @@ function isAudioPlayable(audio) {
   return Boolean(audio && audio.playable && audio.outputPath);
 }
 
+function speakerIcon() {
+  return `
+    <svg class="speaker-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M4 9v6h4l5 4V5L8 9H4"></path>
+      <path d="M16 9.5a4 4 0 0 1 0 5"></path>
+      <path d="M18.5 7a7 7 0 0 1 0 10"></path>
+    </svg>
+  `;
+}
+
 function renderAudioButton({ audio, label, className = "" }) {
   const canPlay = isAudioPlayable(audio);
   const classes = ["play-dot", className, canPlay ? "" : "disabled"].filter(Boolean).join(" ");
@@ -1868,7 +1878,7 @@ function renderAudioButton({ audio, label, className = "" }) {
       type="button"
       ${canPlay ? "" : "disabled"}
       aria-label="${t("audio.play")} ${label}"
-    >${t("audio.play")}</button>
+    >${speakerIcon()}</button>
   `;
 }
 
