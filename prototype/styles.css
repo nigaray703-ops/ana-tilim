@@ -2582,6 +2582,98 @@ button {
   box-shadow: none;
 }
 
+.latin-keyboard-target {
+  display: grid;
+  gap: 8px;
+}
+
+.latin-keyboard-target strong {
+  color: var(--ink);
+  font-size: 30px;
+  letter-spacing: 0.16em;
+}
+
+.latin-keyboard-input {
+  width: 100%;
+  min-height: 58px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: var(--paper);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: left;
+}
+
+.latin-keyboard {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+  padding: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, rgba(223, 246, 247, 0.82), rgba(255, 242, 207, 0.66) 58%, var(--paper));
+  box-shadow: 0 14px 32px rgba(22, 38, 87, 0.10);
+  direction: ltr;
+}
+
+.latin-keyboard-row,
+.latin-keyboard-extended,
+.latin-keyboard-tools {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.latin-keyboard-row:nth-child(2) {
+  width: 90%;
+  margin-inline: auto;
+}
+
+.latin-keyboard-row:nth-child(3) {
+  width: 72%;
+  margin-inline: auto;
+}
+
+.latin-keyboard .key-button {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 58px;
+  min-height: 48px;
+  padding: 6px 2px;
+  border-color: var(--line);
+  background: var(--paper);
+  box-shadow: 0 2px 0 rgba(22, 38, 87, 0.13);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+}
+
+.latin-keyboard-extended {
+  padding-top: 4px;
+}
+
+.latin-keyboard-extended .key-button {
+  flex: 0 1 58px;
+  background: var(--teal-soft);
+}
+
+.latin-keyboard-tools .key-button.utility {
+  flex: 1 1 0;
+  grid-column: auto;
+  max-width: 180px;
+  background: var(--mint-soft);
+}
+
+.latin-keyboard-tools .latin-keyboard-space {
+  flex-grow: 1.5;
+}
+
 @media (min-width: 561px) and (max-width: 900px) {
   .uyghur-keyboard {
     max-width: 680px;

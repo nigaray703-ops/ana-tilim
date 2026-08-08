@@ -232,6 +232,7 @@ for (const scriptPath of [
 vm.runInContext(fs.readFileSync("prototype/course-data.js", "utf8"), context, { filename: "prototype/course-data.js" });
 vm.runInContext(fs.readFileSync("prototype/unit-order.js", "utf8"), context, { filename: "prototype/unit-order.js" });
 vm.runInContext(fs.readFileSync("prototype/uyghur-keyboard.js", "utf8"), context, { filename: "prototype/uyghur-keyboard.js" });
+vm.runInContext(fs.readFileSync("prototype/latin-keyboard.js", "utf8"), context, { filename: "prototype/latin-keyboard.js" });
 vm.runInContext(fs.readFileSync("prototype/sentence-morphemes.js", "utf8"), context, { filename: "prototype/sentence-morphemes.js" });
 vm.runInContext(fs.readFileSync("prototype/sentence-glossary.js", "utf8"), context, { filename: "prototype/sentence-glossary.js" });
 vm.runInContext(fs.readFileSync("prototype/progress-transfer.js", "utf8"), context, { filename: "prototype/progress-transfer.js" });

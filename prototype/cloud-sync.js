@@ -2,7 +2,7 @@
   "use strict";
 
   const SCHEMA_VERSION = 1;
-  const PROGRESS_SCOPES = ["letters", "combos", "vocab", "practice", "reading"];
+  const PROGRESS_SCOPES = ["latinWriting", "letters", "combos", "vocab", "practice", "reading"];
 
   class UnsupportedCloudSchemaError extends Error {
     constructor(version) {
@@ -179,6 +179,8 @@
       typeof options.applyMergedSnapshot === "function" ? options.applyMergedSnapshot : () => {};
     const saveMergedSnapshot =
       typeof options.saveMergedSnapshot === "function" ? options.saveMergedSnapshot : () => {};
+    const validateSnapshot =
+      typeof options.validateSnapshot === "function" ? options.validateSnapshot : () => {};
     const now = typeof options.now === "function" ? options.now : () => new Date();
     const setTimeoutFn =
       typeof options.setTimeoutFn === "function"
@@ -299,6 +301,7 @@
       let merged = localSnapshot;
       try {
         if (result?.data?.payload) {
+          validateSnapshot(result.data.payload);
           merged = mergeSnapshots(localSnapshot, result.data.payload);
           applyMergedSnapshot(merged);
           saveMergedSnapshot();

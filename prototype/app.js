@@ -2,6 +2,7 @@ const courseData = window.ANA_TILIM_COURSE;
 const sentenceGlossary = window.ANA_TILIM_SENTENCE_GLOSSARY;
 const progressTransfer = window.ANA_TILIM_PROGRESS_TRANSFER;
 const uyghurKeyboard = window.ANA_TILIM_UYGHUR_KEYBOARD;
+const latinKeyboard = window.ANA_TILIM_LATIN_KEYBOARD;
 const unitOrder = window.ANA_TILIM_UNIT_ORDER;
 const appConfig = Object.freeze({
   edition: "global",
@@ -14,7 +15,7 @@ const appConfig = Object.freeze({
   ...(window.ANA_TILIM_APP_CONFIG || {})
 });
 
-if (!courseData || !sentenceGlossary || !progressTransfer || !uyghurKeyboard || !unitOrder) {
+if (!courseData || !sentenceGlossary || !progressTransfer || !uyghurKeyboard || !latinKeyboard || !unitOrder) {
   throw new Error("Learning data modules failed to load.");
 }
 
@@ -268,6 +269,7 @@ const persistedScreenIds = new Set([
   "home",
   "learn",
   "unit",
+  "latinKeyboardIntro",
   "letter",
   "group",
   "writing",
@@ -296,6 +298,7 @@ const persistedScreenIds = new Set([
   "settings"
 ]);
 const stableProgressIds = Object.freeze({
+  latinWriting: new Set(["qwerty"]),
   letters: new Set(alphabetGroups.map((group) => group.id)),
   combos: new Set(comboGroups.map((group) => group.id)),
   vocab: new Set(vocabGroups.map((group) => group.id)),
@@ -325,6 +328,7 @@ const stableMistakeTargetIds = Object.freeze({
 });
 const stableWritingCheckIds = new Set(["shape", "dots", "spacing"]);
 const dailyActivitySteps = Object.freeze({
+  latinWriting: new Set(["completed"]),
   letters: new Set(["viewed", "writing", "recognition", "keyboard", "completed"]),
   combos: new Set(["viewed", "writing", "recognition", "build", "keyboard", "completed"]),
   vocab: new Set(["viewed", "recognition", "keyboard", "completed"]),
@@ -351,6 +355,12 @@ const unitExperience = {
     steps: ["认识相似字母组", "看四种写法", "做辨认、听音、键盘", "完成后进入下一单元"],
     reviewLabel: "复习本组",
     reviewTarget: "group"
+  },
+  "latin-keyboard-writing": {
+    recommended: "先完成普通拉丁 QWERTY，再继续本单元后续字母练习。",
+    steps: ["认识三排键位", "输入 qwerty", "核对完全一致", "后续内容将按单元顺序开放"],
+    reviewLabel: "练习 QWERTY",
+    reviewTarget: "latinKeyboardIntro"
   },
   combos: {
     recommended: "先练两字母组合，再看三字母连接和断开规则，从右往左拆分再合上。",
@@ -478,6 +488,7 @@ const state = {
   practiceAudioPlayed: false,
   keyboardValue: "",
   keyboardShift: false,
+  latinKeyboardValue: "",
   practiceSpoken: false,
   emailAuthExpanded: false,
   emailCodeSent: false,
@@ -592,6 +603,7 @@ function applyLocalProgressData(saved) {
 
   if (saved.learningProgress && typeof saved.learningProgress === "object") {
     state.learningProgress = {
+      latinWriting: saved.learningProgress.latinWriting || {},
       letters: saved.learningProgress.letters || {},
       combos: saved.learningProgress.combos || {},
       vocab: saved.learningProgress.vocab || {},
@@ -874,7 +886,14 @@ function initializeNewLearnerProgress() {
   saveLocalProgress();
 }
 
+function validateCloudProgressSnapshot(snapshot) {
+  const learningProgress = snapshot?.learningProgress || {};
+  progressTransfer.validateLearningProgress(learningProgress);
+  validateImportedProgressIds({ learningProgress });
+}
+
 function applyCloudSnapshot(snapshot) {
+  validateCloudProgressSnapshot(snapshot);
   const normalized = window.ANA_TILIM_CLOUD.normalizeSnapshot(snapshot);
   state.learningProgress = normalized.learningProgress;
   state.mistakes = normalized.mistakes;
@@ -889,6 +908,7 @@ function applyCloudSnapshot(snapshot) {
 
 function emptyLearningProgress() {
   return {
+    latinWriting: {},
     letters: {},
     combos: {},
     vocab: {},
@@ -909,6 +929,7 @@ function learningRecordSnapshot() {
       selectedListening: state.selectedListening,
       practiceAudioPlayed: state.practiceAudioPlayed,
       keyboardValue: state.keyboardValue,
+      latinKeyboardValue: state.latinKeyboardValue,
       practiceSpoken: state.practiceSpoken,
       currentLetterId: state.currentLetterId,
       selectedGroupId: state.selectedGroupId,
@@ -939,6 +960,7 @@ function clearLearningRecords() {
   state.selectedListening = "";
   state.practiceAudioPlayed = false;
   state.keyboardValue = "";
+  state.latinKeyboardValue = "";
   state.practiceSpoken = false;
   state.currentLetterId = "be";
   state.selectedGroupId = "dot-bone";
@@ -1480,6 +1502,9 @@ function unitProgressSummaries() {
     if (unit.id === "letters") {
       completed = countCompleted("letters");
       total = unit.groups.length;
+    } else if (unit.id === "latin-keyboard-writing") {
+      completed = countCompletedForIds("latinWriting", ["qwerty"]);
+      total = 1;
     } else if (unit.id === "combos") {
       completed = countCompletedForIds("combos", basicComboIds);
       total = basicComboIds.length;
@@ -2315,6 +2340,7 @@ function render({ persist = true } = {}) {
     home: renderHome,
     learn: renderLearnPath,
     unit: renderUnitDetail,
+    latinKeyboardIntro: renderLatinKeyboardIntro,
     letter: renderGroupLesson,
     group: renderGroupLesson,
     writing: renderPracticeHub,
@@ -3528,6 +3554,66 @@ function renderKeyboardPractice() {
         <button class="primary-button" data-action="go" data-target="complete" type="button" ${isCorrect ? "" : "disabled"}>
           完成课程
         </button>
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function renderLatinKeyboardIntro() {
+  const targetValue = "qwerty";
+  const isComplete = state.latinKeyboardValue === targetValue;
+
+  return screen(
+    `
+      ${topBar(
+        "普通拉丁 QWERTY",
+        learningUnitTitle("latin-keyboard-writing"),
+        "",
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack">
+        <article class="card latin-keyboard-target">
+          <p class="caption">目标</p>
+          <strong dir="ltr">${targetValue}</strong>
+          <p>用普通拉丁键位按顺序输入；大写字母会按小写记录。</p>
+        </article>
+        <input
+          class="latin-keyboard-input"
+          value="${escapeHtml(state.latinKeyboardValue)}"
+          aria-label="普通拉丁输入框"
+          readonly
+          dir="ltr"
+        />
+        <div class="latin-keyboard" aria-label="普通拉丁 QWERTY 键盘">
+          ${latinKeyboard.ROWS.map(
+            (row) => `
+              <div class="latin-keyboard-row">
+                ${Array.from(row)
+                  .map(
+                    (key) => `<button class="key-button" data-action="latin-key" data-key="${key}" type="button">${key.toUpperCase()}</button>`
+                  )
+                  .join("")}
+              </div>
+            `
+          ).join("")}
+          <div class="latin-keyboard-extended" aria-label="拉丁扩展键">
+            ${latinKeyboard.EXTENDED_KEYS.map(
+              (key) => `<button class="key-button" data-action="latin-extended-key" data-key="${key}" type="button">${key}</button>`
+            ).join("")}
+          </div>
+          <div class="latin-keyboard-tools">
+            <button class="key-button utility" data-action="latin-backspace" type="button" aria-label="Backspace">Backspace</button>
+            <button class="key-button utility latin-keyboard-space" data-action="latin-space" type="button" aria-label="Space">Space</button>
+          </div>
+        </div>
+        <div class="feedback ${isComplete ? "good" : ""}">
+          ${isComplete ? "输入完全一致。普通拉丁 QWERTY 已完成。" : "只有输入完全等于 qwerty 时才会完成。"}
+        </div>
+        <div class="action-grid">
+          <button class="secondary-button" data-action="go" data-target="unit" type="button">返回本单元</button>
+          <button class="primary-button" data-action="go" data-target="home" type="button">回到首页</button>
+        </div>
       </section>
     `,
     "learn"
@@ -5380,6 +5466,13 @@ function appendKeyboardValue(value) {
   }
 }
 
+function updateLatinKeyboardValue(nextValue) {
+  state.latinKeyboardValue = nextValue;
+  if (state.latinKeyboardValue === "qwerty") {
+    markProgress("latinWriting", "qwerty", "completed");
+  }
+}
+
 document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-action]");
   if (!button) {
@@ -5387,6 +5480,30 @@ document.addEventListener("click", (event) => {
   }
 
   const action = button.dataset.action;
+
+  if (action === "latin-key") {
+    updateLatinKeyboardValue(latinKeyboard.applyKey(state.latinKeyboardValue, { key: button.dataset.key || "" }));
+    render();
+    return;
+  }
+
+  if (action === "latin-extended-key") {
+    updateLatinKeyboardValue(latinKeyboard.applyExtendedKey(state.latinKeyboardValue, button.dataset.key || ""));
+    render();
+    return;
+  }
+
+  if (action === "latin-backspace") {
+    updateLatinKeyboardValue(latinKeyboard.applyKey(state.latinKeyboardValue, { key: "Backspace" }));
+    render();
+    return;
+  }
+
+  if (action === "latin-space") {
+    updateLatinKeyboardValue(latinKeyboard.applyKey(state.latinKeyboardValue, { key: " " }));
+    render();
+    return;
+  }
 
   if (action === "toggle-learning-reminder") {
     setPreference("learningReminder", !state.preferences.learningReminder);
@@ -5717,6 +5834,9 @@ document.addEventListener("click", (event) => {
     }
     if (target === "vocab") {
       state.selectedUnitId = "basic-phrases";
+    }
+    if (target === "latinKeyboardIntro") {
+      state.latinKeyboardValue = "";
     }
     if (["picture", "listening", "keyboard", "letterOdd", "letterSound", "comboRecognition", "comboBuild", "comboWriting", "comboKeyboard", "vocabRecognition", "vocabKeyboard", "letterWriting"].includes(target)) {
       resetPracticeState();
@@ -6098,6 +6218,16 @@ document.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (state.screen === "latinKeyboardIntro") {
+    if (event.target?.matches?.("textarea, select, [contenteditable='true'], input:not([readonly])")) return;
+    const nextValue = latinKeyboard.applyKey(state.latinKeyboardValue, event);
+    if (nextValue === state.latinKeyboardValue) return;
+    event.preventDefault();
+    updateLatinKeyboardValue(nextValue);
+    render();
+    return;
+  }
+
   const onKeyboardLesson =
     ["keyboard", "comboKeyboard", "vocabKeyboard"].includes(state.screen) ||
     (state.screen === "practiceSession" && currentPracticeGroup().mode === "keyboard");
@@ -6243,6 +6373,7 @@ function initializeCloudAuthentication() {
   cloudSync = cloudApi.createCloudSync({
     supabaseClient,
     getLocalSnapshot: buildCloudSnapshot,
+    validateSnapshot: validateCloudProgressSnapshot,
     applyMergedSnapshot: applyCloudSnapshot,
     saveMergedSnapshot() {
       saveLocalProgress();

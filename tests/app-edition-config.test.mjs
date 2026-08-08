@@ -94,6 +94,7 @@ const expectedCoreFiles = [
   "course-data/practice-data.js",
   "course-data/reading-data.js",
   "uyghur-keyboard.js",
+  "latin-keyboard.js",
   "sentence-morphemes.js",
   "sentence-glossary.js",
   "progress-transfer.js",
@@ -159,13 +160,20 @@ for (const [relativePath, before] of excludedBeforeSync) {
   );
 }
 
+const domesticIndexAfterFirstSync = fs.readFileSync(path.join(syncTargetPath, "index.html"), "utf8");
 const secondSyncResult = runSync(syncTargetPath);
 assertCoreSyncPassed(secondSyncResult);
 const syncedDomesticIndex = fs.readFileSync(path.join(syncTargetPath, "index.html"), "utf8");
+assert.equal(
+  syncedDomesticIndex,
+  domesticIndexAfterFirstSync,
+  "a repeated sync should leave the normalized domestic index byte-identical"
+);
 const alphabetDataScriptIndex = syncedDomesticIndex.indexOf("./course-data/alphabet-data.js");
 const latinWritingDataScriptIndex = syncedDomesticIndex.indexOf("./course-data/latin-writing-data.js");
 const courseDataScriptIndex = syncedDomesticIndex.indexOf("./course-data.js");
 const unitOrderScriptIndex = syncedDomesticIndex.indexOf("./unit-order.js");
+const latinKeyboardScriptIndex = syncedDomesticIndex.indexOf("./latin-keyboard.js");
 const appScriptIndex = syncedDomesticIndex.indexOf("./app.js");
 assert.ok(
   alphabetDataScriptIndex >= 0
@@ -173,13 +181,20 @@ assert.ok(
     && latinWritingDataScriptIndex < courseDataScriptIndex
     && courseDataScriptIndex >= 0
     && courseDataScriptIndex < unitOrderScriptIndex
-    && unitOrderScriptIndex < appScriptIndex,
-  "domestic scripts should load course data before unit order before app"
+    && unitOrderScriptIndex < appScriptIndex
+    && latinKeyboardScriptIndex >= 0
+    && latinKeyboardScriptIndex < appScriptIndex,
+  "domestic scripts should load course data, unit order, and the Latin keyboard before app"
 );
 assert.equal(
   [...syncedDomesticIndex.matchAll(/<script\s+[^>]*src=["']\.\/course-data\/latin-writing-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)].length,
   1,
   "repeated sync should leave exactly one domestic latin-writing-data script"
+);
+assert.equal(
+  [...syncedDomesticIndex.matchAll(/<script\s+[^>]*src=["']\.\/latin-keyboard\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)].length,
+  1,
+  "repeated sync should leave exactly one domestic latin-keyboard script"
 );
 assert.equal(
   [...syncedDomesticIndex.matchAll(/<script\s+[^>]*src=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)].length,
@@ -208,6 +223,7 @@ fs.writeFileSync(path.join(misplacedUnitOrderTargetPath, "index.html"), `<!docty
     <script src="./domestic-after-app.js?v=1"></script>
     <script src="./course-data/latin-writing-data.js?v=misplaced"></script>
     <script src="./unit-order.js?v=misplaced"></script>
+    <script src="./latin-keyboard.js?v=misplaced"></script>
   </body>
 </html>
 `);
@@ -223,14 +239,19 @@ const normalizedMisplacedLatinWritingTags = [
 const normalizedMisplacedUnitOrderTags = [
   ...normalizedMisplacedIndex.matchAll(/<script\s+[^>]*src=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
 ];
+const normalizedMisplacedLatinKeyboardTags = [
+  ...normalizedMisplacedIndex.matchAll(/<script\s+[^>]*src=["']\.\/latin-keyboard\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
+];
 assert.equal(normalizedMisplacedLatinWritingTags.length, 1, "sync should keep one normalized latin-writing-data tag");
 assert.equal(normalizedMisplacedUnitOrderTags.length, 1, "sync should keep one normalized unit-order tag");
+assert.equal(normalizedMisplacedLatinKeyboardTags.length, 1, "sync should keep one normalized latin-keyboard tag");
 assert.ok(
   normalizedMisplacedIndex.indexOf("./course-data/alphabet-data.js") < normalizedMisplacedIndex.indexOf("./course-data/latin-writing-data.js")
     && normalizedMisplacedIndex.indexOf("./course-data/latin-writing-data.js") < normalizedMisplacedIndex.indexOf("./course-data.js")
     && normalizedMisplacedIndex.indexOf("./course-data.js") < normalizedMisplacedIndex.indexOf("./unit-order.js")
-    && normalizedMisplacedIndex.indexOf("./unit-order.js") < normalizedMisplacedIndex.indexOf("./app.js"),
-  "sync should move a misplaced unit-order tag before app.js"
+    && normalizedMisplacedIndex.indexOf("./unit-order.js") < normalizedMisplacedIndex.indexOf("./app.js")
+    && normalizedMisplacedIndex.indexOf("./latin-keyboard.js") < normalizedMisplacedIndex.indexOf("./app.js"),
+  "sync should move misplaced strict dependencies before app.js"
 );
 assert.ok(
   normalizedMisplacedIndex.includes('data-misplaced-domestic-marker="keep"'),
@@ -259,10 +280,12 @@ fs.writeFileSync(path.join(duplicateUnitOrderTargetPath, "index.html"), `<!docty
     <script src="./course-data/latin-writing-data.js?v=old-before"></script>
     <script src="./course-data.js?v=cn-course"></script>
     <script src="./unit-order.js?v=old-before"></script>
+    <script src="./latin-keyboard.js?v=old-before"></script>
     <script src="./domestic-duplicate-fixture.js?v=1"></script>
     <script src="./app.js?v=cn-app"></script>
     <script src="./course-data/latin-writing-data.js?v=old-after"></script>
     <script src="./unit-order.js?v=old-after"></script>
+    <script src="./latin-keyboard.js?v=old-after"></script>
   </body>
 </html>
 `);
@@ -278,12 +301,21 @@ const normalizedDuplicateLatinWritingTags = [
 const normalizedDuplicateUnitOrderTags = [
   ...normalizedDuplicateIndex.matchAll(/<script\s+[^>]*src=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
 ];
+const normalizedDuplicateLatinKeyboardTags = [
+  ...normalizedDuplicateIndex.matchAll(/<script\s+[^>]*src=["']\.\/latin-keyboard\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
+];
 assert.equal(normalizedDuplicateLatinWritingTags.length, 1, "sync should collapse duplicate latin-writing-data tags");
 assert.equal(normalizedDuplicateUnitOrderTags.length, 1, "sync should collapse duplicate unit-order tags");
+assert.equal(normalizedDuplicateLatinKeyboardTags.length, 1, "sync should collapse duplicate latin-keyboard tags");
 assert.equal(
   normalizedDuplicateLatinWritingTags[0][0].trim(),
   '<script src="./course-data/latin-writing-data.js?v=20260809-latin-writing"></script>',
   "duplicate normalization should use the standard latin-writing-data tag"
+);
+assert.equal(
+  normalizedDuplicateLatinKeyboardTags[0][0],
+  '<script src="./latin-keyboard.js?v=20260809-latin-qwerty"></script>',
+  "duplicate normalization should use the standard latin-keyboard tag"
 );
 assert.equal(
   normalizedDuplicateUnitOrderTags[0][0],
@@ -294,8 +326,9 @@ assert.ok(
   normalizedDuplicateIndex.indexOf("./course-data/alphabet-data.js") < normalizedDuplicateIndex.indexOf("./course-data/latin-writing-data.js")
     && normalizedDuplicateIndex.indexOf("./course-data/latin-writing-data.js") < normalizedDuplicateIndex.indexOf("./course-data.js")
     && normalizedDuplicateIndex.indexOf("./course-data.js") < normalizedDuplicateIndex.indexOf("./unit-order.js")
-    && normalizedDuplicateIndex.indexOf("./unit-order.js") < normalizedDuplicateIndex.indexOf("./app.js"),
-  "duplicate normalization should place unit order before app.js"
+    && normalizedDuplicateIndex.indexOf("./unit-order.js") < normalizedDuplicateIndex.indexOf("./app.js")
+    && normalizedDuplicateIndex.indexOf("./latin-keyboard.js") < normalizedDuplicateIndex.indexOf("./app.js"),
+  "duplicate normalization should place strict dependencies before app.js"
 );
 assert.ok(
   normalizedDuplicateIndex.includes('data-duplicate-domestic-marker="keep"')

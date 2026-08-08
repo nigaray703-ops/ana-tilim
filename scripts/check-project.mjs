@@ -35,6 +35,11 @@ const checks = [
     args: ["--check", "prototype/sentence-morphemes.js"]
   },
   {
+    label: "syntax: Latin keyboard",
+    command: node,
+    args: ["--check", "prototype/latin-keyboard.js"]
+  },
+  {
     label: "syntax: sentence glossary",
     command: node,
     args: ["--check", "prototype/sentence-glossary.js"]
@@ -133,6 +138,11 @@ const checks = [
     label: "test: latin writing course data",
     command: node,
     args: ["tests/latin-writing-data.test.mjs"]
+  },
+  {
+    label: "test: Latin keyboard",
+    command: node,
+    args: ["tests/latin-keyboard.test.mjs"]
   },
   {
     label: "test: content policy",

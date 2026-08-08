@@ -58,6 +58,7 @@ for (const scriptPath of [
   "prototype/course-data.js",
   "prototype/unit-order.js",
   "prototype/uyghur-keyboard.js",
+  "prototype/latin-keyboard.js",
   "prototype/sentence-morphemes.js",
   "prototype/sentence-glossary.js",
   "prototype/progress-transfer.js",
@@ -134,12 +135,19 @@ assert.equal(
 
 for (const unitId of [
   "letters",
+  "latin-keyboard-writing",
   "combos",
   "basic-phrases",
   ...courseData.readingUnits.map((unit) => unit.id)
 ]) {
   renderState({ screen: "unit", selectedUnitId: unitId }, `${unitId} unit`);
 }
+
+renderState(
+  { screen: "latinKeyboardIntro", selectedUnitId: "latin-keyboard-writing", latinKeyboardValue: "" },
+  "Latin QWERTY keyboard",
+  "qwerty"
+);
 
 for (const group of courseData.alphabetGroups) {
   for (const letter of group.letters) {
@@ -193,6 +201,6 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
   }
 }
 
-assert.equal(renderCount, 465, "full UI audit should render every retained main screen, welcome state, unit, lesson item, reading group, and practice item");
+assert.equal(renderCount, 467, "full UI audit should render every retained main screen, welcome state, unit, lesson item, reading group, and practice item");
 
 console.log(`full content render checks passed (${renderCount} states)`);

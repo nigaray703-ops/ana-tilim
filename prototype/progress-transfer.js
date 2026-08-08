@@ -5,7 +5,7 @@
     cn: "Uyghur Tili 国内版",
     global: "Ana Tilim 海外版"
   });
-  const PROGRESS_SCOPES = Object.freeze(["letters", "combos", "vocab", "practice", "reading"]);
+  const PROGRESS_SCOPES = Object.freeze(["latinWriting", "letters", "combos", "vocab", "practice", "reading"]);
   const PROGRESS_BOOLEAN_FIELDS = new Set([
     "viewed",
     "writing",
@@ -215,6 +215,7 @@
     FORMAT,
     VERSION,
     createExportPayload,
-    parseImportPayload
+    parseImportPayload,
+    validateLearningProgress
   });
 })();

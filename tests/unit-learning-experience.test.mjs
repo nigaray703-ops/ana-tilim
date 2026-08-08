@@ -9,6 +9,7 @@ const projectCheckScriptPath = "scripts/check-project.mjs";
 const courseDataAggregatorPath = "prototype/course-data.js";
 const unitOrderPath = "prototype/unit-order.js";
 const uyghurKeyboardPath = "prototype/uyghur-keyboard.js";
+const latinKeyboardPath = "prototype/latin-keyboard.js";
 const courseDataScriptPaths = [
   "prototype/uly-transliteration.js",
   "prototype/course-data/alphabet-data.js",
@@ -21,6 +22,7 @@ const courseDataScriptPaths = [
 assert.ok(fs.existsSync(courseDataAggregatorPath), "course data aggregator should exist");
 assert.ok(fs.existsSync(unitOrderPath), "edition-aware unit order module should exist");
 assert.ok(fs.existsSync(uyghurKeyboardPath), "focused Uyghur keyboard mapping module should exist");
+assert.ok(fs.existsSync(latinKeyboardPath), "focused Latin keyboard module should exist");
 for (const scriptPath of courseDataScriptPaths) {
   assert.ok(fs.existsSync(scriptPath), `${scriptPath} should exist as a focused course data file`);
 }
@@ -59,6 +61,7 @@ const expectedVersionedAssets = [
   "./course-data/reading-data.js?v=20260728-uly-transliteration",
   "./course-data.js?v=20260728-uly-transliteration",
   "./uyghur-keyboard.js?v=20260809-phone-morphemes",
+  "./latin-keyboard.js?v=20260809-latin-qwerty",
   "./sentence-morphemes.js?v=20260809-word-formation",
   "./sentence-glossary.js?v=20260809-word-formation",
   "./progress-transfer.js?v=20260808-local-progress",
@@ -70,7 +73,7 @@ const expectedVersionedAssets = [
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
-    /(?:href|src)="(?<url>(?:\.\/(?:styles\.css|app-config\.js|uly-transliteration\.js|course-data\/[^"]+\.js|course-data\.js|uyghur-keyboard\.js|sentence-morphemes\.js|sentence-glossary\.js|progress-transfer\.js|audio-controller\.js|cloud-config\.js|cloud-sync\.js|app\.js)[^"]*|https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2\.110\.8))"/g
+    /(?:href|src)="(?<url>(?:\.\/(?:styles\.css|app-config\.js|uly-transliteration\.js|course-data\/[^"]+\.js|course-data\.js|uyghur-keyboard\.js|latin-keyboard\.js|sentence-morphemes\.js|sentence-glossary\.js|progress-transfer\.js|audio-controller\.js|cloud-config\.js|cloud-sync\.js|app\.js)[^"]*|https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2\.110\.8))"/g
   )
 ].map((match) => match.groups.url);
 assert.deepEqual(
@@ -241,6 +244,7 @@ const htmlScriptOrder = [
   ...courseDataScriptPaths,
   courseDataAggregatorPath,
   uyghurKeyboardPath,
+  latinKeyboardPath,
   "prototype/sentence-glossary.js",
   "prototype/progress-transfer.js",
   "prototype/cloud-config.js",
@@ -391,6 +395,7 @@ for (const scriptPath of courseDataScriptPaths) {
 vm.runInContext(fs.readFileSync(courseDataAggregatorPath, "utf8"), context, { filename: courseDataAggregatorPath });
 vm.runInContext(fs.readFileSync(unitOrderPath, "utf8"), context, { filename: unitOrderPath });
 vm.runInContext(fs.readFileSync(uyghurKeyboardPath, "utf8"), context, { filename: uyghurKeyboardPath });
+vm.runInContext(fs.readFileSync(latinKeyboardPath, "utf8"), context, { filename: latinKeyboardPath });
 vm.runInContext(fs.readFileSync("prototype/sentence-morphemes.js", "utf8"), context, { filename: "prototype/sentence-morphemes.js" });
 vm.runInContext(fs.readFileSync("prototype/sentence-glossary.js", "utf8"), context, { filename: "prototype/sentence-glossary.js" });
 vm.runInContext(fs.readFileSync("prototype/progress-transfer.js", "utf8"), context, { filename: "prototype/progress-transfer.js" });
@@ -424,7 +429,7 @@ assert.deepEqual(globalUnits.map(({ id, title }) => [id, title]), [
   ["famous-quotes", "第十单元：名人名言"]
 ]);
 
-function createConfiguredAppVm(hiddenUnitIds) {
+function createConfiguredAppVm(hiddenUnitIds, { includeLatinKeyboard = true } = {}) {
   const configuredApp = makeElement("configured-app");
   const configuredToast = makeElement("configured-toast");
   const configuredStorage = {};
@@ -497,6 +502,7 @@ function createConfiguredAppVm(hiddenUnitIds) {
     courseDataAggregatorPath,
     unitOrderPath,
     uyghurKeyboardPath,
+    ...(includeLatinKeyboard ? [latinKeyboardPath] : []),
     "prototype/sentence-morphemes.js",
     "prototype/sentence-glossary.js",
     "prototype/progress-transfer.js",
@@ -514,6 +520,12 @@ function createConfiguredAppVm(hiddenUnitIds) {
     }
   };
 }
+
+assert.throws(
+  () => createConfiguredAppVm([], { includeLatinKeyboard: false }),
+  /Learning data modules failed to load/,
+  "the app should fail fast when its focused Latin keyboard dependency is missing"
+);
 
 const domesticApp = createConfiguredAppVm(["famous-quotes"]);
 const domesticWelcomeHtml = domesticApp.render("state.screen = 'welcome'");
@@ -673,6 +685,11 @@ assert.equal(
   true,
   "legacy learning progress should remain attached to its stable lesson ID"
 );
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.latinWriting)", context)),
+  {},
+  "legacy snapshots without Latin writing progress should receive an empty compatible scope"
+);
 delete storage["ana-tilim-progress"];
 vm.runInContext("state.selectedUnitId = 'letters'; state.learningProgress = emptyLearningProgress()", context);
 
@@ -740,6 +757,7 @@ vm.runInContext(
       preferencesUpdatedAt: "2026-07-28T04:00:00.000Z",
       favoriteUpdatedAt: "2026-07-28T04:00:00.000Z",
       learningProgress: {
+        latinWriting: { qwerty: { completed: true } },
         letters: { "dot-bone": { completed: true } },
         combos: {},
         vocab: {},
@@ -760,6 +778,56 @@ assert.equal(
   vm.runInContext("state.learningProgress.letters['dot-bone'].completed", context),
   true
 );
+assert.equal(vm.runInContext("state.learningProgress.latinWriting.qwerty.completed", context), true);
+
+const validCloudProgress = {
+  latinWriting: { qwerty: { completed: true } },
+  letters: {},
+  combos: {},
+  vocab: {},
+  practice: {},
+  reading: {}
+};
+const cloudSnapshotBase = {
+  schemaVersion: 1,
+  modifiedAt: "2026-07-28T05:00:00.000Z",
+  preferencesUpdatedAt: "2026-07-28T05:00:00.000Z",
+  favoriteUpdatedAt: "2026-07-28T05:00:00.000Z",
+  mistakes: [],
+  favorite: false,
+  dailyActivity: { date: "2026-07-28", completedIds: [] },
+  preferences: {}
+};
+const cloudStateBeforeInvalidProgress = vm.runInContext("JSON.stringify(state.learningProgress)", context);
+for (const [label, learningProgress, expectedError] of [
+  [
+    "unknown cloud progress scope",
+    { ...validCloudProgress, futureScope: {} },
+    /learningProgress 包含未知字段 futureScope/
+  ],
+  [
+    "unknown cloud Latin progress ID",
+    { ...validCloudProgress, latinWriting: { futureStep: { completed: true } } },
+    /learningProgress\.latinWriting 包含未知 ID: futureStep/
+  ],
+  [
+    "unknown cloud Latin progress field",
+    { ...validCloudProgress, latinWriting: { qwerty: { completed: true, score: 99 } } },
+    /learningProgress\.latinWriting\.qwerty 包含未知字段 score/
+  ]
+]) {
+  const invalidSnapshot = { ...cloudSnapshotBase, learningProgress };
+  assert.throws(
+    () => vm.runInContext(`applyCloudSnapshot(${JSON.stringify(invalidSnapshot)})`, context),
+    expectedError,
+    label
+  );
+  assert.equal(
+    vm.runInContext("JSON.stringify(state.learningProgress)", context),
+    cloudStateBeforeInvalidProgress,
+    `${label} should not mutate local progress`
+  );
+}
 vm.runInContext(
   `
     globalThis.originalCloudSync = cloudSync;
@@ -894,6 +962,21 @@ function clickDataset(dataset) {
   });
 }
 
+function pressPhysicalKey(key, overrides = {}) {
+  assert.ok(keydownHandler, "keydown handler should be registered");
+  keydownHandler({
+    key,
+    code: key === " " ? "Space" : key === "Backspace" ? "Backspace" : `Key${key.toUpperCase()}`,
+    shiftKey: false,
+    ctrlKey: false,
+    altKey: false,
+    metaKey: false,
+    target: { matches() { return false; } },
+    preventDefault() {},
+    ...overrides
+  });
+}
+
 function assertGuestActionPrecedesAuthSubmits(html, actions, label) {
   const guestIndex = html.indexOf('data-action="continue-local"');
   assert.ok(guestIndex >= 0, `${label} should keep the guest learning action`);
@@ -989,7 +1072,7 @@ assert.equal(vm.runInContext("state.selectedGroupId", context), "dot-bone");
 assert.equal(vm.runInContext("state.currentLetterId", context), "be");
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress)", context)),
-  { letters: {}, combos: {}, vocab: {}, practice: {}, reading: {} }
+  { latinWriting: {}, letters: {}, combos: {}, vocab: {}, practice: {}, reading: {} }
 );
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(state.mistakes)", context)),
@@ -1381,6 +1464,7 @@ vm.runInContext(
 );
 const importedProgress = {
   learningProgress: {
+    latinWriting: { qwerty: { completed: true } },
     letters: { "dot-bone": { completed: true } },
     combos: {},
     vocab: {},
@@ -1486,6 +1570,11 @@ const semanticInvalidCases = [
   ["selected reading group", { selectedReadingGroupId: "unknown-reading-group" }, /未知 selectedReadingGroupId: unknown-reading-group/],
   ["selected unit", { selectedUnitId: "unknown-unit" }, /未知 selectedUnitId: unknown-unit/],
   [
+    "Latin writing progress key",
+    { learningProgress: { latinWriting: { "unknown-latin-step": { completed: true } } } },
+    /learningProgress\.latinWriting 包含未知 ID: unknown-latin-step/
+  ],
+  [
     "letter progress key",
     { learningProgress: { letters: { "unknown-letter-group": { completed: true } } } },
     /learningProgress\.letters 包含未知 ID: unknown-letter-group/
@@ -1582,6 +1671,11 @@ assert.equal(
   replacedProgress.learningProgress.letters["dot-bone"].completed,
   true,
   "confirmation should replace local learning progress with the imported data"
+);
+assert.equal(
+  replacedProgress.learningProgress.latinWriting.qwerty.completed,
+  true,
+  "confirmation should preserve a recognized Latin QWERTY completion"
 );
 assert.deepEqual(
   {
@@ -3109,6 +3203,95 @@ assert.ok(!app.innerHTML.includes("输入正确。本轮键盘练习完成。"),
 assert.ok(!app.innerHTML.includes("对比正确写法"), "practice keyboard entry should not show writing comparison");
 assert.ok(!app.innerHTML.includes("完成后评价"), "practice keyboard entry should not show writing self-check");
 
+const latinUnitHtml = renderState(
+  "state.screen = 'unit'; state.selectedUnitId = 'latin-keyboard-writing'; state.latinKeyboardValue = ''"
+);
+assert.match(
+  latinUnitHtml,
+  /data-action="go"[^>]*data-target="latinKeyboardIntro"[^>]*>\s*进入当前学习\s*<\/button>/,
+  "the visible Latin writing unit should link to its implemented keyboard screen"
+);
+clickDataset({ action: "go", target: "latinKeyboardIntro" });
+assert.equal(vm.runInContext("state.screen", context), "latinKeyboardIntro", "the Task 1 unit entry should no longer be dead");
+includesAll(
+  app.innerHTML,
+  ["普通拉丁 QWERTY", "目标", "qwerty", 'aria-label="普通拉丁 QWERTY 键盘"', 'dir="ltr"', "Backspace", "Space", "ë", "ö", "ü"],
+  "Latin QWERTY screen"
+);
+assert.equal((app.innerHTML.match(/class="latin-keyboard-row"/g) || []).length, 3, "Latin keyboard should render three QWERTY rows");
+assert.equal((app.innerHTML.match(/data-action="latin-key"/g) || []).length, 26, "Latin keyboard should render all 26 ordinary letters");
+assert.doesNotMatch(app.innerHTML, /[\u0600-\u06ff]/u, "the isolated Latin keyboard screen should not render Arabic Unicode");
+assert.doesNotMatch(app.innerHTML, /accuracy|准确率|得分|分数/i, "literal keyboard completion should not invent an accuracy score");
+
+vm.runInContext("state.learningProgress.latinWriting = {}; state.latinKeyboardValue = ''; render()", context);
+for (const key of "qwertx") clickDataset({ action: "latin-key", key });
+assert.equal(vm.runInContext("state.latinKeyboardValue", context), "qwertx", "screen keys should type literal lowercase Latin letters");
+assert.equal(
+  vm.runInContext("state.learningProgress.latinWriting.qwerty?.completed", context),
+  undefined,
+  "a near match must not complete the QWERTY exercise"
+);
+clickDataset({ action: "latin-backspace" });
+clickDataset({ action: "latin-key", key: "y" });
+assert.equal(vm.runInContext("state.latinKeyboardValue", context), "qwerty");
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.latinWriting.qwerty)", context)),
+  { completed: true },
+  "an exact literal match should persist one completion flag and no fabricated score"
+);
+includesAll(app.innerHTML, ["输入完全一致", "返回本单元", "回到首页"], "Latin QWERTY success");
+assert.ok(!app.innerHTML.includes("classification"), "Task 2 must not link to the unimplemented classification screen");
+
+vm.runInContext("state.latinKeyboardValue = ''; render()", context);
+clickDataset({ action: "latin-key", key: "q" });
+clickDataset({ action: "latin-extended-key", key: "ë" });
+clickDataset({ action: "latin-space" });
+clickDataset({ action: "latin-backspace" });
+assert.equal(vm.runInContext("state.latinKeyboardValue", context), "që", "extended, Space, and Backspace screen keys should stay literal");
+assert.doesNotMatch(vm.runInContext("state.latinKeyboardValue", context), /[\u0600-\u06ff]/u);
+
+vm.runInContext("state.learningProgress.latinWriting = {}; state.latinKeyboardValue = ''; render()", context);
+pressPhysicalKey("A", { metaKey: true });
+pressPhysicalKey("A", { ctrlKey: true });
+pressPhysicalKey("A", { altKey: true });
+assert.equal(vm.runInContext("state.latinKeyboardValue", context), "", "physical modifiers should be ignored on the Latin screen");
+pressPhysicalKey("Q", {
+  target: {
+    matches(selector) {
+      if (selector.includes("input:not([readonly])")) return false;
+      return selector.split(",").some((part) => part.trim() === "input");
+    }
+  }
+});
+assert.equal(
+  vm.runInContext("state.latinKeyboardValue", context),
+  "q",
+  "physical Latin input should still work when the readonly LTR display has focus"
+);
+vm.runInContext("state.latinKeyboardValue = ''; render()", context);
+for (const key of "QWERTY") pressPhysicalKey(key);
+assert.equal(vm.runInContext("state.latinKeyboardValue", context), "qwerty", "physical QWERTY should stay literal Latin");
+pressPhysicalKey(" ");
+pressPhysicalKey("Backspace");
+assert.equal(vm.runInContext("state.latinKeyboardValue", context), "qwerty", "physical Space and Backspace should use the Latin API");
+assert.equal(vm.runInContext("state.learningProgress.latinWriting.qwerty.completed", context), true);
+assert.doesNotMatch(vm.runInContext("state.latinKeyboardValue", context), /[\u0600-\u06ff]/u);
+vm.runInContext(
+  "state.learningProgress = emptyLearningProgress(); state.learningProgress.latinWriting.qwerty = { completed: true }; state.dailyActivity = { date: localDayKey(), completedIds: ['latinWriting:qwerty:completed'] }",
+  context
+);
+const completedLatinExportText = vm.runInContext(
+  "JSON.stringify(progressTransfer.createExportPayload(buildLocalProgressData(), { edition: appConfig.edition, brandName: appConfig.brandName }))",
+  context
+);
+const completedLatinImport = importProgressDirect(completedLatinExportText);
+assert.equal(
+  completedLatinImport.data.learningProgress.latinWriting.qwerty.completed,
+  true,
+  "the current real app export should round-trip Latin QWERTY completion through semantic validation"
+);
+vm.runInContext("state.pendingProgressImport = null", context);
+
 renderState("state.screen = 'keyboard'; state.selectedGroupId = 'vowels-basic'; state.currentLetterId = 'ae'; state.keyboardValue = ''");
 assert.ok(app.innerHTML.includes('data-physical-key="Space"'), "the virtual keyboard should display a real Space key");
 assert.ok(app.innerHTML.includes(">بوشلۇق</button>"), "the Space key should use the real Uyghur phone-keyboard label");
@@ -3162,6 +3345,11 @@ keydownHandler({
   preventDefault() {}
 });
 assert.equal(vm.runInContext("state.keyboardValue", context), "ئە", "physical keyboard keys should type the mapped Uyghur target");
+assert.equal(
+  vm.runInContext("state.latinKeyboardValue", context),
+  "qwerty",
+  "the existing Uyghur keyboard screen should not mutate isolated Latin keyboard state"
+);
 
 includesAll(
   renderState("state.screen = 'vocabComplete'"),
