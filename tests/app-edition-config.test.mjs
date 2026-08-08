@@ -98,7 +98,7 @@ const expectedCoreFiles = [
   "audio-controller.js"
 ];
 const syncTargetPath = path.join(os.tmpdir(), "ana-tilim-cn-core-sync-test");
-const excludedFiles = ["app-config.js", "index.html", "manifest.webmanifest", "assets/logo.png"];
+const excludedFiles = ["app-config.js", "manifest.webmanifest", "assets/logo.png"];
 fs.mkdirSync(path.join(syncTargetPath, "assets"), { recursive: true });
 for (const relativePath of excludedFiles) {
   const fixturePath = path.join(syncTargetPath, relativePath);
@@ -109,19 +109,39 @@ const excludedBeforeSync = new Map(excludedFiles.map((relativePath) => [
   relativePath,
   fs.readFileSync(path.join(syncTargetPath, relativePath))
 ]));
-const syncResult = spawnSync(process.execPath, [path.join(repoRoot, "scripts", "sync-cn-core.mjs")], {
-  cwd: repoRoot,
-  env: { ...process.env, ANA_TILIM_CN_SITE: syncTargetPath },
-  encoding: "utf8"
-});
-assert.equal(syncResult.status, 0, syncResult.stderr || syncResult.stdout);
-assert.equal(
-  syncResult.stdout.trim().split("\n").filter(Boolean).length,
-  expectedCoreFiles.length,
-  "sync should copy only the explicit core allowlist"
-);
+const domesticIndexFixture = `<!doctype html>
+<html>
+  <body>
+    <main data-domestic-marker="keep"></main>
+    <script src="./course-data.js?v=cn-course"></script>
+    <script src="./domestic-only.js?v=1"></script>
+    <script src="./app.js?v=cn-app"></script>
+  </body>
+</html>
+`;
+fs.writeFileSync(path.join(syncTargetPath, "index.html"), domesticIndexFixture);
+
+function runSync(targetPath) {
+  return spawnSync(process.execPath, [path.join(repoRoot, "scripts", "sync-cn-core.mjs")], {
+    cwd: repoRoot,
+    env: { ...process.env, ANA_TILIM_CN_SITE: targetPath },
+    encoding: "utf8"
+  });
+}
+
+function assertCoreSyncPassed(syncResult) {
+  assert.equal(syncResult.status, 0, syncResult.stderr || syncResult.stdout);
+  assert.equal(
+    syncResult.stdout.trim().split("\n").filter((line) => line.startsWith("Copied ")).length,
+    expectedCoreFiles.length,
+    "sync should copy only the explicit core allowlist"
+  );
+}
+
+const firstSyncResult = runSync(syncTargetPath);
+assertCoreSyncPassed(firstSyncResult);
 for (const relativePath of expectedCoreFiles) {
-  assert.ok(syncResult.stdout.includes(relativePath), `sync output should name ${relativePath}`);
+  assert.ok(firstSyncResult.stdout.includes(relativePath), `sync output should name ${relativePath}`);
   assert.deepEqual(
     fs.readFileSync(path.join(syncTargetPath, relativePath)),
     fs.readFileSync(path.join(repoRoot, "prototype", relativePath)),
@@ -135,6 +155,56 @@ for (const [relativePath, before] of excludedBeforeSync) {
     `sync should leave edition-specific ${relativePath} unchanged`
   );
 }
+
+const secondSyncResult = runSync(syncTargetPath);
+assertCoreSyncPassed(secondSyncResult);
+const syncedDomesticIndex = fs.readFileSync(path.join(syncTargetPath, "index.html"), "utf8");
+const courseDataScriptIndex = syncedDomesticIndex.indexOf("./course-data.js");
+const unitOrderScriptIndex = syncedDomesticIndex.indexOf("./unit-order.js");
+const appScriptIndex = syncedDomesticIndex.indexOf("./app.js");
+assert.ok(
+  courseDataScriptIndex >= 0
+    && courseDataScriptIndex < unitOrderScriptIndex
+    && unitOrderScriptIndex < appScriptIndex,
+  "domestic scripts should load course data before unit order before app"
+);
+assert.equal(
+  [...syncedDomesticIndex.matchAll(/<script\s+[^>]*src=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)].length,
+  1,
+  "repeated sync should leave exactly one domestic unit-order script"
+);
+assert.ok(syncedDomesticIndex.includes('data-domestic-marker="keep"'), "sync should preserve domestic markup");
+assert.ok(syncedDomesticIndex.includes("./domestic-only.js?v=1"), "sync should preserve domestic-only scripts");
+const domesticScriptSources = [...syncedDomesticIndex.matchAll(/<script\s+[^>]*src=["']([^"']+)["'][^>]*>/g)]
+  .map((match) => match[1]);
+assert.equal(
+  domesticScriptSources.some((source) => /supabase|cloud|auth/i.test(source)),
+  false,
+  "sync should not introduce Supabase, cloud, or auth scripts"
+);
+
+const missingAppTargetPath = path.join(os.tmpdir(), "ana-tilim-cn-core-sync-missing-app-test");
+fs.mkdirSync(missingAppTargetPath, { recursive: true });
+const missingAppIndex = `<!doctype html>
+<html>
+  <body>
+    <script src="./course-data.js?v=cn-course"></script>
+  </body>
+</html>
+`;
+const missingAppIndexPath = path.join(missingAppTargetPath, "index.html");
+fs.writeFileSync(missingAppIndexPath, missingAppIndex);
+const missingAppSyncResult = runSync(missingAppTargetPath);
+assert.notEqual(missingAppSyncResult.status, 0, "sync should fail when the domestic app.js tag is missing");
+assert.ok(
+  `${missingAppSyncResult.stdout}${missingAppSyncResult.stderr}`.includes("app.js script tag"),
+  "sync failure should clearly identify the missing app.js script tag"
+);
+assert.equal(
+  fs.readFileSync(missingAppIndexPath, "utf8"),
+  missingAppIndex,
+  "failed sync should not guess or rewrite the domestic index"
+);
 
 const parityScriptPath = path.join(repoRoot, "scripts", "check-edition-parity.mjs");
 const mismatchRelativePath = "unit-order.js";
