@@ -103,6 +103,17 @@ for (const screen of ["welcome", "home", "learn", "writing", "library", "profile
   renderState({ screen }, `${screen} screen`);
 }
 
+renderState({ screen: "welcome", authPanelExpanded: false }, "collapsed welcome screen", "直接开始学习");
+assert.ok(app.innerHTML.includes("可选：登录后跨设备同步"), "collapsed welcome should expose the optional sync disclosure");
+assert.ok(!app.innerHTML.includes('data-action="password-login"'), "collapsed welcome should not render a login submit");
+renderState({ screen: "welcome", authPanelExpanded: true }, "expanded welcome screen", "登录并继续学习");
+assert.ok(
+  app.innerHTML.indexOf('data-action="continue-local"') < app.innerHTML.indexOf('data-action="password-login"'),
+  "expanded welcome should keep guest learning before authentication submits"
+);
+renderState({ screen: "home", mistakes: [] }, "empty memory review", "当前没有需要复习的错题");
+assert.ok(!app.innerHTML.includes("后续登录版"), "empty memory review should not promise future reminder behavior");
+
 assert.equal(
   vm.runInContext("typeof handleCloudStatus === 'function'", context),
   true,
@@ -179,6 +190,6 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
   }
 }
 
-assert.equal(renderCount, 462, "full UI audit should render every retained main screen, unit, lesson item, reading group, and practice item");
+assert.equal(renderCount, 465, "full UI audit should render every retained main screen, welcome state, unit, lesson item, reading group, and practice item");
 
 console.log(`full content render checks passed (${renderCount} states)`);

@@ -494,6 +494,19 @@ function createConfiguredAppVm(hiddenUnitIds) {
 }
 
 const domesticApp = createConfiguredAppVm(["famous-quotes"]);
+const domesticWelcomeHtml = domesticApp.render("state.screen = 'welcome'");
+assert.match(
+  domesticWelcomeHtml,
+  /<button class="primary-button" data-action="continue-local"[^>]*>\s*开始学习\s*<\/button>/,
+  "domestic guest learning should be the welcome screen primary action"
+);
+assert.ok(
+  domesticWelcomeHtml.includes("学习记录保存在当前设备，可在‘我的’页面导出备份"),
+  "domestic welcome should explain local storage and manual backup"
+);
+for (const cloudCopy of ["登录", "Google", "Supabase", "云同步"]) {
+  assert.ok(!domesticWelcomeHtml.includes(cloudCopy), `domestic welcome should not include ${cloudCopy}`);
+}
 const domesticUnits = JSON.parse(
   vm.runInContext(
     "JSON.stringify(learningUnits.map(({ id, title }) => ({ id, title })))",
@@ -856,6 +869,15 @@ function clickDataset(dataset) {
   });
 }
 
+function assertGuestActionPrecedesAuthSubmits(html, actions, label) {
+  const guestIndex = html.indexOf('data-action="continue-local"');
+  assert.ok(guestIndex >= 0, `${label} should keep the guest learning action`);
+  for (const action of actions) {
+    const authIndex = html.indexOf(`data-action="${action}"`);
+    assert.ok(authIndex > guestIndex, `${label} should place continue-local before ${action}`);
+  }
+}
+
 function triggerProgressImportFile(file) {
   assert.ok(changeHandler, "change handler should be registered");
   const input = {
@@ -949,35 +971,60 @@ assert.deepEqual(
   []
 );
 
+const collapsedWelcomeHtml = renderState("state.screen = 'welcome'; state.authPanelExpanded = false");
 includesAll(
-  renderState("state.screen = 'welcome'"),
+  collapsedWelcomeHtml,
   [
     "从字母、发音、书写到键盘输入，一步一步学会自己的母语。",
-    "无需登录，直接开始学习",
-    "登录",
-    "注册",
-    "邮箱",
-    "密码",
-    "登录并继续学习",
-    "使用 Google 登录",
-    "使用邮箱验证码",
-    "登录后自动同步"
+    "直接开始学习",
+    "可选：登录后跨设备同步"
   ],
-  "welcome screen"
+  "collapsed welcome screen"
+);
+assert.equal(
+  vm.runInContext("state.authPanelExpanded", context),
+  false,
+  "overseas authentication should start collapsed"
+);
+assert.match(
+  collapsedWelcomeHtml,
+  /<button class="primary-button" data-action="continue-local"[^>]*>\s*直接开始学习\s*<\/button>/,
+  "guest learning should be the welcome screen primary action"
+);
+assert.ok(
+  !collapsedWelcomeHtml.includes('data-action="password-login"') &&
+    !collapsedWelcomeHtml.includes('data-action="password-register"') &&
+    !collapsedWelcomeHtml.includes('data-action="cloud-google-login"'),
+  "collapsed welcome should not render authentication controls"
 );
 assert.ok(!app.innerHTML.includes("测试账号"), "welcome screen should not expose the removed mock account");
-assert.ok(app.innerHTML.includes('type="password"'), "welcome should provide password login");
-assert.ok(
-  app.innerHTML.includes('autocomplete="current-password"'),
-  "login password should use current-password autocomplete"
-);
 assert.ok(!app.innerHTML.includes("<br>"), "welcome screen should not force the hero copy onto manual line breaks");
 assert.ok(
   app.innerHTML.includes('class="hero-content with-auth"'),
   "overseas welcome should use the centered layout with an auth panel"
 );
 
-const registerHtml = renderState("state.screen = 'welcome'; state.authMode = 'register'");
+clickDataset({ action: "toggle-auth-panel" });
+assert.equal(vm.runInContext("state.authPanelExpanded", context), true, "the optional sync button should expand authentication");
+const expandedLoginHtml = app.innerHTML;
+includesAll(
+  expandedLoginHtml,
+  ["登录", "注册", "邮箱", "密码", "登录并继续学习", "使用 Google 登录", "使用邮箱验证码", "登录后自动同步"],
+  "expanded welcome authentication"
+);
+assert.ok(expandedLoginHtml.includes('type="password"'), "expanded welcome should provide password login");
+assert.ok(
+  expandedLoginHtml.includes('autocomplete="current-password"'),
+  "login password should use current-password autocomplete"
+);
+assertGuestActionPrecedesAuthSubmits(
+  expandedLoginHtml,
+  ["password-login", "cloud-google-login"],
+  "expanded login"
+);
+
+clickDataset({ action: "switch-auth-mode", mode: "register" });
+const registerHtml = app.innerHTML;
 includesAll(
   registerHtml,
   [
@@ -992,6 +1039,21 @@ assert.ok(
   registerHtml.includes('autocomplete="new-password"'),
   "registration passwords should use new-password autocomplete"
 );
+assertGuestActionPrecedesAuthSubmits(
+  registerHtml,
+  ["password-register", "cloud-google-login"],
+  "expanded registration"
+);
+clickDataset({ action: "show-email-login" });
+assert.ok(app.innerHTML.includes('id="auth-email"'), "expanded authentication should keep email-code login operable");
+assertGuestActionPrecedesAuthSubmits(
+  app.innerHTML,
+  ["password-register", "cloud-google-login", "request-email-otp"],
+  "expanded email-code authentication"
+);
+clickDataset({ action: "toggle-auth-panel" });
+assert.equal(vm.runInContext("state.authPanelExpanded", context), false, "the optional sync button should collapse authentication again");
+assert.ok(!app.innerHTML.includes('id="auth-email"'), "collapsed authentication should leave no hidden form in the DOM");
 
 assert.deepEqual(
   JSON.parse(
@@ -1075,6 +1137,15 @@ assert.ok(!profileHtml.includes("调整界面与学习内容字号"), "My should
 assert.ok(!profileHtml.includes("按 9 个学习单元查看完成情况"));
 assert.ok(!renderState("state.screen = 'home'").includes("按 9 个学习单元查看完成情况"));
 assert.ok(!profileHtml.includes("将在登录版开放"));
+const emptyMemoryHtml = renderState("state.screen = 'home'; state.mistakes = []");
+assert.ok(
+  emptyMemoryHtml.includes("当前没有需要复习的错题"),
+  "empty memory review should describe only the current state"
+);
+assert.ok(
+  !emptyMemoryHtml.includes("后续登录版会按记忆状态生成每日复习队列"),
+  "empty memory review should not promise a future reminder feature"
+);
 assert.match(
   profileHtml,
   /<input[^>]+id="profile-avatar-input"[^>]+type="file"[^>]+accept="image\/\*"[^>]*>/,

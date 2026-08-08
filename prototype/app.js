@@ -398,6 +398,7 @@ const state = {
   practiceSpoken: false,
   emailAuthExpanded: false,
   emailCodeSent: false,
+  authPanelExpanded: false,
   authMode: "login",
   authEmail: "",
   avatarUploading: false,
@@ -2494,21 +2495,39 @@ function renderWelcome() {
           <p class="hero-copy">
             从字母、发音、书写到键盘输入，一步一步学会自己的母语。
           </p>
-          <button class="ghost-button" data-action="continue-local" type="button">
-            ${appConfig.cloudEnabled ? "无需登录，直接开始学习" : "开始学习"}
+          <button class="primary-button" data-action="continue-local" type="button">
+            ${appConfig.cloudEnabled ? "直接开始学习" : "开始学习"}
           </button>
+          ${
+            appConfig.cloudEnabled
+              ? ""
+              : `<p class="caption local-backup-note">学习记录保存在当前设备，可在‘我的’页面导出备份</p>`
+          }
         </div>
 
         ${
           appConfig.cloudEnabled
-            ? `<article class="card auth-panel">
-                <div>
-                  <p class="caption">登录后自动同步</p>
-                  <h2 class="section-title">${accountEmail ? "学习记录已同步" : "保存你的学习进度"}</h2>
-                  <p class="muted">${accountEmail ? `已登录 ${escapeHtml(accountEmail)}` : "换设备也能继续学习；不登录不会影响课程使用。"}</p>
-                </div>
-                ${renderCloudAuthControls()}
-              </article>`
+            ? `<div class="auth-disclosure">
+                <button
+                  class="secondary-button auth-panel-toggle"
+                  data-action="toggle-auth-panel"
+                  aria-expanded="${state.authPanelExpanded}"
+                  aria-controls="welcome-auth-panel"
+                  type="button"
+                >可选：登录后跨设备同步</button>
+                ${
+                  state.authPanelExpanded
+                    ? `<article class="card auth-panel" id="welcome-auth-panel">
+                        <div>
+                          <p class="caption">登录后自动同步</p>
+                          <h2 class="section-title">${accountEmail ? "学习记录已同步" : "保存你的学习进度"}</h2>
+                          <p class="muted">${accountEmail ? `已登录 ${escapeHtml(accountEmail)}` : "换设备也能继续学习；不登录不会影响课程使用。"}</p>
+                        </div>
+                        ${renderCloudAuthControls()}
+                      </article>`
+                    : ""
+                }
+              </div>`
             : ""
         }
       </div>
@@ -4886,9 +4905,7 @@ function renderProfileMemoryCard(reviewCount) {
           ? appConfig.cloudEnabled
             ? "错题会优先进入复习队列，后续登录版会按间隔重复自动安排下次复习。"
             : "错题会优先进入本地复习队列。"
-          : appConfig.cloudEnabled
-            ? "当前没有待复习错题，后续登录版会按记忆状态生成每日复习队列。"
-            : "当前没有待复习错题，可以继续巩固基础内容。"
+          : "当前没有需要复习的错题"
       }</p>
       <button
         class="primary-button"
@@ -5267,6 +5284,12 @@ document.addEventListener("click", (event) => {
     saveLocalProgress();
     render();
     showToast("已进入本地学习模式");
+    return;
+  }
+
+  if (action === "toggle-auth-panel") {
+    state.authPanelExpanded = !state.authPanelExpanded;
+    render();
     return;
   }
 
