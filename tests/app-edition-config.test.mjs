@@ -268,8 +268,7 @@ assert.ok(
   "duplicate normalization should preserve domestic content"
 );
 
-const missingAppTargetPath = path.join(os.tmpdir(), "ana-tilim-cn-core-sync-missing-app-test");
-fs.mkdirSync(missingAppTargetPath, { recursive: true });
+const missingAppTargetPath = fs.mkdtempSync(path.join(os.tmpdir(), "ana-tilim-cn-core-sync-missing-app-test-"));
 const missingAppIndex = `<!doctype html>
 <html>
   <body>
@@ -279,6 +278,17 @@ const missingAppIndex = `<!doctype html>
 `;
 const missingAppIndexPath = path.join(missingAppTargetPath, "index.html");
 fs.writeFileSync(missingAppIndexPath, missingAppIndex);
+const preseededMissingAppTargets = new Map([
+  ["app.js", Buffer.from("domestic app bytes must survive failed preflight\n")],
+  ["course-data/alphabet-data.js", Buffer.from("domestic alphabet bytes must survive failed preflight\n")]
+]);
+for (const [relativePath, bytes] of preseededMissingAppTargets) {
+  const fixturePath = path.join(missingAppTargetPath, relativePath);
+  fs.mkdirSync(path.dirname(fixturePath), { recursive: true });
+  fs.writeFileSync(fixturePath, bytes);
+}
+const absentMissingAppTarget = path.join(missingAppTargetPath, "styles.css");
+assert.equal(fs.existsSync(absentMissingAppTarget), false, "missing-app fixture should begin without styles.css");
 const missingAppSyncResult = runSync(missingAppTargetPath);
 assert.notEqual(missingAppSyncResult.status, 0, "sync should fail when the domestic app.js tag is missing");
 assert.ok(
@@ -289,6 +299,36 @@ assert.equal(
   fs.readFileSync(missingAppIndexPath, "utf8"),
   missingAppIndex,
   "failed sync should not guess or rewrite the domestic index"
+);
+for (const [relativePath, before] of preseededMissingAppTargets) {
+  assert.equal(
+    fs.readFileSync(path.join(missingAppTargetPath, relativePath)).equals(before),
+    true,
+    `failed sync preflight should preserve existing ${relativePath} bytes`
+  );
+}
+assert.equal(
+  fs.existsSync(absentMissingAppTarget),
+  false,
+  "failed sync preflight must not create a previously missing core target"
+);
+
+const blockedTargetPath = fs.mkdtempSync(path.join(os.tmpdir(), "ana-tilim-cn-core-sync-blocked-target-test-"));
+fs.writeFileSync(path.join(blockedTargetPath, "index.html"), domesticIndexFixture);
+const blockedTargetAppBytes = Buffer.from("domestic app survives a pre-detectable target conflict\n");
+fs.writeFileSync(path.join(blockedTargetPath, "app.js"), blockedTargetAppBytes);
+fs.writeFileSync(path.join(blockedTargetPath, "course-data"), "not a directory\n");
+const blockedTargetSyncResult = runSync(blockedTargetPath);
+assert.notEqual(blockedTargetSyncResult.status, 0, "sync should fail when a core target parent is not a directory");
+assert.equal(
+  fs.readFileSync(path.join(blockedTargetPath, "app.js")).equals(blockedTargetAppBytes),
+  true,
+  "target preflight failure should occur before overwriting an earlier core target"
+);
+assert.equal(
+  fs.existsSync(path.join(blockedTargetPath, "styles.css")),
+  false,
+  "target preflight failure should occur before creating an earlier missing core target"
 );
 
 const parityScriptPath = path.join(repoRoot, "scripts", "check-edition-parity.mjs");
