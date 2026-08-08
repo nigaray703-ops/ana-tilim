@@ -775,6 +775,7 @@ function learningRecordSnapshot() {
       dailyActivity: state.dailyActivity,
       mistakes: state.mistakes,
       writingChecks: state.writingChecks,
+      writingStrokes: state.writingStrokes,
       favorite: state.favorite,
       selectedPicture: state.selectedPicture,
       selectedListening: state.selectedListening,
@@ -805,6 +806,7 @@ function clearLearningRecords() {
   state.dailyActivity = { date: localDayKey(), completedIds: [] };
   state.mistakes = [];
   state.writingChecks = [];
+  state.writingStrokes = {};
   state.favorite = false;
   state.selectedPicture = "";
   state.selectedListening = "";
