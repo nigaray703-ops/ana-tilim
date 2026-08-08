@@ -38,7 +38,7 @@ The existing signed-in account summary remains unchanged. It displays the accoun
 
 ## Architecture
 
-`renderCloudAuthPanel()` remains the single renderer used by both the welcome and profile account surfaces. Its signed-out branch will be reduced to a guest explanation, one Google button, and the current cloud-status text. Its signed-in branch remains unchanged.
+`renderCloudAuthControls()` remains the single renderer used by both the welcome and profile account surfaces. Its signed-out branch will be reduced to a guest explanation, one Google button, and the current cloud-status text. Its signed-in branch remains unchanged.
 
 The click handler for `cloud-google-login`, the OAuth redirect target, session restoration, cloud merge behavior, and sign-out behavior remain unchanged.
 
