@@ -216,10 +216,17 @@ const letterAudioByShapeLatin = Object.fromEntries(
 const learningUnits = [
   {
     id: "letters",
-    title: "第一单元：认识字母",
-    subtitle: "32 个字母，相似分组",
-    description: "先按截图顺序认识全部字母，学习时把看起来相似、容易混的字母放在一组。",
-    bullets: ["认识字母形状", "区分点位和点数", "看四种形态", "练单字母键盘输入"],
+    get title() { return t("alphabet.unitTitle"); },
+    get subtitle() { return t("alphabet.unitSubtitle"); },
+    get description() { return t("alphabet.unitDescription"); },
+    get bullets() {
+      return [
+        t("alphabet.unitBulletShape"),
+        t("alphabet.unitBulletDots"),
+        t("alphabet.unitBulletForms"),
+        t("alphabet.unitBulletKeyboard")
+      ];
+    },
     groups: alphabetGroups,
     actionTarget: "letter"
   },
@@ -249,11 +256,18 @@ const learningUnits = [
 
 const unitExperience = {
   letters: {
-    recommended: "先复习第一单元字母分组，再进入组合。",
-    steps: ["认识相似字母组", "看四种写法", "做辨认、听音、键盘", "完成后进入组合"],
-    reviewLabel: "复习本组",
+    get recommended() { return t("alphabet.recommended"); },
+    get steps() {
+      return [
+        t("alphabet.stepGroups"),
+        t("alphabet.stepForms"),
+        t("alphabet.stepPractice"),
+        t("alphabet.stepComplete")
+      ];
+    },
+    get reviewLabel() { return t("alphabet.reviewGroup"); },
     reviewTarget: "group",
-    nextLabel: "进入第二单元",
+    get nextLabel() { return t("alphabet.enterUnit2"); },
     nextUnitId: "combos"
   },
   combos: {
@@ -1818,10 +1832,11 @@ function renderUnitNextActions(unitId, primaryClass = "primary-button") {
   const experience = currentUnitExperience(unitId);
   const nextUnit = learningUnits.find((unit) => unit.id === experience.nextUnitId);
   const shouldOpenNextUnit = Boolean(nextUnit) && experience.nextTarget !== "learn";
+  const caption = unitId === "letters" ? t("alphabet.nextStep") : "下一步建议";
 
   return `
     <article class="card next-action-card">
-      <p class="caption">下一步建议</p>
+      <p class="caption">${caption}</p>
       <div class="action-grid">
         <button class="secondary-button" data-action="go" data-target="${experience.reviewTarget}" type="button">
           ${experience.reviewLabel}
@@ -2542,7 +2557,7 @@ function renderUnitDetail() {
   const firstGroup = unit.groups?.[0];
   const primaryButton =
     unit.actionTarget === "letter" && firstGroup
-      ? `<button class="primary-button" data-action="open-group" data-id="${firstGroup.id}" type="button">进入当前学习</button>`
+      ? `<button class="primary-button" data-action="open-group" data-id="${firstGroup.id}" type="button">${t("alphabet.startCurrent")}</button>`
       : unit.actionTarget === "combo" && firstGroup
         ? `<button class="primary-button" data-action="open-combo-group" data-id="${firstGroup.id}" type="button">进入当前学习</button>`
         : `<button class="primary-button" data-action="go" data-target="${unit.actionTarget}" type="button">进入当前学习</button>`;
@@ -3134,23 +3149,23 @@ function renderComplete() {
 
   return screen(
     `
-      ${topBar("课程完成", "第一单元完成")}
+      ${topBar(t("alphabet.completeTitle"), t("alphabet.completeSubtitle"))}
       <section class="stack">
         <article class="card">
-          <p class="caption">本次学会</p>
+          <p class="caption">${t("alphabet.completeLearned")}</p>
           <h2 class="screen-title">
             <span class="uyghur">${groupLetters}</span>
           </h2>
-          <p class="muted">你看了当前相似组字母、描摹了 ${displayStandaloneLetterGlyph(letter.letter)}、完成辨认，并用键盘输入了 ${displayStandaloneLetterGlyph(letter.letter)}。</p>
+          <p class="muted">${t("alphabet.completeSummary", { letter: displayStandaloneLetterGlyph(letter.letter) })}</p>
         </article>
         <div class="metric-grid">
-          <div class="metric"><strong>${group.letters.length}</strong><span>字母</span></div>
-          <div class="metric"><strong>${loop.completeCount} / ${loop.total}</strong><span>完成进度</span></div>
-          <div class="metric"><strong>${groupMistakes}</strong><span>本组错题</span></div>
+          <div class="metric"><strong>${group.letters.length}</strong><span>${t("alphabet.completeLetters")}</span></div>
+          <div class="metric"><strong>${loop.completeCount} / ${loop.total}</strong><span>${t("alphabet.completeProgress")}</span></div>
+          <div class="metric"><strong>${groupMistakes}</strong><span>${t("alphabet.completeMistakes")}</span></div>
         </div>
         ${renderUnitNextActions("letters")}
         <button class="secondary-button" data-action="go" data-target="home" type="button">
-          回到首页
+          ${t("alphabet.backHome")}
         </button>
       </section>
     `,

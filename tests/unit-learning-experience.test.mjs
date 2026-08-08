@@ -827,6 +827,8 @@ vm.runInContext(
     state.selectedPicture = "pe";
     state.selectedListening = "pe";
     state.keyboardValue = "پ";
+    state.mistakes = [];
+    state.learningProgress = { letters: {}, combos: {}, vocab: {}, practice: {}, reading: {} };
   `,
   context
 );
@@ -836,20 +838,44 @@ assert.equal(
   "switching to English should rebuild derived form-example text"
 );
 const englishAlphabetScreens = {
+  home: renderState("state.screen = 'home'"),
+  unit: renderState("state.selectedUnitId = 'letters'; state.screen = 'unit'"),
   group: renderState("state.screen = 'group'"),
   letterWriting: renderState("state.screen = 'letterWriting'"),
   picture: renderState("state.screen = 'picture'"),
   listening: renderState("state.screen = 'listening'"),
   letterOdd: renderState("state.screen = 'letterOdd'"),
   letterSound: renderState("state.screen = 'letterSound'"),
-  keyboard: renderState("state.screen = 'keyboard'")
+  keyboard: renderState("state.screen = 'keyboard'"),
+  complete: renderState("state.screen = 'complete'")
 };
 includesAll(
+  englishAlphabetScreens.home,
+  ["Unit 1: Meet the alphabet", "Review the Unit 1 letter groups before moving on to combinations."],
+  "English Home alphabet recommendation"
+);
+includesAll(
+  englishAlphabetScreens.unit,
+  ["Unit 1: Meet the alphabet", "32 letters grouped by similarity", "Start current lesson", "Next step", "Review this group", "Enter Unit 2"],
+  "English alphabet unit overview"
+);
+includesAll(
   englishAlphabetScreens.group,
-  ["Consonant", "One dot below", "Isolated form", "book", "Shape", "Connections", "Writing"],
+  ["Play", "Consonant", "One dot below", "Isolated form", "book", "Shape", "Connections", "Writing"],
   "English alphabet letter lesson"
 );
+includesAll(
+  englishAlphabetScreens.keyboard,
+  ["Keyboard input", "Keyboard steps", "Entered: پ", "Remove the incorrect part first", "Backspace", "Clear", "Keep typing. The target letter is ب.", "Finish lesson"],
+  "English alphabet keyboard page"
+);
+includesAll(
+  englishAlphabetScreens.complete,
+  ["Lesson complete", "Unit 1 complete", "What you learned", "Letters", "Progress", "Mistakes in this group", "Next step", "Review this group", "Enter Unit 2", "Back to Home"],
+  "English alphabet completion page"
+);
 for (const [screenName, html] of Object.entries(englishAlphabetScreens)) {
+  if (screenName === "home") continue;
   assert.ok(
     !/[\u3400-\u9fff]/u.test(html),
     `English alphabet ${screenName} screen should not contain Chinese course or interface text`
