@@ -10,6 +10,11 @@ const checks = [
     args: ["--check", "prototype/app-config.js"]
   },
   {
+    label: "syntax: unit order",
+    command: node,
+    args: ["--check", "prototype/unit-order.js"]
+  },
+  {
     label: "syntax: sentence morphemes",
     command: node,
     args: ["--check", "prototype/sentence-morphemes.js"]
@@ -93,6 +98,11 @@ const checks = [
     label: "test: edition config",
     command: node,
     args: ["tests/app-edition-config.test.mjs"]
+  },
+  {
+    label: "test: unit order",
+    command: node,
+    args: ["tests/unit-order.test.mjs"]
   },
   {
     label: "test: content policy",
