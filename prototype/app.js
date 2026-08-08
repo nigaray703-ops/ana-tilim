@@ -323,11 +323,19 @@ const keyboardRows = [
 
 const progressStorageKey = "ana-tilim-progress";
 const guestBackupStorageKey = "ana-tilim-guest-progress-backup";
+const i18n = window.ANA_TILIM_I18N;
+const serializedProgress = window.localStorage?.getItem("ana-tilim-progress") || "";
+const savedLanguage = i18n.readSavedLanguage(serializedProgress);
+const systemLanguages = window.navigator?.languages || [window.navigator?.language].filter(Boolean);
+const initialInterfaceLanguage = i18n.resolveLanguage(savedLanguage, systemLanguages);
+i18n.setLanguage(initialInterfaceLanguage);
+document.documentElement.lang = initialInterfaceLanguage;
 const DEFAULT_PREFERENCES = Object.freeze({
   audioAutoplay: false,
   dailyGoal: 10,
   learningReminder: false,
-  showLatin: true
+  showLatin: true,
+  uiLanguage: null
 });
 
 function normalizePreferences(value) {
@@ -336,7 +344,8 @@ function normalizePreferences(value) {
     audioAutoplay: typeof source.audioAutoplay === "boolean" ? source.audioAutoplay : false,
     dailyGoal: [5, 10, 15].includes(source.dailyGoal) ? source.dailyGoal : 10,
     learningReminder: typeof source.learningReminder === "boolean" ? source.learningReminder : false,
-    showLatin: typeof source.showLatin === "boolean" ? source.showLatin : true
+    showLatin: typeof source.showLatin === "boolean" ? source.showLatin : true,
+    uiLanguage: source.uiLanguage === "zh" || source.uiLanguage === "en" ? source.uiLanguage : null
   };
 }
 
@@ -358,6 +367,7 @@ const initialCloudTimestamp = new Date().toISOString();
 
 const state = {
   screen: "welcome",
+  interfaceLanguage: initialInterfaceLanguage,
   selectedPicture: "",
   selectedListening: "",
   practiceAudioPlayed: false,
@@ -644,6 +654,7 @@ function applyCloudSnapshot(snapshot) {
   state.favorite = normalized.favorite;
   state.dailyActivity = normalized.dailyActivity;
   state.preferences = normalizePreferences(normalized.preferences);
+  applyInterfaceLanguage(state.preferences.uiLanguage, { explicit: false });
   state.modifiedAt = normalized.modifiedAt;
   state.preferencesUpdatedAt = normalized.preferencesUpdatedAt;
   state.favoriteUpdatedAt = normalized.favoriteUpdatedAt;
@@ -726,6 +737,24 @@ function setPreference(key, value) {
   });
   markCloudDirty("preferences");
   saveLocalProgress();
+}
+
+function applyInterfaceLanguage(language, { explicit = false } = {}) {
+  const effectiveLanguage = i18n.resolveLanguage(language, systemLanguages);
+  state.interfaceLanguage = effectiveLanguage;
+  i18n.setLanguage(effectiveLanguage);
+  document.documentElement.lang = effectiveLanguage;
+
+  if (explicit) {
+    state.preferences = normalizePreferences({
+      ...state.preferences,
+      uiLanguage: effectiveLanguage
+    });
+    markCloudDirty("preferences");
+    saveLocalProgress();
+  }
+
+  return effectiveLanguage;
 }
 
 function applyPreferencesToRoot() {

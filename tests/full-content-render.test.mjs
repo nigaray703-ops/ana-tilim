@@ -24,6 +24,7 @@ const toast = makeElement("toast");
 const context = {
   console,
   document: {
+    documentElement: { lang: "" },
     querySelector(selector) {
       if (selector === "#app") return app;
       if (selector === "#toast") return toast;
@@ -32,6 +33,7 @@ const context = {
     addEventListener() {}
   },
   window: {
+    navigator: { languages: ["en-NZ"], language: "en-NZ" },
     setTimeout() {
       return 1;
     },
@@ -54,6 +56,8 @@ for (const scriptPath of [
   "prototype/course-data/practice-data.js",
   "prototype/course-data/reading-data.js",
   "prototype/course-data.js",
+  "prototype/i18n/ui-messages.js",
+  "prototype/i18n/runtime.js",
   "prototype/cloud-config.js",
   "prototype/cloud-sync.js",
   "prototype/app.js"

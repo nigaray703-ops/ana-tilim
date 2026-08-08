@@ -195,6 +195,7 @@ const toast = makeElement("toast");
 const context = {
   console,
   document: {
+    documentElement: { lang: "" },
     querySelector(selector) {
       if (selector === "#app") return app;
       if (selector === "#toast") return toast;
@@ -203,6 +204,7 @@ const context = {
     addEventListener() {}
   },
   window: {
+    navigator: { languages: ["en-NZ"], language: "en-NZ" },
     setTimeout() {
       return 1;
     },
@@ -227,6 +229,8 @@ for (const scriptPath of [
   vm.runInContext(fs.readFileSync(scriptPath, "utf8"), context, { filename: scriptPath });
 }
 vm.runInContext(fs.readFileSync("prototype/course-data.js", "utf8"), context, { filename: "prototype/course-data.js" });
+vm.runInContext(fs.readFileSync("prototype/i18n/ui-messages.js", "utf8"), context, { filename: "prototype/i18n/ui-messages.js" });
+vm.runInContext(fs.readFileSync("prototype/i18n/runtime.js", "utf8"), context, { filename: "prototype/i18n/runtime.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
 
 const coverageCategories = JSON.parse(

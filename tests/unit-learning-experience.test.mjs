@@ -7,6 +7,10 @@ const courseDataGuidePath = "课程/00-课程数据编辑与审校说明.md";
 const courseDataIntegrityTestPath = "tests/course-data-integrity.test.mjs";
 const projectCheckScriptPath = "scripts/check-project.mjs";
 const courseDataAggregatorPath = "prototype/course-data.js";
+const i18nScriptPaths = [
+  "prototype/i18n/ui-messages.js",
+  "prototype/i18n/runtime.js"
+];
 const courseDataScriptPaths = [
   "prototype/uly-transliteration.js",
   "prototype/course-data/alphabet-data.js",
@@ -51,6 +55,8 @@ const expectedVersionedAssets = [
   "./course-data/practice-data.js?v=20260728-learned-markers",
   "./course-data/reading-data.js?v=20260728-uly-transliteration",
   "./course-data.js?v=20260728-uly-transliteration",
+  "./i18n/ui-messages.js?v=20260809-bilingual",
+  "./i18n/runtime.js?v=20260809-bilingual",
   "./audio-controller.js?v=20260728-uly-transliteration",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
@@ -59,7 +65,7 @@ const expectedVersionedAssets = [
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
-    /(?:href|src)="(?<url>(?:\.\/(?:styles\.css|uly-transliteration\.js|course-data\/[^"]+\.js|course-data\.js|audio-controller\.js|cloud-config\.js|cloud-sync\.js|app\.js)[^"]*|https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2\.110\.8))"/g
+    /(?:href|src)="(?<url>(?:\.\/(?:styles\.css|uly-transliteration\.js|course-data\/[^"]+\.js|course-data\.js|i18n\/[^"]+\.js|audio-controller\.js|cloud-config\.js|cloud-sync\.js|app\.js)[^"]*|https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2\.110\.8))"/g
   )
 ].map((match) => match.groups.url);
 assert.deepEqual(
@@ -227,6 +233,7 @@ assert.ok(appSource.includes("clear-canvas"), "writing canvas should include a r
 const htmlScriptOrder = [
   ...courseDataScriptPaths,
   courseDataAggregatorPath,
+  ...i18nScriptPaths,
   "prototype/cloud-config.js",
   "prototype/cloud-sync.js",
   "prototype/app.js"
@@ -268,6 +275,7 @@ let audioPlayShouldReject = false;
 const context = {
   console,
   document: {
+    documentElement: { lang: "" },
     querySelector(selector) {
       if (selector === "#app") return app;
       if (selector === "#toast") return toast;
@@ -280,6 +288,7 @@ const context = {
     }
   },
   window: {
+    navigator: { languages: ["en-NZ"], language: "en-NZ" },
     setTimeout() {
       return 1;
     },
@@ -328,9 +337,57 @@ for (const scriptPath of courseDataScriptPaths) {
   vm.runInContext(fs.readFileSync(scriptPath, "utf8"), context, { filename: scriptPath });
 }
 vm.runInContext(fs.readFileSync(courseDataAggregatorPath, "utf8"), context, { filename: courseDataAggregatorPath });
+for (const scriptPath of i18nScriptPaths) {
+  vm.runInContext(fs.readFileSync(scriptPath, "utf8"), context, { filename: scriptPath });
+}
 vm.runInContext(fs.readFileSync("prototype/cloud-config.js", "utf8"), context, { filename: "prototype/cloud-config.js" });
 vm.runInContext(fs.readFileSync("prototype/cloud-sync.js", "utf8"), context, { filename: "prototype/cloud-sync.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
+
+const savedLanguageStorage = {
+  "ana-tilim-progress": JSON.stringify({ preferences: { uiLanguage: "zh" } })
+};
+const savedLanguageContext = {
+  ...context,
+  document: {
+    ...context.document,
+    documentElement: { lang: "" },
+    addEventListener() {}
+  },
+  window: {
+    ...context.window,
+    navigator: { languages: ["en-NZ"], language: "en-NZ" },
+    localStorage: {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(savedLanguageStorage, key)
+          ? savedLanguageStorage[key]
+          : null;
+      },
+      setItem(key, value) {
+        savedLanguageStorage[key] = String(value);
+      },
+      removeItem(key) {
+        delete savedLanguageStorage[key];
+      }
+    }
+  }
+};
+savedLanguageContext.globalThis = savedLanguageContext;
+vm.createContext(savedLanguageContext);
+for (const scriptPath of courseDataScriptPaths) {
+  vm.runInContext(fs.readFileSync(scriptPath, "utf8"), savedLanguageContext, { filename: scriptPath });
+}
+for (const scriptPath of [
+  courseDataAggregatorPath,
+  ...i18nScriptPaths,
+  "prototype/cloud-config.js",
+  "prototype/cloud-sync.js",
+  "prototype/app.js"
+]) {
+  vm.runInContext(fs.readFileSync(scriptPath, "utf8"), savedLanguageContext, { filename: scriptPath });
+}
+assert.equal(vm.runInContext("state.interfaceLanguage", savedLanguageContext), "zh");
+assert.equal(savedLanguageContext.document.documentElement.lang, "zh");
 
 const defaultPreferences = JSON.parse(
   vm.runInContext("JSON.stringify(normalizePreferences(null))", context)
@@ -339,8 +396,57 @@ assert.deepEqual(defaultPreferences, {
   audioAutoplay: false,
   dailyGoal: 10,
   learningReminder: false,
-  showLatin: true
+  showLatin: true,
+  uiLanguage: null
 });
+assert.equal(vm.runInContext("state.interfaceLanguage", context), "en");
+assert.equal(context.document.documentElement.lang, "en");
+assert.equal(
+  vm.runInContext('normalizePreferences({ uiLanguage: "zh" }).uiLanguage', context),
+  "zh"
+);
+assert.equal(
+  vm.runInContext('normalizePreferences({ uiLanguage: "fr" }).uiLanguage', context),
+  null
+);
+assert.equal(
+  vm.runInContext("buildCloudSnapshot().preferences.uiLanguage", context),
+  null,
+  "system detection must not become an uploaded explicit preference"
+);
+vm.runInContext(
+  `
+    state.syncDirty = false;
+    applyInterfaceLanguage("zh", { explicit: false });
+  `,
+  context
+);
+assert.equal(vm.runInContext("state.interfaceLanguage", context), "zh");
+assert.equal(vm.runInContext("state.preferences.uiLanguage", context), null);
+assert.equal(vm.runInContext("state.syncDirty", context), false);
+assert.equal(context.document.documentElement.lang, "zh");
+assert.equal(context.window.ANA_TILIM_I18N.getLanguage(), "zh");
+vm.runInContext(
+  `
+    globalThis.languageTestCloudSync = cloudSync;
+    cloudSync = null;
+    applyInterfaceLanguage("en", { explicit: true });
+  `,
+  context
+);
+assert.equal(vm.runInContext("state.preferences.uiLanguage", context), "en");
+assert.equal(vm.runInContext("state.syncDirty", context), true);
+assert.equal(JSON.parse(storage["ana-tilim-progress"]).preferences.uiLanguage, "en");
+vm.runInContext(
+  `
+    cloudSync = globalThis.languageTestCloudSync;
+    state.preferences = normalizePreferences(null);
+    state.syncDirty = false;
+    applyInterfaceLanguage("en", { explicit: false });
+  `,
+  context
+);
+delete storage["ana-tilim-progress"];
 
 vm.runInContext("globalThis.preCloudTestState = JSON.stringify(state)", context);
 const cloudSnapshotKeys = JSON.parse(
@@ -380,13 +486,18 @@ vm.runInContext(
       mistakes: [],
       favorite: true,
       dailyActivity: { date: "2026-07-28", completedIds: ["letters:dot-bone:completed"] },
-      preferences: { audioAutoplay: false, dailyGoal: 10, learningReminder: false, showLatin: true }
+      preferences: { audioAutoplay: false, dailyGoal: 10, learningReminder: false, showLatin: true, uiLanguage: "zh" }
     });
   `,
   context
 );
 assert.equal(vm.runInContext("state.screen", context), "library", "cloud merge should preserve current page");
 assert.equal(vm.runInContext("state.favorite", context), true);
+assert.equal(vm.runInContext("state.preferences.uiLanguage", context), "zh");
+assert.equal(vm.runInContext("state.interfaceLanguage", context), "zh");
+assert.equal(context.document.documentElement.lang, "zh");
+assert.equal(context.window.ANA_TILIM_I18N.getLanguage(), "zh");
+assert.equal(vm.runInContext("buildCloudSnapshot().preferences.uiLanguage", context), "zh");
 assert.equal(
   vm.runInContext("state.learningProgress.letters['dot-bone'].completed", context),
   true
@@ -420,7 +531,8 @@ const repairedPreferences = JSON.parse(
       audioAutoplay: 1,
       dailyGoal: 99,
       learningReminder: "yes",
-      showLatin: "yes"
+      showLatin: "yes",
+      uiLanguage: "fr"
     }))`,
     context
   )
@@ -464,7 +576,8 @@ vm.runInContext(
       audioAutoplay: true,
       dailyGoal: 15,
       learningReminder: true,
-      showLatin: true
+      showLatin: true,
+      uiLanguage: "zh"
     };
     state.dailyActivity = { date: "2026-07-26", completedIds: ["letters:dot-bone:viewed"] };
     saveLocalProgress();
@@ -475,7 +588,8 @@ assert.deepEqual(savedProgress().preferences, {
   audioAutoplay: true,
   dailyGoal: 15,
   learningReminder: true,
-  showLatin: true
+  showLatin: true,
+  uiLanguage: "zh"
 });
 assert.deepEqual(savedProgress().dailyActivity, {
   date: "2026-07-26",
@@ -544,6 +658,10 @@ assert.equal(
   JSON.parse(storage["ana-tilim-guest-progress-backup"])
     .snapshot.learningProgress.letters["dot-bone"].completed,
   true
+);
+assert.equal(
+  JSON.parse(storage["ana-tilim-guest-progress-backup"]).snapshot.preferences.uiLanguage,
+  "zh"
 );
 
 storage["ana-tilim-guest-progress-backup"] = "previous-backup";
