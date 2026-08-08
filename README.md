@@ -58,6 +58,25 @@ isolated exercises.
 - A re-recording queue for language and audio review<br>
   面向语言审校和音频重录的任务清单
 
+## Language behavior / 语言行为
+
+- Chinese-language systems initially use Chinese; every non-Chinese system
+  initially uses English.<br>
+  系统语言为中文时初始显示中文；所有非中文系统初始显示英文。
+- Learners can switch manually with the compact control in the Home header or
+  the full language control in Profile.<br>
+  学习者可通过首页顶栏的紧凑切换器，或 Profile 页面的完整语言控件手动切换。
+- A manual choice is saved locally and, for Google users, synchronized as an
+  account preference.<br>
+  手动选择会保存在本地；Google 用户的选择还会作为账户偏好同步。
+- Uyghur learning content and audio are shared by Chinese and English modes.<br>
+  中文和英文模式共用同一套维吾尔语学习内容和音频。
+- All learning translations are bundled locally; no live translation service is
+  used.<br>
+  所有学习翻译均随项目保存在本地，不使用实时翻译服务。
+- Additional interface languages remain future work.<br>
+  其他界面语言仍属于未来工作。
+
 ## Try it online / 在线体验
 
 The verified public deployment is available at:

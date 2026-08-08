@@ -32,6 +32,19 @@ for (const scriptPath of courseDataScriptPaths) {
 assert.ok(fs.existsSync(courseDataGuidePath), "course data editing guide should exist for non-technical review");
 assert.ok(fs.existsSync(courseDataIntegrityTestPath), "course data integrity checker should exist");
 assert.ok(fs.existsSync(projectCheckScriptPath), "one-command project check script should exist");
+const projectCheckSource = fs.readFileSync(projectCheckScriptPath, "utf8");
+for (const i18nScriptPath of i18nScriptPaths) {
+  assert.ok(
+    projectCheckSource.includes(`["--check", "${i18nScriptPath}"]`),
+    `one-command project checks should syntax-check ${i18nScriptPath}`
+  );
+}
+for (const i18nTestPath of ["tests/i18n-runtime.test.mjs", "tests/i18n-course-content.test.mjs"]) {
+  assert.ok(
+    projectCheckSource.includes(`["${i18nTestPath}"]`),
+    `one-command project checks should run ${i18nTestPath}`
+  );
+}
 const courseDataSource = fs.readFileSync(courseDataAggregatorPath, "utf8");
 const courseDataSources = Object.fromEntries(
   courseDataScriptPaths.map((scriptPath) => [scriptPath, fs.readFileSync(scriptPath, "utf8")])
@@ -43,7 +56,7 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260729-password-auth",
+  "./styles.css?v=20260809-bilingual",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
   "./course-data/combo-data.js?v=20260728-uly-transliteration",
@@ -52,18 +65,18 @@ const expectedVersionedAssets = [
   "./course-data/reading-data.js?v=20260728-uly-transliteration",
   "./course-data.js?v=20260728-uly-transliteration",
   "./i18n/ui-messages.js?v=20260809-bilingual",
-  "./i18n/alphabet-en.js?v=20260809-bilingual-alphabet",
-  "./i18n/combo-en.js?v=20260809-bilingual-combos",
-  "./i18n/vocab-en.js?v=20260809-bilingual-vocab",
-  "./i18n/practice-en.js?v=20260809-bilingual-practice",
-  "./i18n/reading-en.js?v=20260809-bilingual-reading",
-  "./i18n/course-en.js?v=20260809-bilingual-alphabet",
+  "./i18n/alphabet-en.js?v=20260809-bilingual",
+  "./i18n/combo-en.js?v=20260809-bilingual",
+  "./i18n/vocab-en.js?v=20260809-bilingual",
+  "./i18n/practice-en.js?v=20260809-bilingual",
+  "./i18n/reading-en.js?v=20260809-bilingual",
+  "./i18n/course-en.js?v=20260809-bilingual",
   "./i18n/runtime.js?v=20260809-bilingual",
   "./audio-controller.js?v=20260728-uly-transliteration",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260729-password-auth",
-  "./app.js?v=20260808-google-guest-auth"
+  "./app.js?v=20260809-bilingual"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -73,7 +86,7 @@ const versionedAppAssets = [
 assert.deepEqual(
   versionedAppAssets,
   expectedVersionedAssets,
-  "every prototype CSS, course-data, audio controller, and app asset should use the listening release cache version"
+  "the international build should load every local asset in release order with its required cache version"
 );
 assert.ok(styleSource.includes("--content-max-width: 1120px;"), "prototype should define a tablet-friendly content width");
 assert.ok(styleSource.includes("--nav-rail-width: 96px;"), "prototype should define a tablet side navigation width");
