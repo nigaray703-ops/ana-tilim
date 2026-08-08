@@ -13,7 +13,7 @@ const cnSiteRoot = process.env.ANA_TILIM_CN_SITE
 const indexPath = path.join(cnSiteRoot, "index.html");
 const indexSource = fs.readFileSync(indexPath, "utf8");
 const unitOrderScriptPattern = /<script\b[^>]*\bsrc=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g;
-const unitOrderScripts = indexSource.match(unitOrderScriptPattern) || [];
+const latinWritingScriptPattern = /<script\b[^>]*\bsrc=["']\.\/course-data\/latin-writing-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/g;
 const appScriptPattern = /^([ \t]*)(<script\b[^>]*\bsrc=["']\.\/app\.js(?:\?[^"']*)?["'][^>]*><\/script>)/m;
 const appScriptMatch = appScriptPattern.exec(indexSource);
 
@@ -21,27 +21,46 @@ if (!appScriptMatch) {
   throw new Error(`Cannot update ${indexPath}: app.js script tag not found.`);
 }
 
+const alphabetDataScriptPattern = /^([ \t]*)(<script\b[^>]*\bsrc=["']\.\/course-data\/alphabet-data\.js(?:\?[^"']*)?["'][^>]*><\/script>)/m;
+const courseDataScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/course-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/m;
+const indexWithoutLatinWritingScripts = indexSource.replace(latinWritingScriptPattern, "");
+const alphabetDataScriptMatch = alphabetDataScriptPattern.exec(indexWithoutLatinWritingScripts);
+const courseDataScriptMatch = courseDataScriptPattern.exec(indexWithoutLatinWritingScripts);
+
+if (!alphabetDataScriptMatch || !courseDataScriptMatch) {
+  throw new Error(`Cannot update ${indexPath}: alphabet-data.js and course-data.js script tags are required.`);
+}
+if (alphabetDataScriptMatch.index > courseDataScriptMatch.index) {
+  throw new Error(`Cannot update ${indexPath}: alphabet-data.js must load before course-data.js.`);
+}
+
+const standardLatinWritingScript = '<script src="./course-data/latin-writing-data.js?v=20260809-latin-writing"></script>';
+const latinWritingInsertionIndex = alphabetDataScriptMatch.index + alphabetDataScriptMatch[0].length;
+let normalizedIndex = `${indexWithoutLatinWritingScripts.slice(0, latinWritingInsertionIndex)}\n${alphabetDataScriptMatch[1]}${standardLatinWritingScript}${indexWithoutLatinWritingScripts.slice(latinWritingInsertionIndex)}`;
+const indexUpdateMessages = ["Normalized index.html: latin-writing-data.js after alphabet-data.js"];
+
 const standardUnitOrderScript = '<script src="./unit-order.js?v=20260809-edition-unit-order"></script>';
-let normalizedIndex = indexSource;
-let indexUpdateMessage = "Index already loads unit-order.js";
+const unitOrderScripts = normalizedIndex.match(unitOrderScriptPattern) || [];
+const normalizedAppScriptMatch = appScriptPattern.exec(normalizedIndex);
 
 if (unitOrderScripts.length === 0) {
-  const insertion = `${appScriptMatch[1]}${standardUnitOrderScript}\n`;
-  const updatedIndex = `${indexSource.slice(0, appScriptMatch.index)}${insertion}${indexSource.slice(appScriptMatch.index)}`;
-  normalizedIndex = updatedIndex;
-  indexUpdateMessage = "Updated index.html: added unit-order.js before app.js";
-} else if (unitOrderScripts.length === 1 && indexSource.indexOf(unitOrderScripts[0]) > appScriptMatch.index) {
-  const indexWithoutMisplacedScript = indexSource.replace(unitOrderScripts[0], "");
-  const normalizedAppScriptMatch = appScriptPattern.exec(indexWithoutMisplacedScript);
   const insertion = `${normalizedAppScriptMatch[1]}${standardUnitOrderScript}\n`;
-  normalizedIndex = `${indexWithoutMisplacedScript.slice(0, normalizedAppScriptMatch.index)}${insertion}${indexWithoutMisplacedScript.slice(normalizedAppScriptMatch.index)}`;
-  indexUpdateMessage = "Updated index.html: moved unit-order.js before app.js";
+  normalizedIndex = `${normalizedIndex.slice(0, normalizedAppScriptMatch.index)}${insertion}${normalizedIndex.slice(normalizedAppScriptMatch.index)}`;
+  indexUpdateMessages.push("Updated index.html: added unit-order.js before app.js");
+} else if (unitOrderScripts.length === 1 && normalizedIndex.indexOf(unitOrderScripts[0]) > normalizedAppScriptMatch.index) {
+  const indexWithoutMisplacedScript = normalizedIndex.replace(unitOrderScripts[0], "");
+  const appMatchAfterRemoval = appScriptPattern.exec(indexWithoutMisplacedScript);
+  const insertion = `${appMatchAfterRemoval[1]}${standardUnitOrderScript}\n`;
+  normalizedIndex = `${indexWithoutMisplacedScript.slice(0, appMatchAfterRemoval.index)}${insertion}${indexWithoutMisplacedScript.slice(appMatchAfterRemoval.index)}`;
+  indexUpdateMessages.push("Updated index.html: moved unit-order.js before app.js");
 } else if (unitOrderScripts.length > 1) {
-  const indexWithoutDuplicateScripts = indexSource.replace(unitOrderScriptPattern, "");
-  const normalizedAppScriptMatch = appScriptPattern.exec(indexWithoutDuplicateScripts);
-  const normalizedInsertion = `${normalizedAppScriptMatch[1]}${standardUnitOrderScript}\n`;
-  normalizedIndex = `${indexWithoutDuplicateScripts.slice(0, normalizedAppScriptMatch.index)}${normalizedInsertion}${indexWithoutDuplicateScripts.slice(normalizedAppScriptMatch.index)}`;
-  indexUpdateMessage = "Updated index.html: normalized unit-order.js before app.js";
+  const indexWithoutDuplicateScripts = normalizedIndex.replace(unitOrderScriptPattern, "");
+  const appMatchAfterRemoval = appScriptPattern.exec(indexWithoutDuplicateScripts);
+  const normalizedInsertion = `${appMatchAfterRemoval[1]}${standardUnitOrderScript}\n`;
+  normalizedIndex = `${indexWithoutDuplicateScripts.slice(0, appMatchAfterRemoval.index)}${normalizedInsertion}${indexWithoutDuplicateScripts.slice(appMatchAfterRemoval.index)}`;
+  indexUpdateMessages.push("Updated index.html: normalized unit-order.js before app.js");
+} else {
+  indexUpdateMessages.push("Index already loads unit-order.js");
 }
 
 function preflightTargetPath(targetPath) {
@@ -85,4 +104,4 @@ for (const { relativePath, sourcePath, targetPath } of copyJobs) {
 if (normalizedIndex !== indexSource) {
   fs.writeFileSync(indexPath, normalizedIndex);
 }
-console.log(indexUpdateMessage);
+console.log(indexUpdateMessages.join("\n"));

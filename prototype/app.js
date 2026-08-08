@@ -18,7 +18,17 @@ if (!courseData || !sentenceGlossary || !progressTransfer || !uyghurKeyboard || 
   throw new Error("Learning data modules failed to load.");
 }
 
-const { alphabetLetters, letterDetails, alphabetGroups, alphabetAudioItems, comboGroups, vocabGroups, practiceGroups, readingUnits } = courseData;
+const {
+  alphabetLetters,
+  letterDetails,
+  alphabetGroups,
+  alphabetAudioItems,
+  latinWriting,
+  comboGroups,
+  vocabGroups,
+  practiceGroups,
+  readingUnits
+} = courseData;
 
 function voiceFileBase(file) {
   return file.replace(/^human_/, "voice_").replace(/\.[^.]+$/, "");
@@ -226,6 +236,11 @@ const lettersUnit = {
   groups: alphabetGroups,
   actionTarget: "letter"
 };
+const latinWritingUnit = {
+  ...latinWriting.unit,
+  groups: [],
+  actionTarget: "latinKeyboardIntro"
+};
 const combosUnit = {
   id: "combos",
   subtitle: "基础组合、三字母连接和断开规则",
@@ -246,7 +261,7 @@ const readingUnitCatalog = readingUnits.map(({ title: _title, ...unit }) => ({
   ...unit,
   actionTarget: "reading"
 }));
-const learningUnitCatalog = [lettersUnit, combosUnit, vocabUnit, ...readingUnitCatalog];
+const learningUnitCatalog = [lettersUnit, latinWritingUnit, combosUnit, vocabUnit, ...readingUnitCatalog];
 const learningUnits = unitOrder.buildVisibleUnits(learningUnitCatalog, appConfig);
 const persistedScreenIds = new Set([
   "welcome",

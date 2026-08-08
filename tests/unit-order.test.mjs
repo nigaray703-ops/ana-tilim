@@ -32,4 +32,29 @@ assert.equal(api.nextUnitId("uyghur-proverbs", api.buildVisibleUnits(catalog, { 
 assert.equal(api.nextUnitId("uyghur-proverbs", api.buildVisibleUnits(catalog, { hiddenUnitIds: ["famous-quotes"] })), "afanti-stories");
 assert.equal(api.nextUnitId("afanti-stories", api.buildVisibleUnits(catalog, { hiddenUnitIds: [] })), null);
 
+const currentAvailableCatalog = [
+  "letters", "latin-keyboard-writing", "combos", "basic-phrases", "grammar-basics",
+  "sentence-patterns", "dialogue-theater", "short-stories", "uyghur-proverbs", "famous-quotes"
+].map((id) => ({ id }));
+assert.deepEqual(
+  JSON.parse(JSON.stringify(
+    api.buildVisibleUnits(currentAvailableCatalog, { hiddenUnitIds: [] }).map((unit) => unit.id)
+  )),
+  [
+    "letters", "latin-keyboard-writing", "combos", "basic-phrases", "grammar-basics",
+    "sentence-patterns", "dialogue-theater", "short-stories", "uyghur-proverbs", "famous-quotes"
+  ],
+  "global catalog should expose the ten currently available units in edition order"
+);
+assert.deepEqual(
+  JSON.parse(JSON.stringify(
+    api.buildVisibleUnits(currentAvailableCatalog, { hiddenUnitIds: ["famous-quotes"] }).map((unit) => unit.id)
+  )),
+  [
+    "letters", "latin-keyboard-writing", "combos", "basic-phrases", "grammar-basics",
+    "sentence-patterns", "dialogue-theater", "short-stories", "uyghur-proverbs"
+  ],
+  "domestic catalog should expose the nine currently available units in edition order"
+);
+
 console.log("unit order checks passed");
