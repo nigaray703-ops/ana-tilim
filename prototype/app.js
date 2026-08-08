@@ -3891,7 +3891,12 @@ function renderLatinDictation() {
             <button class="secondary-button" data-action="clear-canvas" type="button">清空画布</button>
             <button class="primary-button" data-action="reveal-latin-dictation-answer" type="button">揭晓标准字形</button>
           </div>
-          <div data-latin-dictation-answer-region ${state.latinDictationRevealed ? "" : "hidden"}>
+          <div
+            data-latin-dictation-answer-region
+            aria-live="polite"
+            aria-atomic="true"
+            ${state.latinDictationRevealed ? "" : "hidden"}
+          >
             ${state.latinDictationRevealed ? renderLatinDictationAnswer(letter) : ""}
           </div>
         </article>
