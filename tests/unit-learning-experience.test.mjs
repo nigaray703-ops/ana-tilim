@@ -55,7 +55,7 @@ const expectedVersionedAssets = [
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260729-password-auth",
-  "./app.js?v=20260729-password-auth-4"
+  "./app.js?v=20260808-google-guest-auth"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
