@@ -2943,23 +2943,19 @@ function renderPicturePractice() {
         </article>
         <div class="choice-grid">
           ${choices
-            .map((choice) => {
+            .map((choice, index) => {
               const selected = state.selectedPicture === choice.id;
               const correctChoice = choice.id === letter.id;
               const resultClass = selected ? (correctChoice ? "correct" : "wrong") : "";
               return `
                 <button
-                  class="choice-card ${resultClass}"
+                  class="${["choice-card", "letter-only-choice", resultClass].filter(Boolean).join(" ")}"
                   data-action="pick-picture"
                   data-id="${choice.id}"
                   type="button"
+                  aria-label="${t("practice.choiceAria", { count: index + 1 })}"
                 >
                   <span class="choice-art uyghur">${displayStandaloneLetterGlyph(choice.letter)}</span>
-                  <span>
-                    <strong>${choice.cue}</strong>
-                    <span class="caption">${t("alphabet.letterType", { type: choice.type, latin: choice.latin })}</span>
-                  </span>
-                  <span class="step-state">${selected ? (correctChoice ? t("alphabet.correct") : t("alphabet.tryAgain")) : t("alphabet.choose")}</span>
                 </button>
               `;
             })
@@ -3009,23 +3005,19 @@ function renderListeningPractice() {
         })}
         <div class="choice-grid">
           ${choices
-            .map((choice) => {
+            .map((choice, index) => {
               const selected = state.selectedListening === choice.id;
               const correctChoice = choice.id === letter.id;
               const resultClass = selected ? (correctChoice ? "correct" : "wrong") : "";
               return `
                 <button
-                  class="choice-card ${resultClass}"
+                  class="${["choice-card", "letter-only-choice", resultClass].filter(Boolean).join(" ")}"
                   data-action="pick-listening"
                   data-id="${choice.id}"
                   type="button"
+                  aria-label="${t("practice.choiceAria", { count: index + 1 })}"
                 >
                   <span class="choice-art uyghur">${displayStandaloneLetterGlyph(choice.letter)}</span>
-                  <span>
-                    <strong class="uyghur">${displayStandaloneLetterGlyph(choice.letter)}</strong>
-                    <span class="caption">${t("alphabet.letterLabel", { latin: choice.latin })}</span>
-                  </span>
-                  <span class="step-state">${selected ? (correctChoice ? t("alphabet.correct") : t("alphabet.listenAgain")) : t("alphabet.choose")}</span>
                 </button>
               `;
             })

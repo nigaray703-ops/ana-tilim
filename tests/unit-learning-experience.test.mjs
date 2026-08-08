@@ -2301,6 +2301,19 @@ assert.ok(
 );
 vm.runInContext(`letterDetails.ee.formExamples[5] = ${savedEeSeparatedMedialExample}`, context);
 
+const letterPictureHtml = renderState(
+  "state.screen = 'picture'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'; state.selectedPicture = ''"
+);
+const letterPictureChoiceGrid = letterPictureHtml.match(/<div class="choice-grid">([\s\S]*?)<\/div>\s*<button class="primary-button"/)?.[1] || "";
+assert.equal(
+  (letterPictureChoiceGrid.match(/class="choice-card letter-only-choice"/g) || []).length,
+  3,
+  "point-identification options should render every group letter as a letter-only button"
+);
+for (const hiddenAnswer of ["<strong>", "class=\"caption\"", "class=\"step-state\"", ">选择<", "下方一个点", "下方三个点", "上方两个点", "辅音，b", "辅音，p"]) {
+  assert.ok(!letterPictureChoiceGrid.includes(hiddenAnswer), `point-identification options should hide answer hint ${hiddenAnswer}`);
+}
+
 const letterOddHtml = renderState("state.screen = 'letterOdd'; state.selectedGroupId = 'vowels-basic'; state.currentLetterId = 'aa'; state.selectedPicture = ''");
 const letterOddChoiceGrid = letterOddHtml.match(/<div class="choice-grid">[\s\S]*?<\/div>/)?.[0] || "";
 includesAll(
@@ -2323,6 +2336,15 @@ includesAll(
 );
 assert.ok(!listeningPracticeHtml.includes('<div class="audio-strip">'), "letter listening should put the listen button in the gradient card");
 assert.ok(!listeningPracticeHtml.includes("播放：b"), "letter listening should not reveal the latin answer before choosing");
+const listeningPracticeChoiceGrid = listeningPracticeHtml.match(/<div class="choice-grid">([\s\S]*?)<\/div>\s*<button class="primary-button"/)?.[1] || "";
+assert.equal(
+  (listeningPracticeChoiceGrid.match(/class="choice-card letter-only-choice"/g) || []).length,
+  3,
+  "letter listening options should render every group letter as a letter-only button"
+);
+for (const hiddenAnswer of ["<strong>", "class=\"caption\"", "class=\"step-state\"", ">选择<", "辅音，b", "辅音，p", "字母 b", "字母 p"]) {
+  assert.ok(!listeningPracticeChoiceGrid.includes(hiddenAnswer), `letter listening options should hide answer hint ${hiddenAnswer}`);
+}
 
 const letterSoundChoiceHtml = renderState(
   "state.screen = 'letterSound'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'; state.selectedListening = ''; state.mistakes = []"
