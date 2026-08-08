@@ -195,6 +195,7 @@ const toast = makeElement("toast");
 const context = {
   console,
   document: {
+    documentElement: { lang: "" },
     querySelector(selector) {
       if (selector === "#app") return app;
       if (selector === "#toast") return toast;
@@ -203,6 +204,7 @@ const context = {
     addEventListener() {}
   },
   window: {
+    navigator: { languages: ["en-NZ"], language: "en-NZ" },
     setTimeout() {
       return 1;
     },
@@ -227,6 +229,8 @@ for (const scriptPath of [
   vm.runInContext(fs.readFileSync(scriptPath, "utf8"), context, { filename: scriptPath });
 }
 vm.runInContext(fs.readFileSync("prototype/course-data.js", "utf8"), context, { filename: "prototype/course-data.js" });
+vm.runInContext(fs.readFileSync("prototype/i18n/ui-messages.js", "utf8"), context, { filename: "prototype/i18n/ui-messages.js" });
+vm.runInContext(fs.readFileSync("prototype/i18n/runtime.js", "utf8"), context, { filename: "prototype/i18n/runtime.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
 
 const coverageCategories = JSON.parse(
@@ -327,7 +331,14 @@ assert.ok(!app.innerHTML.includes("可先接近理解为 b"), "letter page shoul
 
 vm.runInContext("state.screen = 'combo'; state.selectedComboGroupId = 'open-a'; state.currentComboItemId = 'ba'; render();", context);
 assert.ok(app.innerHTML.includes('data-action="play-audio"'), "combo page should render a play action");
-assert.ok(app.innerHTML.includes("真人音频"), "combo page should label connected human audio");
+assert.ok(app.innerHTML.includes('aria-label="Play با"'), "combo page should localize reusable audio chrome in English mode");
+assert.ok(!app.innerHTML.includes('aria-label="播放'), "combo page should not retain Chinese reusable audio chrome in English mode");
+assert.ok(!app.innerHTML.includes(">听</button>"), "combo page should not retain the Chinese reusable play label in English mode");
+assert.ok(
+  app.innerHTML.includes("a human recording provides the target pronunciation"),
+  "combo page should preserve course-domain human-audio guidance in English mode"
+);
+assert.ok(!app.innerHTML.includes("真人音频"), "combo page should not retain Chinese course-domain guidance in English mode");
 assert.ok(app.innerHTML.includes("./assets/audio/human/combos/human_combo_ba.webm"), "combo page should expose connected human audio");
 
 vm.runInContext("state.screen = 'combo'; state.selectedComboGroupId = 'connection-breaks'; state.currentComboItemId = 'dada-connection'; render();", context);
@@ -380,7 +391,7 @@ assert.ok(
 
 vm.runInContext("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'listening-loop'; state.currentPracticeItemId = 'practice-listen-be'; render();", context);
 assert.ok(app.innerHTML.includes('data-action="play-audio"'), "practice page should render a play action");
-assert.ok(app.innerHTML.includes("真人音频"), "practice page should reuse connected alphabet audio");
+assert.ok(app.innerHTML.includes("Human recording"), "practice page should localize the reusable human-audio status in English mode");
 assert.ok(app.innerHTML.includes("./assets/audio/human/alphabet/human_letter_01_b.webm"), "practice page should use alphabet audio instead of duplicate practice audio");
 
 console.log("human audio checks passed");
