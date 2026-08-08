@@ -13,7 +13,7 @@
 - The current phase supports exactly `zh` and `en`; no third interface language is added.
 - A `zh-*` system language defaults to Chinese; English and every other system language default to English.
 - A manual choice always overrides system detection and is remembered.
-- The language control is visible in the global header and repeated in Profile settings.
+- The compact language control is visible only in the Home top-right, on the same horizontal row as the logo and `早上好 / Good morning`; Profile repeats the full language setting, and course-page top bars do not repeat the compact control.
 - English mode covers navigation, authentication, settings, instructions, feedback, letter explanations, word meanings, and sentence translations—not only buttons.
 - Uyghur text, ULY transliteration, human recordings, audio paths, course IDs, course order, progress IDs, guest access, and Google login remain unchanged.
 - All translations ship locally. Do not add Google Translate, a runtime translation API, a CDN dependency, or a network requirement for core learning.
@@ -339,7 +339,7 @@ Assert the English welcome, home, bottom navigation, profile, guest panel, and G
 ]
 ```
 
-Before switching, set `state.screen`, `selectedUnitId`, `selectedGroupId`, `currentLetterId`, `selectedPicture`, and `keyboardValue`; after switching, assert every value is unchanged. Assert that the compact control has `aria-label="Language"`, two buttons, and one `aria-pressed="true"`.
+Before switching, set `state.screen`, `selectedUnitId`, `selectedGroupId`, `currentLetterId`, `selectedPicture`, and `keyboardValue`; after switching, assert every value is unchanged. Assert that the compact control has `aria-label="Language"`, two buttons, and one `aria-pressed="true"`. The compact control must render on Home in the same horizontal row as the logo and `早上好 / Good morning`, and it must not repeat on course-page top bars.
 
 - [ ] **Step 2: Run the focused test and verify English surfaces are absent**
 
@@ -387,7 +387,7 @@ function languageSwitcher(compact = false) {
 }
 ```
 
-Put the compact control in every `topBar()` and the full `中文 / English` setting in Profile. In the click handler, validate `button.dataset.language`, call `applyInterfaceLanguage(language, { explicit: true })`, save preferences, render, and show the toast in the newly selected language.
+Put the compact control only in the Home top-right, in the same horizontal row as the logo and `早上好 / Good morning`. Keep the full `中文 / English` setting in Profile and do not repeat the compact control on course-page `topBar()` rows. In the click handler, validate `button.dataset.language`, call `applyInterfaceLanguage(language, { explicit: true })`, save preferences, render, and show the toast in the newly selected language.
 
 - [ ] **Step 5: Add responsive styles and verify global UI**
 
