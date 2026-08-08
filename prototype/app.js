@@ -2098,94 +2098,16 @@ function renderCloudAuthControls() {
     `;
   }
 
-  const isRegistering = state.authMode === "register";
   return `
-    <div class="password-auth-shell">
-      <div class="auth-mode-tabs" role="tablist" aria-label="账号登录方式">
-        <button
-          class="auth-mode-tab ${isRegistering ? "" : "active"}"
-          data-action="switch-auth-mode"
-          data-mode="login"
-          role="tab"
-          aria-selected="${!isRegistering}"
-          type="button"
-        >登录</button>
-        <button
-          class="auth-mode-tab ${isRegistering ? "active" : ""}"
-          data-action="switch-auth-mode"
-          data-mode="register"
-          role="tab"
-          aria-selected="${isRegistering}"
-          type="button"
-        >注册</button>
-      </div>
-      <div class="password-auth-fields">
-        ${
-          isRegistering
-            ? `
-              <label class="auth-field">
-                <span>昵称</span>
-                <input id="password-auth-name" type="text" autocomplete="name" maxlength="40" placeholder="你的学习名称" />
-              </label>
-            `
-            : ""
-        }
-        <label class="auth-field">
-          <span>邮箱</span>
-          <input id="password-auth-email" type="email" autocomplete="email" value="${escapeHtml(state.authEmail)}" placeholder="name@example.com" />
-        </label>
-        <label class="auth-field">
-          <span>密码</span>
-          <input id="password-auth-password" type="password" autocomplete="${isRegistering ? "new-password" : "current-password"}" minlength="8" placeholder="至少 8 个字符" />
-        </label>
-        ${
-          isRegistering
-            ? `
-              <label class="auth-field">
-                <span>确认密码</span>
-                <input id="password-auth-confirm" type="password" autocomplete="new-password" minlength="8" placeholder="再次输入密码" />
-              </label>
-              <p class="auth-warning">当前暂不支持邮件找回密码，请保存好密码。</p>
-            `
-            : ""
-        }
-        <button class="primary-button" data-action="${isRegistering ? "password-register" : "password-login"}" type="button">
-          ${isRegistering ? "注册并开始学习" : "登录并继续学习"}
-        </button>
-      </div>
+    <div class="cloud-account-summary">
+      <strong>本地游客模式</strong>
+      <small>无需登录即可学习，进度保存在当前设备。</small>
     </div>
-    <div class="auth-divider" aria-hidden="true"><span>其他方式</span></div>
     <div class="auth-actions">
       <button class="primary-button" data-action="cloud-google-login" type="button">
         使用 Google 登录
       </button>
-      <button class="secondary-button" data-action="show-email-login" type="button">
-        使用邮箱验证码
-      </button>
     </div>
-    ${
-      state.emailAuthExpanded
-        ? `
-          <div class="email-auth-fields">
-            <label class="auth-field">
-              <span>邮箱</span>
-              <input id="auth-email" type="email" autocomplete="email" value="${escapeHtml(state.authEmail)}" placeholder="name@example.com" />
-            </label>
-            ${
-              state.emailCodeSent
-                ? `
-                  <label class="auth-field">
-                    <span>6 位验证码</span>
-                    <input id="auth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" />
-                  </label>
-                  <button class="primary-button" data-action="verify-email-otp" type="button">确认登录</button>
-                `
-                : `<button class="primary-button" data-action="request-email-otp" type="button">发送验证码</button>`
-            }
-          </div>
-        `
-        : ""
-    }
     <p class="caption auth-status-copy">${cloudStatusLabel()}</p>
   `;
 }
