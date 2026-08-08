@@ -58,7 +58,7 @@ assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should n
 const expectedVersionedAssets = [
   "./styles.css?v=20260809-bilingual",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
-  "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
+  "./course-data/alphabet-data.js?v=20260809-bilingual",
   "./course-data/combo-data.js?v=20260728-uly-transliteration",
   "./course-data/vocab-data.js?v=20260728-uly-transliteration",
   "./course-data/practice-data.js?v=20260728-learned-markers",
@@ -87,6 +87,20 @@ assert.deepEqual(
   versionedAppAssets,
   expectedVersionedAssets,
   "the international build should load every local asset in release order with its required cache version"
+);
+const staleAlphabetCache = new Map([
+  ["./course-data/alphabet-data.js?v=20260728-uly-transliteration", { release: "pre-bilingual" }]
+]);
+const requestedAlphabetAsset = versionedAppAssets.find((url) => url.includes("course-data/alphabet-data.js"));
+assert.equal(
+  requestedAlphabetAsset,
+  "./course-data/alphabet-data.js?v=20260809-bilingual",
+  "the bilingual runtime should request the bilingual alphabet data release"
+);
+assert.equal(
+  staleAlphabetCache.get(requestedAlphabetAsset),
+  undefined,
+  "an old alphabet-data cache entry must not satisfy the bilingual release URL"
 );
 assert.ok(styleSource.includes("--content-max-width: 1120px;"), "prototype should define a tablet-friendly content width");
 assert.ok(styleSource.includes("--nav-rail-width: 96px;"), "prototype should define a tablet side navigation width");
@@ -282,7 +296,72 @@ function makeElement(id) {
   };
 }
 
+function makeWritingCanvas() {
+  const handlers = {};
+  const operations = [];
+  const context2d = {
+    operations,
+    setTransform(...values) {
+      operations.push(["setTransform", ...values]);
+    },
+    beginPath() {
+      operations.push(["beginPath"]);
+    },
+    moveTo(x, y) {
+      operations.push(["moveTo", x, y]);
+    },
+    lineTo(x, y) {
+      operations.push(["lineTo", x, y]);
+    },
+    stroke() {
+      operations.push(["stroke"]);
+    },
+    closePath() {
+      operations.push(["closePath"]);
+    },
+    clearRect(...values) {
+      operations.push(["clearRect", ...values]);
+    }
+  };
+
+  return {
+    width: 0,
+    height: 0,
+    context2d,
+    getContext(kind) {
+      return kind === "2d" ? context2d : null;
+    },
+    getBoundingClientRect() {
+      return { left: 0, top: 0, width: 320, height: 180 };
+    },
+    addEventListener(eventName, handler) {
+      handlers[eventName] = handler;
+    },
+    setPointerCapture() {},
+    releasePointerCapture() {},
+    dispatchPointer(eventName, values) {
+      assert.ok(handlers[eventName], `${eventName} should be registered on the writing canvas`);
+      handlers[eventName]({
+        pointerId: 1,
+        preventDefault() {},
+        ...values
+      });
+    }
+  };
+}
+
+let activeWritingCanvas = null;
 const app = makeElement("app");
+let appMarkup = "";
+Object.defineProperty(app, "innerHTML", {
+  get() {
+    return appMarkup;
+  },
+  set(value) {
+    appMarkup = String(value);
+    activeWritingCanvas = appMarkup.includes("data-writing-canvas") ? makeWritingCanvas() : null;
+  }
+});
 const toast = makeElement("toast");
 let clickHandler = null;
 const storage = {};
@@ -298,6 +377,12 @@ const context = {
       if (selector === "#app") return app;
       if (selector === "#toast") return toast;
       return null;
+    },
+    querySelectorAll(selector) {
+      if (selector === "[data-writing-canvas]" && activeWritingCanvas) {
+        return [activeWritingCanvas];
+      }
+      return [];
     },
     addEventListener(eventName, handler) {
       if (eventName === "click") {
@@ -361,6 +446,59 @@ for (const scriptPath of i18nScriptPaths) {
 vm.runInContext(fs.readFileSync("prototype/cloud-config.js", "utf8"), context, { filename: "prototype/cloud-config.js" });
 vm.runInContext(fs.readFileSync("prototype/cloud-sync.js", "utf8"), context, { filename: "prototype/cloud-sync.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
+
+const storageDeniedApp = makeElement("app");
+const storageDeniedToast = makeElement("toast");
+const storageDeniedWindow = {
+  navigator: { languages: ["en-NZ"], language: "en-NZ" },
+  setTimeout() {
+    return 1;
+  },
+  clearTimeout() {}
+};
+Object.defineProperty(storageDeniedWindow, "localStorage", {
+  get() {
+    throw new Error("localStorage access denied");
+  }
+});
+const storageDeniedContext = {
+  console,
+  document: {
+    documentElement: { lang: "" },
+    querySelector(selector) {
+      if (selector === "#app") return storageDeniedApp;
+      if (selector === "#toast") return storageDeniedToast;
+      return null;
+    },
+    addEventListener() {}
+  },
+  window: storageDeniedWindow,
+  Audio: function StorageDeniedAudio() {
+    this.pause = () => {};
+    this.play = () => Promise.resolve();
+  }
+};
+storageDeniedContext.globalThis = storageDeniedContext;
+vm.createContext(storageDeniedContext);
+for (const scriptPath of [
+  ...courseDataScriptPaths,
+  courseDataAggregatorPath,
+  ...i18nScriptPaths,
+  "prototype/cloud-config.js",
+  "prototype/cloud-sync.js",
+  "prototype/app.js"
+]) {
+  vm.runInContext(fs.readFileSync(scriptPath, "utf8"), storageDeniedContext, { filename: scriptPath });
+}
+assert.ok(
+  storageDeniedApp.innerHTML.includes("Continue as guest"),
+  "guest learning should still start when browser storage access is denied"
+);
+assert.equal(
+  vm.runInContext("state.interfaceLanguage", storageDeniedContext),
+  "en",
+  "storage denial should not prevent system-language startup"
+);
 
 const savedLanguageStorage = {
   "ana-tilim-progress": JSON.stringify({ preferences: { uiLanguage: "zh" } })
@@ -431,6 +569,44 @@ assert.equal(
   vm.runInContext("buildCloudSnapshot().preferences.uiLanguage", context),
   null,
   "system detection must not become an uploaded explicit preference"
+);
+const freshDeviceCloudMerge = JSON.parse(
+  vm.runInContext(
+    `JSON.stringify(window.ANA_TILIM_CLOUD.mergeSnapshots(buildCloudSnapshot(), {
+      schemaVersion: 1,
+      modifiedAt: "2026-01-02T00:00:00.000Z",
+      preferencesUpdatedAt: "2026-01-02T00:00:00.000Z",
+      favoriteUpdatedAt: "2026-01-02T00:00:00.000Z",
+      learningProgress: { letters: {}, combos: {}, vocab: {}, practice: {}, reading: {} },
+      mistakes: [],
+      favorite: false,
+      dailyActivity: { date: "", completedIds: [] },
+      preferences: {
+        audioAutoplay: true,
+        dailyGoal: 15,
+        learningReminder: true,
+        showLatin: false,
+        uiLanguage: "zh"
+      }
+    }))`,
+    context
+  )
+);
+assert.deepEqual(
+  freshDeviceCloudMerge.preferences,
+  {
+    audioAutoplay: true,
+    dailyGoal: 15,
+    learningReminder: true,
+    showLatin: false,
+    uiLanguage: "zh"
+  },
+  "a fresh device with no explicit local preference must not replace an existing cloud preference with null"
+);
+assert.equal(
+  freshDeviceCloudMerge.preferencesUpdatedAt,
+  "2026-01-02T00:00:00.000Z",
+  "the explicit cloud preference timestamp should win over an untouched fresh-device preference"
 );
 vm.runInContext(
   `
@@ -694,16 +870,38 @@ for (const language of ["zh", "en"]) {
 setLanguage("zh");
 vm.runInContext(
   `
-    state.screen = "group";
+    state.screen = "letterWriting";
     state.selectedUnitId = "letters";
     state.selectedGroupId = "dot-bone";
     state.currentLetterId = "pe";
     state.selectedPicture = "be";
+    state.selectedListening = "te";
+    state.practiceAudioPlayed = true;
     state.keyboardValue = "ب";
+    state.currentComboItemId = "ba";
+    state.selectedComboGroupId = "open-a";
+    state.currentVocabItemId = "yaxshimusiz";
+    state.selectedVocabGroupId = "greetings";
+    state.currentPracticeItemId = "practice-write-be";
+    state.selectedPracticeGroupId = "writing-loop";
+    state.selectedReadingUnitId = "sentence-patterns";
+    state.selectedReadingGroupId = "sentence-this-that";
+    state.practiceSpoken = true;
+    state.writingChecks = ["shape"];
+    state.showGuide = false;
+    state.favorite = true;
     render();
   `,
   context
 );
+assert.ok(activeWritingCanvas, "the active handwriting exercise should initialize a real canvas surface");
+const writingCanvasBeforeLanguageSwitch = activeWritingCanvas;
+writingCanvasBeforeLanguageSwitch.dispatchPointer("pointerdown", { clientX: 40, clientY: 36 });
+writingCanvasBeforeLanguageSwitch.dispatchPointer("pointermove", { clientX: 200, clientY: 126 });
+writingCanvasBeforeLanguageSwitch.dispatchPointer("pointerup", { clientX: 200, clientY: 126 });
+writingCanvasBeforeLanguageSwitch.dispatchPointer("pointerdown", { clientX: 80, clientY: 54 });
+writingCanvasBeforeLanguageSwitch.dispatchPointer("pointermove", { clientX: 240, clientY: 144 });
+writingCanvasBeforeLanguageSwitch.dispatchPointer("pointerup", { clientX: 240, clientY: 144 });
 const learningStateBeforeLanguageSwitch = vm.runInContext(
   `JSON.stringify({
     screen: state.screen,
@@ -711,11 +909,26 @@ const learningStateBeforeLanguageSwitch = vm.runInContext(
     selectedGroupId: state.selectedGroupId,
     currentLetterId: state.currentLetterId,
     selectedPicture: state.selectedPicture,
-    keyboardValue: state.keyboardValue
+    selectedListening: state.selectedListening,
+    practiceAudioPlayed: state.practiceAudioPlayed,
+    keyboardValue: state.keyboardValue,
+    currentComboItemId: state.currentComboItemId,
+    selectedComboGroupId: state.selectedComboGroupId,
+    currentVocabItemId: state.currentVocabItemId,
+    selectedVocabGroupId: state.selectedVocabGroupId,
+    currentPracticeItemId: state.currentPracticeItemId,
+    selectedPracticeGroupId: state.selectedPracticeGroupId,
+    selectedReadingUnitId: state.selectedReadingUnitId,
+    selectedReadingGroupId: state.selectedReadingGroupId,
+    practiceSpoken: state.practiceSpoken,
+    writingChecks: state.writingChecks,
+    showGuide: state.showGuide,
+    favorite: state.favorite,
+    writingStrokes: state.writingStrokes
   })`,
   context
 );
-setLanguage("en");
+clickDataset({ action: "set-language", language: "en" });
 assert.equal(
   vm.runInContext(
     `JSON.stringify({
@@ -724,15 +937,63 @@ assert.equal(
       selectedGroupId: state.selectedGroupId,
       currentLetterId: state.currentLetterId,
       selectedPicture: state.selectedPicture,
-      keyboardValue: state.keyboardValue
+      selectedListening: state.selectedListening,
+      practiceAudioPlayed: state.practiceAudioPlayed,
+      keyboardValue: state.keyboardValue,
+      currentComboItemId: state.currentComboItemId,
+      selectedComboGroupId: state.selectedComboGroupId,
+      currentVocabItemId: state.currentVocabItemId,
+      selectedVocabGroupId: state.selectedVocabGroupId,
+      currentPracticeItemId: state.currentPracticeItemId,
+      selectedPracticeGroupId: state.selectedPracticeGroupId,
+      selectedReadingUnitId: state.selectedReadingUnitId,
+      selectedReadingGroupId: state.selectedReadingGroupId,
+      practiceSpoken: state.practiceSpoken,
+      writingChecks: state.writingChecks,
+      showGuide: state.showGuide,
+      favorite: state.favorite,
+      writingStrokes: state.writingStrokes
     })`,
     context
   ),
   learningStateBeforeLanguageSwitch,
   "manually switching from Chinese to the opposing English language should preserve the current learning state"
 );
+assert.notEqual(
+  activeWritingCanvas,
+  writingCanvasBeforeLanguageSwitch,
+  "the language switch should exercise the real rerender path and replace the canvas element"
+);
+assert.deepEqual(
+  activeWritingCanvas.context2d.operations
+    .filter(([operation]) => operation === "moveTo" || operation === "lineTo")
+    .map(([operation, x, y]) => [operation, Math.round(x), Math.round(y)]),
+  [
+    ["moveTo", 40, 36], ["lineTo", 200, 126],
+    ["moveTo", 80, 54], ["lineTo", 240, 144]
+  ],
+  "the replacement canvas should redraw all of the learner's existing strokes"
+);
+assert.equal(
+  Object.prototype.hasOwnProperty.call(savedProgress(), "writingStrokes"),
+  false,
+  "temporary handwriting strokes must not be added to persisted local learning progress"
+);
+assert.equal(
+  vm.runInContext("Object.prototype.hasOwnProperty.call(buildCloudSnapshot(), 'writingStrokes')", context),
+  false,
+  "temporary handwriting strokes must not be added to cloud learning snapshots"
+);
 assert.equal(vm.runInContext("state.preferences.uiLanguage", context), "en");
 assert.equal(savedProgress().preferences.uiLanguage, "en");
+
+clickDataset({ action: "clear-canvas" });
+vm.runInContext("render()", context);
+assert.equal(
+  activeWritingCanvas.context2d.operations.some(([operation]) => operation === "lineTo"),
+  false,
+  "clearing a handwriting pad should keep the next render empty"
+);
 
 const englishWelcomeHtml = renderState("state.screen = 'welcome'");
 includesAll(
@@ -1014,6 +1275,33 @@ for (const [screenName, html] of Object.entries(englishVocabScreens)) {
   );
 }
 
+const expectedListeningChoiceValues = [
+  "ئا", "ئە", "ب", "پ", "ت", "ج", "چ", "خ", "د", "ر", "ز", "ژ", "س", "ش", "غ", "ف",
+  "ق", "ك", "گ", "ڭ", "ل", "م", "ن", "ھ", "ئو", "ئۇ", "ئۆ", "ئۈ", "ۋ", "ئې", "ئى", "ي"
+];
+
+function listeningChoiceRecords(html) {
+  const strip = html.match(/<div class="alphabet-strip compact listening-choice-strip"[\s\S]*?<\/div>/)?.[0] || "";
+  return [...strip.matchAll(/<button\b[\s\S]*?aria-label="([^"]+)"[\s\S]*?<span class="uyghur">([^<]+)<\/span>[\s\S]*?<\/button>/g)]
+    .map((match) => ({ aria: match[1], text: match[2].trim() }));
+}
+
+setLanguage("zh");
+const chineseListeningChoiceRecords = listeningChoiceRecords(
+  renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'listening-loop'; state.currentPracticeItemId = 'practice-listen-be'; state.practiceAudioPlayed = true; state.selectedListening = ''")
+);
+assert.deepEqual(
+  chineseListeningChoiceRecords.map((choice) => choice.aria),
+  expectedListeningChoiceValues.map((letter, index) => `字母选项 ${index + 1}：${letter}`),
+  "all 32 Chinese listening choices should identify their one-based index and actual Uyghur letter"
+);
+assert.deepEqual(
+  chineseListeningChoiceRecords.map((choice) => choice.text),
+  expectedListeningChoiceValues,
+  "Chinese listening choice buttons should display only the Uyghur letter"
+);
+
+setLanguage("en");
 const englishPracticeScreens = {
   listen: renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'listening-loop'; state.currentPracticeItemId = 'practice-listen-be'; state.practiceAudioPlayed = true; state.selectedListening = ''"),
   repeat: renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'repeat-loop'; state.currentPracticeItemId = 'practice-repeat-be'; state.practiceSpoken = false"),
@@ -1029,6 +1317,17 @@ includesAll(
 );
 const listeningChoiceStrip = englishPracticeScreens.listen.match(/<div class="alphabet-strip compact listening-choice-strip"[\s\S]*?<\/div>/)?.[0] || "";
 assert.equal((listeningChoiceStrip.match(/data-action="pick-practice"/g) || []).length, 32, "English listening practice should show all 32 answer letters");
+const englishListeningChoiceRecords = listeningChoiceRecords(englishPracticeScreens.listen);
+assert.deepEqual(
+  englishListeningChoiceRecords.map((choice) => choice.aria),
+  expectedListeningChoiceValues.map((letter, index) => `Letter choice ${index + 1}: ${letter}`),
+  "all 32 English listening choices should identify their one-based index and actual Uyghur letter"
+);
+assert.deepEqual(
+  englishListeningChoiceRecords.map((choice) => choice.text),
+  expectedListeningChoiceValues,
+  "English listening choice buttons should display only the Uyghur letter"
+);
 assert.equal((listeningChoiceStrip.match(/<small>/g) || []).length, 0, "point-identification answer choices should show letters only");
 assert.ok(!/One dot below|Three dots below|sound|hint/i.test(listeningChoiceStrip), "point-identification answer choices should not expose answer-revealing cue or hint text");
 includesAll(englishPracticeScreens.repeat, ["Repeat aloud", "Letter to repeat", "Repeat steps", "Look at the letter", "Read the hint", "Repeat softly"], "English repeat practice");
