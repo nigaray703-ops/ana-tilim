@@ -142,6 +142,17 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
     return result;
   }
 
+  function existingStatePath() {
+    assertNoSymlinkFromTrustedAnchor(normalizedWorkspaceRoot, "workspace root");
+    assert.ok(fsApi.existsSync(normalizedWorkspaceRoot), "workspace root is required for a strict snapshot");
+    assertRegularDirectory(fsApi, normalizedWorkspaceRoot, "workspace root");
+    const result = resolveWorkspacePath(STATE_FILE, "state file");
+    assertNoSymlinkWithinWorkspace(result, "state file");
+    const stat = lstatIfExists(result);
+    assert.ok(stat && !stat.isSymbolicLink() && stat.isFile(), "recording workspace state file is required");
+    return result;
+  }
+
   function createInitialState() {
     const targets = {};
     for (const target of catalog.targets) {
@@ -211,6 +222,19 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
       }
     }
     return state;
+  }
+
+  function readStrictStateSnapshot() {
+    const file = existingStatePath();
+    const contents = fsApi.readFileSync(file);
+    let state;
+    try {
+      state = JSON.parse(contents.toString("utf8"));
+    } catch (error) {
+      assert.fail(`malformed recording workspace state: ${error.message}`);
+    }
+    validateState(state);
+    return { contents: Buffer.from(contents), state: clone(state) };
   }
 
   function writeState(state) {
@@ -389,6 +413,10 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
   }
 
   return Object.freeze({
+    readValidatedStateSnapshot() {
+      return readStrictStateSnapshot();
+    },
+
     loadState() {
       return clone(readState());
     },

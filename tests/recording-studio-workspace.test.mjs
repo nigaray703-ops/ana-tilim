@@ -43,6 +43,22 @@ function createApprovedTakeState() {
   return { options, state, take };
 }
 
+function snapshotTree(root) {
+  const entries = [];
+  function visit(current, relative) {
+    const stat = fs.lstatSync(current);
+    const record = { relative, mode: stat.mode, type: stat.isSymbolicLink() ? "symlink" : stat.isDirectory() ? "directory" : "file" };
+    if (stat.isSymbolicLink()) record.link = fs.readlinkSync(current);
+    if (stat.isFile()) record.bytes = fs.readFileSync(current).toString("base64");
+    entries.push(record);
+    if (stat.isDirectory()) {
+      for (const name of fs.readdirSync(current).sort()) visit(path.join(current, name), path.join(relative, name));
+    }
+  }
+  visit(root, ".");
+  return entries;
+}
+
 test("creates the exact review baseline from the catalog and persists it", () => {
   const options = createOptions();
   const workspace = createRecordingWorkspace(options);
@@ -147,6 +163,49 @@ test("rejects malformed state without overwriting it", () => {
 
   assert.throws(() => createRecordingWorkspace(options).loadState(), /malformed recording workspace state/);
   assert.equal(fs.readFileSync(statePath, "utf8"), malformed);
+});
+
+test("reads a strict snapshot without recovering a pending rollback journal or writing anything", () => {
+  const options = createOptions();
+  const workspace = createRecordingWorkspace(options);
+  const take = workspace.saveTake({ stableId: "alphabet:aa", buffer: validWebm, createdAt: "2026-08-10T01:00:00.000Z" });
+  const state = workspace.loadState();
+  state.targets["alphabet:aa"].status = "pending-review";
+  state.targets["alphabet:aa"].approvedTakeId = null;
+  state.targets["alphabet:aa"].takes = [];
+  writeRawState(options, state);
+  const recoveryDirectory = path.join(options.workspaceRoot, "recovery");
+  fs.mkdirSync(recoveryDirectory, { recursive: true });
+  fs.writeFileSync(path.join(recoveryDirectory, `rollback-${take.id}.json`), `${JSON.stringify({
+    schemaVersion: 1,
+    stableId: "alphabet:aa",
+    takeId: take.id,
+    relativePath: take.relativePath,
+    sha256: take.sha256,
+    createdAt: "2026-08-10T01:00:01.000Z"
+  }, null, 2)}\n`);
+  const before = snapshotTree(options.workspaceRoot);
+
+  const snapshot = workspace.readValidatedStateSnapshot();
+
+  assert.deepEqual(snapshot.contents, fs.readFileSync(path.join(options.workspaceRoot, "state.json")));
+  assert.deepEqual(snapshot.state, state);
+  assert.deepEqual(snapshotTree(options.workspaceRoot), before);
+});
+
+test("strict snapshot validator never calls workspace mutation APIs", () => {
+  const options = createOptions();
+  createRecordingWorkspace(options).loadState();
+  const forbiddenFs = Object.assign(Object.create(fs), {
+    mkdirSync() { throw new Error("strict snapshot must not create directories"); },
+    writeFileSync() { throw new Error("strict snapshot must not write files"); },
+    renameSync() { throw new Error("strict snapshot must not rename files"); },
+    unlinkSync() { throw new Error("strict snapshot must not unlink files"); }
+  });
+
+  const snapshot = createRecordingWorkspace({ ...options, fsApi: forbiddenFs }).readValidatedStateSnapshot();
+
+  assert.equal(snapshot.state.schemaVersion, 1);
 });
 
 test("keeps stale state visible but rejects every current mutation", () => {
