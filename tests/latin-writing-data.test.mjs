@@ -21,7 +21,7 @@ const expectedUnit = {
   name: "拉丁键盘与字母书写强化",
   subtitle: "普通 QWERTY、元辅音分类与 ULY 默写",
   description: "先认识普通拉丁键位，再按元音和辅音整理字母，最后看拉丁提示练习维吾尔字母书写。",
-  bullets: ["普通 QWERTY", "8 个元音", "24 个辅音", "拉丁提示默写", "四种字形"]
+  bullets: ["普通 QWERTY", "8 个元音", "24 个辅音", "拉丁提示默写", "真实字母形式"]
 };
 
 function runScript(scriptPath, context) {
@@ -50,6 +50,15 @@ assert.deepEqual(
   expectedComparisonIds
 );
 assert.deepEqual(JSON.parse(JSON.stringify(data.unit)), expectedUnit);
+assert.ok(
+  data.unit.bullets.includes("真实字母形式"),
+  "unit metadata should describe the source-backed variable form references neutrally"
+);
+assert.equal(
+  data.unit.bullets.some((bullet) => /四种字形|统一四种|四个字形/.test(bullet)),
+  false,
+  "unit metadata should not promise one fixed four-form model for every letter"
+);
 
 const letterDetails = focusedContext.window.ANA_TILIM_ALPHABET.letterDetails;
 for (const letterId of [...expectedVowelIds, ...expectedConsonantIds]) {
