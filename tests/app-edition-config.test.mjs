@@ -338,6 +338,7 @@ fs.writeFileSync(path.join(duplicateUnitOrderTargetPath, "index.html"), `<!docty
     <script src="./course-data/syllable-data.js?v=old-before"></script>
     <script src="./course-data/afanti-data.js?v=old-before"></script>
     <script src="./afanti-content.js?v=old-before"></script>
+    <script src="./course-data/reading-data.js?v=old-before"></script>
     <script src="./course-data.js?v=cn-course"></script>
     <script src="./unit-order.js?v=old-before"></script>
     <script src="./latin-keyboard.js?v=old-before"></script>
@@ -411,16 +412,20 @@ assert.equal(
   "duplicate normalization should use the standard unit-order tag"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-afanti-layout"'),
-  "sync should cache-bust the copied syllable UI styles"
+  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-quote-names"'),
+  "sync should cache-bust the copied quote-name UI styles"
+);
+assert.ok(
+  normalizedDuplicateIndex.includes('src="./course-data/reading-data.js?v=20260810-quote-names"'),
+  "sync should cache-bust the copied bilingual quote-name data"
 );
 assert.ok(
   normalizedDuplicateIndex.includes('src="./progress-transfer.js?v=20260809-syllable-review"'),
   "sync should cache-bust the copied split syllable mistake validator"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-afanti-layout"'),
-  "sync should cache-bust the copied syllable review app"
+  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-quote-names"'),
+  "sync should cache-bust the copied bilingual quote-name app"
 );
 assert.ok(
   normalizedDuplicateIndex.indexOf("./course-data/alphabet-data.js") < normalizedDuplicateIndex.indexOf("./course-data/latin-writing-data.js")

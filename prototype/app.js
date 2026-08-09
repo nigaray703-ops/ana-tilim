@@ -3476,6 +3476,10 @@ function readingGroupCountLabel(unit, group) {
 }
 
 function renderReadingTopicCard(unit, group) {
+  const uyghurName =
+    unit.readingKind === "quote" && typeof group.titleUyghur === "string"
+      ? `<span class="reading-topic-uyghur-name" lang="ug" dir="rtl">${escapeHtml(group.titleUyghur)}</span>`
+      : "";
   return `
     <button
       class="reading-topic-row"
@@ -3486,7 +3490,10 @@ function renderReadingTopicCard(unit, group) {
       aria-label="进入${group.title}"
     >
       <span>
-        <strong>${group.title}</strong>
+        <span class="reading-topic-name-line">
+          <strong>${group.title}</strong>
+          ${uyghurName}
+        </span>
         <small>${readingGroupCountLabel(unit, group)}</small>
       </span>
       <span class="topic-end">

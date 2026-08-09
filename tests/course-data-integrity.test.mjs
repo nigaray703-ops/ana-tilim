@@ -590,6 +590,26 @@ for (const group of quoteUnit.groups) {
   assert.equal(group.items.length, 3, `quote group ${group.id} should include three short quotes`);
 }
 
+const approvedQuoteNamesUyghur = new Map([
+  ["quote-mahmud-kashgari", "مەھمۇد قەشقىرى"],
+  ["quote-yusuf-hajib", "يۈسۈپ خاس ھاجىپ"],
+  ["quote-ahmet-yukneki", "ئەھمەد يۈكنەكى"],
+  ["quote-molla-musa", "موللا مۇسا سايرامى"],
+  ["quote-abdulkhaliq-uyghur", "ئابدۇخالىق ئۇيغۇر"],
+  ["quote-lutpulla-mutellip", "لۇتپۇللا مۇتەللىپ"],
+  ["quote-abdurehim-otkur", "ئابدۇرېھىم ئۆتكۈر"],
+  ["quote-zunun-qadiri", "زۇنۇن قادىرى"],
+  ["quote-zordun-sabir", "زوردۇن سابىر"],
+  ["quote-teyipjan-eliyev", "تېيىپجان ئېلىيېف"]
+]);
+for (const group of quoteUnit.groups) {
+  assert.equal(
+    group.titleUyghur,
+    approvedQuoteNamesUyghur.get(group.id),
+    `${group.id} should keep its approved Uyghur name`
+  );
+}
+
 for (const group of proverbUnit.groups) {
   assert.equal(group.items.length, 3, `proverb group ${group.id} should include three short proverbs`);
 }

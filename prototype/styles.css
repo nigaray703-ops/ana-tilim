@@ -745,6 +745,24 @@ button {
   line-height: 1.25;
 }
 
+.reading-topic-name-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.reading-topic-uyghur-name {
+  display: inline-block;
+  color: var(--ink);
+  font-family: var(--uyghur-font);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: left;
+}
+
 .afanti-language-switches {
   display: flex;
   flex: 0 1 auto;
