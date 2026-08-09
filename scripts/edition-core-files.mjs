@@ -11,6 +11,8 @@ export const EDITION_CORE_FILES = Object.freeze([
   "course-data/vocab-data.js",
   "course-data/practice-data.js",
   "course-data/reading-data.js",
+  "course-data/afanti-data.js",
+  "afanti-content.js",
   "uyghur-keyboard.js",
   "latin-keyboard.js",
   "sentence-morphemes.js",

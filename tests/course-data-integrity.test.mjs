@@ -11,12 +11,15 @@ const courseDataScriptPaths = [
   "prototype/course-data/vocab-data.js",
   "prototype/course-data/practice-data.js",
   "prototype/course-data/reading-data.js",
+  "prototype/course-data/afanti-data.js",
+  "prototype/course-data/afanti-english-data.js",
+  "prototype/afanti-content.js",
   "prototype/course-data.js"
 ];
 
 const context = {
   console,
-  window: {}
+  window: { ANA_TILIM_APP_CONFIG: { edition: "global" } }
 };
 context.globalThis = context;
 vm.createContext(context);
@@ -37,10 +40,20 @@ const {
   syllableTraining,
   vocabGroups,
   practiceGroups,
-  readingUnits
+  readingUnits,
+  afantiStories,
+  afantiUnit
 } = courseData;
 
 assert.equal(syllableTraining.unit.id, "syllable-training", "reviewed syllable training data should be available to course consumers");
+assert.equal(afantiUnit.id, "afanti-stories", "reviewed Afanti unit should be available to course consumers");
+assert.deepEqual(
+  JSON.parse(JSON.stringify(afantiStories.map((story) => story.id))),
+  ["listen-before-judge", "fair-bowl-water", "unverified-words", "precious-time", "neighbors-tree", "wisdom-not-advantage"],
+  "the course aggregator should publish all six reviewed Afanti stories in order"
+);
+assert.ok(afantiStories.every((story) => story.noAudio === true), "Afanti course data should remain explicitly no-audio");
+assert.ok(afantiStories.every((story) => story.en?.paragraphs?.length > 0), "the global course aggregator should attach English data");
 
 function assertText(value, label) {
   assert.equal(typeof value, "string", `${label} should be text`);

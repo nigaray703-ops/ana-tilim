@@ -26,6 +26,9 @@ export function loadCourseData() {
     "prototype/course-data/vocab-data.js",
     "prototype/course-data/practice-data.js",
     "prototype/course-data/reading-data.js",
+    "prototype/course-data/afanti-data.js",
+    "prototype/course-data/afanti-english-data.js",
+    "prototype/afanti-content.js",
     "prototype/course-data.js"
   ]) {
     const absolutePath = path.join(projectRoot, relativePath);

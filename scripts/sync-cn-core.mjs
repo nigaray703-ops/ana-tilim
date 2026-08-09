@@ -16,6 +16,9 @@ const unitOrderScriptPattern = /<script\b[^>]*\bsrc=["']\.\/unit-order\.js(?:\?[
 const latinKeyboardScriptPattern = /<script\b[^>]*\bsrc=["']\.\/latin-keyboard\.js(?:\?[^"']*)?["'][^>]*><\/script>/g;
 const latinWritingScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/course-data\/latin-writing-data\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
 const syllableDataScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/course-data\/syllable-data\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
+const afantiDataScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/course-data\/afanti-data\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
+const afantiEnglishDataScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/course-data\/afanti-english-data\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
+const afantiContentScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/afanti-content\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
 const appScriptPattern = /^([ \t]*)(<script\b[^>]*\bsrc=["']\.\/app\.js(?:\?[^"']*)?["'][^>]*><\/script>)/m;
 const appScriptMatch = appScriptPattern.exec(indexSource);
 
@@ -54,6 +57,22 @@ const standardSyllableDataScript = '<script src="./course-data/syllable-data.js?
 const syllableInsertionIndex = comboDataScriptMatch.index + comboDataScriptMatch[0].length;
 normalizedIndex = `${indexWithoutSyllableScripts.slice(0, syllableInsertionIndex)}${comboDataScriptMatch[1]}${standardSyllableDataScript}\n${indexWithoutSyllableScripts.slice(syllableInsertionIndex)}`;
 indexUpdateMessages.push("Normalized index.html: syllable-data.js after combo-data.js");
+
+const indexWithoutAfantiScripts = normalizedIndex
+  .replace(afantiDataScriptPattern, "")
+  .replace(afantiEnglishDataScriptPattern, "")
+  .replace(afantiContentScriptPattern, "");
+const courseDataMatchAfterAfantiRemoval = courseDataScriptPattern.exec(indexWithoutAfantiScripts);
+if (!courseDataMatchAfterAfantiRemoval) {
+  throw new Error(`Cannot update ${indexPath}: course-data.js script tag is required.`);
+}
+const afantiIndent = courseDataMatchAfterAfantiRemoval[0].match(/^[ \t]*/)?.[0] || "";
+const standardAfantiScripts = [
+  '<script src="./course-data/afanti-data.js?v=20260810-reviewed-afanti"></script>',
+  '<script src="./afanti-content.js?v=20260810-reviewed-afanti"></script>'
+].map((tag) => `${afantiIndent}${tag}\n`).join("");
+normalizedIndex = `${indexWithoutAfantiScripts.slice(0, courseDataMatchAfterAfantiRemoval.index)}${standardAfantiScripts}${indexWithoutAfantiScripts.slice(courseDataMatchAfterAfantiRemoval.index)}`;
+indexUpdateMessages.push("Normalized index.html: shared Afanti data and validator before course-data.js");
 
 const standardUnitOrderScript = '<script src="./unit-order.js?v=20260809-edition-unit-order"></script>';
 const unitOrderScripts = normalizedIndex.match(unitOrderScriptPattern) || [];
@@ -113,6 +132,11 @@ const sharedCacheReferences = [
     pattern: /(\bsrc=["']\.\/progress-transfer\.js)(?:\?[^"']*)?(["'])/g,
     replacement: "$1?v=20260809-syllable-review$2",
     label: "progress-transfer.js"
+  },
+  {
+    pattern: /(\bsrc=["']\.\/course-data\.js)(?:\?[^"']*)?(["'])/g,
+    replacement: "$1?v=20260810-reviewed-afanti$2",
+    label: "course-data.js"
   },
   {
     pattern: /(\bsrc=["']\.\/app\.js)(?:\?[^"']*)?(["'])/g,

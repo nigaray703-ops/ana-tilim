@@ -82,7 +82,10 @@ const focusedCoursePaths = [
   "prototype/course-data/syllable-data.js",
   "prototype/course-data/vocab-data.js",
   "prototype/course-data/practice-data.js",
-  "prototype/course-data/reading-data.js"
+  "prototype/course-data/reading-data.js",
+  "prototype/course-data/afanti-data.js",
+  "prototype/course-data/afanti-english-data.js",
+  "prototype/afanti-content.js"
 ];
 
 const missingDependencyContext = makeContext();
