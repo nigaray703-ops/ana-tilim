@@ -100,6 +100,14 @@ const expectedCoreFiles = [
   "course-data/reading-data.js",
   "course-data/afanti-data.js",
   "afanti-content.js",
+  "i18n/ui-messages.js",
+  "i18n/alphabet-en.js",
+  "i18n/combo-en.js",
+  "i18n/vocab-en.js",
+  "i18n/practice-en.js",
+  "i18n/reading-en.js",
+  "i18n/course-en.js",
+  "i18n/runtime.js",
   "uyghur-keyboard.js",
   "latin-keyboard.js",
   "sentence-morphemes.js",
@@ -189,6 +197,10 @@ const courseDataScriptIndex = syncedDomesticIndex.indexOf("./course-data.js");
 const unitOrderScriptIndex = syncedDomesticIndex.indexOf("./unit-order.js");
 const latinKeyboardScriptIndex = syncedDomesticIndex.indexOf("./latin-keyboard.js");
 const feedbackScriptIndex = syncedDomesticIndex.indexOf("./feedback.js");
+const sharedI18nSources = [
+  "ui-messages", "alphabet-en", "combo-en", "vocab-en", "practice-en", "reading-en", "course-en", "runtime"
+].map((name) => `./i18n/${name}.js`);
+const sharedI18nScriptIndices = sharedI18nSources.map((source) => syncedDomesticIndex.indexOf(source));
 const appScriptIndex = syncedDomesticIndex.indexOf("./app.js");
 assert.ok(
   alphabetDataScriptIndex >= 0
@@ -204,9 +216,17 @@ assert.ok(
     && latinKeyboardScriptIndex >= 0
     && latinKeyboardScriptIndex < appScriptIndex
     && feedbackScriptIndex >= 0
-    && feedbackScriptIndex < appScriptIndex,
+    && feedbackScriptIndex < appScriptIndex
+    && sharedI18nScriptIndices.every((index) => index >= 0 && index < appScriptIndex),
   "domestic scripts should load course data, unit order, and the Latin keyboard before app"
 );
+for (const source of sharedI18nSources) {
+  assert.equal(
+    [...syncedDomesticIndex.matchAll(new RegExp(`<script\\s+[^>]*src=["']${source.replaceAll(".", "\\.")}(?:\\?[^"']*)?["'][^>]*><\\/script>`, "g"))].length,
+    1,
+    `repeated sync should leave exactly one domestic ${source} script`
+  );
+}
 assert.equal(
   [...syncedDomesticIndex.matchAll(/<script\s+[^>]*src=["']\.\/feedback\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)].length,
   1,
@@ -438,20 +458,20 @@ assert.equal(
   "duplicate normalization should use the standard feedback tag"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-unit-maps"'),
-  "sync should cache-bust the shared unit-map styles"
+  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-unit-resume"'),
+  "sync should cache-bust the shared resumable-unit styles"
 );
 assert.ok(
   normalizedDuplicateIndex.includes('src="./course-data/reading-data.js?v=20260810-quote-profiles"'),
   "sync should cache-bust the copied bilingual quote-name data"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./progress-transfer.js?v=20260810-unit-maps"'),
+  normalizedDuplicateIndex.includes('src="./progress-transfer.js?v=20260810-unit-resume"'),
   "sync should cache-bust the resumable unit progress validator"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-unit-maps"'),
-  "sync should cache-bust the shared unit-map UI"
+  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-unit-resume"'),
+  "sync should cache-bust the shared resumable-unit UI"
 );
 assert.ok(
   normalizedDuplicateIndex.indexOf("./course-data/alphabet-data.js") < normalizedDuplicateIndex.indexOf("./course-data/latin-writing-data.js")

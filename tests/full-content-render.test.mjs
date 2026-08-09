@@ -24,6 +24,7 @@ const toast = makeElement("toast");
 const context = {
   console,
   document: {
+    documentElement: { lang: "" },
     querySelector(selector) {
       if (selector === "#app") return app;
       if (selector === "#toast") return toast;
@@ -32,6 +33,7 @@ const context = {
     addEventListener() {}
   },
   window: {
+    navigator: { languages: ["en-NZ"], language: "en-NZ" },
     setTimeout() {
       return 1;
     },
@@ -66,6 +68,14 @@ for (const scriptPath of [
   "prototype/sentence-morphemes.js",
   "prototype/sentence-glossary.js",
   "prototype/progress-transfer.js",
+  "prototype/i18n/ui-messages.js",
+  "prototype/i18n/alphabet-en.js",
+  "prototype/i18n/combo-en.js",
+  "prototype/i18n/vocab-en.js",
+  "prototype/i18n/practice-en.js",
+  "prototype/i18n/reading-en.js",
+  "prototype/i18n/course-en.js",
+  "prototype/i18n/runtime.js",
   "prototype/cloud-config.js",
   "prototype/cloud-sync.js",
   "prototype/feedback.js",
@@ -75,7 +85,9 @@ for (const scriptPath of [
 }
 
 const courseData = context.window.ANA_TILIM_COURSE;
+vm.runInContext('applyInterfaceLanguage("zh");', context);
 let renderCount = 0;
+let auditLanguage = "zh";
 const forbiddenLearnerCopy = [
   "待审校",
   "待母语者审校",
@@ -101,6 +113,13 @@ function renderState(assignments, label, expectedText = "") {
   assert.ok(app.innerHTML.trim(), `${label} should render content`);
   assert.doesNotMatch(app.innerHTML, />\s*(?:undefined|null|NaN)\s*</, `${label} should not expose missing values`);
   assertLearnerCopyClean(label);
+  if (auditLanguage === "en") {
+    assert.doesNotMatch(
+      app.innerHTML.replaceAll(">中文<", "><"),
+      /[\u3400-\u9fff]/u,
+      `${label} should not expose Chinese learner copy in English mode`
+    );
+  }
   if (expectedText) {
     assert.ok(app.innerHTML.includes(expectedText), `${label} should include ${expectedText}`);
   }
@@ -150,7 +169,6 @@ assert.ok(
 );
 renderState({ screen: "home", mistakes: [] }, "empty memory review", "当前没有需要复习的错题");
 assert.ok(!app.innerHTML.includes("后续登录版"), "empty memory review should not promise future reminder behavior");
-
 assert.equal(
   vm.runInContext("typeof handleCloudStatus === 'function'", context),
   true,
@@ -422,16 +440,6 @@ for (const group of courseData.alphabetGroups) {
   }
 }
 
-for (const group of courseData.comboGroups) {
-  for (const item of group.items) {
-    renderState(
-      { screen: "combo", selectedComboGroupId: group.id, currentComboItemId: item.id },
-      `combo ${item.id}`,
-      item.value
-    );
-  }
-}
-
 for (const [syllableItemIndex, item] of courseData.syllableTraining.twoLetterItems.entries()) {
   renderState(
     {
@@ -632,6 +640,16 @@ for (const [sentenceIndex, sentence] of courseData.syllableTraining.sentences.en
   }
 }
 
+for (const group of courseData.comboGroups) {
+  for (const item of group.items) {
+    renderState(
+      { screen: "combo", selectedComboGroupId: group.id, currentComboItemId: item.id },
+      `combo ${item.id}`,
+      item.value
+    );
+  }
+}
+
 for (const group of courseData.vocabGroups) {
   for (const item of group.items) {
     renderState(
@@ -664,6 +682,17 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
   }
 }
 
-assert.equal(renderCount, 814, "full UI audit should render every retained main screen, feedback state, both modes of all seven Uyghur keyboard lessons, all seven QWERTY lesson states, six Afanti stories in each allowed language state, syllable warmup/rule/judgment/review/sentence state, real 2/4/8 form state, lesson item, reading group, and practice item");
+const chineseRenderCount = renderCount;
+assert.equal(chineseRenderCount, 814, "full UI audit should render every retained main screen, feedback state, both modes of all seven Uyghur keyboard lessons, all seven QWERTY lesson states, six Afanti stories in each allowed language state, syllable warmup/rule/judgment/review/sentence state, real 2/4/8 form state, lesson item, reading group, and practice item");
+
+auditLanguage = "en";
+vm.runInContext('applyInterfaceLanguage("en");', context);
+for (const screen of ["welcome", "home", "learn", "writing", "library", "profile"]) {
+  renderState({ screen }, `English ${screen} screen`);
+}
+for (const unitId of ["letters", "latin-keyboard-writing", "combos", "syllable-training", "basic-phrases", ...courseData.readingUnits.map((unit) => unit.id), courseData.afantiUnit.id]) {
+  renderState({ screen: "unit", selectedUnitId: unitId }, `English ${unitId} unit`);
+}
+assert.equal(renderCount, chineseRenderCount + 18, "English smoke audit should render every main screen and all twelve visible learning units");
 
 console.log(`full content render checks passed (${renderCount} states)`);

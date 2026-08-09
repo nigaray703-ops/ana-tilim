@@ -35,6 +35,27 @@ const {
   afantiStories,
   afantiUnit
 } = courseData;
+const i18n = window.ANA_TILIM_I18N;
+if (!i18n) {
+  throw new Error("Ana Tilim interface language module failed to load.");
+}
+const t = i18n.t;
+const courseLocalizer = i18n.createCourseLocalizer(courseData, window.ANA_TILIM_COURSE_EN);
+let serializedProgress = "";
+try {
+  serializedProgress = localStorageSafe()?.getItem("ana-tilim-progress") || "";
+} catch {
+  // Storage can be blocked by browser policy; guest learning must still start.
+}
+const savedLanguage = i18n.readSavedLanguage(serializedProgress);
+const systemLanguages = window.navigator?.languages || [];
+const systemFallbackLanguage = window.navigator?.language || "";
+const initialInterfaceLanguage = appConfig.edition === "cn"
+  ? "zh"
+  : i18n.resolveLanguage(savedLanguage, systemLanguages, systemFallbackLanguage);
+i18n.setLanguage(initialInterfaceLanguage);
+courseLocalizer.apply(initialInterfaceLanguage);
+document.documentElement.lang = initialInterfaceLanguage;
 
 function voiceFileBase(file) {
   return file.replace(/^human_/, "voice_").replace(/\.[^.]+$/, "");
@@ -51,7 +72,7 @@ function connectVoiceAudio(audio, folder) {
     ...audio,
     file,
     playable: true,
-    statusLabel: "真人音频",
+    get statusLabel() { return i18n.t("audio.humanRecording"); },
     outputPath: `./assets/audio/human/${folder}/${file}`
   };
 }
@@ -77,7 +98,7 @@ function createAudioItem({ folder, prefix, id, fileId = id, value, latin, order 
     latin,
     file,
     playable: true,
-    statusLabel: "真人音频",
+    get statusLabel() { return i18n.t("audio.humanRecording"); },
     outputPath: `./assets/audio/human/${folder}/${file}`
   };
 }
@@ -126,7 +147,7 @@ function buildFormExampleItems() {
   return [...byValue.values()];
 }
 
-const formExampleItems = buildFormExampleItems();
+let formExampleItems = buildFormExampleItems();
 const comboAudioItems = comboGroups
   .flatMap((group) => group.items)
   .filter((item) => connectedComboAudioIds.has(item.id))
@@ -218,7 +239,7 @@ const dedicatedFormExampleAudioByValue = new Map(
         id: item.id,
         fileId: item.key,
         value: item.value,
-        latin: item.latin || "未提供转写",
+        latin: item.latin || "",
         order: index + 1
       })
     ])
@@ -236,9 +257,16 @@ const letterAudioByShapeLatin = Object.fromEntries(
 
 const lettersUnit = {
   id: "letters",
-  subtitle: "32 个字母，相似分组",
-  description: "先按截图顺序认识全部字母，学习时把看起来相似、容易混的字母放在一组。",
-  bullets: ["认识字母形状", "区分点位和点数", "看四种形态", "练单字母键盘输入"],
+  get subtitle() { return t("alphabet.unitSubtitle"); },
+  get description() { return t("alphabet.unitDescription"); },
+  get bullets() {
+    return [
+      t("alphabet.unitBulletShape"),
+      t("alphabet.unitBulletDots"),
+      t("alphabet.unitBulletForms"),
+      t("alphabet.unitBulletKeyboard")
+    ];
+  },
   groups: alphabetGroups,
   actionTarget: "letter"
 };
@@ -249,9 +277,17 @@ const latinWritingUnit = {
 };
 const combosUnit = {
   id: "combos",
-  subtitle: "基础组合、三字母连接和断开规则",
-  description: "先做两字母组合，再加入三字母和断开连接例子，比较同一个字母在词里的形态变化。",
-  bullets: ["开口组合", "轻声组合", "三字母连接", "断开规则", "拆开再合上"],
+  get subtitle() { return t("combo.unitSubtitle"); },
+  get description() { return t("combo.unitDescription"); },
+  get bullets() {
+    return [
+      t("combo.unitBulletOpen"),
+      t("combo.unitBulletSoft"),
+      t("combo.unitBulletThree"),
+      t("combo.unitBulletBreaks"),
+      t("combo.unitBulletBuild")
+    ];
+  },
   groups: basicComboGroups,
   actionTarget: "combo"
 };
@@ -262,15 +298,29 @@ const syllableTrainingUnit = {
 };
 const vocabUnit = {
   id: "basic-phrases",
-  subtitle: "问候、人称代词、称呼、数字、动物等",
-  description: "选择一个常用主题，点进去再一行一行学习词形。",
-  bullets: ["主题小课", "一行一词", "词形辨认", "键盘输入"],
+  get subtitle() { return t("vocab.unitSubtitle"); },
+  get description() { return t("vocab.unitDescription"); },
+  get bullets() {
+    return [
+      t("vocab.unitBulletTopics"),
+      t("vocab.unitBulletRows"),
+      t("vocab.unitBulletRecognition"),
+      t("vocab.unitBulletKeyboard")
+    ];
+  },
   groups: vocabGroups,
   actionTarget: "vocab"
 };
-const readingUnitCatalog = readingUnits.map(({ title: _title, ...unit }) => ({
-  ...unit,
-  actionTarget: "reading"
+const readingUnitCatalog = readingUnits.map((unit) => ({
+  id: unit.id,
+  kind: unit.kind,
+  readingKind: unit.readingKind,
+  groups: unit.groups,
+  actionTarget: "reading",
+  get subtitle() { return unit.subtitle; },
+  get description() { return unit.description; },
+  get bullets() { return unit.bullets; },
+  get status() { return unit.status; }
 }));
 const afantiUnitCatalog = {
   ...afantiUnit,
@@ -286,7 +336,53 @@ const learningUnitCatalog = [
   ...readingUnitCatalog,
   afantiUnitCatalog
 ];
-const learningUnits = unitOrder.buildVisibleUnits(learningUnitCatalog, appConfig);
+const englishUnitNames = Object.freeze({
+  letters: "Meet the alphabet",
+  "latin-keyboard-writing": "Latin keyboards and letter writing",
+  combos: "Basic combinations",
+  "syllable-training": "Syllable reading workshop",
+  "basic-phrases": "Everyday phrases and vocabulary",
+  "grammar-basics": "Grammar basics",
+  "sentence-patterns": "Basic sentence patterns",
+  "dialogue-theater": "Mini dialogues",
+  "short-stories": "Short stories",
+  "uyghur-proverbs": "Uyghur proverbs",
+  "famous-quotes": "Famous quotes",
+  "afanti-stories": "Afanti stories"
+});
+const englishUnitDetails = Object.freeze({
+  "latin-keyboard-writing": Object.freeze({
+    subtitle: "Latin and Uyghur keyboards, vowel and consonant groups, and ULY dictation",
+    description: "Build confidence with Latin keys, sort the Uyghur alphabet into vowels and consonants, then write Uyghur letters from ULY prompts.",
+    bullets: Object.freeze(["Latin QWERTY", "Uyghur keyboard", "8 vowels and 24 consonants", "ULY-guided dictation", "Real letter forms"])
+  }),
+  "syllable-training": Object.freeze({
+    subtitle: "From two-letter combinations to syllable reading in short sentences",
+    description: "Join two letters reliably, practise introductory syllable strategies, compare joining and breaks, then return to complete short sentences.",
+    bullets: Object.freeze(["Two-letter warm-up", "Syllable strategies", "Joining and breaks", "Split and read short sentences"])
+  }),
+  "afanti-stories": Object.freeze({
+    subtitle: "Six increasingly challenging, thoughtful stories for reading without audio",
+    description: "Read the Uyghur story first, open a support language only when needed, and answer one comprehension question for each story.",
+    bullets: Object.freeze(["Uyghur-first reading", "Optional support language", "Comprehension choices", "A clear lesson from each story"])
+  })
+});
+const learningUnits = unitOrder.buildVisibleUnits(learningUnitCatalog, appConfig).map((unit, index) => {
+  const chineseTitle = unit.title;
+  const sourceUnit = learningUnitCatalog.find((candidate) => candidate.id === unit.id) || unit;
+  return {
+    ...unit,
+    get title() {
+      return i18n.getLanguage() === "en"
+        ? `Unit ${index + 1}: ${englishUnitNames[unit.id] || unitOrder.UNIT_NAMES[unit.id]}`
+        : chineseTitle;
+    },
+    get subtitle() { return i18n.getLanguage() === "en" ? (englishUnitDetails[unit.id]?.subtitle || sourceUnit.subtitle) : sourceUnit.subtitle; },
+    get description() { return i18n.getLanguage() === "en" ? (englishUnitDetails[unit.id]?.description || sourceUnit.description) : sourceUnit.description; },
+    get bullets() { return i18n.getLanguage() === "en" ? (englishUnitDetails[unit.id]?.bullets || sourceUnit.bullets) : sourceUnit.bullets; },
+    get status() { return sourceUnit.status; }
+  };
+});
 const persistedScreenIds = new Set([
   "welcome",
   "home",
@@ -411,81 +507,83 @@ function learningUnitTitle(unitId) {
 }
 
 function learningUnitOrdinal(unitId) {
-  const [ordinal, name] = learningUnitTitle(unitId).split("：");
+  const [ordinal, name] = learningUnitTitle(unitId).split(/[:：]/u);
   return name ? ordinal : "学习单元";
 }
 
 const unitExperience = {
   letters: {
-    recommended: "先复习字母分组，再进入下一单元。",
-    steps: ["认识相似字母组", "看四种写法", "做辨认、听音、键盘", "完成后进入下一单元"],
-    reviewLabel: "复习本组",
+    get recommended() { return t("alphabet.recommended"); },
+    get steps() {
+      return [t("alphabet.stepGroups"), t("alphabet.stepForms"), t("alphabet.stepPractice"), t("alphabet.stepComplete")];
+    },
+    get reviewLabel() { return t("alphabet.reviewGroup"); },
     reviewTarget: "group"
   },
   "latin-keyboard-writing": {
-    recommended: "先完成普通拉丁 QWERTY，再按顺序整理字母并练习书写。",
-    steps: ["普通 QWERTY", "元音与辅音分类", "元音对比辨认", "ULY 提示默写", "书写形式参考"],
-    reviewLabel: "练习 QWERTY",
+    get recommended() { return i18n.getLanguage() === "en" ? "Start with Latin QWERTY, then organise the alphabet and practise writing in a clear sequence." : "先完成普通拉丁 QWERTY，再按顺序整理字母并练习书写。"; },
+    get steps() { return i18n.getLanguage() === "en" ? ["Latin QWERTY", "Vowels and consonants", "Vowel comparisons", "ULY-guided dictation", "Letter-form writing"] : ["普通 QWERTY", "元音与辅音分类", "元音对比辨认", "ULY 提示默写", "书写形式参考"]; },
+    get reviewLabel() { return i18n.getLanguage() === "en" ? "Practise QWERTY" : "练习 QWERTY"; },
     reviewTarget: "latinKeyboardIntro"
   },
   combos: {
-    recommended: "先练两字母组合，再看三字母连接和断开规则，从右往左拆分再合上。",
-    steps: ["看两字母组合", "看三字母连接", "找断开字母", "做组合辨认和键盘输入"],
-    reviewLabel: "复习组合",
+    get recommended() { return t("combo.recommended"); },
+    get steps() { return [t("combo.stepTwo"), t("combo.stepThree"), t("combo.stepBreaks"), t("combo.stepPractice")]; },
+    get reviewLabel() { return t("combo.review"); },
     reviewTarget: "combo"
   },
   "syllable-training": {
-    recommended: "先把真实两字母组合拼起来，再逐条练习入门音节划分策略，最后完成连接与断开判断。",
-    steps: ["两字母热身", "先找元音中心", "判断辅音边界", "区分构词与音节边界", "连接与断开判断", "分桶复习错题"],
-    reviewLabel: "复习连接与断开错题",
+    get recommended() { return i18n.getLanguage() === "en" ? "Join real two-letter combinations, practise each introductory syllable strategy, then judge joining and breaks." : "先把真实两字母组合拼起来，再逐条练习入门音节划分策略，最后完成连接与断开判断。"; },
+    get steps() { return i18n.getLanguage() === "en" ? ["Two-letter warm-up", "Find the vowel centre", "Judge consonant boundaries", "Separate word-building and syllable boundaries", "Joining and break judgements", "Review mistakes by type"] : ["两字母热身", "先找元音中心", "判断辅音边界", "区分构词与音节边界", "连接与断开判断", "分桶复习错题"]; },
+    get reviewLabel() { return i18n.getLanguage() === "en" ? "Review joining and break mistakes" : "复习连接与断开错题"; },
     reviewTarget: "syllableReview"
   },
   "afanti-stories": {
-    recommended: "按顺序阅读六篇逐步变难的阿凡提小故事，先读维吾尔文，需要时再打开辅助语言。",
-    steps: ["默认阅读维吾尔文", "按需打开辅助语言", "逐篇理解故事道理"],
-    reviewLabel: "阅读六篇故事",
+    get recommended() { return i18n.getLanguage() === "en" ? "Read six Afanti stories in order as they become more challenging. Read Uyghur first and open a support language only when needed." : "按顺序阅读六篇逐步变难的阿凡提小故事，先读维吾尔文，需要时再打开辅助语言。"; },
+    get steps() { return i18n.getLanguage() === "en" ? ["Read Uyghur first", "Open a support language when needed", "Understand the lesson in each story"] : ["默认阅读维吾尔文", "按需打开辅助语言", "逐篇理解故事道理"]; },
+    get reviewLabel() { return i18n.getLanguage() === "en" ? "Read the six stories" : "阅读六篇故事"; },
     reviewTarget: "afantiStories"
   },
   "basic-phrases": {
-    recommended: "按主题小课学日常用语和词汇，一行一行看词形。",
-    steps: ["选择主题小课", "一行一行看词", "做词形辨认", "完成键盘输入"],
-    reviewLabel: "复习主题词",
+    get recommended() { return t("vocab.recommended"); },
+    get steps() { return [t("vocab.stepTopic"), t("vocab.stepWords"), t("vocab.stepRecognition"), t("vocab.stepKeyboard")]; },
+    get reviewLabel() { return t("vocab.review"); },
     reviewTarget: "vocab"
   },
   "grammar-basics": {
-    recommended: "先看最基础的语法规则，再读例句。",
-    steps: ["选择语法点", "看句型模式", "读维语例句", "看中文说明"],
-    reviewLabel: "复习语法",
+    get recommended() { return t("reading.grammarRecommended"); },
+    get steps() { return [t("reading.grammarStepChoose"), t("reading.grammarStepPattern"), t("reading.grammarStepExample"), t("reading.grammarStepExplanation")]; },
+    get reviewLabel() { return t("reading.grammarReview"); },
     reviewTarget: "reading"
   },
   "sentence-patterns": {
-    recommended: "把日常用语与词汇中学过的常用词放进短句里。",
-    steps: ["选择句型", "一行一行读短句", "看中文翻译"],
-    reviewLabel: "复习句型",
+    get recommended() { return t("reading.sentenceRecommended"); },
+    get steps() { return [t("reading.sentenceStepChoose"), t("reading.sentenceStepRead"), t("reading.translationStep")]; },
+    get reviewLabel() { return t("reading.sentenceReview"); },
     reviewTarget: "reading"
   },
   "dialogue-theater": {
-    recommended: "读很短的双人日常对话。",
-    steps: ["选择对话", "一句一句读", "看中文翻译"],
-    reviewLabel: "复习对话",
+    get recommended() { return t("reading.dialogueRecommended"); },
+    get steps() { return [t("reading.dialogueStepChoose"), t("reading.dialogueStepRead"), t("reading.translationStep")]; },
+    get reviewLabel() { return t("reading.dialogueReview"); },
     reviewTarget: "reading"
   },
   "short-stories": {
-    recommended: "读很短的小故事。",
-    steps: ["选择故事", "一句一句读", "看中文翻译"],
-    reviewLabel: "复习故事",
+    get recommended() { return t("reading.storyRecommended"); },
+    get steps() { return [t("reading.storyStepChoose"), t("reading.storyStepRead"), t("reading.translationStep")]; },
+    get reviewLabel() { return t("reading.storyReview"); },
     reviewTarget: "reading"
   },
   "famous-quotes": {
-    recommended: "阅读名人短句，先理解句意，再听真人发音。",
-    steps: ["选择人物", "读短句", "看中文翻译"],
-    reviewLabel: "复习名言",
+    get recommended() { return t("reading.quoteRecommended"); },
+    get steps() { return [t("reading.quoteStepChoose"), t("reading.quoteStepRead"), t("reading.translationStep")]; },
+    get reviewLabel() { return t("reading.quoteReview"); },
     reviewTarget: "reading"
   },
   "uyghur-proverbs": {
-    recommended: "阅读常见谚语，先理解句意，再跟读真人发音。",
-    steps: ["选择谚语", "读原文", "看中文翻译"],
-    reviewLabel: "复习谚语",
+    get recommended() { return t("reading.proverbRecommended"); },
+    get steps() { return [t("reading.proverbStepChoose"), t("reading.proverbStepRead"), t("reading.translationStep")]; },
+    get reviewLabel() { return t("reading.proverbReview"); },
     reviewTarget: "reading"
   }
 };
@@ -496,7 +594,8 @@ const DEFAULT_PREFERENCES = Object.freeze({
   audioAutoplay: false,
   dailyGoal: 10,
   learningReminder: false,
-  showLatin: true
+  showLatin: true,
+  uiLanguage: null
 });
 
 function normalizePreferences(value) {
@@ -505,7 +604,8 @@ function normalizePreferences(value) {
     audioAutoplay: typeof source.audioAutoplay === "boolean" ? source.audioAutoplay : false,
     dailyGoal: [5, 10, 15].includes(source.dailyGoal) ? source.dailyGoal : 10,
     learningReminder: typeof source.learningReminder === "boolean" ? source.learningReminder : false,
-    showLatin: typeof source.showLatin === "boolean" ? source.showLatin : true
+    showLatin: typeof source.showLatin === "boolean" ? source.showLatin : true,
+    uiLanguage: source.uiLanguage === "zh" || source.uiLanguage === "en" ? source.uiLanguage : null
   };
 }
 
@@ -752,6 +852,7 @@ const letterLoopSteps = [
 ];
 
 const initialCloudTimestamp = new Date().toISOString();
+const untouchedPreferenceTimestamp = "1970-01-01T00:00:00.000Z";
 
 function createDefaultLocalProgressState(timestamp = new Date().toISOString()) {
   return {
@@ -779,7 +880,7 @@ function createDefaultLocalProgressState(timestamp = new Date().toISOString()) {
     preferences: { ...DEFAULT_PREFERENCES },
     dailyActivity: { date: "", completedIds: [] },
     modifiedAt: timestamp,
-    preferencesUpdatedAt: timestamp,
+    preferencesUpdatedAt: untouchedPreferenceTimestamp,
     favoriteUpdatedAt: timestamp
   };
 }
@@ -790,6 +891,7 @@ const localProgressFieldNames = Object.freeze(
 
 const state = {
   ...createDefaultLocalProgressState(initialCloudTimestamp),
+  interfaceLanguage: initialInterfaceLanguage,
   selectedPicture: "",
   selectedListening: "",
   practiceAudioPlayed: false,
@@ -840,6 +942,7 @@ const state = {
   feedbackAdminUserId: "",
   feedbackRecords: [],
   showGuide: true,
+  writingStrokes: {},
   clearLearningConfirmation: false,
   pendingProgressImport: null,
   syncDirty: false
@@ -1405,6 +1508,7 @@ function applyCloudSnapshot(snapshot) {
   state.favorite = normalized.favorite;
   state.dailyActivity = normalized.dailyActivity;
   state.preferences = normalizePreferences(normalized.preferences);
+  applyInterfaceLanguage(state.preferences.uiLanguage, { explicit: false });
   state.modifiedAt = normalized.modifiedAt;
   state.preferencesUpdatedAt = normalized.preferencesUpdatedAt;
   state.favoriteUpdatedAt = normalized.favoriteUpdatedAt;
@@ -1432,6 +1536,7 @@ function learningRecordSnapshot() {
       mistakes: state.mistakes,
       syllableMistakes: state.syllableMistakes,
       writingChecks: state.writingChecks,
+      writingStrokes: state.writingStrokes,
       favorite: state.favorite,
       selectedPicture: state.selectedPicture,
       selectedListening: state.selectedListening,
@@ -1475,6 +1580,7 @@ function clearLearningRecords() {
   state.mistakes = [];
   state.syllableMistakes = { connection: [], break: [] };
   state.writingChecks = [];
+  state.writingStrokes = {};
   state.favorite = false;
   state.selectedPicture = "";
   state.selectedListening = "";
@@ -1516,6 +1622,28 @@ function setPreference(key, value) {
   });
   markCloudDirty("preferences");
   saveLocalProgress();
+}
+
+function applyInterfaceLanguage(language, { explicit = false } = {}) {
+  const effectiveLanguage = appConfig.edition === "cn"
+    ? "zh"
+    : i18n.resolveLanguage(language, systemLanguages, systemFallbackLanguage);
+  state.interfaceLanguage = effectiveLanguage;
+  i18n.setLanguage(effectiveLanguage);
+  courseLocalizer.apply(effectiveLanguage);
+  formExampleItems = buildFormExampleItems();
+  document.documentElement.lang = effectiveLanguage;
+
+  if (explicit) {
+    state.preferences = normalizePreferences({
+      ...state.preferences,
+      uiLanguage: effectiveLanguage
+    });
+    markCloudDirty("preferences");
+    saveLocalProgress();
+  }
+
+  return effectiveLanguage;
 }
 
 function applyPreferencesToRoot() {
@@ -1773,9 +1901,9 @@ function alphabetAudioCoverageTargets() {
     audioCoverageTarget({
       id: `alphabet-${letter.id}`,
       categoryId: "alphabet",
-      categoryTitle: "字母",
+      categoryTitle: t("audio.categoryAlphabet"),
       unit: learningUnitOrdinal("letters"),
-      groupTitle: groupForLetter(letter.id)?.title || "认识字母",
+      groupTitle: groupForLetter(letter.id)?.title || t("audio.alphabetGroupFallback"),
       value: letter.letter,
       latin: letter.latin,
       kind: letter.type,
@@ -1789,12 +1917,12 @@ function formExampleAudioCoverageTargets() {
     audioCoverageTarget({
       id: item.id,
       categoryId: "form-example",
-      categoryTitle: "例词",
+      categoryTitle: t("audio.categoryFormExamples"),
       unit: learningUnitOrdinal("letters"),
-      groupTitle: "写法例词",
+      groupTitle: t("audio.formExamplesFallback"),
       value: item.value,
-      latin: item.latin || "未提供转写",
-      kind: item.meaning || "写法例词",
+      latin: item.latin || t("audio.noTransliteration"),
+      kind: item.meaning || t("audio.formExamplesFallback"),
       audio: formExampleAudioForWord(item.value),
       fileBase: `voice_form_example_${item.key}`
     })
@@ -1806,9 +1934,9 @@ function comboAudioCoverageTargets() {
     audioCoverageTarget({
       id: `combo-${item.id}`,
       categoryId: "combo",
-      categoryTitle: "组合",
+      categoryTitle: t("audio.categoryCombinations"),
       unit: unitNameForComboGroup(comboGroupForItem(item.id)?.id),
-      groupTitle: comboGroupForItem(item.id)?.title || "组合与词组",
+      groupTitle: comboGroupForItem(item.id)?.title || t("audio.combinationGroupFallback"),
       value: item.value,
       latin: item.latin,
       kind: item.type,
@@ -1822,9 +1950,9 @@ function vocabAudioCoverageTargets() {
     audioCoverageTarget({
       id: `vocab-${item.id}`,
       categoryId: "vocab",
-      categoryTitle: "词汇",
+      categoryTitle: t("audio.categoryVocabulary"),
       unit: learningUnitOrdinal("basic-phrases"),
-      groupTitle: vocabGroupForItem(item.id)?.title || "日常词汇",
+      groupTitle: vocabGroupForItem(item.id)?.title || t("audio.vocabularyGroupFallback"),
       value: item.value,
       latin: item.latin,
       kind: item.meaning,
@@ -1840,7 +1968,7 @@ function readingAudioCoverageTargets() {
         audioCoverageTarget({
           id: `reading-${item.id}`,
           categoryId: "reading",
-          categoryTitle: "句子",
+          categoryTitle: t("audio.categorySentences"),
           unit: learningUnitTitle(unit.id),
           groupTitle: group.title,
           value: item.value,
@@ -1855,11 +1983,11 @@ function readingAudioCoverageTargets() {
 
 function audioCoverageCategories() {
   return [
-    { id: "alphabet", title: "字母", items: alphabetAudioCoverageTargets() },
-    { id: "form-example", title: "例词", items: formExampleAudioCoverageTargets() },
-    { id: "combo", title: "组合", items: comboAudioCoverageTargets() },
-    { id: "vocab", title: "词汇", items: vocabAudioCoverageTargets() },
-    { id: "reading", title: "句子", items: readingAudioCoverageTargets() }
+    { id: "alphabet", title: t("audio.categoryAlphabet"), items: alphabetAudioCoverageTargets() },
+    { id: "form-example", title: t("audio.categoryFormExamples"), items: formExampleAudioCoverageTargets() },
+    { id: "combo", title: t("audio.categoryCombinations"), items: comboAudioCoverageTargets() },
+    { id: "vocab", title: t("audio.categoryVocabulary"), items: vocabAudioCoverageTargets() },
+    { id: "reading", title: t("audio.categorySentences"), items: readingAudioCoverageTargets() }
   ];
 }
 
@@ -2026,7 +2154,7 @@ function countCompletedForIds(scope, ids) {
 function unitProgressSummaries() {
   const basicComboIds = basicComboGroups.map((group) => group.id);
   return learningUnits.map((unit) => {
-    const [unitName, label = unit.title] = unit.title.split("：");
+    const [unitName, label = unit.title] = unit.title.split(/[:：]\s*/u);
     let completed;
     let total;
 
@@ -2058,7 +2186,6 @@ function unitProgressSummaries() {
       completed = unit.groups.filter((group) => state.learningProgress.reading?.[group.id]?.completed).length;
       total = unit.groups.length;
     }
-
     return {
       unit: unitName,
       label,
@@ -2089,9 +2216,10 @@ function hasLearningActivity(scope, id) {
 }
 
 function renderLearnedMarker(scope, id) {
-  return hasLearningActivity(scope, id)
-    ? '<span class="learned-marker" aria-label="已学习">✓ 已学</span>'
-    : "";
+  if (!hasLearningActivity(scope, id)) {
+    return "";
+  }
+  return `<span class="learned-marker" aria-label="${t("vocab.learnedAria")}">✓ ${t("vocab.learned")}</span>`;
 }
 
 function renderLearningMap(summaries) {
@@ -2099,8 +2227,8 @@ function renderLearningMap(summaries) {
     <article class="card learning-map-card">
       <div class="section-row">
         <div>
-          <p class="caption">学习地图</p>
-          <h2 class="section-title">按单元一步一步往前走</h2>
+          <p class="caption">${t("progress.map")}</p>
+          <h2 class="section-title">${t("progress.mapDetail")}</h2>
         </div>
         <span class="step-state">${summaries.reduce((sum, item) => sum + item.completed, 0)} / ${summaries.reduce((sum, item) => sum + item.total, 0)}</span>
       </div>
@@ -2156,16 +2284,21 @@ function upsertMistake(mistake) {
 }
 
 function mistakeReviewItems() {
+  const useEnglish = i18n.getLanguage() === "en";
   return state.mistakes.map((mistake) => ({
     id: `mistake-${escapeHtml(mistake.key)}`,
-    type: escapeHtml(mistake.kindLabel),
+    type: escapeHtml(useEnglish ? t("practice.reviewType") : mistake.kindLabel),
     value: escapeHtml(mistake.value),
     latin: escapeHtml(mistake.latin),
-    label: escapeHtml(mistake.source),
-    hint: escapeHtml(`${mistake.note} ${mistake.help || ""} 错 ${mistake.attempts} 次。`),
+    label: escapeHtml(useEnglish ? t("practice.reviewLabel") : mistake.source),
+    hint: escapeHtml(
+      useEnglish
+        ? t("practice.reviewHint", { count: mistake.attempts })
+        : `${mistake.note} ${mistake.help || ""} 错 ${mistake.attempts} 次。`
+    ),
     parts: [escapeHtml(mistake.value)],
     audio: audioForMistake(mistake),
-    audioStatus: "复习错题"
+    audioStatus: useEnglish ? t("practice.reviewAudio") : "复习错题"
   }));
 }
 
@@ -2207,10 +2340,18 @@ function recordItemMistake(kind, target, picked, source) {
 
 function letterMistakeFeedback(target, picked) {
   if (!picked) {
-    return `目标是 ${displayStandaloneLetterGlyph(target.letter)}，线索是 ${target.cue}。`;
+    return t("alphabet.mistakeMissing", {
+      target: displayStandaloneLetterGlyph(target.letter),
+      targetCue: target.cue
+    });
   }
 
-  return `目标是 ${displayStandaloneLetterGlyph(target.letter)}：${target.cue}；你选了 ${displayStandaloneLetterGlyph(picked.letter)}：${picked.cue}。先看点在上方还是下方，再看点数。`;
+  return t("alphabet.mistakePicked", {
+    target: displayStandaloneLetterGlyph(target.letter),
+    targetCue: target.cue,
+    picked: displayStandaloneLetterGlyph(picked.letter),
+    pickedCue: picked.cue
+  });
 }
 
 function oddLetterForCurrent() {
@@ -2220,12 +2361,41 @@ function oddLetterForCurrent() {
   return choices[index + 1] || choices[index - 1] || choices[0];
 }
 
-function itemMistakeFeedback(target, picked, label = "词形") {
+function itemMistakeFeedback(target, picked, label = t("practice.choiceTarget")) {
   if (!picked) {
-    return `目标${label}是 ${target.value}，先看 ${target.latin} 的转写提示。`;
+    return t("practice.mistakeMissing", { label, target: target.value, latin: target.latin });
   }
 
-  return `目标${label}是 ${target.value}，你选了 ${picked.value}。先对照转写：${target.latin}。`;
+  return t("practice.mistakePicked", {
+    label,
+    target: target.value,
+    picked: picked.value,
+    latin: target.latin
+  });
+}
+
+function comboMistakeFeedback(target, picked) {
+  if (!picked) {
+    return t("combo.mistakeMissing", { target: target.value, latin: target.latin });
+  }
+
+  return t("combo.mistakePicked", {
+    target: target.value,
+    picked: picked.value,
+    latin: target.latin
+  });
+}
+
+function vocabMistakeFeedback(target, picked) {
+  if (!picked) {
+    return t("vocab.mistakeMissing", { target: target.value, latin: target.latin });
+  }
+
+  return t("vocab.mistakePicked", {
+    target: target.value,
+    picked: picked.value,
+    latin: target.latin
+  });
 }
 
 function physicalKeyboardParts(targetValue) {
@@ -2236,7 +2406,7 @@ function physicalKeyboardParts(targetValue) {
 }
 
 function keyboardPartLabel(part) {
-  return part === " " ? "空格" : part;
+  return part === " " ? t("keyboard.space") : part;
 }
 
 function keyboardGuideState(parts, targetValue, currentValue = state.keyboardValue) {
@@ -2274,20 +2444,24 @@ function renderKeyboardGuide(parts, targetValue, currentValue = state.keyboardVa
   const needsShiftToggle = Boolean(nextStroke) && Boolean(state.keyboardShift) !== nextStroke.shifted;
   const nextPartLabel = keyboardPartLabel(guide.nextPart);
   const stepText = guide.isComplete
-    ? "已完成"
+    ? t("keyboard.complete")
     : guide.isOffTrack
-      ? "先删除错误部分"
+      ? t("keyboard.removeWrong")
       : needsShiftToggle
-        ? `第 ${guide.completeCount + 1} 步：先点击 Shift，再点击 ${nextPartLabel}`
-        : `第 ${guide.completeCount + 1} 步：点击 ${nextPartLabel}`;
-  const inputText = guide.currentValue ? `已输入 ${guide.currentValue}` : "已输入 未输入";
-  const countText = guide.isComplete ? "已完成" : `还差 ${guide.remainingCount} 键`;
+        ? t("keyboard.nextStep", { step: guide.completeCount + 1, key: `Shift → ${nextPartLabel}` })
+        : t("keyboard.nextStep", { step: guide.completeCount + 1, key: nextPartLabel });
+  const inputText = guide.currentValue
+    ? t("keyboard.entered", { value: guide.currentValue })
+    : t("keyboard.notEntered");
+  const countText = guide.isComplete
+    ? t("keyboard.complete")
+    : t("keyboard.keysRemaining", { count: guide.remainingCount });
 
   return `
     <article class="card keyboard-guide-card">
       <div class="section-row">
         <div>
-          <p class="caption">键盘步骤</p>
+          <p class="caption">${t("keyboard.steps")}</p>
           <h2 class="section-title">
             <span class="uyghur">${parts.map(keyboardPartLabel).join(" → ")}</span>
           </h2>
@@ -2354,7 +2528,7 @@ function renderUyghurKeyboard(targetValue = "", options = {}) {
         data-code="${key.code}"
         data-physical-key="${key.physical}"
         type="button"
-        aria-label="${key.physical} 键，输入 ${escapeHtml(output)}"
+        aria-label="${t("keyboard.keyAria", { key: key.physical, value: escapeHtml(output) })}"
       >
         <small>${key.physical}</small>
         <strong>${escapeHtml(output)}</strong>
@@ -2363,7 +2537,7 @@ function renderUyghurKeyboard(targetValue = "", options = {}) {
   };
 
   return `
-    <div class="uyghur-keyboard" aria-label="维吾尔语标准键盘">
+    <div class="uyghur-keyboard" aria-label="${t("keyboard.aria")}">
       <div class="uyghur-keyboard-row row-top">
         ${topRow.map(renderLetterKey).join("")}
       </div>
@@ -2373,10 +2547,10 @@ function renderUyghurKeyboard(targetValue = "", options = {}) {
       <div class="uyghur-keyboard-row row-bottom">
         <button class="key-button utility keyboard-shift ${state.keyboardShift ? "active" : ""} ${needsShiftToggle ? "next-key" : ""}" data-action="toggle-keyboard-shift" type="button" aria-label="Shift" aria-pressed="${state.keyboardShift}">⇧</button>
         ${bottomRow.map(renderLetterKey).join("")}
-        <button class="key-button utility keyboard-backspace" data-action="${escapeHtml(backspaceAction)}" type="button" aria-label="删除">⌫</button>
+        <button class="key-button utility keyboard-backspace" data-action="${escapeHtml(backspaceAction)}" type="button" aria-label="${t("keyboard.backspace")}">⌫</button>
       </div>
-      <div class="uyghur-keyboard-tools" aria-label="键盘工具">
-        <button class="key-button utility keyboard-space uyghur ${isSpaceNext ? "next-key" : ""}" data-action="${escapeHtml(keyAction)}" data-key=" " data-code="Space" data-physical-key="Space" type="button" aria-label="Space 键，输入空格">بوشلۇق</button>
+      <div class="uyghur-keyboard-tools" aria-label="${t("keyboard.toolsAria")}">
+        <button class="key-button utility keyboard-space uyghur ${isSpaceNext ? "next-key" : ""}" data-action="${escapeHtml(keyAction)}" data-key=" " data-code="Space" data-physical-key="Space" type="button" aria-label="${t("keyboard.spaceAria")}">بوشلۇق</button>
       </div>
     </div>
   `;
@@ -2419,15 +2593,17 @@ function practiceKeyboardChoices(item) {
 
 function renderWritingCoach({ value, parts, hint, mode = "letter" }) {
   const partText = parts && parts.length > 1 ? parts.join(" → ") : value;
-  const startText = mode === "letter" ? "先看主体轮廓，再决定点的位置。" : `拆分描摹：${partText}`;
+  const startText = mode === "letter"
+    ? t("writing.letterStart")
+    : t("writing.splitStart", { parts: partText });
 
   return `
     <article class="card writing-coach-card">
-      <p class="caption">书写步骤</p>
+      <p class="caption">${t("writing.steps")}</p>
       <div class="lesson-point-list">
-        <div class="lesson-point"><strong>起笔</strong><span>${startText}</span></div>
-        <div class="lesson-point"><strong>方向</strong><span>从右往左写，先主体后点位，最后检查连接。</span></div>
-        <div class="lesson-point"><strong>提醒</strong><span>${hint}</span></div>
+        <div class="lesson-point"><strong>${t("writing.start")}</strong><span>${startText}</span></div>
+        <div class="lesson-point"><strong>${t("writing.direction")}</strong><span>${t("writing.directionDetail")}</span></div>
+        <div class="lesson-point"><strong>${t("writing.selfCheck")}</strong><span>${hint}</span></div>
       </div>
     </article>
   `;
@@ -2437,20 +2613,20 @@ function renderWritingComparison({ value, parts, forms = [], selectedIndex = 0 }
   const comparisonItems = forms.length
     ? forms.map((form) => ({ label: form.label, value: form.value }))
     : [
-        { label: "整体", value },
-        ...(parts || []).map((part, index) => ({ label: `部分 ${index + 1}`, value: part }))
+        { label: t("writing.whole"), value },
+        ...(parts || []).map((part, index) => ({ label: t("writing.part", { count: index + 1 }), value: part }))
       ];
 
   return `
     <article class="card writing-comparison-card">
       <div class="section-row">
         <div>
-          <p class="caption">选择一种写法临摹</p>
+          <p class="caption">${t("writing.chooseForm")}</p>
           <h2 class="section-title"><span class="uyghur">${displayStandaloneLetterGlyph(value)}</span></h2>
         </div>
-        <span class="step-state">${comparisonItems.length} 项</span>
+        <span class="step-state">${t("writing.itemCount", { count: comparisonItems.length })}</span>
       </div>
-      <div class="writing-form-selector" role="group" aria-label="选择要临摹的字母写法">
+      <div class="writing-form-selector" role="group" aria-label="${t("writing.selectFormAria")}">
         ${comparisonItems
           .map(
             (item, index) => `
@@ -2559,9 +2735,10 @@ function currentUnitExperience(unitId = currentUnit().id) {
     return { ...base, nextLabel: "回到学习路径", nextTarget: "learn", nextUnitId: null };
   }
   const next = learningUnits.find((unit) => unit.id === nextId);
+  const nextOrdinal = next.title.split(/[:：]/u)[0];
   return {
     ...base,
-    nextLabel: `进入${next.title.split("：")[0]}`,
+    nextLabel: i18n.getLanguage() === "en" ? `Enter ${nextOrdinal}` : `进入${nextOrdinal}`,
     nextTarget: "unit",
     nextUnitId: nextId
   };
@@ -2592,7 +2769,7 @@ function renderStepList(unitId) {
   const experience = currentUnitExperience(unitId);
 
   return `
-    <div class="step-list" aria-label="学习步骤">
+    <div class="step-list" aria-label="${t("reading.stepsAria")}">
       ${experience.steps
         .map(
           (step, index) => `
@@ -2629,7 +2806,17 @@ function isAudioPlayable(audio) {
   return Boolean(audio && audio.playable && audio.outputPath);
 }
 
-function renderAudioButton({ audio, label, className = "", accessibleLabel = "播放发音" }) {
+function speakerIcon() {
+  return `
+    <svg class="speaker-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M4 9v6h4l5 4V5L8 9H4"></path>
+      <path d="M16 9.5a4 4 0 0 1 0 5"></path>
+      <path d="M18.5 7a7 7 0 0 1 0 10"></path>
+    </svg>
+  `;
+}
+
+function renderAudioButton({ audio, label, className = "", accessibleLabel = "" }) {
   const canPlay = isAudioPlayable(audio);
   const classes = ["play-dot", className, canPlay ? "" : "disabled"].filter(Boolean).join(" ");
 
@@ -2641,8 +2828,8 @@ function renderAudioButton({ audio, label, className = "", accessibleLabel = "�
       data-audio-label="${escapeHtml(label)}"
       type="button"
       ${canPlay ? "" : "disabled"}
-      aria-label="${escapeHtml(accessibleLabel)}"
-    >听</button>
+      aria-label="${escapeHtml(accessibleLabel || `${t("audio.play")} ${label}`)}"
+    >${speakerIcon()}</button>
   `;
 }
 
@@ -2661,15 +2848,24 @@ function renderAudioWord({ value, audio, className = "" }) {
       data-audio-src="${audio.outputPath}"
       data-audio-label="${value}"
       type="button"
-      aria-label="播放 ${value}"
+      aria-label="${t("audio.play")} ${value}"
     >${value}</button>
   `;
 }
 
 function renderAudioFocus({ audio, label, title, hint, hideFile = false, hideCaption = false, buttonOnly = false, className = "" }) {
   const canPlay = isAudioPlayable(audio);
-  const audioInfo = canPlay ? (hideFile ? `${audio.statusLabel}。` : `${audio.statusLabel}：${audio.file}。`) : "";
-  const caption = hideCaption ? "" : canPlay ? `${audioInfo}${hint}` : "音频待录，暂不播放。";
+  const audioStatusLabel = t("audio.humanRecording");
+  const audioInfo = canPlay
+    ? state.interfaceLanguage === "zh"
+      ? hideFile
+        ? `${audioStatusLabel}。`
+        : `${audioStatusLabel}：${audio.file}。`
+      : hideFile
+        ? `${audioStatusLabel}. `
+        : `${audioStatusLabel}: ${audio.file}. `
+    : "";
+  const caption = hideCaption ? "" : canPlay ? `${audioInfo}${hint}` : t("audio.unavailable");
   const classes = ["letter-focus", "audio-focus", buttonOnly ? "audio-only-focus" : "", className].filter(Boolean).join(" ");
 
   if (buttonOnly) {
@@ -2684,16 +2880,16 @@ function renderAudioFocus({ audio, label, title, hint, hideFile = false, hideCap
     <div class="${classes}">
       ${renderAudioButton({ audio, label, className: "letter-focus-play" })}
       <div>
-        <strong class="audio-focus-title">${canPlay ? title : "音频待录"}</strong>
+        <strong class="audio-focus-title">${canPlay ? title : t("audio.unavailable")}</strong>
         ${caption ? `<p class="caption">${caption}</p>` : ""}
       </div>
     </div>
   `;
 }
 
-function renderAdjacentNav({ previous, next, action, previousLabel = "上一个", nextLabel = "下一个" }) {
+function renderAdjacentNav({ previous, next, action, previousLabel = t("common.previous"), nextLabel = t("common.next") }) {
   return `
-    <div class="adjacent-nav" aria-label="前后切换">
+    <div class="adjacent-nav" aria-label="${t("common.adjacent")}">
       <button
         class="secondary-button"
         data-action="${action}"
@@ -2728,17 +2924,24 @@ function renderContinueCourseButton(options = {}) {
     .filter(Boolean)
     .join(" ");
 
-  return `<button class="primary-button continue-course-button" ${attributes} type="button">继续学习本单元下一课程</button>`;
+  return `<button class="primary-button continue-course-button" ${attributes} type="button">${t("common.continueUnitCourse")}</button>`;
 }
 
 function renderUnitNextActions(unitId, primaryClass = "primary-button") {
   const experience = currentUnitExperience(unitId);
   const nextUnit = learningUnits.find((unit) => unit.id === experience.nextUnitId);
   const shouldOpenNextUnit = Boolean(nextUnit) && experience.nextTarget !== "learn";
+  const caption = unitId === "letters"
+    ? t("alphabet.nextStep")
+    : unitId === "combos"
+      ? t("combo.nextStep")
+      : unitId === "basic-phrases"
+        ? t("vocab.nextStep")
+        : t("reading.nextStep");
 
   return `
     <article class="card next-action-card">
-      <p class="caption">下一步建议</p>
+      <p class="caption">${caption}</p>
       <div class="action-grid">
         <button class="secondary-button" data-action="go" data-target="${experience.reviewTarget}" type="button">
           ${experience.reviewLabel}
@@ -2755,6 +2958,19 @@ function renderUnitNextActions(unitId, primaryClass = "primary-button") {
       </div>
     </article>
   `;
+}
+
+function writingSurfaceKey() {
+  if (state.screen === "letterWriting") {
+    return `letter:${state.currentLetterId}`;
+  }
+  if (state.screen === "comboWriting") {
+    return `combo:${state.currentComboItemId}`;
+  }
+  if (state.screen === "practiceSession") {
+    return `practice:${state.currentPracticeItemId}`;
+  }
+  return "";
 }
 
 function initializeWritingCanvases() {
@@ -2801,19 +3017,48 @@ function initializeWritingCanvases() {
     context.lineWidth = 8;
     context.strokeStyle = "#162657";
 
+    const surfaceKey = writingSurfaceKey();
+    const savedStrokes = surfaceKey ? state.writingStrokes[surfaceKey] || [] : [];
+    savedStrokes.forEach((stroke) => {
+      if (!Array.isArray(stroke) || !stroke.length) {
+        return;
+      }
+      context.beginPath();
+      context.moveTo(stroke[0].x * rect.width, stroke[0].y * rect.height);
+      stroke.slice(1).forEach((point) => {
+        context.lineTo(point.x * rect.width, point.y * rect.height);
+      });
+      if (stroke.length > 1) {
+        context.stroke();
+      }
+      context.closePath();
+    });
+
     let isDrawing = false;
+    let activeStroke = null;
 
     function pointFor(event) {
       const bounds = canvas.getBoundingClientRect();
       return {
         x: event.clientX - bounds.left,
-        y: event.clientY - bounds.top
+        y: event.clientY - bounds.top,
+        normalized: {
+          x: bounds.width > 0 ? (event.clientX - bounds.left) / bounds.width : 0,
+          y: bounds.height > 0 ? (event.clientY - bounds.top) / bounds.height : 0
+        }
       };
     }
 
     canvas.addEventListener("pointerdown", (event) => {
       const point = pointFor(event);
       isDrawing = true;
+      activeStroke = [point.normalized];
+      if (surfaceKey) {
+        state.writingStrokes[surfaceKey] = [
+          ...(state.writingStrokes[surfaceKey] || []),
+          activeStroke
+        ];
+      }
       canvas.setPointerCapture?.(event.pointerId);
       context.beginPath();
       context.moveTo(point.x, point.y);
@@ -2825,6 +3070,7 @@ function initializeWritingCanvases() {
         return;
       }
       const point = pointFor(event);
+      activeStroke?.push(point.normalized);
       context.lineTo(point.x, point.y);
       context.stroke();
       event.preventDefault();
@@ -2835,6 +3081,7 @@ function initializeWritingCanvases() {
         return;
       }
       isDrawing = false;
+      activeStroke = null;
       canvas.releasePointerCapture?.(event.pointerId);
       context.closePath();
     }
@@ -2846,6 +3093,10 @@ function initializeWritingCanvases() {
 }
 
 function clearWritingCanvases() {
+  const surfaceKey = writingSurfaceKey();
+  if (surfaceKey) {
+    delete state.writingStrokes[surfaceKey];
+  }
   if (!document.querySelectorAll) {
     return;
   }
@@ -3029,6 +3280,26 @@ function screen(content, active = "home") {
   `;
 }
 
+function languageSwitcher(compact = false) {
+  if (appConfig.edition === "cn") return "";
+  return `
+    <div class="language-switcher ${compact ? "is-compact" : ""}" role="group" aria-label="${t("language.label")}">
+      ${["zh", "en"].map((language) => `
+        <button type="button" data-action="set-language" data-language="${language}"
+          aria-pressed="${state.interfaceLanguage === language}">${compact ? (language === "zh" ? "中文" : "EN") : t(language === "zh" ? "language.chinese" : "language.english")}</button>`).join("")}
+    </div>`;
+}
+
+function profileLanguageSelect() {
+  if (appConfig.edition === "cn") return "";
+  return `
+    <select id="profile-language-select" class="language-select"
+      data-action="set-language-select" aria-label="${t("language.label")}">
+      ${["zh", "en"].map((language) => `
+        <option value="${language}"${state.interfaceLanguage === language ? " selected" : ""}>${t(language === "zh" ? "language.chinese" : "language.english")}</option>`).join("")}
+    </select>`;
+}
+
 function topBar(title, subtitle, action = "", leading = "") {
   return `
     <header class="top-row">
@@ -3047,14 +3318,14 @@ function topBar(title, subtitle, action = "", leading = "") {
 
 function bottomNav(active) {
   const items = [
-    ["home", "首页", iconHome()],
-    ["library", "字母", iconLibrary()],
-    ["learn", "学习", iconBook()],
-    ["profile", "我的", iconUser()]
+    ["home", t("nav.home"), iconHome()],
+    ["library", t("nav.alphabet"), iconLibrary()],
+    ["learn", t("nav.learn"), iconBook()],
+    ["profile", t("nav.profile"), iconUser()]
   ];
 
   return `
-    <nav class="bottom-nav" aria-label="主导航">
+    <nav class="bottom-nav" aria-label="${t("nav.label")}">
       ${items
         .map(
           ([target, label, icon]) => `
@@ -3133,23 +3404,23 @@ function cloudAccountProfile() {
 
 function cloudStatusLabel() {
   const labels = {
-    local: "本地模式",
-    ready: "本地模式",
-    "signing-in": "正在登录",
-    registering: "正在注册",
-    "sending-code": "正在发送验证码",
-    "code-sent": "验证码已发送",
-    "verifying-code": "正在验证",
-    "uploading-avatar": "正在上传头像",
-    "signed-in": "已登录",
-    syncing: "正在同步",
-    synced: "已同步",
-    "waiting-network": "当前离线，等待同步",
-    "sync-error": "同步失败，将自动重试",
-    "update-required": "应用版本过旧，请先更新",
-    error: "登录失败，请重试"
+    local: t("auth.local"),
+    ready: t("auth.local"),
+    "signing-in": t("auth.signingIn"),
+    registering: t("auth.registering"),
+    "sending-code": t("auth.sendingCode"),
+    "code-sent": t("auth.codeSent"),
+    "verifying-code": t("auth.verifying"),
+    "uploading-avatar": t("auth.uploadingAvatar"),
+    "signed-in": t("auth.signedIn"),
+    syncing: t("auth.syncing"),
+    synced: t("auth.synced"),
+    "waiting-network": t("auth.offline"),
+    "sync-error": t("auth.syncError"),
+    "update-required": t("auth.updateRequired"),
+    error: t("auth.loginError")
   };
-  return labels[cloudStatus.phase] || "本地模式";
+  return labels[cloudStatus.phase] || t("auth.local");
 }
 
 function renderCloudAuthControls() {
@@ -3164,96 +3435,48 @@ function renderCloudAuthControls() {
         <strong>${escapeHtml(accountEmail)}</strong>
         <small>${cloudStatusLabel()}</small>
       </div>
-      <button class="secondary-button" data-action="cloud-sign-out" type="button">退出登录</button>
+      <button class="secondary-button" data-action="cloud-sign-out" type="button">${t("auth.signOut")}</button>
     `;
   }
 
   const isRegistering = state.authMode === "register";
   return `
     <div class="password-auth-shell">
-      <div class="auth-mode-tabs" role="tablist" aria-label="账号登录方式">
-        <button
-          class="auth-mode-tab ${isRegistering ? "" : "active"}"
-          data-action="switch-auth-mode"
-          data-mode="login"
-          role="tab"
-          aria-selected="${!isRegistering}"
-          type="button"
-        >登录</button>
-        <button
-          class="auth-mode-tab ${isRegistering ? "active" : ""}"
-          data-action="switch-auth-mode"
-          data-mode="register"
-          role="tab"
-          aria-selected="${isRegistering}"
-          type="button"
-        >注册</button>
+      <div class="auth-mode-tabs" role="tablist" aria-label="${t("auth.modeAria")}">
+        <button class="auth-mode-tab ${isRegistering ? "" : "active"}" data-action="switch-auth-mode" data-mode="login" role="tab" aria-selected="${!isRegistering}" type="button">${t("auth.loginTab")}</button>
+        <button class="auth-mode-tab ${isRegistering ? "active" : ""}" data-action="switch-auth-mode" data-mode="register" role="tab" aria-selected="${isRegistering}" type="button">${t("auth.registerTab")}</button>
       </div>
       <div class="password-auth-fields">
         ${
           isRegistering
-            ? `
-              <label class="auth-field">
-                <span>昵称</span>
-                <input id="password-auth-name" type="text" autocomplete="name" maxlength="40" placeholder="你的学习名称" />
-              </label>
-            `
+            ? `<label class="auth-field"><span>${t("auth.nickname")}</span><input id="password-auth-name" type="text" autocomplete="name" maxlength="40" placeholder="${t("auth.nicknamePlaceholder")}" /></label>`
             : ""
         }
-        <label class="auth-field">
-          <span>邮箱</span>
-          <input id="password-auth-email" type="email" autocomplete="email" value="${escapeHtml(state.authEmail)}" placeholder="name@example.com" />
-        </label>
-        <label class="auth-field">
-          <span>密码</span>
-          <input id="password-auth-password" type="password" autocomplete="${isRegistering ? "new-password" : "current-password"}" minlength="8" placeholder="至少 8 个字符" />
-        </label>
+        <label class="auth-field"><span>${t("auth.email")}</span><input id="password-auth-email" type="email" autocomplete="email" value="${escapeHtml(state.authEmail)}" placeholder="name@example.com" /></label>
+        <label class="auth-field"><span>${t("auth.password")}</span><input id="password-auth-password" type="password" autocomplete="${isRegistering ? "new-password" : "current-password"}" minlength="8" placeholder="${t("auth.passwordPlaceholder")}" /></label>
         ${
           isRegistering
-            ? `
-              <label class="auth-field">
-                <span>确认密码</span>
-                <input id="password-auth-confirm" type="password" autocomplete="new-password" minlength="8" placeholder="再次输入密码" />
-              </label>
-              <p class="auth-warning">当前暂不支持邮件找回密码，请保存好密码。</p>
-            `
+            ? `<label class="auth-field"><span>${t("auth.confirmPassword")}</span><input id="password-auth-confirm" type="password" autocomplete="new-password" minlength="8" placeholder="${t("auth.confirmPasswordPlaceholder")}" /></label><p class="auth-warning">${t("auth.passwordWarning")}</p>`
             : ""
         }
-        <button class="primary-button" data-action="${isRegistering ? "password-register" : "password-login"}" type="button">
-          ${isRegistering ? "注册并开始学习" : "登录并继续学习"}
-        </button>
+        <button class="primary-button" data-action="${isRegistering ? "password-register" : "password-login"}" type="button">${isRegistering ? t("auth.registerSubmit") : t("auth.loginSubmit")}</button>
       </div>
     </div>
-    <div class="auth-divider" aria-hidden="true"><span>其他方式</span></div>
+    <div class="auth-divider" aria-hidden="true"><span>${t("auth.otherMethods")}</span></div>
     <div class="auth-actions">
-      <button class="primary-button" data-action="cloud-google-login" type="button">
-        使用 Google 登录
-      </button>
-      <button class="secondary-button" data-action="show-email-login" type="button">
-        使用邮箱验证码
-      </button>
+      <button class="primary-button" data-action="cloud-google-login" type="button">${t("auth.google")}</button>
+      <button class="secondary-button" data-action="show-email-login" type="button">${t("auth.emailOtp")}</button>
     </div>
     ${
       state.emailAuthExpanded
-        ? `
-          <div class="email-auth-fields">
-            <label class="auth-field">
-              <span>邮箱</span>
-              <input id="auth-email" type="email" autocomplete="email" value="${escapeHtml(state.authEmail)}" placeholder="name@example.com" />
-            </label>
+        ? `<div class="email-auth-fields">
+            <label class="auth-field"><span>${t("auth.email")}</span><input id="auth-email" type="email" autocomplete="email" value="${escapeHtml(state.authEmail)}" placeholder="name@example.com" /></label>
             ${
               state.emailCodeSent
-                ? `
-                  <label class="auth-field">
-                    <span>6 位验证码</span>
-                    <input id="auth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" />
-                  </label>
-                  <button class="primary-button" data-action="verify-email-otp" type="button">确认登录</button>
-                `
-                : `<button class="primary-button" data-action="request-email-otp" type="button">发送验证码</button>`
+                ? `<label class="auth-field"><span>${t("auth.codeLabel")}</span><input id="auth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" /></label><button class="primary-button" data-action="verify-email-otp" type="button">${t("auth.verifyCode")}</button>`
+                : `<button class="primary-button" data-action="request-email-otp" type="button">${t("auth.sendCode")}</button>`
             }
-          </div>
-        `
+          </div>`
         : ""
     }
     <p class="caption auth-status-copy">${cloudStatusLabel()}</p>
@@ -3270,19 +3493,19 @@ function validatePasswordAuthFields({
   const normalizedName = displayName.trim();
   const normalizedEmail = email.trim();
   if (mode === "register" && !normalizedName) {
-    return { ok: false, message: "请输入昵称" };
+    return { ok: false, message: t("auth.invalidNickname") };
   }
   if (mode === "register" && normalizedName.length > 40) {
-    return { ok: false, message: "昵称不能超过 40 个字符" };
+    return { ok: false, message: t("auth.nicknameTooLong") };
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-    return { ok: false, message: "请输入有效的邮箱地址" };
+    return { ok: false, message: t("auth.invalidEmail") };
   }
   if (password.length < 8) {
-    return { ok: false, message: "密码至少需要 8 个字符" };
+    return { ok: false, message: t("auth.shortPassword") };
   }
   if (mode === "register" && password !== confirmPassword) {
-    return { ok: false, message: "两次输入的密码不一致" };
+    return { ok: false, message: t("auth.passwordMismatch") };
   }
   return {
     ok: true,
@@ -3296,19 +3519,19 @@ function validatePasswordAuthFields({
 
 function passwordAuthErrorMessage(error, mode) {
   const message = String(error?.message || "").toLowerCase();
-  if (message.includes("invalid login credentials")) return "邮箱或密码不正确";
+  if (message.includes("invalid login credentials")) return t("auth.invalidCredentials");
   if (message.includes("already registered") || message.includes("already been registered")) {
-    return "这个邮箱已经注册";
+    return t("auth.alreadyRegistered");
   }
-  if (message.includes("email not confirmed")) return "请先完成邮箱确认";
-  if (message.includes("注册需要邮箱确认")) return "注册需要邮箱确认，请检查登录设置";
-  return mode === "register" ? "注册失败，请稍后重试" : "登录失败，请稍后重试";
+  if (message.includes("email not confirmed")) return t("auth.emailNotConfirmed");
+  if (message.includes("注册需要邮箱确认")) return t("auth.confirmationRequired");
+  return mode === "register" ? t("auth.registerError") : t("auth.loginError");
 }
 
 function validateDisplayName(value) {
   const name = String(value || "").trim();
-  if (!name) return { ok: false, message: "请输入名称" };
-  if (name.length > 40) return { ok: false, message: "名称不能超过 40 个字符" };
+  if (!name) return { ok: false, message: t("auth.nameRequired") };
+  if (name.length > 40) return { ok: false, message: t("auth.nameTooLong") };
   return { ok: true, value: name };
 }
 
@@ -3322,10 +3545,10 @@ function renderWelcome() {
           <h1>${escapeHtml(appConfig.brandName)}</h1>
           <div class="uyghur uyghur-title">${escapeHtml(appConfig.brandNameUyghur)}</div>
           <p class="hero-copy">
-            从字母、发音、书写到键盘输入，一步一步学会自己的母语。
+            ${t("welcome.title")}
           </p>
           <button class="primary-button" data-action="continue-local" type="button">
-            ${accountEmail ? "继续学习" : appConfig.cloudEnabled ? "直接开始学习" : "开始学习"}
+            ${accountEmail ? t("home.continue") : appConfig.cloudEnabled ? t("welcome.continueGuest") : "直接开始学习"}
           </button>
           ${
             appConfig.cloudEnabled
@@ -3343,15 +3566,15 @@ function renderWelcome() {
                   aria-expanded="${state.authPanelExpanded}"
                   aria-controls="welcome-auth-panel"
                   type="button"
-                >${accountEmail ? "查看同步状态" : "可选：登录后跨设备同步"}</button>
+                >${accountEmail ? t("welcome.viewSyncStatus") : t("welcome.optionalSync")}</button>
                 <div class="auth-panel-region" id="welcome-auth-panel" ${state.authPanelExpanded ? "" : "hidden"}>
                   ${
                     state.authPanelExpanded
                       ? `<article class="card auth-panel">
                           <div>
-                            <p class="caption">登录后自动同步</p>
-                            <h2 class="section-title">${accountEmail ? "学习记录已同步" : "保存你的学习进度"}</h2>
-                            <p class="muted">${accountEmail ? `已登录 ${escapeHtml(accountEmail)}` : "换设备也能继续学习；不登录不会影响课程使用。"}</p>
+                            <p class="caption">${t("welcome.subtitle")}</p>
+                            <h2 class="section-title">${accountEmail ? t("welcome.synced") : t("welcome.saveProgress")}</h2>
+                            <p class="muted">${accountEmail ? t("welcome.signedInAs", { email: escapeHtml(accountEmail) }) : t("welcome.syncDetail")}</p>
                           </div>
                           ${renderCloudAuthControls()}
                         </article>`
@@ -3372,7 +3595,7 @@ function renderHome() {
   const today = todayGoalProgress();
   const nextAction = {
     detail: currentRecommendation.recommended,
-    button: "继续学习",
+    button: t("home.continue"),
     action: "open-unit",
     id: unit.id,
     target: ""
@@ -3380,13 +3603,13 @@ function renderHome() {
 
   return screen(
     `
-      ${topBar("早上好", "今天继续 8 分钟就很好")}
+      ${topBar(t("home.greeting"), t("home.subtitle"), languageSwitcher(true))}
 
       <section class="stack wide-gap home-center">
         <article class="card today-progress-card">
           <div class="section-row">
             <div>
-              <p class="caption">今日进度</p>
+              <p class="caption">${t("home.progress")}</p>
               <h2 class="section-title">${unit.title.replace("：", " · ")}</h2>
             </div>
             <span class="step-state">${today.completed} / ${today.goal}</span>
@@ -3410,8 +3633,8 @@ function renderHome() {
           state.preferences.learningReminder && !today.complete
             ? `
               <aside class="card learning-reminder-card" role="status">
-                <strong>今日学习提醒</strong>
-                <span>还差 ${today.goal - today.completed} 个完成今日目标</span>
+                <strong>${t("home.reminder")}</strong>
+                <span>${t("home.remaining", { count: today.goal - today.completed })}</span>
               </aside>
             `
             : ""
@@ -3427,7 +3650,7 @@ function renderHome() {
 function renderLearnPath() {
   return screen(
     `
-      ${topBar("学习单元", "先认识字母，再学连接、词汇、句型和阅读")}
+      ${topBar(t("learn.title"), t("learn.subtitle"))}
       <section class="stack">
         <div class="path-list">
           ${learningUnits
@@ -3503,11 +3726,11 @@ function renderGroupCard(group) {
 }
 
 function practiceTopicLabel(group) {
-  if (group.mode === "listen") return "听音选择";
-  if (group.mode === "repeat") return "跟读确认";
-  if (group.mode === "write") return "手写板";
-  if (group.mode === "keyboard") return "键盘输入";
-  return "错题回看";
+  if (group.mode === "listen") return t("practice.topicListenLabel");
+  if (group.mode === "repeat") return t("practice.topicRepeatLabel");
+  if (group.mode === "write") return t("practice.topicWriteLabel");
+  if (group.mode === "keyboard") return t("practice.topicKeyboardLabel");
+  return t("practice.topicReviewLabel");
 }
 
 function practiceTopicCount(group) {
@@ -3515,11 +3738,11 @@ function practiceTopicCount(group) {
 }
 
 function practiceHubTopicTitle(group) {
-  if (group.mode === "listen") return "听音练习";
-  if (group.mode === "repeat") return "跟读练习";
-  if (group.mode === "write") return "书写";
-  if (group.mode === "keyboard") return "键盘练习";
-  return "错题复习";
+  if (group.mode === "listen") return t("practice.topicListenTitle");
+  if (group.mode === "repeat") return t("practice.topicRepeatTitle");
+  if (group.mode === "write") return t("practice.topicWriteTitle");
+  if (group.mode === "keyboard") return t("practice.topicKeyboardTitle");
+  return t("practice.topicReviewTitle");
 }
 
 function renderPracticeTopicCard(group, action = "open-practice-group") {
@@ -3531,11 +3754,11 @@ function renderPracticeTopicCard(group, action = "open-practice-group") {
       data-action="${action}"
       data-id="${group.id}"
       type="button"
-      aria-label="进入${title}"
+      aria-label="${t("practice.openAria", { title })}"
     >
       <span>
         <strong>${title}</strong>
-        <small>${practiceTopicLabel(group)} · ${practiceTopicCount(group)} 项</small>
+        <small>${t("practice.topicCount", { label: practiceTopicLabel(group), count: practiceTopicCount(group) })}</small>
       </span>
       <span class="topic-end">
         ${renderLearnedMarker("practice", group.id)}
@@ -3552,11 +3775,11 @@ function renderVocabTopicCard(group, action = "open-vocab-group") {
       data-action="${action}"
       data-id="${group.id}"
       type="button"
-      aria-label="进入${group.title}"
+      aria-label="${t("vocab.openTopic", { title: group.title })}"
     >
       <span>
         <strong>${group.title}</strong>
-        <small>${group.items.length} 个词</small>
+        <small>${t("vocab.wordCount", { count: group.items.length })}</small>
       </span>
       <span class="topic-end">
         ${renderLearnedMarker("vocab", group.id)}
@@ -3568,17 +3791,17 @@ function renderVocabTopicCard(group, action = "open-vocab-group") {
 
 function readingGroupCountLabel(unit, group) {
   if (unit.readingKind === "grammar") {
-    return `${group.items.length} 个语法点`;
+    return t("reading.grammarCount", { count: group.items.length });
   }
 
   if (unit.readingKind === "sentence") {
-    return `${group.items.length} 个句型`;
+    return t("reading.patternCount", { count: group.items.length });
   }
 
   if (unit.readingKind === "quote" || unit.readingKind === "proverb") {
-    return `${group.items.length} 条`;
+    return t("reading.entryCount", { count: group.items.length });
   }
-  return `${group.items.length} 句`;
+  return t("reading.lineCount", { count: group.items.length });
 }
 
 function renderReadingTopicCard(unit, group) {
@@ -3593,7 +3816,7 @@ function renderReadingTopicCard(unit, group) {
       data-unit-id="${unit.id}"
       data-id="${group.id}"
       type="button"
-      aria-label="进入${group.title}"
+      aria-label="${t("reading.openTopic", { title: group.title })}"
     >
       <span>
         <span class="reading-topic-name-line">
@@ -3617,7 +3840,7 @@ function renderVocabUnitDetail(unit) {
         unit.title,
         unit.subtitle,
         "",
-        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <div class="vocab-topic-list">
@@ -3636,7 +3859,7 @@ function renderReadingUnitDetail(unit) {
         unit.title,
         unit.subtitle,
         "",
-        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <div class="reading-topic-list">
@@ -3649,13 +3872,14 @@ function renderReadingUnitDetail(unit) {
 }
 
 function renderAfantiUnitDetail(unit) {
+  const english = i18n.getLanguage() === "en";
   return screen(
     `
       ${topBar(
         unit.title,
         unit.subtitle,
         "",
-        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <div class="reading-topic-list afanti-topic-list">
@@ -3667,11 +3891,11 @@ function renderAfantiUnitDetail(unit) {
                   data-action="open-afanti-story"
                   data-id="${escapeHtml(story.id)}"
                   type="button"
-                  aria-label="进入${escapeHtml(story.title.zh)}"
+                  aria-label="${english ? "Open " : "进入"}${escapeHtml(english ? story.en.title : story.title.zh)}"
                 >
                   <span>
-                    <strong>${escapeHtml(story.title.zh)}</strong>
-                    <small><span lang="ug" dir="rtl">${escapeHtml(story.title.uyghur)}</span> · ${story.actualWordCount} 词</small>
+                    <strong>${escapeHtml(english ? story.en.title : story.title.zh)}</strong>
+                    <small><span lang="ug" dir="rtl">${escapeHtml(story.title.uyghur)}</span> · ${story.actualWordCount} ${english ? "words" : "词"}</small>
                   </span>
                   <span class="topic-end">
                     <span class="topic-arrow" aria-hidden="true">→</span>
@@ -3699,6 +3923,7 @@ function renderUnitLearningMapCard({
   recommended = false,
   extra = ""
 }) {
+  const english = i18n.getLanguage() === "en";
   return `
     <article
       class="card unit-learning-map-card${complete ? " is-complete" : ""}${recommended ? " is-recommended" : ""}${locked ? " is-locked" : ""}"
@@ -3708,7 +3933,7 @@ function renderUnitLearningMapCard({
       <div class="unit-learning-map-copy">
         <div class="section-row">
           <div>
-            <p class="caption">${recommended ? "推荐继续" : complete ? "已完成 · 可复习" : locked ? "尚未解锁" : "可直接进入"}</p>
+            <p class="caption">${recommended ? (english ? "Recommended next" : "推荐继续") : complete ? (english ? "Complete · ready to review" : "已完成 · 可复习") : locked ? (english ? "Locked" : "尚未解锁") : (english ? "Open directly" : "可直接进入")}</p>
             <h2 class="section-title">${escapeHtml(title)}</h2>
           </div>
           <span class="step-state">${escapeHtml(progressText)}</span>
@@ -3723,7 +3948,7 @@ function renderUnitLearningMapCard({
           data-target="${escapeHtml(target)}"
           type="button"
           ${locked ? "disabled" : ""}
-        >${complete ? "再次学习" : recommended ? "继续学习" : "进入学习"}</button>
+        >${complete ? (english ? "Study again" : "再次学习") : recommended ? (english ? "Continue learning" : "继续学习") : (english ? "Open lesson" : "进入学习")}</button>
         ${extra}
       </div>
     </article>
@@ -3749,6 +3974,7 @@ function syllableWarmupResumeIndex() {
 }
 
 function renderLatinWritingUnitMap(unit) {
+  const english = i18n.getLanguage() === "en";
   const qwertyIds = completedLatinKeyboardLessonIds();
   const uyghurIds = completedUyghurKeyboardLessonIds();
   const classificationComplete = Boolean(state.learningProgress.latinWriting?.classification?.completed);
@@ -3759,30 +3985,30 @@ function renderLatinWritingUnitMap(unit) {
   const cards = [
     {
       target: "latinKeyboardIntro",
-      title: "拉丁键盘",
-      description: "从常用词到词组和短句，练习普通 QWERTY 与 ULY 输入。",
+      title: english ? "Latin keyboard" : "拉丁键盘",
+      description: english ? "Practise Latin QWERTY and ULY input through common words, phrases, and a complete sentence." : "从常用词到词组和短句，练习普通 QWERTY 与 ULY 输入。",
       progressText: `${qwertyIds.length} / ${latinWriting.keyboardLessons.length}`,
       complete: qwertyIds.length === latinWriting.keyboardLessons.length
     },
     {
       target: "uyghurKeyboardWords",
-      title: "维吾尔语键盘",
-      description: "可切换屏幕键盘和实体键盘，从两字母组合练到完整短句。",
+      title: english ? "Uyghur keyboard" : "维吾尔语键盘",
+      description: english ? "Switch between the on-screen and physical keyboard, progressing from two-letter combinations to a complete sentence." : "可切换屏幕键盘和实体键盘，从两字母组合练到完整短句。",
       progressText: `${uyghurIds.length} / ${latinWriting.uyghurKeyboardLessons.length}`,
       complete: uyghurIds.length === latinWriting.uyghurKeyboardLessons.length
     },
     {
       target: "latinLetterClasses",
-      title: "元辅音分类",
-      description: "整理 8 个元音和 24 个辅音，再完成四组容易混淆的元音对比。",
+      title: english ? "Vowels and consonants" : "元辅音分类",
+      description: english ? "Organise 8 vowels and 24 consonants, then compare four easily confused vowel pairs." : "整理 8 个元音和 24 个辅音，再完成四组容易混淆的元音对比。",
       progressText: `${Number(classificationComplete) + Number(contrastComplete)} / 2`,
       complete: classificationComplete && contrastComplete
     },
     {
       target: "latinDictation",
-      title: "ULY 默写",
-      description: "根据 ULY 提示默写维吾尔字母，并切换真实字母形式进行临摹。",
-      progressText: `${dictationIds.length} / ${latinDictationLetterIds.length} 个字母${formsComplete ? " · 形式已练" : ""}`,
+      title: english ? "ULY dictation" : "ULY 默写",
+      description: english ? "Write Uyghur letters from ULY prompts, then switch among real letter forms for tracing." : "根据 ULY 提示默写维吾尔字母，并切换真实字母形式进行临摹。",
+      progressText: `${dictationIds.length} / ${latinDictationLetterIds.length}${english ? " letters" : " 个字母"}${formsComplete ? (english ? " · forms practised" : " · 形式已练") : ""}`,
       complete: dictationComplete && formsComplete
     }
   ];
@@ -3794,9 +4020,9 @@ function renderLatinWritingUnitMap(unit) {
         unit.title,
         unit.subtitle,
         "",
-        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="返回学习单元">←</button>`
+        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="${t("common.back")}">←</button>`
       )}
-      <section class="stack unit-learning-map" aria-label="第二单元学习地图">
+      <section class="stack unit-learning-map" aria-label="${english ? "Unit 2 learning map" : "第二单元学习地图"}">
         ${cards.map((card, index) => renderUnitLearningMapCard({
           ...card,
           unitId: unit.id,
@@ -3827,6 +4053,7 @@ function syllableUnitStageIsUnlocked(target) {
 }
 
 function renderSyllableTrainingUnitMap(unit) {
+  const english = i18n.getLanguage() === "en";
   const warmupId = syllableTraining.sections[0].id;
   const connectionId = syllableTraining.sections[2].id;
   const sentenceId = syllableTraining.sections[3].id;
@@ -3840,41 +4067,41 @@ function renderSyllableTrainingUnitMap(unit) {
   const cards = [
     {
       target: "syllableWarmup",
-      title: "两字母热身",
-      description: "把 10 组真实两字母组合先拆开看，再合起来读。",
+      title: english ? "Two-letter warm-up" : "两字母热身",
+      description: english ? "Separate 10 real two-letter combinations, then join and read them." : "把 10 组真实两字母组合先拆开看，再合起来读。",
       progressText: `${warmup.count} / ${warmup.total}`,
       complete: warmup.completed,
       locked: false
     },
     {
       target: "syllableRules",
-      title: "音节划分规则",
-      description: "逐条学习 4 个入门策略，并完成每条规则的 4 道判断。",
+      title: english ? "Syllable strategies" : "音节划分规则",
+      description: english ? "Learn four introductory strategies and complete four judgements for each strategy." : "逐条学习 4 个入门策略，并完成每条规则的 4 道判断。",
       progressText: `${ruleCount} / ${syllableTraining.rules.length}`,
       complete: rulesComplete,
       locked: !syllableRulesPrerequisitesComplete(),
-      lockText: "完成两字母热身后解锁"
+      lockText: english ? "Complete the two-letter warm-up to unlock" : "完成两字母热身后解锁"
     },
     {
       target: "syllableConnections",
-      title: "连接与断开",
-      description: "完成 12 道连接与断开判断，错题分别保存并可专项复习。",
+      title: english ? "Joining and breaks" : "连接与断开",
+      description: english ? "Complete 12 joining and break judgements. Mistakes are saved separately for focused review." : "完成 12 道连接与断开判断，错题分别保存并可专项复习。",
       progressText: `${connections.count} / ${connections.total}`,
       complete: connections.completed,
       locked: !syllableConnectionPrerequisitesComplete(),
-      lockText: "完成 4 条音节划分规则后解锁",
+      lockText: english ? "Complete all four syllable strategies to unlock" : "完成 4 条音节划分规则后解锁",
       extra: !connections.completed && reviewCount === 0
         ? ""
-        : `<button class="ghost-button" data-action="go" data-target="syllableReview" type="button">${reviewCount ? `复习 ${reviewCount} 道错题` : "查看错题复习"}</button>`
+        : `<button class="ghost-button" data-action="go" data-target="syllableReview" type="button">${reviewCount ? (english ? `Review ${reviewCount} mistakes` : `复习 ${reviewCount} 道错题`) : (english ? "Open mistake review" : "查看错题复习")}</button>`
     },
     {
       target: "syllableSentences",
-      title: "短句分音节朗读",
-      description: "用已有真人整句音频完成 6 句逐步变难的分音节朗读。",
+      title: english ? "Syllable reading in short sentences" : "短句分音节朗读",
+      description: english ? "Use the existing human-recorded sentence audio to complete six increasingly challenging syllable-reading sentences." : "用已有真人整句音频完成 6 句逐步变难的分音节朗读。",
       progressText: `${sentences.count} / ${sentences.total}`,
       complete: sentences.completed,
       locked: !syllableSentencePrerequisitesComplete(),
-      lockText: "完成连接与断开判断后解锁"
+      lockText: english ? "Complete the joining and break judgements to unlock" : "完成连接与断开判断后解锁"
     }
   ];
 
@@ -3884,9 +4111,9 @@ function renderSyllableTrainingUnitMap(unit) {
         unit.title,
         unit.subtitle,
         "",
-        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="返回学习单元">←</button>`
+        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="${t("common.back")}">←</button>`
       )}
-      <section class="stack unit-learning-map" aria-label="第四单元学习地图">
+      <section class="stack unit-learning-map" aria-label="${english ? "Unit 4 learning map" : "第四单元学习地图"}">
         ${cards.map((card) => renderUnitLearningMapCard({
           ...card,
           unitId: unit.id,
@@ -3909,10 +4136,10 @@ function renderUnitDetail() {
   const firstGroup = unit.groups?.[0];
   const primaryButton =
     unit.actionTarget === "letter" && firstGroup
-      ? `<button class="primary-button" data-action="open-group" data-id="${firstGroup.id}" type="button">进入当前学习</button>`
+      ? `<button class="primary-button" data-action="open-group" data-id="${firstGroup.id}" type="button">${t("alphabet.startCurrent")}</button>`
       : unit.actionTarget === "combo" && firstGroup
-        ? `<button class="primary-button" data-action="open-combo-group" data-id="${firstGroup.id}" type="button">进入当前学习</button>`
-        : `<button class="primary-button" data-action="go" data-target="${unit.actionTarget}" type="button">进入当前学习</button>`;
+        ? `<button class="primary-button" data-action="open-combo-group" data-id="${firstGroup.id}" type="button">${t("common.startCurrent")}</button>`
+        : `<button class="primary-button" data-action="go" data-target="${unit.actionTarget}" type="button">${t("common.startCurrent")}</button>`;
 
   if (unit.id === "basic-phrases") {
     return renderVocabUnitDetail(unit);
@@ -3932,7 +4159,7 @@ function renderUnitDetail() {
         unit.title,
         unit.subtitle,
         "",
-        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <div class="path-list">
@@ -4623,7 +4850,7 @@ function renderFormExampleWord(example) {
     return `<strong class="uyghur form-example-word-text" aria-label="${example.word}"${targetDataAttributes}>${example.word}</strong>`;
   }
 
-  return `<button class="uyghur form-example-word-text form-example-audio-word" data-action="play-audio" data-audio-src="${audio.outputPath}" data-audio-label="${example.word}"${targetDataAttributes} type="button" aria-label="播放 ${example.word}">${example.word}</button>`;
+  return `<button class="uyghur form-example-word-text form-example-audio-word" data-action="play-audio" data-audio-src="${audio.outputPath}" data-audio-label="${example.word}"${targetDataAttributes} type="button" aria-label="${t("audio.play")} ${example.word}">${example.word}</button>`;
 }
 
 function renderLetterFormExamples(letter) {
@@ -4635,8 +4862,8 @@ function renderLetterFormExamples(letter) {
         <article class="card letter-form-example-card">
           <div class="section-row">
             <div>
-              <p class="caption">写法例词</p>
-              <h2 class="section-title">${letter.formExamples.length} 种位置写法</h2>
+              <p class="caption">${t("alphabet.formExamples")}</p>
+              <h2 class="section-title">${t("alphabet.formCount", { count: letter.formExamples.length })}</h2>
             </div>
           </div>
       <div class="letter-form-example-grid">
@@ -4658,10 +4885,10 @@ function renderLetterFormExamples(letter) {
                       `
                       : example.noteType === "rule"
                         ? `
-                          <strong class="form-example-rule">${example.noteTitle || "书写规则"}</strong>
+                          <strong class="form-example-rule">${example.noteTitle || t("alphabet.writingRule")}</strong>
                           <small class="form-example-note">${example.note || ""}</small>
                         `
-                        : '<small class="form-example-empty">无例词</small>'
+                        : `<small class="form-example-empty">${t("alphabet.noExample")}</small>`
                   }
                 </div>
               </div>
@@ -4684,8 +4911,8 @@ function renderGroupLesson() {
       ${topBar(
         group.title,
         learningUnitTitle("letters"),
-        `<button class="icon-button" data-action="toggle-favorite" type="button" aria-label="收藏">${state.favorite ? "★" : "☆"}</button>`,
-        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
+        `<button class="icon-button" data-action="toggle-favorite" type="button" aria-label="${t("alphabet.favorite")}">${state.favorite ? "★" : "☆"}</button>`,
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <div class="alphabet-strip compact">
@@ -4706,7 +4933,7 @@ function renderGroupLesson() {
             .join("")}
         </div>
 
-        ${renderItemProgress(position.label, "当前字母在本组的位置")}
+        ${renderItemProgress(position.label, t("alphabet.currentPosition"))}
         ${renderAdjacentNav({
           previous: position.previous,
           next: position.next,
@@ -4735,40 +4962,40 @@ function renderGroupLesson() {
         </div>
         ${renderLetterFormExamples(letter)}
         <article class="card">
-          <p class="caption">学习小点</p>
+          <p class="caption">${t("alphabet.learningPoints")}</p>
           <div class="lesson-point-list">
             <div class="lesson-point">
-              <strong>认形</strong>
+              <strong>${t("alphabet.shape")}</strong>
               <span>${letter.cue}</span>
             </div>
             <div class="lesson-point">
-              <strong>连接</strong>
+              <strong>${t("alphabet.connections")}</strong>
               <span>${letter.connection}</span>
             </div>
             <div class="lesson-point">
-              <strong>书写</strong>
+              <strong>${t("alphabet.writing")}</strong>
               <span>${letter.writingHint}</span>
             </div>
           </div>
         </article>
         <div class="action-grid">
           <button class="secondary-button" data-action="go" data-target="letterWriting" type="button">
-            描摹
+            ${t("alphabet.trace")}
           </button>
           <button class="secondary-button" data-action="go" data-target="picture" type="button">
-            辨认
+            ${t("alphabet.recognize")}
           </button>
           <button class="secondary-button" data-action="go" data-target="letterOdd" type="button">
-            找不同
+            ${t("alphabet.findDifferent")}
           </button>
           <button class="secondary-button" data-action="go" data-target="letterSound" type="button">
-            读音选择
+            ${t("alphabet.soundChoice")}
           </button>
           <button class="secondary-button" data-action="go" data-target="listening" type="button">
-            听音
+            ${t("alphabet.listen")}
           </button>
           <button class="primary-button" data-action="go" data-target="keyboard" type="button">
-            键盘
+            ${t("alphabet.keyboard")}
           </button>
         </div>
       </section>
@@ -4786,24 +5013,24 @@ function renderLetterWriting() {
   return screen(
     `
       ${topBar(
-        "书写练习",
-        "先描摹，再自己写",
+        t("alphabet.writingTitle"),
+        t("alphabet.writingSubtitle"),
         "",
-        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
           <div class="section-row">
             <div>
-              <p class="caption">目标字母</p>
+              <p class="caption">${t("alphabet.targetLetter")}</p>
               <h2 class="section-title writing-target-heading">
                 <span class="uyghur writing-target-letter" lang="ug" dir="rtl" data-letter-writing-target-letter>${escapeHtml(letter.letter)}</span>
                 ${renderLatinTransliteration(letter.latin, "letter-writing-target-latin")}
               </h2>
-              <p class="muted writing-target-form-label">当前临摹：<strong data-letter-writing-target-label>${escapeHtml(selectedForm.label)}</strong></p>
+              <p class="muted writing-target-form-label">${t("alphabet.currentTracing", { form: `<strong data-letter-writing-target-label>${escapeHtml(selectedForm.label)}</strong>` })}</p>
             </div>
             <button class="ghost-button" data-action="toggle-guide" type="button">
-              ${state.showGuide ? "隐藏参考" : "显示参考"}
+              ${state.showGuide ? t("alphabet.hideGuide") : t("alphabet.showGuide")}
             </button>
           </div>
         </article>
@@ -4813,7 +5040,7 @@ function renderLetterWriting() {
           hint: letter.writingHint,
           mode: "letter"
         })}
-        ${renderWritingCanvas(selectedForm.value, `${selectedForm.label} 字母手写板`, {
+        ${renderWritingCanvas(selectedForm.value, t("alphabet.handwritingPad", { form: selectedForm.label }), {
           letterWritingHooks: true
         })}
         ${renderWritingComparison({
@@ -4823,16 +5050,16 @@ function renderLetterWriting() {
           selectedIndex: selectedFormIndex
         })}
         <div class="tool-row">
-          <button class="secondary-button" data-action="clear-canvas" type="button">清空画布</button>
+          <button class="secondary-button" data-action="clear-canvas" type="button">${t("alphabet.clearCanvas")}</button>
           <button class="secondary-button" data-action="toggle-guide" type="button">
-            ${state.showGuide ? "隐藏参考" : "显示参考"}
+            ${state.showGuide ? t("alphabet.hideGuide") : t("alphabet.showGuide")}
           </button>
         </div>
         <div class="feedback">
           ${letter.writingHint}
         </div>
         <button class="primary-button" data-action="go" data-target="picture" type="button">
-          完成描摹
+          ${t("alphabet.finishTracing")}
         </button>
       </section>
     `,
@@ -4850,21 +5077,21 @@ function renderPicturePractice() {
   return screen(
     `
       ${topBar(
-        "点位辨认",
+        t("alphabet.recognitionTitle"),
         currentGroup().title,
         "",
-        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
-          <p class="caption">选择正确字母</p>
+          <p class="caption">${t("alphabet.chooseLetter")}</p>
           <h2 class="section-title">
-            哪一个符合：${letter.cue}？
+            ${t("alphabet.cueQuestion", { cue: letter.cue })}
           </h2>
         </article>
         <div class="choice-grid">
           ${choices
-            .map((choice) => {
+            .map((choice, index) => {
               const selected = state.selectedPicture === choice.id;
               const correctChoice = choice.id === letter.id;
               const resultClass = selected ? (correctChoice ? "correct" : "wrong") : "";
@@ -4874,7 +5101,10 @@ function renderPicturePractice() {
                   data-action="pick-picture"
                   data-id="${choice.id}"
                   type="button"
-                  aria-label="${displayStandaloneLetterGlyph(choice.letter)}"
+                  aria-label="${t("alphabet.choiceAria", {
+                    count: index + 1,
+                    letter: displayStandaloneLetterGlyph(choice.letter)
+                  })}"
                 >
                   <span class="choice-art uyghur">${displayStandaloneLetterGlyph(choice.letter)}</span>
                 </button>
@@ -4886,13 +5116,13 @@ function renderPicturePractice() {
           hasPicked
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? "答对了。"
-                  : "再看点位和点数，然后重新选择。"
+                  ? t("alphabet.cueCorrect", { letter: displayStandaloneLetterGlyph(letter.letter), cue: letter.cue })
+                  : letterMistakeFeedback(letter, picked)
               }</div>`
             : ""
         }
         <button class="primary-button" data-action="go" data-target="listening" type="button">
-          继续听力
+          ${t("alphabet.continueListening")}
         </button>
       </section>
     `,
@@ -4911,38 +5141,37 @@ function renderListeningPractice() {
   return screen(
     `
       ${topBar(
-        "听音选择",
+        t("alphabet.listeningTitle"),
         currentGroup().title,
         "",
-        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         ${renderAudioFocus({
           audio,
-          label: "听音练习",
-          title: "听音练习",
-          hint: "先听声音，再从下面选择。",
+          label: t("alphabet.listeningExercise"),
+          title: t("alphabet.listeningExercise"),
+          hint: t("alphabet.listeningHint"),
           hideFile: true
         })}
         <div class="choice-grid">
           ${choices
-            .map((choice) => {
+            .map((choice, index) => {
               const selected = state.selectedListening === choice.id;
               const correctChoice = choice.id === letter.id;
               const resultClass = selected ? (correctChoice ? "correct" : "wrong") : "";
               return `
                 <button
-                  class="choice-card ${resultClass}"
+                  class="${["choice-card", "letter-only-choice", resultClass].filter(Boolean).join(" ")}"
                   data-action="pick-listening"
                   data-id="${choice.id}"
                   type="button"
+                  aria-label="${t("alphabet.choiceAria", {
+                    count: index + 1,
+                    letter: displayStandaloneLetterGlyph(choice.letter)
+                  })}"
                 >
                   <span class="choice-art uyghur">${displayStandaloneLetterGlyph(choice.letter)}</span>
-                  <span>
-                    <strong class="uyghur">${displayStandaloneLetterGlyph(choice.letter)}</strong>
-                    <span class="caption">字母，${choice.latin}</span>
-                  </span>
-                  <span class="step-state">${selected ? (correctChoice ? "正确" : "再听") : "选择"}</span>
                 </button>
               `;
             })
@@ -4952,13 +5181,13 @@ function renderListeningPractice() {
           hasPicked
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? "听对了。下一步用键盘输入这个字母。"
+                  ? t("alphabet.listeningCorrect")
                   : letterMistakeFeedback(letter, picked)
               }</div>`
             : ""
         }
         <button class="primary-button" data-action="go" data-target="keyboard" type="button">
-          继续键盘
+          ${t("alphabet.continueKeyboard")}
         </button>
       </section>
     `,
@@ -4977,18 +5206,18 @@ function renderLetterOddPractice() {
   return screen(
     `
       ${topBar(
-        "找不同",
+        t("alphabet.findDifferent"),
         currentGroup().title,
         "",
-        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
-          <p class="caption">相似字母对比</p>
+          <p class="caption">${t("alphabet.oddCompare")}</p>
           <h2 class="section-title">
-            目标 ${displayStandaloneLetterGlyph(letter.letter)}，找出：${target.cue}
+            ${t("alphabet.oddPrompt", { letter: displayStandaloneLetterGlyph(letter.letter), cue: target.cue })}
           </h2>
-          <p class="muted">先看点在上面还是下面，再看点数。这个题型专门练容易混的字母。</p>
+          <p class="muted">${t("alphabet.oddHint")}</p>
         </article>
         <div class="choice-grid">
           ${choices
@@ -5004,7 +5233,7 @@ function renderLetterOddPractice() {
                   type="button"
                 >
                   <span class="choice-art uyghur">${displayStandaloneLetterGlyph(choice.letter)}</span>
-                  <span class="step-state">${selected ? (correctChoice ? "正确" : "再看") : "选择"}</span>
+                  <span class="step-state">${selected ? (correctChoice ? t("alphabet.correct") : t("alphabet.lookAgain")) : t("alphabet.choose")}</span>
                 </button>
               `;
             })
@@ -5014,13 +5243,13 @@ function renderLetterOddPractice() {
           hasPicked
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? `找对了：${displayStandaloneLetterGlyph(target.letter)} 是 ${target.cue}。`
+                  ? t("alphabet.oddCorrect", { letter: displayStandaloneLetterGlyph(target.letter), cue: target.cue })
                   : letterMistakeFeedback(target, picked)
               }</div>`
             : ""
         }
         <button class="primary-button" data-action="go" data-target="letterSound" type="button">
-          继续读音选择
+          ${t("alphabet.continueSoundChoice")}
         </button>
       </section>
     `,
@@ -5039,22 +5268,22 @@ function renderLetterSoundChoice() {
   return screen(
     `
       ${topBar(
-        "读音选择",
+        t("alphabet.soundTitle"),
         currentGroup().title,
         "",
-        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         ${renderAudioFocus({
           audio,
           label: letter.letter,
-          title: `播放或查看读音：${letter.latin}`,
-          hint: "音频未生成时，先用转写提示做读音选择练习。",
+          title: t("alphabet.playSound", { latin: letter.latin }),
+          hint: t("alphabet.soundHint"),
           buttonOnly: true
         })}
         <article class="card">
-          <p class="caption">选择正确字母</p>
-          <h2 class="section-title">哪一个读作 ${letter.latin}？</h2>
+          <p class="caption">${t("alphabet.chooseLetter")}</p>
+          <h2 class="section-title">${t("alphabet.soundQuestion", { latin: letter.latin })}</h2>
         </article>
         <div class="choice-grid">
           ${choices
@@ -5080,13 +5309,16 @@ function renderLetterSoundChoice() {
           hasPicked
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? `选对了：${displayStandaloneLetterGlyph(letter.letter)} 对应 ${letter.latin}。`
-                  : letterMistakeFeedback(letter, picked)
+                  ? t("alphabet.soundCorrect", { letter: displayStandaloneLetterGlyph(letter.letter), latin: letter.latin })
+                  : t("alphabet.soundMistakePicked", {
+                      target: displayStandaloneLetterGlyph(letter.letter),
+                      picked: displayStandaloneLetterGlyph(picked?.letter || "")
+                    })
               }</div>`
             : ""
         }
         <button class="primary-button" data-action="go" data-target="keyboard" type="button">
-          继续键盘
+          ${t("alphabet.continueKeyboard")}
         </button>
       </section>
     `,
@@ -5103,14 +5335,14 @@ function renderKeyboardPractice() {
   return screen(
     `
       ${topBar(
-        "键盘输入",
+        t("alphabet.keyboardTitle"),
         currentGroup().title,
         "",
-        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="group" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
-          <p class="caption">请输入这个字母</p>
+          <p class="caption">${t("alphabet.keyboardPrompt")}</p>
           <div class="section-row">
             <strong class="uyghur">${displayStandaloneLetterGlyph(letter.letter)}</strong>
             <span class="caption">${letter.latin}</span>
@@ -5119,7 +5351,7 @@ function renderKeyboardPractice() {
         <input
           class="rtl-input uyghur"
           value="${state.keyboardValue}"
-          aria-label="维吾尔语输入框"
+          aria-label="${t("alphabet.inputAria")}"
           readonly
           dir="rtl"
         />
@@ -5129,13 +5361,13 @@ function renderKeyboardPractice() {
           hasInput
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? "输入正确。你已经完成这一课。"
-                  : `继续输入，目标字母是 ${displayStandaloneLetterGlyph(letter.letter)}。`
+                  ? t("alphabet.keyboardCorrect")
+                  : t("alphabet.keyboardContinue", { letter: displayStandaloneLetterGlyph(letter.letter) })
               }</div>`
-            : `<div class="feedback">提示：按顺序点击 <span class="uyghur">${keyboardParts.map(keyboardPartLabel).join("、")}</span>，橙色键是下一步。</div>`
+            : `<div class="feedback">${t("keyboard.inputHint", { keys: `<span class="uyghur">${keyboardParts.map(keyboardPartLabel).join("、")}</span>` })}</div>`
         }
         <button class="primary-button" data-action="go" data-target="complete" type="button" ${isCorrect ? "" : "disabled"}>
-          完成课程
+          ${t("alphabet.finishCourse")}
         </button>
       </section>
     `,
@@ -5816,24 +6048,24 @@ function renderComplete() {
 
   return screen(
     `
-      ${topBar("课程完成", `${learningUnitOrdinal("letters")}完成`)}
+      ${topBar(t("alphabet.completeTitle"), t("common.unitComplete", { unit: learningUnitOrdinal("letters") }))}
       <section class="stack">
         <article class="card">
-          <p class="caption">本次学会</p>
+          <p class="caption">${t("alphabet.completeLearned")}</p>
           <h2 class="screen-title">
             <span class="uyghur">${groupLetters}</span>
           </h2>
-          <p class="muted">你看了当前相似组字母、描摹了 ${displayStandaloneLetterGlyph(letter.letter)}、完成辨认，并用键盘输入了 ${displayStandaloneLetterGlyph(letter.letter)}。</p>
+          <p class="muted">${t("alphabet.completeSummary", { letter: displayStandaloneLetterGlyph(letter.letter) })}</p>
         </article>
         <div class="metric-grid">
-          <div class="metric"><strong>${group.letters.length}</strong><span>字母</span></div>
-          <div class="metric"><strong>${loop.completeCount} / ${loop.total}</strong><span>完成进度</span></div>
-          <div class="metric"><strong>${groupMistakes}</strong><span>本组错题</span></div>
+          <div class="metric"><strong>${group.letters.length}</strong><span>${t("alphabet.completeLetters")}</span></div>
+          <div class="metric"><strong>${loop.completeCount} / ${loop.total}</strong><span>${t("alphabet.completeProgress")}</span></div>
+          <div class="metric"><strong>${groupMistakes}</strong><span>${t("alphabet.completeMistakes")}</span></div>
         </div>
         ${renderContinueCourseButton(nextGroup ? { action: "open-group", id: nextGroup.id } : null)}
         ${renderUnitNextActions("letters")}
         <button class="secondary-button" data-action="go" data-target="home" type="button">
-          回到首页
+          ${t("alphabet.backHome")}
         </button>
       </section>
     `,
@@ -5895,17 +6127,17 @@ function comboPartConnectsForward(part) {
   return Boolean(comboLetterDetail(part)) && !comboNonForwardJoiningCharacters.has(comboPartBaseCharacter(part));
 }
 
-function comboPartFormValue(part, label) {
+function comboPartFormValue(part, formId) {
   const letter = comboLetterDetail(part);
   if (!letter) {
     return part;
   }
 
-  if (comboBareLetterIds[part] && label === "独立式") {
+  if (comboBareLetterIds[part] && formId === "isolated") {
     return part;
   }
 
-  return letter.forms.find((form) => form.label === label)?.value || part;
+  return letter.forms.find((form) => form.id === formId)?.value || part;
 }
 
 function comboPartDetail(item, index) {
@@ -5914,31 +6146,35 @@ function comboPartDetail(item, index) {
   const next = item.parts[index + 1];
   const connectsPrevious = Boolean(previous) && comboPartConnectsForward(previous) && comboPartAcceptsConnection(part);
   const connectsNext = Boolean(next) && comboPartConnectsForward(part) && comboPartAcceptsConnection(next);
-  let label = "独立式";
+  let formId = "isolated";
+  let label = t("combo.formIsolated");
 
   if (connectsPrevious && connectsNext) {
-    label = "双连式";
+    formId = "dual-joined";
+    label = t("combo.formMedial");
   } else if (connectsPrevious) {
-    label = "前连式";
+    formId = "left-joined";
+    label = t("combo.formFinal");
   } else if (connectsNext) {
-    label = "后连式";
+    formId = "right-joined";
+    label = t("combo.formInitial");
   }
 
-  let connection = "不接前一个字母，后面也断开。";
+  let connection = t("combo.connectionNeither");
   if (connectsPrevious && connectsNext) {
-    connection = "接前一个字母，也接后一个字母。";
+    connection = t("combo.connectionBoth");
   } else if (connectsPrevious) {
-    connection = "接前一个字母，不再接后面。";
+    connection = t("combo.connectionPrevious");
   } else if (connectsNext) {
-    connection = "不接前面，接后一个字母。";
+    connection = t("combo.connectionNext");
   } else if (index === 0 && item.parts.length > 1) {
-    connection = "在词首位置，但这个字母后面通常不继续连接。";
+    connection = t("combo.connectionInitialBreak");
   }
 
   return {
     part,
     label,
-    form: comboPartFormValue(part, label),
+    form: comboPartFormValue(part, formId),
     connection
   };
 }
@@ -5950,16 +6186,16 @@ function renderComboParts(item) {
         const detail = comboPartDetail(item, index);
         return `
         <span class="combo-part">
-          <span class="combo-part-index">第 ${index + 1} 个字母</span>
+          <span class="combo-part-index">${t("combo.partIndex", { count: index + 1 })}</span>
           <span class="combo-part-flow">
             <span class="combo-part-source">
               <strong class="uyghur">${detail.part}</strong>
-              <small>原字母</small>
+              <small>${t("combo.sourceLetter")}</small>
             </span>
             <span class="combo-part-arrow" aria-hidden="true">→</span>
             <span class="combo-part-form">
               <strong class="uyghur">${detail.form}</strong>
-              <small>${detail.label}写法</small>
+              <small>${t("combo.formWriting", { form: detail.label })}</small>
             </span>
           </span>
           <small class="combo-part-note">${detail.connection}</small>
@@ -5983,14 +6219,14 @@ function renderComboLesson() {
         group.title,
         unit.title,
         "",
-        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <div class="alphabet-strip compact">
           ${renderComboSelector(group.items, item.id)}
         </div>
 
-        ${renderItemProgress(position.label, "当前组合在本组的位置")}
+        ${renderItemProgress(position.label, t("combo.position"))}
         ${renderAdjacentNav({
           previous: position.previous,
           next: position.next,
@@ -6007,36 +6243,37 @@ function renderComboLesson() {
         </div>
 
         <article class="card">
-          <p class="caption">拆开看</p>
-          <h2 class="section-title">实际连写形</h2>
-          <div class="combo-parts" aria-label="组合拆分">
+          <p class="caption">${t("combo.breakDown")}</p>
+          <h2 class="section-title">${t("combo.connectedForm")}</h2>
+          <div class="combo-parts" aria-label="${t("combo.partsAria")}">
             ${renderComboParts(item)}
           </div>
-          <p class="muted">从右往左：${item.rule}</p>
+          <p class="caption">${t("combo.readDirection")}</p>
+          <p class="muted">${item.rule}</p>
         </article>
 
         ${
           item.meaning
             ? `<article class="card review-card">
-                <p class="caption">词义预览</p>
+                <p class="caption">${t("combo.meaningPreview")}</p>
                 <h2 class="section-title">${item.meaning}</h2>
               </article>`
             : ""
         }
 
         <article class="card">
-          <p class="caption">学习小点</p>
+          <p class="caption">${t("combo.learningPoints")}</p>
           <div class="lesson-point-list">
             <div class="lesson-point">
-              <strong>怎么读</strong>
+              <strong>${t("combo.howToRead")}</strong>
               <span>${
                 state.preferences.showLatin
-                  ? `先用 ${item.latin} 做过渡提示，正式发音以后接真人音频。`
-                  : "先听真人音频，再跟着音频练习发音。"
+                  ? t("combo.readWithLatin", { latin: item.latin })
+                  : t("combo.readWithAudio")
               }</span>
             </div>
             <div class="lesson-point">
-              <strong>怎么看</strong>
+              <strong>${t("combo.howToSee")}</strong>
               <span>${item.hint}</span>
             </div>
           </div>
@@ -6044,16 +6281,16 @@ function renderComboLesson() {
 
         <div class="action-grid">
           <button class="secondary-button" data-action="go" data-target="comboRecognition" type="button">
-            辨认
+            ${t("combo.recognize")}
           </button>
           <button class="secondary-button" data-action="go" data-target="comboBuild" type="button">
-            拼接
+            ${t("combo.build")}
           </button>
           <button class="secondary-button" data-action="go" data-target="comboWriting" type="button">
-            书写
+            ${t("combo.writing")}
           </button>
           <button class="primary-button" data-action="go" data-target="comboKeyboard" type="button">
-            键盘
+            ${t("combo.keyboard")}
           </button>
         </div>
       </section>
@@ -6069,19 +6306,21 @@ function renderComboRecognition() {
   const hasPicked = Boolean(state.selectedPicture);
   const picked = choices.find((choice) => choice.id === state.selectedPicture);
   const isCorrect = picked && picked.id === item.id;
-  const prompt = item.meaning ? `请选择 ${item.latin} 的词形` : `哪一个读作 ${item.prompt}？`;
+  const prompt = item.meaning
+    ? t("combo.chooseMeaning", { latin: item.latin })
+    : t("combo.chooseReading", { prompt: item.prompt });
 
   return screen(
     `
       ${topBar(
-        "组合辨认",
+        t("combo.recognitionTitle"),
         group.title,
         "",
-        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
-          <p class="caption">选择正确组合</p>
+          <p class="caption">${t("combo.chooseCorrect")}</p>
           <h2 class="section-title">${prompt}</h2>
         </article>
         <div class="choice-grid">
@@ -6102,7 +6341,7 @@ function renderComboRecognition() {
                     <strong>${choice.latin}</strong>
                     <span class="caption">${choice.type}</span>
                   </span>
-                  <span class="step-state">${selected ? (correctChoice ? "正确" : "再想想") : "选择"}</span>
+                  <span class="step-state">${selected ? (correctChoice ? t("combo.correct") : t("combo.tryAgain")) : t("combo.choose")}</span>
                 </button>
               `;
             })
@@ -6112,13 +6351,13 @@ function renderComboRecognition() {
           hasPicked
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? `答对了。${item.value} 现在只作为 ${item.type} 学习。`
-                  : itemMistakeFeedback(item, picked, "组合")
+                  ? t("combo.recognitionCorrect", { value: item.value, type: item.type })
+                  : comboMistakeFeedback(item, picked)
               }</div>`
             : ""
         }
         <button class="primary-button" data-action="go" data-target="comboKeyboard" type="button">
-          继续键盘
+          ${t("combo.continueKeyboard")}
         </button>
       </section>
     `,
@@ -6136,29 +6375,29 @@ function renderComboBuild() {
   return screen(
     `
       ${topBar(
-        "组合拼接",
+        t("combo.buildTitle"),
         group.title,
         "",
-        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
-          <p class="caption">从部分拼成整体</p>
+          <p class="caption">${t("combo.buildWhole")}</p>
           <h2 class="section-title">
             <span class="uyghur">${item.parts.join(" + ")}</span>
           </h2>
-          <p class="muted">按顺序点击下面的部分，拼成 <span class="uyghur">${item.value}</span>。先理解结构，再进入键盘输入。</p>
+          <p class="muted">${t("combo.buildInstruction", { value: `<span class="uyghur">${item.value}</span>` })}</p>
         </article>
         <article class="card">
-          <p class="caption">当前拼接</p>
+          <p class="caption">${t("combo.currentBuild")}</p>
           <div class="letter-focus compact-focus">
             <div>
               <div class="uyghur letter-big combo-big">${state.keyboardValue || "…"}</div>
-              <p class="caption">目标：${item.latin}</p>
+              <p class="caption">${t("combo.targetLatin", { latin: item.latin })}</p>
             </div>
           </div>
         </article>
-        <div class="practice-key-row" aria-label="组合拼接按钮">
+        <div class="practice-key-row" aria-label="${t("combo.buildAria")}">
           ${item.parts
             .map(
               (part) => `
@@ -6170,22 +6409,22 @@ function renderComboBuild() {
             .join("")}
         </div>
         <div class="tool-row">
-          <button class="secondary-button" data-action="backspace" type="button">删除</button>
-          <button class="secondary-button" data-action="clear-input" type="button">清空</button>
+          <button class="secondary-button" data-action="backspace" type="button">${t("combo.backspace")}</button>
+          <button class="secondary-button" data-action="clear-input" type="button">${t("combo.clear")}</button>
         </div>
         ${
           hasInput
             ? `<div class="feedback ${isCorrect ? "good" : isOffTrack ? "bad" : ""}">${
                 isCorrect
-                  ? `拼接正确：${item.value}。`
+                  ? t("combo.buildCorrect", { value: item.value })
                   : isOffTrack
-                    ? itemMistakeFeedback(item, { value: state.keyboardValue }, "组合")
-                    : `继续拼接，目标是 ${item.value}。`
+                    ? comboMistakeFeedback(item, { value: state.keyboardValue })
+                    : t("combo.buildContinue", { value: item.value })
               }</div>`
-            : `<div class="feedback">先点 <span class="uyghur">${item.parts[0]}</span>，再继续点后面的部分。</div>`
+            : `<div class="feedback">${t("combo.buildStart", { part: `<span class="uyghur">${item.parts[0]}</span>` })}</div>`
         }
         <button class="primary-button" data-action="go" data-target="comboKeyboard" type="button">
-          继续键盘
+          ${t("combo.continueKeyboard")}
         </button>
       </section>
     `,
@@ -6201,23 +6440,23 @@ function renderComboWriting() {
   return screen(
     `
       ${topBar(
-        "组合书写",
+        t("combo.writingTitle"),
         group.title,
         "",
-        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
           <div class="section-row">
             <div>
-              <p class="caption">目标组合</p>
+              <p class="caption">${t("combo.targetCombination")}</p>
               <h2 class="section-title"><span class="uyghur">${item.value}</span></h2>
             </div>
             <button class="ghost-button" data-action="toggle-guide" type="button">
-              ${state.showGuide ? "隐藏参考" : "显示参考"}
+              ${state.showGuide ? t("combo.hideGuide") : t("combo.showGuide")}
             </button>
           </div>
-          <p class="muted">${item.latin}。先看整体，再按拆分顺序写。</p>
+          <p class="muted">${t("combo.writingInstruction", { latin: item.latin })}</p>
         </article>
         ${renderWritingCoach({
           value: item.value,
@@ -6225,16 +6464,16 @@ function renderComboWriting() {
           hint: item.hint,
           mode: "word"
         })}
-        ${renderWritingCanvas(item.value, `${unit.title}手写板`)}
+        ${renderWritingCanvas(item.value, t("combo.canvasAria", { unit: unit.title }))}
         <div class="tool-row">
-          <button class="secondary-button" data-action="clear-canvas" type="button">清空画布</button>
+          <button class="secondary-button" data-action="clear-canvas" type="button">${t("combo.clearCanvas")}</button>
           <button class="secondary-button" data-action="toggle-guide" type="button">
-            ${state.showGuide ? "隐藏参考" : "显示参考"}
+            ${state.showGuide ? t("combo.hideGuide") : t("combo.showGuide")}
           </button>
         </div>
-        <div class="feedback">写完可以清空重写，也可以继续做键盘输入。</div>
+        <div class="feedback">${t("combo.writingFeedback")}</div>
         <button class="primary-button" data-action="go" data-target="comboKeyboard" type="button">
-          继续键盘
+          ${t("combo.continueKeyboard")}
         </button>
       </section>
     `,
@@ -6252,14 +6491,14 @@ function renderComboKeyboard() {
   return screen(
     `
       ${topBar(
-        "组合键盘",
+        t("combo.keyboardTitle"),
         group.title,
         "",
-        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="combo" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
-          <p class="caption">请输入这个组合</p>
+          <p class="caption">${t("combo.keyboardPrompt")}</p>
           <div class="section-row">
             <strong class="uyghur">${item.value}</strong>
             <span class="caption">${item.latin}</span>
@@ -6268,12 +6507,12 @@ function renderComboKeyboard() {
         <input
           class="rtl-input uyghur"
           value="${state.keyboardValue}"
-          aria-label="维吾尔语组合输入框"
+          aria-label="${t("combo.inputAria")}"
           readonly
           dir="rtl"
         />
         ${renderKeyboardGuide(keyboardParts, item.value)}
-        <div class="practice-key-row" aria-label="本组组合快捷键">
+        <div class="practice-key-row" aria-label="${t("combo.groupKeysAria")}">
           ${group.items
             .map(
               (choice) => `
@@ -6284,7 +6523,7 @@ function renderComboKeyboard() {
             )
             .join("")}
         </div>
-        <div class="practice-key-row" aria-label="当前组合拆分键">
+        <div class="practice-key-row" aria-label="${t("combo.partKeysAria")}">
           ${item.parts
             .map(
               (part) => `
@@ -6300,13 +6539,13 @@ function renderComboKeyboard() {
           hasInput
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? "输入正确。你已经完成这组组合练习。"
-                  : `继续输入，目标组合是 ${item.value}。`
+                  ? t("combo.keyboardCorrect")
+                  : t("combo.keyboardContinue", { value: item.value })
               }</div>`
-            : `<div class="feedback">提示：可以直接点击 <span class="uyghur">${item.value}</span>，也可以按拆分键慢慢输入。</div>`
+            : `<div class="feedback">${t("combo.keyboardTip", { value: `<span class="uyghur">${item.value}</span>` })}</div>`
         }
         <button class="primary-button" data-action="go" data-target="comboComplete" type="button">
-          完成这一组
+          ${t("combo.finishGroup")}
         </button>
       </section>
     `,
@@ -6323,24 +6562,24 @@ function renderComboComplete() {
 
   return screen(
     `
-      ${topBar(`${unitNameForComboGroup(group.id)}完成`, group.title)}
+      ${topBar(t("common.unitComplete", { unit: learningUnitOrdinal(unit.id) }), group.title)}
       <section class="stack">
         <article class="card">
-          <p class="caption">本次练习</p>
+          <p class="caption">${t("combo.completePractice")}</p>
           <h2 class="screen-title">
             <span class="uyghur">${groupValues}</span>
           </h2>
-          <p class="muted">你拆分并输入了 ${item.value}。继续复习这一组，熟悉字母连接和断开规律。</p>
+          <p class="muted">${t("combo.completeSummary", { value: item.value })}</p>
         </article>
         <div class="metric-grid">
-          <div class="metric"><strong>${group.items.length}</strong><span>组合</span></div>
-          <div class="metric"><strong>1</strong><span>输入</span></div>
-          <div class="metric"><strong>词形</strong><span>理解</span></div>
+          <div class="metric"><strong>${group.items.length}</strong><span>${t("combo.completeCombinations")}</span></div>
+          <div class="metric"><strong>1</strong><span>${t("combo.completeInput")}</span></div>
+          <div class="metric"><strong>${t("combo.completeWordForm")}</strong><span>${t("combo.completeUnderstanding")}</span></div>
         </div>
         ${renderContinueCourseButton(nextGroup ? { action: "open-combo-group", id: nextGroup.id } : null)}
         ${renderUnitNextActions(unit.id)}
         <button class="secondary-button" data-action="go" data-target="learn" type="button">
-          学习路径
+          ${t("combo.learningPath")}
         </button>
       </section>
     `,
@@ -6394,7 +6633,7 @@ function renderVocabRows(group, activeId) {
   const itemsById = Object.fromEntries(group.items.map((item) => [item.id, item]));
 
   return `
-    <div class="vocab-row-list" aria-label="本课词汇">
+    <div class="vocab-row-list" aria-label="${t("vocab.rowsAria")}">
       ${
         group.sections?.length
           ? group.sections
@@ -6404,7 +6643,7 @@ function renderVocabRows(group, activeId) {
                   <section class="vocab-subgroup">
                     <div class="vocab-subgroup-title">
                       <strong>${section.title}</strong>
-                      <small>${sectionItems.length} 个词</small>
+                      <small>${t("vocab.wordCount", { count: sectionItems.length })}</small>
                     </div>
                     ${sectionItems.map((item) => renderVocabRow(item, activeId)).join("")}
                   </section>
@@ -6428,27 +6667,27 @@ function renderVocabLesson() {
         group.title,
         learningUnitTitle("basic-phrases"),
         "",
-        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card vocab-lesson-card">
           <div class="section-row">
             <div>
-              <p class="caption">本课词汇</p>
-              <h2 class="section-title unit-goal-text">${group.title} · ${group.items.length} 个词</h2>
+              <p class="caption">${t("vocab.lessonWords")}</p>
+              <h2 class="section-title unit-goal-text">${group.title} · ${t("vocab.wordCount", { count: group.items.length })}</h2>
               ${section ? `<p class="caption">${section.title}</p>` : ""}
             </div>
           </div>
-          <p class="muted compact-note">点维语词播放；点右侧解释选择词。中文仅预览，不设唯一答案。</p>
+          <p class="muted compact-note">${t("vocab.lessonInstruction")}</p>
           ${renderVocabRows(group, item.id)}
         </article>
 
         <div class="action-grid vocab-action-grid">
           <button class="secondary-button" data-action="go" data-target="vocabRecognition" type="button">
-            辨认
+            ${t("vocab.recognition")}
           </button>
           <button class="primary-button" data-action="go" data-target="vocabKeyboard" type="button">
-            键盘
+            ${t("vocab.keyboard")}
           </button>
         </div>
       </section>
@@ -6468,16 +6707,16 @@ function renderVocabRecognition() {
   return screen(
     `
       ${topBar(
-        "词形辨认",
+        t("vocab.recognitionTitle"),
         group.title,
         "",
-        `<button class="back-button" data-action="go" data-target="vocab" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="vocab" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
-          <p class="caption">选择正确词形</p>
-          <h2 class="section-title">请选择 ${item.latin} 的词形</h2>
-          <p class="muted">中文预览：${item.meaning}。本题只确认词形。</p>
+          <p class="caption">${t("vocab.chooseWordForm")}</p>
+          <h2 class="section-title">${t("vocab.choosePrompt", { latin: item.latin })}</h2>
+          <p class="muted">${t("vocab.meaningPreview", { meaning: item.meaning })}</p>
         </article>
         <div class="choice-grid">
           ${choices
@@ -6497,7 +6736,7 @@ function renderVocabRecognition() {
                     <strong>${choice.latin}</strong>
                     <span class="caption">${choice.meaning}</span>
                   </span>
-                  <span class="step-state">${selected ? (correctChoice ? "正确" : "再想想") : "选择"}</span>
+                  <span class="step-state">${selected ? (correctChoice ? t("vocab.correct") : t("vocab.tryAgain")) : t("vocab.choose")}</span>
                 </button>
               `;
             })
@@ -6507,13 +6746,13 @@ function renderVocabRecognition() {
           hasPicked
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? `答对了。这里确认的是 ${item.value} 的词形。`
-                  : itemMistakeFeedback(item, picked, "词形")
+                  ? t("vocab.recognitionCorrect", { value: item.value })
+                  : vocabMistakeFeedback(item, picked)
               }</div>`
             : ""
         }
         <button class="primary-button" data-action="go" data-target="vocabKeyboard" type="button">
-          继续键盘
+          ${t("vocab.continueKeyboard")}
         </button>
       </section>
     `,
@@ -6532,14 +6771,14 @@ function renderVocabKeyboard() {
   return screen(
     `
       ${topBar(
-        "词形键盘",
+        t("vocab.keyboardTitle"),
         group.title,
         "",
-        `<button class="back-button" data-action="go" data-target="vocab" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="vocab" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
-          <p class="caption">请输入这个词形</p>
+          <p class="caption">${t("vocab.keyboardPrompt")}</p>
           <div class="section-row">
             <strong class="uyghur">${item.value}</strong>
             <span class="caption">${item.latin}</span>
@@ -6548,12 +6787,12 @@ function renderVocabKeyboard() {
         <input
           class="rtl-input uyghur"
           value="${state.keyboardValue}"
-          aria-label="维吾尔语词形输入框"
+          aria-label="${t("vocab.inputAria")}"
           readonly
           dir="rtl"
         />
         ${renderKeyboardGuide(keyboardParts, item.value)}
-        <div class="practice-key-row" aria-label="本组词形快捷键">
+        <div class="practice-key-row" aria-label="${t("vocab.groupKeysAria")}">
           ${sectionItems
             .map(
               (choice) => `
@@ -6564,7 +6803,7 @@ function renderVocabKeyboard() {
             )
             .join("")}
         </div>
-        <div class="practice-key-row" aria-label="当前词形拆分键">
+        <div class="practice-key-row" aria-label="${t("vocab.partKeysAria")}">
           ${item.parts
             .map(
               (part) => `
@@ -6580,13 +6819,13 @@ function renderVocabKeyboard() {
           hasInput
             ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
                 isCorrect
-                  ? "输入正确。这个词形已完成本轮练习。"
-                  : `继续输入，目标词形是 ${item.value}。`
+                  ? t("vocab.keyboardCorrect")
+                  : t("vocab.keyboardContinue", { value: item.value })
               }</div>`
-            : `<div class="feedback">提示：可以直接点击 <span class="uyghur">${item.value}</span>，也可以按拆分键慢慢输入。</div>`
+            : `<div class="feedback">${t("vocab.keyboardTip", { value: `<span class="uyghur">${item.value}</span>` })}</div>`
         }
         <button class="primary-button" data-action="go" data-target="vocabComplete" type="button">
-          完成这一组
+          ${t("vocab.finishGroup")}
         </button>
       </section>
     `,
@@ -6604,19 +6843,19 @@ function renderVocabComplete() {
 
   return screen(
     `
-      ${topBar(`${learningUnitOrdinal("basic-phrases")}完成`, group.title)}
+      ${topBar(t("common.unitComplete", { unit: learningUnitOrdinal("basic-phrases") }), group.title)}
       <section class="stack">
         <article class="card review-card">
-          <p class="caption">本次练习</p>
+          <p class="caption">${t("vocab.completePractice")}</p>
           <h2 class="screen-title">
             <span class="uyghur">${groupValues}</span>
           </h2>
-          <p class="muted">你辨认并输入了 ${item.value}。可以回到学习路径选择下一组内容。</p>
+          <p class="muted">${t("vocab.completeSummary", { value: item.value })}</p>
         </article>
         <div class="metric-grid">
-          <div class="metric"><strong>${sectionItems.length}</strong><span>${section ? section.title : "词形"}</span></div>
-          <div class="metric"><strong>1</strong><span>输入</span></div>
-          <div class="metric"><strong>词义</strong><span>理解</span></div>
+          <div class="metric"><strong>${sectionItems.length}</strong><span>${section ? section.title : t("vocab.completeWordForms")}</span></div>
+          <div class="metric"><strong>1</strong><span>${t("vocab.completeInput")}</span></div>
+          <div class="metric"><strong>${t("vocab.completeMeaning")}</strong><span>${t("vocab.completeUnderstanding")}</span></div>
         </div>
         ${renderContinueCourseButton(
           nextCourse
@@ -6625,7 +6864,7 @@ function renderVocabComplete() {
         )}
         ${renderUnitNextActions("basic-phrases")}
         <button class="secondary-button" data-action="go" data-target="learn" type="button">
-          学习路径
+          ${t("vocab.learningPath")}
         </button>
       </section>
     `,
@@ -6716,6 +6955,7 @@ function renderGlossSegments(segments, formation = null) {
 }
 
 function renderSentenceGlosses(value) {
+  if (i18n.getLanguage() === "en") return "";
   const glosses = sentenceGlossary.glossSentence(value);
   const hasBreakdown = glosses.some((gloss) => gloss.segments?.length);
   if (!glosses.length || (glosses.length === 1 && !hasBreakdown)) return "";
@@ -6745,10 +6985,6 @@ function renderSentenceGlosses(value) {
   `;
 }
 
-function renderReadingProfile(group) {
-  return `<article class="card reading-intro-card"><p class="caption">人物介绍</p><p class="reading-intro-text">${escapeHtml(group.intro)}</p></article>`;
-}
-
 function renderReadingLesson() {
   const unit = currentReadingUnit();
   const group = currentReadingGroup();
@@ -6760,14 +6996,9 @@ function renderReadingLesson() {
         group.title,
         unit.title,
         "",
-        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
-        ${
-          unit.readingKind === "quote" && group.intro
-            ? renderReadingProfile(group)
-            : ""
-        }
         <div class="reading-list ${unit.readingKind}">
           ${group.items.map((item) => renderReadingLine(unit, item)).join("")}
         </div>
@@ -6775,7 +7006,7 @@ function renderReadingLesson() {
           nextGroup ? { action: "open-reading-group", id: nextGroup.id, unitId: unit.id } : null
         )}
         <button class="secondary-button" data-action="go" data-target="unit" type="button">
-          返回小课
+          ${t("reading.backToLessons")}
         </button>
       </section>
     `,
@@ -6823,9 +7054,9 @@ function renderPracticeChoices(group, item) {
               <span class="choice-art choice-art-wide uyghur">${choice.value}</span>
               <span>
                 <strong>${choice.label}</strong>
-                <span class="caption">${choice.type}，${choice.latin}</span>
+                <span class="caption">${t("practice.typeWithLatin", { type: choice.type, latin: choice.latin })}</span>
               </span>
-              <span class="step-state">${selected ? (correctChoice ? "正确" : "再听") : "选择"}</span>
+              <span class="step-state">${selected ? (correctChoice ? t("practice.correct") : t("practice.listenAgain")) : t("practice.choose")}</span>
             </button>
           `;
         })
@@ -6835,8 +7066,8 @@ function renderPracticeChoices(group, item) {
       hasPicked
         ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
             isCorrect
-              ? `辨认正确。本轮确认的是 ${item.value} 的词形。`
-              : itemMistakeFeedback(item, picked, "练习目标")
+              ? t("practice.choiceCorrect", { letter: item.value })
+              : itemMistakeFeedback(item, picked, t("practice.choiceTarget"))
           }</div>`
         : ""
     }
@@ -6854,11 +7085,11 @@ function renderPracticeListeningChoices(group, item) {
 
   return `
     <article class="card practice-mode-card">
-      <p class="caption">选择字母</p>
-      <h2 class="section-title unit-goal-text">从 32 个字母里选择你听到的字母</h2>
-      <div class="alphabet-strip compact listening-choice-strip" aria-label="32 个字母选择">
+      <p class="caption">${t("practice.chooseLetter")}</p>
+      <h2 class="section-title unit-goal-text">${t("practice.listenInstruction")}</h2>
+      <div class="alphabet-strip compact listening-choice-strip" aria-label="${t("practice.choicesAria")}">
         ${group.items
-          .map((choice) => {
+          .map((choice, index) => {
             const selected = state.selectedListening === choice.id;
             const choiceClass = selected ? (choice.id === item.id ? "active" : "wrong") : "";
             return `
@@ -6867,10 +7098,9 @@ function renderPracticeListeningChoices(group, item) {
                 data-action="pick-practice"
                 data-id="${choice.id}"
                 type="button"
-                aria-label="选择 ${choice.latin}"
+                aria-label="${t("practice.choiceAria", { count: index + 1, letter: choice.value })}"
               >
                 <span class="uyghur">${choice.value}</span>
-                <small>${choice.latin}</small>
               </button>
             `;
           })
@@ -6880,7 +7110,9 @@ function renderPracticeListeningChoices(group, item) {
     ${
       hasPicked
         ? `<div class="feedback ${isCorrect ? "good" : "bad"}">${
-            isCorrect ? `辨认正确。已完成 ${completedCount} / ${group.items.length}。` : "再听一次，再选。"
+            isCorrect
+              ? t("practice.listenCorrect", { completed: completedCount, total: group.items.length })
+              : t("practice.listenRetry")
           }</div>`
         : ""
     }
@@ -6895,11 +7127,11 @@ function renderPracticeModeCard(group, item) {
   if (group.mode === "repeat") {
     return `
       <article class="card practice-mode-card">
-        <p class="caption">跟读步骤</p>
+        <p class="caption">${t("practice.repeatSteps")}</p>
         <div class="lesson-point-list">
-          <div class="lesson-point"><strong>看词形</strong><span class="uyghur">${item.value}</span></div>
-          <div class="lesson-point"><strong>看提示</strong><span>${item.latin}，${item.hint}</span></div>
-          <div class="lesson-point"><strong>轻声跟读</strong><span>${item.audioStatus}。</span></div>
+          <div class="lesson-point"><strong>${t("practice.lookLetter")}</strong><span class="uyghur">${item.value}</span></div>
+          <div class="lesson-point"><strong>${t("practice.readHint")}</strong><span>${item.latin}, ${item.hint}</span></div>
+          <div class="lesson-point"><strong>${t("practice.repeatSoftly")}</strong><span>${t("practice.audioStatusSentence", { status: item.audioStatus })}</span></div>
         </div>
       </article>
     `;
@@ -6915,15 +7147,15 @@ function renderPracticeModeCard(group, item) {
       <article class="card practice-mode-card">
         <div class="section-row">
           <div>
-            <p class="caption">手写板 · 当前临摹 ${escapeHtml(selectedForm.label)}</p>
+            <p class="caption">${t("practice.writingPad")} · ${t("alphabet.currentTracing", { form: escapeHtml(selectedForm.label) })}</p>
             <strong class="uyghur practice-writing-target-glyph" data-practice-writing-target-glyph>${escapeHtml(displayLetterFormGlyph(selectedForm.value))}</strong>
             <span class="caption" data-letter-writing-target-label>${escapeHtml(selectedForm.label)}</span>
           </div>
-          <button class="ghost-button" data-action="clear-canvas" type="button">清空画布</button>
+          <button class="ghost-button" data-action="clear-canvas" type="button">${t("practice.clearPad")}</button>
         </div>
-        ${renderWritingCanvas(selectedForm.value, `${selectedForm.label} 字母手写板`, { letterWritingHooks: true })}
+        ${renderWritingCanvas(selectedForm.value, t("alphabet.handwritingPad", { form: selectedForm.label }), { letterWritingHooks: true })}
         <button class="ghost-button" data-action="toggle-guide" type="button">
-          ${state.showGuide ? "隐藏参考" : "显示参考"}
+          ${state.showGuide ? t("practice.hideGuide") : t("practice.showGuide")}
         </button>
       </article>
       ${renderWritingComparison({
@@ -6936,7 +7168,7 @@ function renderPracticeModeCard(group, item) {
         value: item.value,
         parts: item.parts,
         hint: item.hint,
-        mode: "word"
+        mode: "letter"
       })}
     `;
   }
@@ -6946,7 +7178,7 @@ function renderPracticeModeCard(group, item) {
       <input
         class="rtl-input uyghur"
         value="${state.keyboardValue}"
-        aria-label="字母练习维吾尔语输入框"
+        aria-label="${t("practice.keyboardAria")}"
         readonly
         dir="rtl"
       />
@@ -6958,17 +7190,17 @@ function renderPracticeModeCard(group, item) {
   if (!reviewItems.length) {
     return `
       <article class="card practice-mode-card">
-        <p class="caption">暂无错题</p>
-        <h2 class="section-title">练习答错后会自动进入这里</h2>
-        <p class="muted">先去听音辨认、跟读、书写或键盘练习。答错的字母会保存在本地错题里。</p>
+        <p class="caption">${t("practice.noMistakes")}</p>
+        <h2 class="section-title">${t("practice.noMistakesTitle")}</h2>
+        <p class="muted">${t("practice.noMistakesDetail")}</p>
       </article>
-      <div class="feedback">当前没有需要复习的错题。</div>
+      <div class="feedback">${t("practice.noMistakesFeedback")}</div>
     `;
   }
 
   return `
     <article class="card practice-mode-card">
-      <p class="caption">本轮错题</p>
+      <p class="caption">${t("practice.mistakesRound")}</p>
       <div class="practice-review-list">
         ${reviewItems
           .map(
@@ -6990,21 +7222,21 @@ function renderPracticeModeCard(group, item) {
           .join("")}
       </div>
     </article>
-    <div class="feedback">这些错题已保存在本地，之后可以继续按错题频率安排复习。</div>
+    <div class="feedback">${t("practice.reviewSaved")}</div>
   `;
 }
 
 function renderPracticeHub() {
   return screen(
     `
-      ${topBar("练习已整理", "入口已移动到首页和字母")}
+      ${topBar(t("practice.hubTitle"), t("practice.hubSubtitle"))}
       <section class="stack">
         <article class="card">
-          <p class="caption">练习入口</p>
-          <h2 class="section-title">今日复习在首页，字母练习在字母页</h2>
+          <p class="caption">${t("practice.hubEntry")}</p>
+          <h2 class="section-title">${t("practice.hubDetail")}</h2>
           <div class="action-grid">
-            <button class="primary-button" data-action="go" data-target="home" type="button">回到首页</button>
-            <button class="secondary-button" data-action="go" data-target="library" type="button">去字母练习</button>
+            <button class="primary-button" data-action="go" data-target="home" type="button">${t("practice.hubBackHome")}</button>
+            <button class="secondary-button" data-action="go" data-target="library" type="button">${t("practice.goAlphabet")}</button>
           </div>
         </article>
       </section>
@@ -7024,14 +7256,14 @@ function renderPracticeSession() {
       `
         ${topBar(
           group.title,
-          isReviewPractice ? "首页：今日复习" : "字母：专项练习",
+          isReviewPractice ? t("practice.reviewSubtitle") : t("practice.alphabetSubtitle"),
           "",
-          `<button class="back-button" data-action="go" data-target="${practiceBackTarget}" type="button" aria-label="返回">←</button>`
+          `<button class="back-button" data-action="go" data-target="${practiceBackTarget}" type="button" aria-label="${t("common.back")}">←</button>`
         )}
         <section class="stack">
           ${renderPracticeModeCard(group, null)}
           <button class="primary-button" data-action="go" data-target="${practiceBackTarget}" type="button">
-            ${isReviewPractice ? "返回首页" : "返回字母练习"}
+            ${isReviewPractice ? t("practice.backHome") : t("practice.backAlphabet")}
           </button>
         </section>
       `,
@@ -7053,11 +7285,11 @@ function renderPracticeSession() {
   const showSeparatePracticeAudio = isListeningPractice && showPracticeAudio && !showPracticeTarget;
   const practiceAudioFocus = renderAudioFocus({
     audio,
-    label: isListeningPractice ? "听音练习" : item.value,
-    title: isListeningPractice ? "听音练习" : `播放：${item.latin}`,
+    label: isListeningPractice ? t("practice.listeningPractice") : item.value,
+    title: isListeningPractice ? t("practice.listeningPractice") : t("practice.playLetter", { latin: item.latin }),
     hint: isListeningPractice
-      ? "先听声音，再从 32 个字母里选择。"
-      : "音频待录，暂不播放。",
+      ? t("practice.listenFirst")
+      : t("practice.audioPending"),
     hideFile: isListeningPractice
   });
   const practiceTargetCard = (withAudio = false) => `
@@ -7066,14 +7298,14 @@ function renderPracticeSession() {
         withAudio
           ? renderAudioButton({
               audio,
-              label: isListeningPractice ? "听音练习" : item.value,
+              label: isListeningPractice ? t("practice.listeningPractice") : item.value,
               className: "letter-focus-play"
             })
           : ""
       }
       <div>
         <div class="uyghur letter-big practice-big ${longWordClass}">${item.value}</div>
-        <p class="caption">${item.type}，${item.latin}</p>
+        <p class="caption">${t("practice.typeWithLatin", { type: item.type, latin: item.latin })}</p>
       </div>
     </div>
   `;
@@ -7082,9 +7314,9 @@ function renderPracticeSession() {
     `
       ${topBar(
         group.title,
-        isReviewPractice ? "首页：今日复习" : "字母：专项练习",
+        isReviewPractice ? t("practice.reviewSubtitle") : t("practice.alphabetSubtitle"),
         "",
-        `<button class="back-button" data-action="go" data-target="${practiceBackTarget}" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="${practiceBackTarget}" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
         <article class="card">
@@ -7094,7 +7326,11 @@ function renderPracticeSession() {
               <h2 class="section-title unit-goal-text">${group.goal}</h2>
             </div>
             <span class="step-state">${
-              isListeningPractice ? `${listeningCompletedCount} / ${group.items.length}` : isReviewPractice ? `${reviewItems.length} 项` : group.status
+              isListeningPractice
+                ? `${listeningCompletedCount} / ${group.items.length}`
+                : isReviewPractice
+                  ? t("practice.itemCount", { count: reviewItems.length })
+                  : group.status
             }</span>
           </div>
         </article>
@@ -7126,19 +7362,19 @@ function renderPracticeSession() {
             ? ""
             : isListeningPractice && !listeningAnsweredCorrect
               ? `<button class="secondary-button" data-action="go" data-target="${practiceBackTarget}" type="button">
-                  返回字母练习
+                  ${t("practice.backAlphabet")}
                 </button>`
               : `<div class="action-grid">
                 <button class="secondary-button" data-action="go" data-target="${practiceBackTarget}" type="button">
-                  ${isReviewPractice ? "返回首页" : "返回字母练习"}
+                  ${isReviewPractice ? t("practice.backHome") : t("practice.backAlphabet")}
                 </button>
                 ${
                   isListeningPractice && !listeningRoundComplete
                     ? `<button class="primary-button" data-action="next-practice-audio" type="button">
-                        下一个音频
+                        ${t("practice.nextAudio")}
                       </button>`
                     : `<button class="primary-button" data-action="go" data-target="practiceComplete" type="button">
-                        查看结果
+                        ${t("practice.viewResults")}
                       </button>`
                 }
               </div>`
@@ -7157,15 +7393,15 @@ function renderPracticeComplete() {
   if (!item) {
     return screen(
       `
-        ${topBar("复习结果", group.title)}
+        ${topBar(t("practice.results"), group.title)}
         <section class="stack">
           <article class="card review-card">
-            <p class="caption">暂无错题</p>
-            <h2 class="section-title">还没有需要复习的内容</h2>
-            <p class="muted">练习中答错的字母会自动进入本地错题。</p>
+            <p class="caption">${t("practice.noMistakes")}</p>
+            <h2 class="section-title">${t("practice.noReviewTitle")}</h2>
+            <p class="muted">${t("practice.noReviewDetail")}</p>
           </article>
           <button class="primary-button" data-action="go" data-target="${isReviewPractice ? "home" : "library"}" type="button">
-            ${isReviewPractice ? "返回首页" : "返回字母练习"}
+            ${isReviewPractice ? t("practice.backHome") : t("practice.backAlphabet")}
           </button>
         </section>
       `,
@@ -7174,44 +7410,50 @@ function renderPracticeComplete() {
   }
 
   const listened =
-    group.mode === "listen" ? `已完成 ${practiceListeningCompletedCount(group)} / ${group.items.length}` : "可选";
-  const repeated = group.mode === "repeat" ? (state.practiceSpoken ? "已跟读" : "未跟读") : "可选";
-  const written = group.mode === "write" ? "已练习" : "可选";
-  const typed = group.mode === "keyboard" ? (state.keyboardValue === item.value ? "已输入" : "未完成") : "可选";
+    group.mode === "listen"
+      ? t("practice.completedCount", { completed: practiceListeningCompletedCount(group), total: group.items.length })
+      : t("practice.optional");
+  const repeated = group.mode === "repeat"
+    ? (state.practiceSpoken ? t("practice.repeated") : t("practice.notRepeated"))
+    : t("practice.optional");
+  const written = group.mode === "write" ? t("practice.practiced") : t("practice.optional");
+  const typed = group.mode === "keyboard"
+    ? (state.keyboardValue === item.value ? t("practice.entered") : t("practice.notComplete"))
+    : t("practice.optional");
 
   return screen(
     `
-      ${topBar("复习结果", group.title)}
+      ${topBar(t("practice.results"), group.title)}
       <section class="stack">
         <article class="card review-card">
-          <p class="caption">本轮目标</p>
+          <p class="caption">${t("practice.roundTarget")}</p>
           <h2 class="screen-title"><span class="uyghur">${item.value}</span></h2>
-          <p class="muted">本页只记录练习流程，不确认主题词义是否最终正确。</p>
+          <p class="muted">${t("practice.scopeNote")}</p>
         </article>
         <div class="metric-grid">
-          <div class="metric"><strong>${group.items.length}</strong><span>本组项目</span></div>
-          <div class="metric"><strong>待录</strong><span>音频</span></div>
-          <div class="metric"><strong>${state.mistakes.length}</strong><span>本地错题</span></div>
+          <div class="metric"><strong>${group.items.length}</strong><span>${t("practice.groupItems")}</span></div>
+          <div class="metric"><strong>${t("practice.recorded")}</strong><span>${t("practice.audio")}</span></div>
+          <div class="metric"><strong>${state.mistakes.length}</strong><span>${t("practice.localMistakes")}</span></div>
         </div>
         <article class="card">
-          <p class="caption">练习记录</p>
+          <p class="caption">${t("practice.record")}</p>
           <div class="audit-grid">
-            <div class="audit-row"><strong>听音</strong><span>${listened}</span></div>
-            <div class="audit-row"><strong>跟读</strong><span>${repeated}</span></div>
-            <div class="audit-row"><strong>书写</strong><span>${written}</span></div>
-            <div class="audit-row"><strong>键盘</strong><span>${typed}</span></div>
-            <div class="audit-row"><strong>备注</strong><span>${item.audioStatus}。</span></div>
+            <div class="audit-row"><strong>${t("practice.listening")}</strong><span>${listened}</span></div>
+            <div class="audit-row"><strong>${t("practice.repeat")}</strong><span>${repeated}</span></div>
+            <div class="audit-row"><strong>${t("practice.writing")}</strong><span>${written}</span></div>
+            <div class="audit-row"><strong>${t("practice.keyboard")}</strong><span>${typed}</span></div>
+            <div class="audit-row"><strong>${t("practice.note")}</strong><span>${t("practice.audioStatusSentence", { status: item.audioStatus })}</span></div>
           </div>
         </article>
         ${renderContinueCourseButton(nextGroup ? { action: "open-practice-group", id: nextGroup.id } : null)}
         <article class="card next-action-card">
-          <p class="caption">下一步建议</p>
+          <p class="caption">${t("practice.nextStep")}</p>
           <div class="action-grid">
             <button class="secondary-button" data-action="open-practice-group" data-id="${group.id}" type="button">
-              再练一轮
+              ${t("practice.tryAgain")}
             </button>
             <button class="primary-button" data-action="go" data-target="${isReviewPractice ? "home" : "library"}" type="button">
-              ${isReviewPractice ? "返回首页" : "返回字母练习"}
+              ${isReviewPractice ? t("practice.backHome") : t("practice.backAlphabet")}
             </button>
           </div>
         </article>
@@ -7224,19 +7466,19 @@ function renderPracticeComplete() {
 function renderLibrary() {
   return screen(
     `
-      ${topBar("字母库", `${learningUnitOrdinal("letters")}全部字母`)}
+      ${topBar(t("library.title"), t("library.subtitle"))}
       <section class="stack">
         <article class="card compact-library-card">
           <div class="section-row">
             <div>
-              <p class="caption">完整字母表</p>
-              <h2 class="section-title">32 个字母</h2>
+              <p class="caption">${t("library.fullAlphabet")}</p>
+              <h2 class="section-title">${t("library.letterCount")}</h2>
             </div>
           </div>
         </article>
 
         <article class="card">
-          <div class="letter-library-grid" aria-label="字母库紧凑目录">
+          <div class="letter-library-grid" aria-label="${t("library.directory")}">
             ${allUnitOneLetters()
               .map(
                 (letter) => `
@@ -7260,8 +7502,8 @@ function renderLibrary() {
         <article class="card">
           <div class="section-row">
             <div>
-              <p class="caption">字母练习</p>
-              <h2 class="section-title">听、读、写、键盘</h2>
+              <p class="caption">${t("library.practice")}</p>
+              <h2 class="section-title">${t("library.practiceModes")}</h2>
             </div>
           </div>
           <div class="path-list">
@@ -7289,9 +7531,9 @@ function renderProfileHero(progress, reviewCount) {
   const avatarUrl = usingCloudProfile ? accountProfile.avatarUrl : state.localProfile.avatarDataUrl;
   const displayName =
     (usingCloudProfile ? accountProfile.displayName : state.localProfile.displayName) ||
-    `${appConfig.brandName} 学习者`;
+    t("profile.defaultLearner", { brand: appConfig.brandName });
   const avatarContent = avatarUrl
-    ? `<img src="${escapeHtml(avatarUrl)}" alt="学习头像" />`
+    ? `<img src="${escapeHtml(avatarUrl)}" alt="${t("profile.avatarAlt")}" />`
     : `<span aria-hidden="true">${appConfig.brandName === "Ana Tilim" ? "AT" : "UT"}</span>`;
 
   return `
@@ -7304,26 +7546,26 @@ function renderProfileHero(progress, reviewCount) {
               id="profile-avatar-input"
               type="file"
               accept="image/*"
-              aria-label="从相册选择头像"
+              aria-label="${t("profile.chooseAvatarAria")}"
               ${state.avatarUploading ? "disabled" : ""}
             />
-            <span>${state.avatarUploading ? "上传中…" : "选择头像"}</span>
+            <span>${state.avatarUploading ? t("profile.uploading") : t("profile.chooseAvatar")}</span>
           </label>
         </div>
         <div class="profile-account">
-          <p class="caption">${usingCloudProfile ? "学习账号" : "本地学习"}</p>
+          <p class="caption">${usingCloudProfile ? t("profile.account") : t("profile.localLearning")}</p>
           ${renderProfileNameControl(displayName)}
-          <p class="muted">${usingCloudProfile ? escapeHtml(accountEmail) : "学习进度与个人资料保存在当前设备"}</p>
+          <p class="muted">${usingCloudProfile ? escapeHtml(accountEmail) : t("profile.guestDetail")}</p>
         </div>
         <span class="step-state profile-status">${cloudStatusLabel()}</span>
       </div>
-      <div class="metric-grid profile-account-metrics" aria-label="个人学习概览">
-        <div class="metric"><strong>${streakDays}</strong><span>连续学习</span></div>
-        <div class="metric"><strong>${reviewCount}</strong><span>今日待复习</span></div>
-        <div class="metric"><strong>${progress.completed} / ${progress.total}</strong><span>总进度</span></div>
+      <div class="metric-grid profile-account-metrics" aria-label="${t("profile.overview")}">
+        <div class="metric"><strong>${streakDays}</strong><span>${t("profile.streak")}</span></div>
+        <div class="metric"><strong>${reviewCount}</strong><span>${t("profile.reviewToday")}</span></div>
+        <div class="metric"><strong>${progress.completed} / ${progress.total}</strong><span>${t("profile.totalProgress")}</span></div>
       </div>
       <div class="profile-progress-row">
-        <span>个人学习状态</span>
+        <span>${t("profile.status")}</span>
         <strong>${progress.percent}%</strong>
       </div>
       <div class="progress-track" aria-hidden="true">
@@ -7331,9 +7573,9 @@ function renderProfileHero(progress, reviewCount) {
       </div>
       <p class="caption">${
         usingCloudProfile
-          ? "学习记录会自动同步到云端。"
+          ? t("profile.cloudSync")
           : appConfig.cloudEnabled
-            ? "无需登录即可修改昵称和头像；登录后学习记录可跨设备同步。"
+            ? t("profile.cloudPrompt")
             : "可直接修改昵称和头像，并可使用导出功能备份学习记录。"
       }</p>
     </article>
@@ -7346,17 +7588,17 @@ function renderProfileMemoryCard(reviewCount) {
     <article class="card profile-memory-card">
       <div class="section-row">
         <div>
-          <p class="caption">记忆练习</p>
-          <h2 class="section-title">${hasReview ? "先复习今天容易忘的内容" : "今天可以继续巩固基础内容"}</h2>
+          <p class="caption">${t("profile.memory")}</p>
+          <h2 class="section-title">${hasReview ? t("profile.reviewHeading") : t("profile.foundationHeading")}</h2>
         </div>
-        <span class="step-state">${reviewCount} 项</span>
+        <span class="step-state">${t("profile.reviewCount", { count: reviewCount })}</span>
       </div>
       <p class="muted">${
         hasReview
           ? appConfig.cloudEnabled
-            ? "错题会优先进入复习队列，后续登录版会按间隔重复自动安排下次复习。"
+            ? t("profile.reviewDetail")
             : "错题会优先进入本地复习队列。"
-          : "当前没有需要复习的错题"
+          : t("profile.foundationDetail")
       }</p>
       <button
         class="primary-button"
@@ -7365,7 +7607,7 @@ function renderProfileMemoryCard(reviewCount) {
         data-target="${hasReview ? "" : "library"}"
         type="button"
       >
-        ${hasReview ? "开始今日复习" : "去字母练习"}
+        ${hasReview ? t("profile.startReview") : t("profile.goAlphabet")}
       </button>
     </article>
   `;
@@ -7411,7 +7653,7 @@ function renderProfileNameControl(displayName) {
     return `
       <div class="profile-name-heading">
         <h2 class="section-title">${escapeHtml(displayName)}</h2>
-        <button class="profile-name-edit-button" data-action="edit-display-name" type="button" aria-label="修改昵称">
+        <button class="profile-name-edit-button" data-action="edit-display-name" type="button" aria-label="${t("profile.editName")}">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M4 20h4L19 9l-4-4L4 16v4Z" />
             <path d="m13.5 6.5 4 4" />
@@ -7429,10 +7671,10 @@ function renderProfileNameControl(displayName) {
         maxlength="40"
         autocomplete="name"
         value="${escapeHtml(displayName)}"
-        aria-label="昵称"
+        aria-label="${t("profile.name")}"
       />
-      <button class="profile-name-save" data-action="save-display-name" type="button">保存</button>
-      <button class="profile-name-cancel" data-action="cancel-display-name" type="button">取消</button>
+      <button class="profile-name-save" data-action="save-display-name" type="button">${t("profile.saveName")}</button>
+      <button class="profile-name-cancel" data-action="cancel-display-name" type="button">${t("profile.cancelName")}</button>
     </div>
   `;
 }
@@ -7444,44 +7686,52 @@ function renderSettingsPanel() {
   return `
     <article class="card profile-settings-card">
       <div>
-        <p class="caption">设置</p>
-        <h2 class="section-title" id="learning-preferences-title">学习偏好</h2>
+        <p class="caption">${t("settings.title")}</p>
+        <h2 class="section-title" id="learning-preferences-title">${t("settings.learning")}</h2>
       </div>
 
       <section class="profile-setting-group" aria-labelledby="learning-preferences-title">
+        ${
+          appConfig.edition === "cn"
+            ? ""
+            : `<div class="profile-setting-block language-setting">
+                <label for="profile-language-select"><strong>${t("language.label")}</strong></label>
+                ${profileLanguageSelect()}
+              </div>`
+        }
         ${renderToggleSetting({
-          label: "学习提醒",
-          detail: "未完成目标时在首页提醒",
+          label: t("settings.reminder"),
+          detail: t("settings.reminderDetail"),
           action: "toggle-learning-reminder",
           checked: preferences.learningReminder
         })}
         ${renderToggleSetting({
-          label: "显示拉丁转写",
-          detail: "在字母、词语和句子下显示 ULY 读法",
+          label: t("settings.showLatin"),
+          detail: t("settings.showLatinDetail"),
           action: "toggle-latin-transliteration",
           checked: preferences.showLatin
         })}
       </section>
 
       <section class="profile-setting-group" aria-labelledby="audio-preferences-title">
-        <h3 id="audio-preferences-title">音频</h3>
+        <h3 id="audio-preferences-title">${t("settings.audio")}</h3>
         ${renderToggleSetting({
-          label: "自动播放",
-          detail: "进入或切换学习内容时播放一次",
+          label: t("settings.autoplay"),
+          detail: t("settings.autoplayDetail"),
           action: "toggle-audio-autoplay",
           checked: preferences.audioAutoplay
         })}
       </section>
 
       <section class="profile-setting-group" aria-labelledby="account-settings-title">
-        <h3 id="account-settings-title">${appConfig.cloudEnabled ? "账号与数据" : "本地数据"}</h3>
+        <h3 id="account-settings-title">${appConfig.cloudEnabled ? t("settings.account") : "本地数据"}</h3>
         ${
           appConfig.cloudEnabled
             ? `
         <div class="profile-setting-block profile-account-setting">
           <div>
-            <strong>当前账号</strong>
-            <small>${accountEmail ? escapeHtml(accountEmail) : "本地学习账号"}</small>
+            <strong>${t("settings.currentAccount")}</strong>
+            <small>${accountEmail ? escapeHtml(accountEmail) : t("settings.localAccount")}</small>
           </div>
           <span class="step-state">${cloudStatusLabel()}</span>
         </div>
@@ -7495,10 +7745,10 @@ function renderSettingsPanel() {
             `
         }
         <div class="action-grid local-data-actions">
-          <button class="secondary-button" data-action="export-progress" type="button">导出学习记录</button>
+          <button class="secondary-button" data-action="export-progress" type="button">${t("profile.exportProgress")}</button>
           <label class="secondary-button import-progress-button">
             <input id="progress-import-input" type="file" accept="application/json,.json" />
-            <span>导入学习记录</span>
+            <span>${t("profile.importProgress")}</span>
           </label>
         </div>
         ${
@@ -7525,26 +7775,26 @@ function renderSettingsPanel() {
           state.clearLearningConfirmation
             ? `
               <div class="clear-learning-confirmation" role="alert">
-                <strong>确认清除学习记录</strong>
-                <p>将清除课程进度、今日记录、错题、收藏和最近学习位置；学习设置会保留。</p>
+                <strong>${t("settings.clearTitle")}</strong>
+                <p>${t("settings.clearDetail")}</p>
                 <div class="action-grid">
-                  <button class="secondary-button" data-action="cancel-clear-learning" type="button">取消</button>
-                  <button class="danger-button" data-action="confirm-clear-learning" type="button">确认清除</button>
+                  <button class="secondary-button" data-action="cancel-clear-learning" type="button">${t("common.cancel")}</button>
+                  <button class="danger-button" data-action="confirm-clear-learning" type="button">${t("settings.clearConfirm")}</button>
                 </div>
               </div>
             `
             : `
               <button class="danger-button" data-action="request-clear-learning" type="button">
-                清除学习记录
+                ${t("settings.clear")}
               </button>
             `
         }
       </section>
 
       <section class="profile-setting-group" aria-labelledby="help-feedback-title">
-        <h3 id="help-feedback-title">帮助与反馈</h3>
+        <h3 id="help-feedback-title">${t("profile.helpFeedback")}</h3>
         <button class="profile-setting-block feedback-entry-row" data-action="go" data-target="feedback" type="button">
-          <span><strong>意见反馈</strong><small>允许匿名提交，不支持附件</small></span>
+          <span><strong>${t("profile.feedback")}</strong><small>${t("profile.feedbackDetail")}</small></span>
           <span aria-hidden="true">→</span>
         </button>
       </section>
@@ -7558,7 +7808,7 @@ function renderProfile() {
 
   return screen(
     `
-      ${topBar("我的", "个人学习状态")}
+      ${topBar(t("profile.title"), t("profile.subtitle"))}
       <section class="stack wide-gap profile-layout">
         ${renderProfileHero(progress, reviewCount)}
         ${renderSettingsPanel()}
@@ -7708,7 +7958,7 @@ function showToast(message) {
 function playAudio(src, label, { autoplay = false } = {}) {
   if (!src) {
     if (!autoplay) {
-      showToast("暂无可播放音频");
+      showToast(t("audio.unavailable"));
     }
     return false;
   }
@@ -7721,12 +7971,12 @@ function playAudio(src, label, { autoplay = false } = {}) {
     .play()
     .then(() => {
       if (!autoplay) {
-        showToast(`${label || "内容"}：播放中`);
+        showToast(t("audio.playing", { label: label || t("common.content") }));
       }
     })
     .catch(() => {
       if (!autoplay) {
-        showToast("音频文件不能播放，请检查文件");
+        showToast(t("audio.fileError"));
       }
     });
   return true;
@@ -8369,24 +8619,35 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (action === "set-language") {
+    const language = button.dataset.language;
+    if (language !== "zh" && language !== "en") {
+      return;
+    }
+    applyInterfaceLanguage(language, { explicit: true });
+    render();
+    showToast(t("language.changed"));
+    return;
+  }
+
   if (action === "toggle-learning-reminder") {
     setPreference("learningReminder", !state.preferences.learningReminder);
     render();
-    showToast(state.preferences.learningReminder ? "学习提醒已开启" : "学习提醒已关闭");
+    showToast(t(state.preferences.learningReminder ? "toast.reminderOn" : "toast.reminderOff"));
     return;
   }
 
   if (action === "toggle-latin-transliteration") {
     setPreference("showLatin", !state.preferences.showLatin);
     render();
-    showToast(state.preferences.showLatin ? "拉丁转写已显示" : "拉丁转写已隐藏");
+    showToast(t(state.preferences.showLatin ? "toast.latinOn" : "toast.latinOff"));
     return;
   }
 
   if (action === "toggle-audio-autoplay") {
     setPreference("audioAutoplay", !state.preferences.audioAutoplay);
     render();
-    showToast(state.preferences.audioAutoplay ? "自动播放已开启" : "自动播放已关闭");
+    showToast(t(state.preferences.audioAutoplay ? "toast.autoplayOn" : "toast.autoplayOff"));
     return;
   }
 
@@ -8415,11 +8676,11 @@ document.addEventListener("click", (event) => {
       restoreLearningRecordSnapshot(previousRecords);
       state.clearLearningConfirmation = false;
       render();
-      showToast("清除失败，原记录已保留");
+      showToast(t("error.storage"));
       return;
     }
     render();
-    showToast("学习记录已清除");
+    showToast(t("toast.recordsCleared"));
     return;
   }
 
@@ -8428,7 +8689,7 @@ document.addEventListener("click", (event) => {
     state.screen = "home";
     saveLocalProgress();
     render();
-    showToast(continuingWithCloud ? "继续学习，进度将自动同步" : "已进入本地学习模式");
+    showToast(continuingWithCloud ? t("toast.continueCloud") : t("toast.localMode"));
     return;
   }
 
@@ -8501,7 +8762,7 @@ document.addEventListener("click", (event) => {
         state.screen = "home";
         state.authEmail = "";
         render();
-        showToast("登录成功，学习记录将自动同步");
+        showToast(t("toast.loginSuccess"));
       })
       .catch((error) => showToast(passwordAuthErrorMessage(error, "login")));
     return;
@@ -8521,7 +8782,7 @@ document.addEventListener("click", (event) => {
     }
     const backup = backupGuestProgress();
     if (!backup.ok) {
-      showToast("游客进度备份失败，请稍后重试");
+      showToast(t("toast.guestBackupError"));
       return;
     }
     state.authEmail = validation.values.email;
@@ -8539,7 +8800,7 @@ document.addEventListener("click", (event) => {
         state.authMode = "login";
         state.authEmail = "";
         render();
-        showToast(`注册成功，从${learningUnitOrdinal("letters")}开始学习`);
+        showToast(t("toast.registerSuccess"));
       })
       .catch((error) => {
         restoreGuestProgressBackup(backup.previousValue);
@@ -8557,7 +8818,7 @@ document.addEventListener("click", (event) => {
       ?.signInWithGoogle(redirectTo)
       .catch(() => {
         setAuthRedirectPending(false);
-        showToast("Google 登录暂时不可用，请稍后重试");
+        showToast(t("toast.googleError"));
       });
     return;
   }
@@ -8565,7 +8826,7 @@ document.addEventListener("click", (event) => {
   if (action === "request-email-otp") {
     const email = document.querySelector("#auth-email")?.value?.trim() || "";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      showToast("请输入有效的邮箱地址");
+      showToast(t("auth.invalidEmail"));
       return;
     }
     state.authEmail = email;
@@ -8574,16 +8835,16 @@ document.addEventListener("click", (event) => {
       .then(() => {
         state.emailCodeSent = true;
         render();
-        showToast("验证码已发送，请检查邮箱");
+        showToast(t("toast.codeSent"));
       })
-      .catch(() => showToast("验证码发送失败，请稍后重试"));
+      .catch(() => showToast(t("toast.codeError")));
     return;
   }
 
   if (action === "verify-email-otp") {
     const code = document.querySelector("#auth-code")?.value?.trim() || "";
     if (!/^\d{6}$/.test(code)) {
-      showToast("请输入 6 位验证码");
+      showToast(t("toast.invalidCode"));
       return;
     }
     cloudSync
@@ -8592,9 +8853,9 @@ document.addEventListener("click", (event) => {
         state.emailCodeSent = false;
         state.emailAuthExpanded = false;
         render();
-        showToast("登录成功，学习记录将自动同步");
+        showToast(t("toast.loginSuccess"));
       })
-      .catch(() => showToast("验证码不正确或已过期"));
+      .catch(() => showToast(t("toast.expiredCode")));
     return;
   }
 
@@ -8603,9 +8864,9 @@ document.addEventListener("click", (event) => {
       ?.signOut()
       .then(() => {
         render();
-        showToast("已退出登录，本地学习记录仍然保留");
+        showToast(t("toast.signedOut"));
       })
-      .catch(() => showToast("退出登录失败，请稍后重试"));
+      .catch(() => showToast(t("toast.signOutError")));
     return;
   }
 
@@ -8643,9 +8904,9 @@ document.addEventListener("click", (event) => {
       .then(() => {
         state.profileNameEditing = false;
         render();
-        showToast("名称已更新");
+        showToast(t("toast.nameUpdated"));
       })
-      .catch(() => showToast("名称保存失败，请稍后重试"));
+      .catch(() => showToast(t("toast.nameError")));
     return;
   }
 
@@ -9174,7 +9435,7 @@ document.addEventListener("click", (event) => {
     state.favorite = !state.favorite;
     markCloudDirty("favorite");
     render();
-    showToast(state.favorite ? "已加入收藏" : "已取消收藏");
+    showToast(t(state.favorite ? "toast.favoriteOn" : "toast.favoriteOff"));
     return;
   }
 
@@ -9188,7 +9449,7 @@ document.addEventListener("click", (event) => {
   }
 
   if (action === "toast") {
-    showToast("这个功能会在正式版加入");
+    showToast(t("toast.comingSoon"));
   }
 });
 
@@ -9359,6 +9620,14 @@ function createLocalAvatarDataUrl(file) {
 
 document.addEventListener("change", (event) => {
   const input = event.target;
+  if (input?.dataset?.action === "set-language-select") {
+    const language = input.value;
+    if (language !== "zh" && language !== "en") return;
+    applyInterfaceLanguage(language, { explicit: true });
+    render();
+    showToast(t("language.changed"));
+    return;
+  }
   if (input?.id === "progress-import-input") {
     const file = input.files?.[0];
     if (!file) return;
@@ -9387,11 +9656,11 @@ document.addEventListener("change", (event) => {
   const file = input.files?.[0];
   if (!file) return;
   if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) {
-    showToast("请选择 JPG、PNG、WebP 或 GIF 图片");
+    showToast(t("toast.avatarType"));
     return;
   }
   if (file.size > 5 * 1024 * 1024) {
-    showToast("头像图片不能超过 5MB");
+    showToast(t("toast.avatarSize"));
     return;
   }
 
@@ -9418,12 +9687,12 @@ document.addEventListener("change", (event) => {
     .then(() => {
       state.avatarUploading = false;
       render();
-      showToast("头像已更新");
+      showToast(t("toast.avatarUpdated"));
     })
     .catch(() => {
       state.avatarUploading = false;
       render();
-      showToast("头像上传失败，请稍后重试");
+      showToast(t("error.avatar"));
     });
 });
 
@@ -9478,7 +9747,7 @@ function initializeCloudAuthentication() {
   });
   cloudStatus = cloudSync.status();
   cloudSync.start().catch(() => {
-    cloudStatus = { phase: "error", error: "登录服务暂时不可用" };
+    cloudStatus = { phase: "error", error: t("error.cloud") };
     render();
   });
   if (typeof window.addEventListener === "function") {

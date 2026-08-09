@@ -53,10 +53,30 @@ isolated exercises.
   手机优先界面及从右到左文字支持
 - Browser-based offline progress and backup/restore tools<br>
   浏览器离线学习进度及备份、恢复工具
-- Email/password registration with UID-scoped Supabase synchronization<br>
-  邮箱密码注册及按用户 UID 隔离的 Supabase 同步
+- Local learning for guests and UID-scoped cloud synchronization after Google
+  sign-in<br>
+  游客可本地学习；Google 登录后可进行按用户 UID 隔离的云同步
 - A re-recording queue for language and audio review<br>
   面向语言审校和音频重录的任务清单
+
+## Language behavior / 语言行为
+
+- Chinese-language systems initially use Chinese; every non-Chinese system
+  initially uses English.<br>
+  系统语言为中文时初始显示中文；所有非中文系统初始显示英文。
+- Learners can switch manually with the compact control in the Home header or
+  the full language control in Profile.<br>
+  学习者可通过首页顶栏的紧凑切换器，或 Profile 页面的完整语言控件手动切换。
+- A manual choice is saved locally and, for Google users, synchronized as an
+  account preference.<br>
+  手动选择会保存在本地；Google 用户的选择还会作为账户偏好同步。
+- Uyghur learning content and audio are shared by Chinese and English modes.<br>
+  中文和英文模式共用同一套维吾尔语学习内容和音频。
+- All learning translations are bundled locally; no live translation service is
+  used.<br>
+  所有学习翻译均随项目保存在本地，不使用实时翻译服务。
+- Additional interface languages remain future work.<br>
+  其他界面语言仍属于未来工作。
 
 ## Try it online / 在线体验
 
@@ -89,12 +109,12 @@ Then open [http://localhost:4173/](http://localhost:4173/).
 
 运行后打开 [http://localhost:4173/](http://localhost:4173/)。
 
-The Supabase client library is loaded from jsDelivr, and cloud authentication or
-synchronization requires an internet connection. Local learning features remain
-available without signing in.
+The Supabase client library is loaded from jsDelivr. Guests can use local
+learning features without signing in; Google sign-in and UID-scoped cloud
+synchronization require an internet connection.
 
-Supabase 客户端库通过 jsDelivr 加载；注册、登录和云同步需要联网。未登录时仍可使用
-本地学习功能。
+Supabase 客户端库通过 jsDelivr 加载。游客无需登录即可使用本地学习功能；
+Google 登录和按用户 UID 隔离的云同步需要联网。
 
 ## Verification / 项目检查
 
@@ -139,15 +159,15 @@ by anyone.
 本仓库为公开仓库。仓库内的真人语言录音、课程文档、设计记录和应用源码均可被任何人
 查看和下载。
 
-Learning state is stored locally in the learner's browser by default. When a
-learner registers or signs in, a snapshot can be synchronized to Supabase under
-that learner's authenticated UID. The included browser configuration uses a
-publishable client key; access control is enforced by the included Row Level
-Security schema.
+Learning state is stored locally in the learner's browser by default, so guests
+can learn without signing in. After Google sign-in, a snapshot can be
+synchronized to Supabase under that learner's authenticated UID. The included
+browser configuration uses a publishable client key; access control is enforced
+by the included Row Level Security schema.
 
-学习数据默认保存在学习者自己的浏览器中。注册或登录后，学习快照可同步到 Supabase，
-并按已认证用户的 UID 隔离。网页中使用的是可公开的客户端配置，数据访问边界由仓库内
-的 Row Level Security 数据库规则控制。
+学习数据默认保存在学习者自己的浏览器中，游客无需登录即可学习。Google 登录后，
+学习快照可同步到 Supabase，并按已认证用户的 UID 隔离。网页中使用的是可公开的客户端配置，
+数据访问边界由仓库内的 Row Level Security 数据库规则控制。
 
 Do not add service-role keys, database passwords, private API keys, or real user
 exports to this repository.

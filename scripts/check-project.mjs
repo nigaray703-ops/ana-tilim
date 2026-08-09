@@ -140,6 +140,46 @@ const checks = [
     args: ["--check", "prototype/afanti-content.js"]
   },
   {
+    label: "syntax: i18n UI messages",
+    command: node,
+    args: ["--check", "prototype/i18n/ui-messages.js"]
+  },
+  {
+    label: "syntax: i18n alphabet English",
+    command: node,
+    args: ["--check", "prototype/i18n/alphabet-en.js"]
+  },
+  {
+    label: "syntax: i18n combinations English",
+    command: node,
+    args: ["--check", "prototype/i18n/combo-en.js"]
+  },
+  {
+    label: "syntax: i18n vocabulary English",
+    command: node,
+    args: ["--check", "prototype/i18n/vocab-en.js"]
+  },
+  {
+    label: "syntax: i18n practice English",
+    command: node,
+    args: ["--check", "prototype/i18n/practice-en.js"]
+  },
+  {
+    label: "syntax: i18n reading English",
+    command: node,
+    args: ["--check", "prototype/i18n/reading-en.js"]
+  },
+  {
+    label: "syntax: i18n course English",
+    command: node,
+    args: ["--check", "prototype/i18n/course-en.js"]
+  },
+  {
+    label: "syntax: i18n runtime",
+    command: node,
+    args: ["--check", "prototype/i18n/runtime.js"]
+  },
+  {
     label: "test: ULY transliteration",
     command: node,
     args: ["tests/uly-transliteration.test.mjs"]
@@ -219,6 +259,12 @@ const checks = [
     command: node,
     args: ["tests/re-record-audio.test.mjs"]
   },
+  { label: "test: i18n runtime", command: node, args: ["tests/i18n-runtime.test.mjs"] },
+  {
+    label: "test: bilingual course content",
+    command: node,
+    args: ["tests/i18n-course-content.test.mjs"]
+  },
   {
     label: "test: course data integrity",
     command: node,
@@ -233,6 +279,11 @@ const checks = [
     label: "test: human audio",
     command: node,
     args: ["tests/human-audio.test.mjs"]
+  },
+  {
+    label: "test: brand assets",
+    command: node,
+    args: ["tests/brand-assets.test.mjs"]
   },
   {
     label: "test: full content render",

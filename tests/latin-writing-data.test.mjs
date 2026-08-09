@@ -180,6 +180,7 @@ const toast = { ...app };
 const appContext = {
   console,
   document: {
+    documentElement: { lang: "" },
     querySelector(selector) {
       if (selector === "#app") return app;
       if (selector === "#toast") return toast;
@@ -203,6 +204,14 @@ for (const scriptPath of [
   ...focusedCoursePaths,
   latinWritingPath,
   "prototype/course-data.js",
+  "prototype/i18n/ui-messages.js",
+  "prototype/i18n/alphabet-en.js",
+  "prototype/i18n/combo-en.js",
+  "prototype/i18n/vocab-en.js",
+  "prototype/i18n/practice-en.js",
+  "prototype/i18n/reading-en.js",
+  "prototype/i18n/course-en.js",
+  "prototype/i18n/runtime.js",
   "prototype/unit-order.js",
   "prototype/uyghur-keyboard.js",
   "prototype/latin-keyboard.js",

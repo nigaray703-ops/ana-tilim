@@ -1056,16 +1056,28 @@ function completeFormsForLetter(letterId, letter) {
   return standardJoinedForms(letterId, letter);
 }
 
+const formIdByLabel = {
+  "独立式": "isolated",
+  "简单独立式": "simple-isolated",
+  "后连式": "right-joined",
+  "简单后连式": "simple-right-joined",
+  "双连式": "dual-joined",
+  "隔音双连式": "hamza-dual-joined",
+  "前连式": "left-joined",
+  "隔音前连式": "hamza-left-joined"
+};
+
 for (const [letterId, letter] of Object.entries(letterDetails)) {
   const forms = completeFormsForLetter(letterId, letter);
-  letter.forms = forms.map(({ label, value }) => ({ label, value }));
-  letterFormExamples[letterId] = forms.map((form) =>
-    form.simple
+  letter.forms = forms.map(({ label, value }) => ({ id: formIdByLabel[label], label, value }));
+  letterFormExamples[letterId] = forms.map((form) => ({
+    id: `${letterId}:${formIdByLabel[form.label]}`,
+    ...(form.simple
       ? simpleCarrierExample(form.label, form.value)
       : form.formOnlyMeaning
         ? formOnlyExample(form.label, form.value, form.formOnlyMeaning)
-        : exampleFromOld(letterId, form.label, form.value, form.oldLabel)
-  );
+        : exampleFromOld(letterId, form.label, form.value, form.oldLabel))
+  }));
 }
 
 for (const [letterId, overrides] of Object.entries(sourceFormExampleOverrides)) {

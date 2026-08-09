@@ -87,7 +87,7 @@ Expected source and destination hash:
 
 - [ ] **Step 2: Generate the site icons deterministically**
 
-Use Pillow to crop `(267, 75, 987, 795)` from the replaced 1254 × 1254 logo. This is a 720 × 720 square centered on the upper emblem with off-white padding. Resize the crop with `Image.Resampling.LANCZOS` to 16, 32, 180, 192, and 512 pixels and save optimized RGB PNGs under `prototype/assets/icons/` using the filenames in the design.
+Use Pillow to crop `(287, 80, 967, 760)` from the replaced 1254 × 1254 logo. This is a 680 × 680 square centered on the upper emblem with off-white padding and excludes the lettering below it. Resize the crop with `Image.Resampling.LANCZOS` to 16, 32, 180, 192, and 512 pixels and save optimized RGB PNGs under `prototype/assets/icons/` using the filenames in the design.
 
 - [ ] **Step 3: Inspect the icon artwork**
 

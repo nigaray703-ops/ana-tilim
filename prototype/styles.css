@@ -107,7 +107,55 @@ button {
 }
 
 .top-row {
+  min-width: 0;
   margin-bottom: 14px;
+}
+
+.language-switcher {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 3px;
+  width: max-content;
+  max-width: 100%;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  flex: 0 0 auto;
+}
+
+.language-switcher button {
+  min-width: 48px;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--ink-soft);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.language-switcher button[aria-pressed="true"] {
+  color: var(--ink);
+  background: var(--teal-soft);
+}
+
+.language-switcher button:focus-visible {
+  outline: 3px solid rgba(14, 155, 177, 0.45);
+  outline-offset: 2px;
+}
+
+.language-switcher.is-compact button {
+  min-width: 38px;
+  min-height: 34px;
+  padding: 6px 8px;
+}
+
+.language-switcher:not(.is-compact) button {
+  min-height: 44px;
 }
 
 .brand-lockup {
@@ -228,6 +276,23 @@ button {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+html[lang="en"] .brand-name,
+html[lang="en"] .brand-subtitle,
+html[lang="en"] .section-title,
+html[lang="en"] .lesson-step strong,
+html[lang="en"] .lesson-step .caption,
+html[lang="en"] .combo-part-note,
+html[lang="en"] .profile-account-metrics span,
+html[lang="en"] .profile-setting-row strong,
+html[lang="en"] .profile-setting-row small,
+html[lang="en"] .nav-button {
+  min-width: 0;
+  overflow: visible;
+  overflow-wrap: break-word;
+  text-overflow: clip;
+  white-space: normal;
 }
 
 .hero {
@@ -570,6 +635,11 @@ button {
 
 .home-center > * {
   width: 100%;
+  min-width: 0;
+}
+
+.home-center > * > * {
+  min-width: 0;
 }
 
 .metric-grid {
@@ -2416,6 +2486,16 @@ button {
   font-weight: 900;
 }
 
+.play-dot .speaker-icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .play-dot:disabled,
 .play-dot.disabled {
   color: var(--ink-soft);
@@ -3874,6 +3954,36 @@ button {
   background: rgba(255, 255, 255, 0.74);
 }
 
+.language-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.language-setting label {
+  min-width: 0;
+}
+
+.language-select {
+  flex: 0 0 auto;
+  min-width: 150px;
+  min-height: 44px;
+  padding: 8px 34px 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.language-select:focus-visible {
+  outline: 3px solid rgba(14, 155, 177, 0.45);
+  outline-offset: 2px;
+}
+
 .profile-setting-block > div:first-child,
 .profile-setting-block > span:first-child {
   display: grid;
@@ -4136,6 +4246,57 @@ button {
 
   .afanti-story-actions {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .brand-lockup {
+    min-width: 0;
+  }
+
+  html[lang="en"] .brand-name {
+    font-size: clamp(14px, 4vw, 17px);
+  }
+
+  html[lang="en"] .brand-subtitle {
+    font-size: clamp(10px, 2.8vw, 11px);
+  }
+
+  html[lang="en"] .section-title {
+    font-size: clamp(16px, 4.6vw, 20px);
+  }
+
+  html[lang="en"] .primary-button,
+  html[lang="en"] .secondary-button,
+  html[lang="en"] .danger-button,
+  html[lang="en"] .ghost-button {
+    font-size: clamp(11px, 3.2vw, 13px);
+  }
+
+  html[lang="en"] .nav-button {
+    font-size: clamp(10px, 2.8vw, 12px);
+  }
+
+  html[lang="en"] .language-select {
+    min-width: min(148px, 46vw);
+    font-size: 12px;
+  }
+
+  .brand-name,
+  .brand-subtitle,
+  .primary-button,
+  .secondary-button,
+  .danger-button,
+  .ghost-button {
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .section-title:not(.unit-goal-text) {
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
   }
 
   .lesson-step {
