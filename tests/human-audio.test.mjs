@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
+import { validateWebmBuffer } from "../tools/lib/webm-audio.mjs";
 
 const manifestPath = "prototype/assets/audio/human/alphabet/manifest.json";
 const comboManifestPath = "prototype/assets/audio/human/combos/manifest.json";
@@ -74,46 +75,6 @@ const expectedVocabAudioAliases = [
   { id: "beliq-food", sourceId: "beliq-animal" }
 ];
 
-function readEbmlVint(buffer, offset) {
-  const firstByte = buffer[offset];
-  let length = 1;
-  let marker = 0x80;
-
-  while (length <= 8 && !(firstByte & marker)) {
-    length += 1;
-    marker >>= 1;
-  }
-
-  assert.ok(length <= 8 && offset + length <= buffer.length, "WebM should contain a valid EBML variable-length integer");
-
-  let value = firstByte & (marker - 1);
-  for (let index = 1; index < length; index += 1) {
-    value = value * 256 + buffer[offset + index];
-  }
-
-  return { length, value };
-}
-
-function readWebmDurationMilliseconds(buffer) {
-  const durationId = Buffer.from([0x44, 0x89]);
-  const durationOffset = buffer.indexOf(durationId);
-  assert.notEqual(durationOffset, -1, "WebM should contain a duration element");
-
-  const durationSize = readEbmlVint(buffer, durationOffset + durationId.length);
-  const valueOffset = durationOffset + durationId.length + durationSize.length;
-  let durationUnits;
-
-  if (durationSize.value === 4) {
-    durationUnits = buffer.readFloatBE(valueOffset);
-  } else if (durationSize.value === 8) {
-    durationUnits = buffer.readDoubleBE(valueOffset);
-  } else {
-    assert.fail(`WebM duration should use a 4-byte or 8-byte float, received ${durationSize.value} bytes`);
-  }
-
-  return durationUnits;
-}
-
 assert.equal(manifest.items.length, 32, "human audio manifest should cover all 32 letters");
 assert.equal(comboManifest.items.length, 34, "combo human audio manifest should cover all combo items");
 assert.equal(comboItemCount - comboManifest.items.length, 0, "all combo examples should have connected recordings");
@@ -167,15 +128,7 @@ for (const { manifest: audioManifest, manifestPath: audioManifestPath } of audio
     assert.ok(fs.existsSync(audioPath), `${item.file} should exist`);
     assert.ok(fs.statSync(audioPath).size > 4096, `${item.file} should contain playable audio data`);
     const audioBuffer = fs.readFileSync(audioPath);
-    assert.deepEqual(
-      [...audioBuffer.subarray(0, 4)],
-      [0x1a, 0x45, 0xdf, 0xa3],
-      `${item.file} should have a valid WebM EBML header`
-    );
-    assert.ok(
-      Number.isFinite(readWebmDurationMilliseconds(audioBuffer)) && readWebmDurationMilliseconds(audioBuffer) > 0,
-      `${item.file} should report a positive duration`
-    );
+    validateWebmBuffer(audioBuffer);
   }
 }
 function makeElement(id) {
