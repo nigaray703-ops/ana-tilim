@@ -286,6 +286,11 @@ const checks = [
     args: ["tests/webm-audio.test.mjs"]
   },
   {
+    label: "test: recording studio catalog",
+    command: node,
+    args: ["tests/recording-studio-catalog.test.mjs"]
+  },
+  {
     label: "test: brand assets",
     command: node,
     args: ["tests/brand-assets.test.mjs"]

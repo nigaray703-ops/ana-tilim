@@ -92,6 +92,42 @@ assert.equal(vocabItemCount - vocabRecordedIds.size, 0, "every vocabulary item s
 assert.equal(practiceManifest.items.length, 0, "practice should reuse alphabet audio instead of duplicate files");
 assert.equal(readingManifest.items.length, 164, "reading human audio manifest should cover every reading line");
 assert.equal(formExampleManifest.items.length, 94, "form example human audio manifest should cover every newly recorded example");
+
+function stableFormExampleKey(value) {
+  let hash = 2166136261;
+  for (const character of value.normalize("NFC")) {
+    hash ^= character.codePointAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+function sourceFormExamples(course) {
+  const byValue = new Map();
+  for (const letter of Object.values(course.letterDetails)) {
+    for (const example of letter.formExamples || []) {
+      if (!example.word) continue;
+      const current = byValue.get(example.word);
+      if (current) {
+        current.latin ||= example.latin || "";
+        continue;
+      }
+      byValue.set(example.word, { id: `form-example-${stableFormExampleKey(example.word)}`, latin: example.latin || "未提供转写" });
+    }
+  }
+  const reusableValues = new Set([...course.comboGroups, ...course.vocabGroups].flatMap((group) => group.items.map((item) => item.value)));
+  return [...byValue.entries()]
+    .filter(([value]) => !reusableValues.has(value))
+    .map(([, item]) => item);
+}
+
+const canonicalFormExamples = sourceFormExamples(courseData);
+const canonicalFormLatinById = new Map(canonicalFormExamples.map((item) => [item.id, item.latin]));
+const formLatinMismatches = formExampleManifest.items
+  .filter((item) => canonicalFormLatinById.get(item.id) !== item.latin)
+  .map((item) => ({ id: item.id, manifestLatin: item.latin, canonicalLatin: canonicalFormLatinById.get(item.id) }));
+assert.equal(canonicalFormExamples.length, 94, "current course data should derive the same 94 dedicated form examples");
+assert.deepEqual(formLatinMismatches, [], `form example manifest latin drift: ${JSON.stringify(formLatinMismatches)}`);
 assert.equal(new Set(manifest.items.map((item) => item.file)).size, 32, "audio filenames should be unique");
 assert.equal(new Set(comboManifest.items.map((item) => item.file)).size, comboManifest.items.length, "combo audio filenames should be unique");
 assert.equal(new Set(vocabManifest.items.map((item) => item.file)).size, vocabManifest.items.length, "vocab audio filenames should be unique");
