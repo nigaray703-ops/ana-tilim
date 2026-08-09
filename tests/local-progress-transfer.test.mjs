@@ -98,6 +98,10 @@ const currentProgressData = {
     latinWriting: { qwerty: { completed: true } },
     letters: { "dot-bone": { viewed: true, completed: true } },
     combos: {},
+    syllableTraining: {
+      "two-letter-warmup": { completedIds: ["warmup-ba", "warmup-pa"] },
+      "vowel-nucleus": { completedIds: ["vowel-nucleus-01"], completed: false }
+    },
     vocab: {},
     practice: { "listening-loop": { listen: true, listenCompletedIds: ["practice-listen-be"] } },
     reading: {}
@@ -187,6 +191,16 @@ const malformedNestedCases = [
     "a progress entry must reject unknown value keys",
     { learningProgress: { letters: { "dot-bone": { futureHtml: "<img onerror=1>" } } } },
     /learningProgress\.letters\.dot-bone 包含未知字段 futureHtml/
+  ],
+  [
+    "syllable submitted IDs must be an array",
+    { learningProgress: { syllableTraining: { "two-letter-warmup": { completedIds: "warmup-ba" } } } },
+    /learningProgress\.syllableTraining\.two-letter-warmup\.completedIds 必须是数组/
+  ],
+  [
+    "syllable submitted IDs must be unique",
+    { learningProgress: { syllableTraining: { "two-letter-warmup": { completedIds: ["warmup-ba", "warmup-ba"] } } } },
+    /learningProgress\.syllableTraining\.two-letter-warmup\.completedIds 不能包含重复 ID/
   ],
   ["mistakes must be an array", { mistakes: {} }, /mistakes 必须是数组/],
   [

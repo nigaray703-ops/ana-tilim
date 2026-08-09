@@ -26,6 +26,7 @@ const {
   alphabetAudioItems,
   latinWriting,
   comboGroups,
+  syllableTraining,
   vocabGroups,
   practiceGroups,
   readingUnits
@@ -250,6 +251,11 @@ const combosUnit = {
   groups: basicComboGroups,
   actionTarget: "combo"
 };
+const syllableTrainingUnit = {
+  ...syllableTraining.unit,
+  groups: [],
+  actionTarget: "syllableWarmup"
+};
 const vocabUnit = {
   id: "basic-phrases",
   subtitle: "问候、人称代词、称呼、数字、动物等",
@@ -262,7 +268,7 @@ const readingUnitCatalog = readingUnits.map(({ title: _title, ...unit }) => ({
   ...unit,
   actionTarget: "reading"
 }));
-const learningUnitCatalog = [lettersUnit, latinWritingUnit, combosUnit, vocabUnit, ...readingUnitCatalog];
+const learningUnitCatalog = [lettersUnit, latinWritingUnit, combosUnit, syllableTrainingUnit, vocabUnit, ...readingUnitCatalog];
 const learningUnits = unitOrder.buildVisibleUnits(learningUnitCatalog, appConfig);
 const persistedScreenIds = new Set([
   "welcome",
@@ -290,6 +296,8 @@ const persistedScreenIds = new Set([
   "comboWriting",
   "comboKeyboard",
   "comboComplete",
+  "syllableWarmup",
+  "syllableRules",
   "vocab",
   "vocabRecognition",
   "vocabKeyboard",
@@ -313,6 +321,7 @@ const stableProgressIds = Object.freeze({
   latinWriting: new Set(latinWritingStepIds),
   letters: new Set(alphabetGroups.map((group) => group.id)),
   combos: new Set(comboGroups.map((group) => group.id)),
+  syllableTraining: new Set([syllableTraining.sections[0].id, ...syllableTraining.rules.map((rule) => rule.id)]),
   vocab: new Set(vocabGroups.map((group) => group.id)),
   practice: new Set(practiceGroups.map((group) => group.id)),
   reading: new Set(readingUnits.flatMap((unit) => unit.groups.map((group) => group.id)))
@@ -343,6 +352,7 @@ const dailyActivitySteps = Object.freeze({
   latinWriting: new Set(["completed"]),
   letters: new Set(["viewed", "writing", "recognition", "keyboard", "completed"]),
   combos: new Set(["viewed", "writing", "recognition", "build", "keyboard", "completed"]),
+  syllableTraining: new Set(["completed"]),
   vocab: new Set(["viewed", "recognition", "keyboard", "completed"]),
   practice: new Set(["viewed", "listen", "repeat", "write", "keyboard", "review", "completed"]),
   reading: new Set(["viewed", "completed"])
@@ -379,6 +389,12 @@ const unitExperience = {
     steps: ["看两字母组合", "看三字母连接", "找断开字母", "做组合辨认和键盘输入"],
     reviewLabel: "复习组合",
     reviewTarget: "combo"
+  },
+  "syllable-training": {
+    recommended: "先把真实两字母组合拼起来，再逐条练习入门音节划分策略。",
+    steps: ["两字母热身", "先找元音中心", "判断辅音边界", "区分构词与音节边界"],
+    reviewLabel: "复习两字母热身",
+    reviewTarget: "syllableWarmup"
   },
   "basic-phrases": {
     recommended: "按主题小课学日常用语和词汇，一行一行看词形。",
@@ -508,6 +524,12 @@ const state = {
   latinWritingLetterId: "aa",
   latinWritingGuideVisible: true,
   latinWritingComparisonRevealed: false,
+  syllableSectionId: "two-letter-warmup",
+  syllableItemIndex: 0,
+  syllableRuleId: syllableTraining.rules[0].id,
+  syllableAnswerId: "",
+  syllableShowStandard: false,
+  syllableAnswerSubmitted: false,
   practiceSpoken: false,
   emailAuthExpanded: false,
   emailCodeSent: false,
@@ -625,6 +647,7 @@ function applyLocalProgressData(saved) {
       latinWriting: saved.learningProgress.latinWriting || {},
       letters: saved.learningProgress.letters || {},
       combos: saved.learningProgress.combos || {},
+      syllableTraining: saved.learningProgress.syllableTraining || {},
       vocab: saved.learningProgress.vocab || {},
       practice: saved.learningProgress.practice || {},
       reading: saved.learningProgress.reading || {}
@@ -753,6 +776,35 @@ function validateImportedProgressIds(saved) {
         const unknownItemId = listenCompletedIds.find((itemId) => !itemIds.has(itemId));
         if (unknownItemId) {
           throw new Error(`learningProgress.${scope}.${id}.listenCompletedIds 包含未知 ID: ${unknownItemId}`);
+        }
+      }
+      const completedIds = bucket[id].completedIds;
+      if (completedIds) {
+        const expectedCompletedIds =
+          scope === "syllableTraining" && id === syllableTraining.sections[0].id
+            ? syllableTraining.twoLetterItems.map((item) => item.id)
+            : scope === "syllableTraining"
+              ? (syllableTraining.rules.find((rule) => rule.id === id)?.exercises || []).map((exercise) => exercise.id)
+              : null;
+        const allowedCompletedIds = expectedCompletedIds ? new Set(expectedCompletedIds) : null;
+        const unknownItemId = completedIds.find((itemId) => !allowedCompletedIds?.has(itemId));
+        if (!allowedCompletedIds || unknownItemId) {
+          throw new Error(`learningProgress.${scope}.${id}.completedIds 包含未知 ID: ${unknownItemId || completedIds[0]}`);
+        }
+        if (new Set(completedIds).size !== completedIds.length) {
+          throw new Error(`learningProgress.${scope}.${id}.completedIds 包含重复 ID`);
+        }
+        if (completedIds.some((itemId, index) => itemId !== expectedCompletedIds[index])) {
+          throw new Error(`learningProgress.${scope}.${id}.completedIds 必须按课程顺序提交`);
+        }
+      }
+      if (scope === "syllableTraining" && bucket[id].completed === true) {
+        const expectedSubmittedCount =
+          id === syllableTraining.sections[0].id
+            ? syllableTraining.twoLetterItems.length
+            : syllableTraining.rules.find((rule) => rule.id === id)?.exercises.length;
+        if (!Array.isArray(completedIds) || completedIds.length !== expectedSubmittedCount) {
+          throw new Error(`learningProgress.${scope}.${id} 未提交全部题目，不能标记完成`);
         }
       }
     }
@@ -930,6 +982,7 @@ function emptyLearningProgress() {
     latinWriting: {},
     letters: {},
     combos: {},
+    syllableTraining: {},
     vocab: {},
     practice: {},
     reading: {}
@@ -949,6 +1002,12 @@ function learningRecordSnapshot() {
       practiceAudioPlayed: state.practiceAudioPlayed,
       keyboardValue: state.keyboardValue,
       latinKeyboardValue: state.latinKeyboardValue,
+      syllableSectionId: state.syllableSectionId,
+      syllableItemIndex: state.syllableItemIndex,
+      syllableRuleId: state.syllableRuleId,
+      syllableAnswerId: state.syllableAnswerId,
+      syllableShowStandard: state.syllableShowStandard,
+      syllableAnswerSubmitted: state.syllableAnswerSubmitted,
       practiceSpoken: state.practiceSpoken,
       currentLetterId: state.currentLetterId,
       selectedGroupId: state.selectedGroupId,
@@ -980,6 +1039,12 @@ function clearLearningRecords() {
   state.practiceAudioPlayed = false;
   state.keyboardValue = "";
   state.latinKeyboardValue = "";
+  state.syllableSectionId = "two-letter-warmup";
+  state.syllableItemIndex = 0;
+  state.syllableRuleId = syllableTraining.rules[0].id;
+  state.syllableAnswerId = "";
+  state.syllableShowStandard = false;
+  state.syllableAnswerSubmitted = false;
   state.practiceSpoken = false;
   state.currentLetterId = "be";
   state.selectedGroupId = "dot-bone";
@@ -1527,6 +1592,10 @@ function unitProgressSummaries() {
     } else if (unit.id === "combos") {
       completed = countCompletedForIds("combos", basicComboIds);
       total = basicComboIds.length;
+    } else if (unit.id === "syllable-training") {
+      const syllableProgressIds = [syllableTraining.sections[0].id, ...syllableTraining.rules.map((rule) => rule.id)];
+      completed = countCompletedForIds("syllableTraining", syllableProgressIds);
+      total = syllableProgressIds.length;
     } else if (unit.id === "basic-phrases") {
       completed = countCompleted("vocab");
       total = unit.groups.length;
@@ -2424,6 +2493,8 @@ function render({ persist = true } = {}) {
     comboWriting: renderComboWriting,
     comboKeyboard: renderComboKeyboard,
     comboComplete: renderComboComplete,
+    syllableWarmup: renderSyllableWarmup,
+    syllableRules: renderSyllableRules,
     vocab: renderVocabLesson,
     vocabRecognition: renderVocabRecognition,
     vocabKeyboard: renderVocabKeyboard,
@@ -3099,6 +3170,209 @@ function renderUnitDetail() {
 
         ${primaryButton}
         ${renderUnitNextActions(unit.id)}
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function currentSyllableWarmupItem() {
+  const lastIndex = syllableTraining.twoLetterItems.length - 1;
+  state.syllableItemIndex = Math.max(0, Math.min(lastIndex, Number(state.syllableItemIndex) || 0));
+  return syllableTraining.twoLetterItems[state.syllableItemIndex];
+}
+
+function syllableWarmupSource(item) {
+  const source = basicComboGroups
+    .flatMap((group) => group.items)
+    .find((combo) => combo.id === item.sourceComboId);
+  const audio = comboAudioByItemId[item.sourceComboId];
+  if (
+    !source ||
+    source.value !== item.standard ||
+    source.latin !== item.latin ||
+    !audio ||
+    audio.outputPath !== item.audioPath
+  ) {
+    throw new Error(`Syllable warmup source mismatch: ${item.id}`);
+  }
+  return { source, audio };
+}
+
+function completedSyllableItemIds(progressId) {
+  const progress = ensureProgress("syllableTraining", progressId);
+  return Array.isArray(progress.completedIds) ? progress.completedIds : [];
+}
+
+function submitSyllableItem(progressId, itemId, expectedIds) {
+  const progress = ensureProgress("syllableTraining", progressId);
+  const completedIds = completedSyllableItemIds(progressId);
+  if (!completedIds.includes(itemId)) {
+    progress.completedIds = [...completedIds, itemId];
+    markCloudDirty("learning");
+  }
+  if (expectedIds.every((id) => progress.completedIds.includes(id))) {
+    markProgress("syllableTraining", progressId, "completed");
+  }
+}
+
+function renderSyllableWarmup() {
+  const item = currentSyllableWarmupItem();
+  const { audio } = syllableWarmupSource(item);
+  const position = `${state.syllableItemIndex + 1} / ${syllableTraining.twoLetterItems.length}`;
+  const isLast = state.syllableItemIndex === syllableTraining.twoLetterItems.length - 1;
+  const revealed = state.syllableShowStandard;
+
+  return screen(
+    `
+      ${topBar(
+        "两字母热身",
+        "先看两个部件，再自己合起来读",
+        "",
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">&larr;</button>`
+      )}
+      <section class="stack syllable-training-screen" data-syllable-warmup-id="${escapeHtml(item.id)}">
+        ${renderItemProgress(position, "真实两字母组合")}
+        <article class="card syllable-warmup-card">
+          <p class="caption">从右往左看字母</p>
+          <div class="syllable-parts" dir="rtl" aria-label="两个字母部件">
+            ${item.parts
+              .map(
+                (part, index) =>
+                  `<span class="uyghur syllable-part" data-syllable-part="${index}">${escapeHtml(part)}</span>`
+              )
+              .join('<span class="syllable-plus" aria-hidden="true"> + </span>')}
+          </div>
+          ${
+            revealed
+              ? `
+                <div class="syllable-standard" data-syllable-standard="${escapeHtml(item.id)}">
+                  <strong class="uyghur" dir="rtl">${escapeHtml(item.standard)}</strong>
+                  ${renderLatinTransliteration(item.latin, "syllable-latin")}
+                </div>
+                <div class="syllable-audio-row">
+                  ${renderAudioButton({
+                    audio,
+                    label: item.standard,
+                    accessibleLabel: `播放 ${item.standard}，ULY ${item.latin}`
+                  })}
+                  <span>真人音频</span>
+                </div>
+              `
+              : `
+                <button class="primary-button" data-action="combine-syllable-warmup" type="button">合起来读</button>
+              `
+          }
+        </article>
+        ${
+          revealed
+            ? isLast
+              ? '<button class="primary-button" data-action="go" data-target="syllableRules" type="button">继续：音节划分策略</button>'
+              : '<button class="primary-button" data-action="next-syllable-warmup" type="button">下一个组合</button>'
+            : ""
+        }
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function currentSyllableRule() {
+  return syllableTraining.rules.find((rule) => rule.id === state.syllableRuleId) || syllableTraining.rules[0];
+}
+
+function syllableRuleExercise(rule) {
+  const submittedIds = completedSyllableItemIds(rule.id);
+  return rule.exercises[Math.min(submittedIds.length, rule.exercises.length - 1)];
+}
+
+function renderSyllableRules() {
+  const rule = currentSyllableRule();
+  const ruleIndex = syllableTraining.rules.findIndex((item) => item.id === rule.id);
+  const submittedIds = completedSyllableItemIds(rule.id);
+  const submittedCount = submittedIds.length;
+  const exercise = syllableRuleExercise(rule);
+  const ruleComplete = submittedCount === rule.exercises.length;
+  const isLastRule = ruleIndex === syllableTraining.rules.length - 1;
+  const selectedAnswer = state.syllableAnswerId;
+
+  return screen(
+    `
+      ${topBar(
+        "音节划分策略",
+        "每条规则紧接着练 4 题",
+        "",
+        `<button class="back-button" data-action="go" data-target="syllableWarmup" type="button" aria-label="返回">&larr;</button>`
+      )}
+      <section class="stack syllable-training-screen" data-syllable-rule-id="${escapeHtml(rule.id)}">
+        ${renderItemProgress(`${ruleIndex + 1} / ${syllableTraining.rules.length} 条规则`, "按顺序完成当前规则")}
+        <article class="card syllable-rule-card">
+          <p class="caption">入门策略</p>
+          <h2 class="section-title">${escapeHtml(rule.title)}</h2>
+          <p>${escapeHtml(rule.explanation)}</p>
+          <p class="syllable-rule-scope">${escapeHtml(rule.scope)}</p>
+        </article>
+        <article class="card syllable-exercise-card" data-syllable-exercise-id="${escapeHtml(exercise.id)}">
+          <div class="section-row">
+            <div>
+              <p class="caption">当前规则练习</p>
+              <h2 class="section-title">${Math.min(submittedCount + 1, rule.exercises.length)} / ${rule.exercises.length}</h2>
+            </div>
+          </div>
+          <p class="syllable-exercise-prompt">${escapeHtml(exercise.prompt)}</p>
+          ${
+            !ruleComplete && !state.syllableAnswerSubmitted
+              ? `
+                <div class="syllable-rule-options">
+                  ${[
+                    ["answer", exercise.answer],
+                    ["distractor", exercise.distractor]
+                  ]
+                    .map(
+                      ([answerId, label]) => `
+                        <button
+                          class="option-button ${selectedAnswer === answerId ? "selected" : ""}"
+                          data-action="pick-syllable-rule-answer"
+                          data-answer-id="${answerId}"
+                          type="button"
+                          aria-pressed="${selectedAnswer === answerId}"
+                        >${escapeHtml(label)}</button>
+                      `
+                    )
+                    .join("")}
+                </div>
+                <button class="primary-button" data-action="submit-syllable-rule-answer" type="button" ${selectedAnswer ? "" : "disabled"}>提交本题</button>
+              `
+              : ""
+          }
+          ${
+            state.syllableAnswerSubmitted
+              ? `
+                <div class="feedback ${selectedAnswer === "answer" ? "good" : "bad"}" role="status">
+                  <strong>${selectedAnswer === "answer" ? "判断正确" : "再看一次规则"}</strong>
+                  <p>${escapeHtml(rule.explanation)}</p>
+                </div>
+              `
+              : ""
+          }
+          ${
+            state.syllableAnswerSubmitted && !ruleComplete
+              ? '<button class="primary-button" data-action="next-syllable-rule-exercise" type="button">继续下一题</button>'
+              : ""
+          }
+          ${
+            ruleComplete
+              ? `
+                <div class="feedback good" role="status"><strong>${submittedCount} / ${rule.exercises.length}</strong><p>本条规则的题目已全部提交。</p></div>
+                ${
+                  isLastRule
+                    ? renderUnitNextActions("syllable-training")
+                    : '<button class="primary-button" data-action="next-syllable-rule" type="button">下一条规则</button>'
+                }
+              `
+              : ""
+          }
+        </article>
       </section>
     `,
     "learn"
@@ -6009,6 +6283,64 @@ document.addEventListener("click", (event) => {
 
   const action = button.dataset.action;
 
+  if (action === "combine-syllable-warmup") {
+    const item = currentSyllableWarmupItem();
+    submitSyllableItem(
+      syllableTraining.sections[0].id,
+      item.id,
+      syllableTraining.twoLetterItems.map((warmupItem) => warmupItem.id)
+    );
+    state.syllableShowStandard = true;
+    render();
+    return;
+  }
+
+  if (action === "next-syllable-warmup") {
+    if (!state.syllableShowStandard) return;
+    state.syllableItemIndex = Math.min(state.syllableItemIndex + 1, syllableTraining.twoLetterItems.length - 1);
+    state.syllableShowStandard = false;
+    render();
+    return;
+  }
+
+  if (action === "pick-syllable-rule-answer") {
+    if (!["answer", "distractor"].includes(button.dataset.answerId) || state.syllableAnswerSubmitted) return;
+    state.syllableAnswerId = button.dataset.answerId;
+    render();
+    return;
+  }
+
+  if (action === "submit-syllable-rule-answer") {
+    if (!["answer", "distractor"].includes(state.syllableAnswerId) || state.syllableAnswerSubmitted) return;
+    const rule = currentSyllableRule();
+    const exercise = syllableRuleExercise(rule);
+    submitSyllableItem(rule.id, exercise.id, rule.exercises.map((item) => item.id));
+    state.syllableAnswerSubmitted = true;
+    render();
+    return;
+  }
+
+  if (action === "next-syllable-rule-exercise") {
+    if (!state.syllableAnswerSubmitted || completedSyllableItemIds(currentSyllableRule().id).length >= 4) return;
+    state.syllableAnswerId = "";
+    state.syllableAnswerSubmitted = false;
+    render();
+    return;
+  }
+
+  if (action === "next-syllable-rule") {
+    const rule = currentSyllableRule();
+    if (!state.learningProgress.syllableTraining[rule.id]?.completed) return;
+    const ruleIndex = syllableTraining.rules.findIndex((item) => item.id === rule.id);
+    const nextRule = syllableTraining.rules[ruleIndex + 1];
+    if (!nextRule) return;
+    state.syllableRuleId = nextRule.id;
+    state.syllableAnswerId = "";
+    state.syllableAnswerSubmitted = false;
+    render();
+    return;
+  }
+
   if (action === "complete-latin-classification") {
     markProgress("latinWriting", "classification", "completed");
     state.latinVowelComparisonIndex = 0;
@@ -6442,6 +6774,20 @@ document.addEventListener("click", (event) => {
     }
     if (target === "latinKeyboardIntro") {
       state.latinKeyboardValue = "";
+    }
+    if (target === "syllableWarmup") {
+      state.syllableSectionId = syllableTraining.sections[0].id;
+      state.syllableItemIndex = 0;
+      state.syllableShowStandard = false;
+    }
+    if (target === "syllableRules") {
+      const firstIncompleteRule = syllableTraining.rules.find(
+        (rule) => !state.learningProgress.syllableTraining[rule.id]?.completed
+      );
+      state.syllableSectionId = syllableTraining.sections[1].id;
+      state.syllableRuleId = (firstIncompleteRule || syllableTraining.rules[syllableTraining.rules.length - 1]).id;
+      state.syllableAnswerId = "";
+      state.syllableAnswerSubmitted = false;
     }
     if (["picture", "listening", "keyboard", "letterOdd", "letterSound", "comboRecognition", "comboBuild", "comboWriting", "comboKeyboard", "vocabRecognition", "vocabKeyboard", "letterWriting"].includes(target)) {
       resetPracticeState();

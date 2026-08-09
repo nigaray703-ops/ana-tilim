@@ -5,7 +5,7 @@
     cn: "Uyghur Tili 国内版",
     global: "Ana Tilim 海外版"
   });
-  const PROGRESS_SCOPES = Object.freeze(["latinWriting", "letters", "combos", "vocab", "practice", "reading"]);
+  const PROGRESS_SCOPES = Object.freeze(["latinWriting", "letters", "combos", "syllableTraining", "vocab", "practice", "reading"]);
   const PROGRESS_BOOLEAN_FIELDS = new Set([
     "viewed",
     "writing",
@@ -67,11 +67,14 @@
             if (typeof fieldValue !== "boolean") {
               throw new Error(`${entryPath}.${field} 必须是布尔值`);
             }
-          } else if (field === "listenCompletedIds") {
+          } else if (["listenCompletedIds", "completedIds"].includes(field)) {
             if (!Array.isArray(fieldValue)) {
-              throw new Error(`${entryPath}.listenCompletedIds 必须是数组`);
+              throw new Error(`${entryPath}.${field} 必须是数组`);
             }
-            fieldValue.forEach((item, index) => requireString(item, `${entryPath}.listenCompletedIds[${index}]`));
+            fieldValue.forEach((item, index) => requireString(item, `${entryPath}.${field}[${index}]`));
+            if (new Set(fieldValue).size !== fieldValue.length) {
+              throw new Error(`${entryPath}.${field} 不能包含重复 ID`);
+            }
           } else {
             throw new Error(`${entryPath} 包含未知字段 ${field}`);
           }

@@ -2928,6 +2928,117 @@ button {
   color: var(--ink-soft);
 }
 
+.syllable-training-screen,
+.syllable-warmup-card,
+.syllable-rule-card,
+.syllable-exercise-card {
+  min-width: 0;
+}
+
+.syllable-warmup-card,
+.syllable-rule-card,
+.syllable-exercise-card {
+  display: grid;
+  gap: 14px;
+}
+
+.syllable-parts {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.syllable-part {
+  display: grid;
+  place-items: center;
+  min-width: 68px;
+  min-height: 68px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--gold-soft);
+  font-size: 42px;
+  line-height: 1;
+}
+
+.syllable-plus {
+  color: var(--ink-soft);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.syllable-standard {
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  min-height: 112px;
+  border-radius: var(--radius);
+  background: linear-gradient(145deg, var(--mint-soft), var(--teal-soft));
+  text-align: center;
+}
+
+.syllable-standard .uyghur {
+  font-size: clamp(58px, 15vw, 88px);
+  line-height: 1;
+}
+
+.syllable-audio-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.syllable-rule-card p,
+.syllable-exercise-prompt,
+.syllable-exercise-card .feedback p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.syllable-rule-scope {
+  padding: 10px;
+  border-left: 3px solid var(--gold);
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  background: var(--gold-soft);
+}
+
+.syllable-exercise-prompt {
+  font-weight: 800;
+}
+
+.syllable-rule-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.option-button {
+  min-width: 0;
+  min-height: 58px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: var(--paper);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.option-button.selected {
+  border-color: var(--teal);
+  background: var(--teal-soft);
+  box-shadow: inset 0 0 0 1px var(--teal);
+}
+
 @media (min-width: 561px) and (max-width: 900px) {
   .uyghur-keyboard {
     max-width: 680px;
@@ -2940,6 +3051,10 @@ button {
 }
 
 @media (max-width: 560px) {
+  .syllable-rule-options {
+    grid-template-columns: 1fr;
+  }
+
   .latin-vowel-comparison-grid {
     grid-template-columns: 1fr;
   }
