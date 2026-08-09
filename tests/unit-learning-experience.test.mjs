@@ -69,7 +69,7 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260810-unit-resume",
+  "./styles.css?v=20260810-feedback-i18n",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260809-bilingual",
@@ -83,26 +83,26 @@ const expectedVersionedAssets = [
   "./course-data/afanti-english-data.js?v=20260810-reviewed-afanti",
   "./afanti-content.js?v=20260810-reviewed-afanti",
   "./course-data.js?v=20260810-reviewed-afanti",
-  "./i18n/ui-messages.js?v=20260810-unit-resume",
+  "./i18n/ui-messages.js?v=20260810-feedback-i18n",
   "./i18n/alphabet-en.js?v=20260809-bilingual",
   "./i18n/combo-en.js?v=20260809-bilingual",
   "./i18n/vocab-en.js?v=20260809-bilingual",
   "./i18n/practice-en.js?v=20260809-bilingual",
   "./i18n/reading-en.js?v=20260809-bilingual",
   "./i18n/course-en.js?v=20260809-bilingual",
-  "./i18n/runtime.js?v=20260810-unit-resume",
+  "./i18n/runtime.js?v=20260810-feedback-i18n",
   "./unit-order.js?v=20260809-edition-unit-order",
   "./uyghur-keyboard.js?v=20260809-phone-morphemes",
   "./latin-keyboard.js?v=20260809-latin-qwerty",
   "./sentence-morphemes.js?v=20260809-word-formation",
   "./sentence-glossary.js?v=20260809-word-formation",
-  "./progress-transfer.js?v=20260810-unit-resume",
+  "./progress-transfer.js?v=20260810-feedback-i18n",
   "./audio-controller.js?v=20260728-uly-transliteration",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260810-unit-maps",
   "./feedback.js?v=20260810-feedback",
-  "./app.js?v=20260810-unit-resume"
+  "./app.js?v=20260810-feedback-i18n"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -118,7 +118,7 @@ const previousEnglishUiCache = new Map([
   ["./styles.css?v=20260809-bilingual", { release: "before-english-layout" }],
   ["./app.js?v=20260809-bilingual-final", { release: "before-english-layout" }]
 ]);
-for (const url of ["./styles.css?v=20260810-unit-resume", "./app.js?v=20260810-unit-resume"]) {
+for (const url of ["./styles.css?v=20260810-feedback-i18n", "./app.js?v=20260810-feedback-i18n"]) {
   assert.ok(versionedAppAssets.includes(url));
   assert.equal(previousEnglishUiCache.get(url), undefined);
 }
@@ -141,8 +141,8 @@ const previousFinalReviewCache = new Map([
   ["./i18n/runtime.js?v=20260809-bilingual", { release: "pr-5" }]
 ]);
 for (const finalAssetUrl of [
-  "./i18n/ui-messages.js?v=20260810-unit-resume",
-  "./i18n/runtime.js?v=20260810-unit-resume"
+  "./i18n/ui-messages.js?v=20260810-feedback-i18n",
+  "./i18n/runtime.js?v=20260810-feedback-i18n"
 ]) {
   assert.ok(versionedAppAssets.includes(finalAssetUrl), `${finalAssetUrl} should be requested by production HTML`);
   assert.equal(

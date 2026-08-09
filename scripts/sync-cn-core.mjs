@@ -142,14 +142,14 @@ if (!appMatchBeforeSharedI18n) {
   throw new Error("Cannot update " + indexPath + ": app.js script tag not found after i18n normalization.");
 }
 const sharedI18nScripts = [
-  '<script src="./i18n/ui-messages.js?v=20260810-unit-resume"></script>',
+  '<script src="./i18n/ui-messages.js?v=20260810-feedback-i18n"></script>',
   '<script src="./i18n/alphabet-en.js?v=20260809-bilingual"></script>',
   '<script src="./i18n/combo-en.js?v=20260809-bilingual"></script>',
   '<script src="./i18n/vocab-en.js?v=20260809-bilingual"></script>',
   '<script src="./i18n/practice-en.js?v=20260809-bilingual"></script>',
   '<script src="./i18n/reading-en.js?v=20260809-bilingual"></script>',
   '<script src="./i18n/course-en.js?v=20260809-bilingual"></script>',
-  '<script src="./i18n/runtime.js?v=20260810-unit-resume"></script>'
+  '<script src="./i18n/runtime.js?v=20260810-feedback-i18n"></script>'
 ].map((tag) => `${appMatchBeforeSharedI18n[1]}${tag}\n`).join("");
 normalizedIndex = `${indexWithoutSharedI18nScripts.slice(0, appMatchBeforeSharedI18n.index)}${sharedI18nScripts}${indexWithoutSharedI18nScripts.slice(appMatchBeforeSharedI18n.index)}`;
 indexUpdateMessages.push("Normalized index.html: shared i18n runtime before app.js");
@@ -157,7 +157,7 @@ indexUpdateMessages.push("Normalized index.html: shared i18n runtime before app.
 const sharedCacheReferences = [
   {
     pattern: /(\bhref=["']\.\/styles\.css)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260810-unit-resume$2",
+    replacement: "$1?v=20260810-feedback-i18n$2",
     label: "styles.css"
   },
   {
@@ -167,7 +167,7 @@ const sharedCacheReferences = [
   },
   {
     pattern: /(\bsrc=["']\.\/progress-transfer\.js)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260810-unit-resume$2",
+    replacement: "$1?v=20260810-feedback-i18n$2",
     label: "progress-transfer.js"
   },
   {
@@ -182,7 +182,7 @@ const sharedCacheReferences = [
   },
   {
     pattern: /(\bsrc=["']\.\/app\.js)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260810-unit-resume$2",
+    replacement: "$1?v=20260810-feedback-i18n$2",
     label: "app.js"
   }
 ];
