@@ -54,7 +54,7 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260809-syllable-sentences",
+  "./styles.css?v=20260810-afanti-reading",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
@@ -77,7 +77,7 @@ const expectedVersionedAssets = [
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260809-syllable-review",
-  "./app.js?v=20260809-plan3-stage-guard"
+  "./app.js?v=20260810-afanti-reading"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -636,7 +636,8 @@ assert.deepEqual(globalUnits.map(({ id, title }) => [id, title]), [
   ["dialogue-theater", "第八单元：对话小剧场"],
   ["short-stories", "第九单元：小故事"],
   ["uyghur-proverbs", "第十单元：维吾尔谚语"],
-  ["famous-quotes", "第十一单元：名人名言"]
+  ["famous-quotes", "第十一单元：名人名言"],
+  ["afanti-stories", "第十二单元：阿凡提小故事"]
 ]);
 
 const learningProgressBeforeSyllableSummaryRegression = JSON.parse(
@@ -699,7 +700,10 @@ vm.runInContext(
   context
 );
 
-function createConfiguredAppVm(hiddenUnitIds, { includeLatinKeyboard = true } = {}) {
+function createConfiguredAppVm(
+  hiddenUnitIds,
+  { includeLatinKeyboard = true, includeAfantiEnglish = true, configOverrides = {} } = {}
+) {
   const configuredApp = makeElement("configured-app");
   const configuredToast = makeElement("configured-toast");
   const configuredStorage = {};
@@ -712,7 +716,9 @@ function createConfiguredAppVm(hiddenUnitIds, { includeLatinKeyboard = true } = 
         if (selector === "#toast") return configuredToast;
         return null;
       },
-      addEventListener() {}
+      addEventListener(eventName, handler) {
+        if (eventName === "click") configuredClickHandler = handler;
+      }
     },
     window: {
       setTimeout() {
@@ -755,6 +761,7 @@ function createConfiguredAppVm(hiddenUnitIds, { includeLatinKeyboard = true } = 
     }
   };
 
+  let configuredClickHandler = null;
   configuredContext.globalThis = configuredContext;
   vm.createContext(configuredContext);
   vm.runInContext(fs.readFileSync("prototype/app-config.js", "utf8"), configuredContext, {
@@ -763,9 +770,12 @@ function createConfiguredAppVm(hiddenUnitIds, { includeLatinKeyboard = true } = 
   configuredContext.window.ANA_TILIM_APP_CONFIG = Object.freeze({
     ...configuredContext.window.ANA_TILIM_APP_CONFIG,
     cloudEnabled: false,
-    hiddenUnitIds
+    hiddenUnitIds,
+    ...configOverrides
   });
-  for (const scriptPath of courseDataScriptPaths) {
+  for (const scriptPath of courseDataScriptPaths.filter(
+    (scriptPath) => includeAfantiEnglish || scriptPath !== "prototype/course-data/afanti-english-data.js"
+  )) {
     vm.runInContext(fs.readFileSync(scriptPath, "utf8"), configuredContext, { filename: scriptPath });
   }
   for (const scriptPath of [
@@ -787,6 +797,18 @@ function createConfiguredAppVm(hiddenUnitIds, { includeLatinKeyboard = true } = 
     render(script) {
       vm.runInContext(`${script}; render();`, configuredContext);
       return configuredApp.innerHTML;
+    },
+    click(dataset) {
+      assert.ok(configuredClickHandler, "configured app click handler should be registered");
+      configuredClickHandler({
+        target: {
+          closest(selector) {
+            assert.equal(selector, "[data-action]");
+            return { dataset };
+          }
+        }
+      });
+      return configuredApp.innerHTML;
     }
   };
 }
@@ -797,7 +819,10 @@ assert.throws(
   "the app should fail fast when its focused Latin keyboard dependency is missing"
 );
 
-const domesticApp = createConfiguredAppVm(["famous-quotes"]);
+const domesticApp = createConfiguredAppVm(["famous-quotes"], {
+  includeAfantiEnglish: false,
+  configOverrides: { edition: "cn", afantiLanguages: ["latin", "zh"] }
+});
 const domesticWelcomeHtml = domesticApp.render("state.screen = 'welcome'");
 assert.match(
   domesticWelcomeHtml,
@@ -827,18 +852,23 @@ assert.deepEqual(domesticUnits.map(({ id, title }) => [id, title]), [
   ["sentence-patterns", "第七单元：基础句型"],
   ["dialogue-theater", "第八单元：对话小剧场"],
   ["short-stories", "第九单元：小故事"],
-  ["uyghur-proverbs", "第十单元：维吾尔谚语"]
+  ["uyghur-proverbs", "第十单元：维吾尔谚语"],
+  ["afanti-stories", "第十一单元：阿凡提小故事"]
 ]);
 const domesticLearningPath = domesticApp.render("state.screen = 'learn'");
 assert.equal(
   (domesticLearningPath.match(/class="lesson-step"/g) || []).length,
-  10,
-  "domestic learning path should render only the ten visible course cards"
+  11,
+  "domestic learning path should render all eleven domestic course cards"
 );
 assert.ok(!domesticLearningPath.includes("名人名言"), "domestic learning path should hide famous quotes");
 assert.ok(
   domesticLearningPath.indexOf("第九单元：小故事") < domesticLearningPath.indexOf("第十单元：维吾尔谚语"),
-  "domestic learning path should keep visible cards in edition order"
+  "domestic learning path should keep existing visible cards in edition order"
+);
+assert.ok(
+  domesticLearningPath.indexOf("第十单元：维吾尔谚语") < domesticLearningPath.indexOf("第十一单元：阿凡提小故事"),
+  "domestic learning path should place the approved Afanti unit last"
 );
 assert.deepEqual(
   JSON.parse(
@@ -857,7 +887,8 @@ assert.deepEqual(
     ["第七单元", "基础句型"],
     ["第八单元", "对话小剧场"],
     ["第九单元", "小故事"],
-    ["第十单元", "维吾尔谚语"]
+    ["第十单元", "维吾尔谚语"],
+    ["第十一单元", "阿凡提小故事"]
   ],
   "domestic progress summaries should include only visible units"
 );
@@ -865,13 +896,33 @@ const domesticProverbActions = vm.runInContext(
   "renderUnitNextActions('uyghur-proverbs')",
   domesticApp.context
 );
-assert.ok(domesticProverbActions.includes("回到学习路径"), "domestic proverb unit should be terminal");
+assert.ok(domesticProverbActions.includes("进入第十一单元"), "domestic proverb unit should lead to Afanti");
 assert.match(
   domesticProverbActions,
-  /data-action="go"[^>]*data-target="learn"[^>]*>[\s\S]*?回到学习路径/,
-  "domestic proverb terminal action should return to the learning path"
+  /data-action="open-unit"[^>]*data-id="afanti-stories"[^>]*>[\s\S]*?进入第十一单元/,
+  "domestic proverb action should open the final Afanti unit"
 );
 assert.ok(!domesticProverbActions.includes('data-id="famous-quotes"'), "domestic proverb unit should not navigate to hidden quotes");
+
+const domesticAfantiDefaultHtml = domesticApp.render(
+  "state.selectedUnitId = 'afanti-stories'; state.screen = 'afantiStories'"
+);
+assert.ok(domesticAfantiDefaultHtml.includes("ئاۋۋال ئاخىرىغىچە ئاڭلا"), "domestic Afanti should show Uyghur by default");
+assert.ok(!domesticAfantiDefaultHtml.includes("Bir küni, ikki bala"), "domestic Afanti should hide Latin by default");
+assert.ok(!domesticAfantiDefaultHtml.includes("一天，两个孩子在市场上争吵"), "domestic Afanti should hide Chinese by default");
+assert.ok(!domesticAfantiDefaultHtml.includes("English"), "domestic Afanti should never offer English");
+assert.equal(
+  (domesticAfantiDefaultHtml.match(/data-action="toggle-afanti-language"/g) || []).length,
+  2,
+  "domestic Afanti should offer exactly Latin and Chinese switches"
+);
+const domesticBeforeForgedEnglish = vm.runInContext("JSON.stringify(state.afantiVisibleLanguages)", domesticApp.context);
+domesticApp.click({ action: "toggle-afanti-language", language: "en" });
+assert.equal(
+  vm.runInContext("JSON.stringify(state.afantiVisibleLanguages)", domesticApp.context),
+  domesticBeforeForgedEnglish,
+  "a forged domestic English action must not change transient language state"
+);
 
 const shiftedApp = createConfiguredAppVm(["letters"]);
 assert.equal(
@@ -915,8 +966,9 @@ assert.equal(
 );
 assert.equal(vm.runInContext("currentUnitExperience('short-stories').nextUnitId", context), "uyghur-proverbs");
 assert.equal(vm.runInContext("currentUnitExperience('uyghur-proverbs').nextUnitId", context), "famous-quotes");
-assert.equal(vm.runInContext("currentUnitExperience('famous-quotes').nextUnitId", context), null);
-assert.equal(vm.runInContext("currentUnitExperience('famous-quotes').nextLabel", context), "回到学习路径");
+assert.equal(vm.runInContext("currentUnitExperience('famous-quotes').nextUnitId", context), "afanti-stories");
+assert.equal(vm.runInContext("currentUnitExperience('afanti-stories').nextUnitId", context), null);
+assert.equal(vm.runInContext("currentUnitExperience('afanti-stories').nextLabel", context), "回到学习路径");
 
 assert.deepEqual(
   JSON.parse(
@@ -936,7 +988,8 @@ assert.deepEqual(
     ["第八单元", "对话小剧场"],
     ["第九单元", "小故事"],
     ["第十单元", "维吾尔谚语"],
-    ["第十一单元", "名人名言"]
+    ["第十一单元", "名人名言"],
+    ["第十二单元", "阿凡提小故事"]
   ]
 );
 
@@ -1269,6 +1322,62 @@ function clickDataset(dataset) {
     }
   });
 }
+
+const afantiUnitHtml = renderState("state.selectedUnitId = 'afanti-stories'; state.screen = 'unit'");
+assert.ok(afantiUnitHtml.includes("第十二单元：阿凡提小故事"), "global catalog should expose Afanti as unit twelve");
+assert.match(
+  afantiUnitHtml,
+  /data-action="go"[^>]*data-target="afantiStories"[^>]*>\s*进入当前学习\s*<\/button>/,
+  "the Afanti unit should have a real reading entry"
+);
+clickDataset({ action: "go", target: "afantiStories" });
+assert.equal(vm.runInContext("state.screen", context), "afantiStories", "the real delegated entry should open Afanti reading");
+assert.ok(app.innerHTML.includes("ئاۋۋال ئاخىرىغىچە ئاڭلا"), "Afanti reading should show the Uyghur title by default");
+assert.ok(app.innerHTML.includes("بىر كۈنى، ئىككى بالا بازاردا تالاشتى"), "Afanti reading should show Uyghur paragraphs by default");
+assert.ok(!app.innerHTML.includes("Bir küni, ikki bala bazarda talashti"), "Afanti reading should hide Latin paragraphs by default");
+assert.ok(!app.innerHTML.includes("一天，两个孩子在市场上争吵"), "Afanti reading should hide Chinese paragraphs by default");
+assert.ok(!app.innerHTML.includes("One day, two children argued in the market"), "Afanti reading should hide English paragraphs by default");
+assert.ok(!app.innerHTML.includes("先听完整事实，再作判断"), "Afanti reading should not leak a Chinese content summary while Chinese is off");
+assert.equal(
+  (app.innerHTML.match(/data-action="toggle-afanti-language"/g) || []).length,
+  3,
+  "global Afanti should offer exactly Latin, Chinese, and English switches"
+);
+assert.equal(
+  (app.innerHTML.match(/data-action="toggle-afanti-language"[^>]*aria-pressed="false"/g) || []).length,
+  3,
+  "all global language switches should start off"
+);
+assert.match(app.innerHTML, /class="uyghur afanti-uyghur"[^>]*lang="ug"[^>]*dir="rtl"/);
+assert.ok(!app.innerHTML.includes('data-action="play-audio"'), "Afanti reading must not render audio controls");
+
+clickDataset({ action: "toggle-afanti-language", language: "latin" });
+assert.ok(app.innerHTML.includes("Bir küni, ikki bala bazarda talashti"), "Latin should appear after its real switch is pressed");
+assert.match(app.innerHTML, /class="afanti-translation afanti-latin"[^>]*lang="ug-Latn"[^>]*dir="ltr"/);
+assert.ok(app.innerHTML.includes("بىر كۈنى، ئىككى بالا بازاردا تالاشتى"), "turning on Latin must keep Uyghur visible");
+clickDataset({ action: "toggle-afanti-language", language: "zh" });
+assert.ok(app.innerHTML.includes("一天，两个孩子在市场上争吵"), "Chinese should appear independently");
+assert.ok(app.innerHTML.includes("先听完整事实，再作判断"), "the approved Chinese theme should appear with Chinese content");
+clickDataset({ action: "toggle-afanti-language", language: "en" });
+assert.ok(app.innerHTML.includes("One day, two children argued in the market"), "English should appear only after its global switch is pressed");
+assert.match(app.innerHTML, /class="afanti-translation afanti-en"[^>]*lang="en"[^>]*dir="ltr"/);
+clickDataset({ action: "toggle-afanti-language", language: "latin" });
+assert.ok(!app.innerHTML.includes("Bir küni, ikki bala bazarda talashti"), "turning Latin off should remove its paragraphs without empty placeholders");
+
+clickDataset({ action: "select-afanti-story", id: "fair-bowl-water" });
+assert.equal(vm.runInContext("state.selectedAfantiStoryId", context), "fair-bowl-water");
+assert.ok(app.innerHTML.includes("بىر چىنە سۇدىكى ئادىللىق"), "selecting another approved story should render its Uyghur title");
+assert.ok(app.innerHTML.includes("On a hot day, Afanti and two children worked in a garden"), "enabled English should follow the selected story");
+assert.equal(
+  vm.runInContext("Object.hasOwn(buildLocalProgressData(), 'afantiVisibleLanguages')", context),
+  false,
+  "Afanti language switches must remain transient and stay out of local progress"
+);
+assert.equal(
+  vm.runInContext("Object.hasOwn(buildCloudSnapshot(), 'afantiVisibleLanguages')", context),
+  false,
+  "Afanti language switches must remain transient and stay out of cloud progress"
+);
 
 function pressPhysicalKey(key, overrides = {}) {
   assert.ok(keydownHandler, "keydown handler should be registered");
@@ -3000,6 +3109,7 @@ includesAll(
     "第九单元：小故事",
     "第十单元：维吾尔谚语",
     "第十一单元：名人名言",
+    "第十二单元：阿凡提小故事",
     "问候、人称代词、称呼、数字、动物"
   ],
   "learning path with reading units"
@@ -3007,7 +3117,7 @@ includesAll(
 assertLearnerCopyClean("learning path");
 assert.ok(!app.innerHTML.includes("听说与书写强化"), "learning path should remove the old third practice unit");
 assert.ok(!app.innerHTML.includes("第三单元：字母连接规律"), "learning path should remove the separate connection unit");
-assert.equal((app.innerHTML.match(/class="lesson-step"/g) || []).length, 11, "learning path should show eleven learning units");
+assert.equal((app.innerHTML.match(/class="lesson-step"/g) || []).length, 12, "global learning path should show all twelve learning units");
 assert.ok(!app.innerHTML.includes("基础词组与主题词"), "learning path should not show the removed vocabulary title");
 assert.ok(!app.innerHTML.includes("选择训练组、完成一个目标、查看本轮结果"), "learning unit cards should not show the full step explanation");
 assert.ok(!app.innerHTML.includes("完整字母目录"), "learning path should not duplicate the full alphabet table");
@@ -3774,7 +3884,7 @@ assert.ok(!app.innerHTML.includes("完成后评价"), "practice keyboard entry s
 const visibleUnitIdsWithSyllableTraining = JSON.parse(
   vm.runInContext("JSON.stringify(learningUnits.map((unit) => unit.id))", context)
 );
-assert.equal(visibleUnitIdsWithSyllableTraining.length, 11, "global edition should expose the new syllable unit atomically");
+assert.equal(visibleUnitIdsWithSyllableTraining.length, 12, "global edition should keep syllable training and the final Afanti unit visible atomically");
 assert.deepEqual(
   visibleUnitIdsWithSyllableTraining.slice(0, 5),
   ["letters", "latin-keyboard-writing", "combos", "syllable-training", "basic-phrases"],

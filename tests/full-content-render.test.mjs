@@ -143,9 +143,55 @@ for (const unitId of [
   "combos",
   "syllable-training",
   "basic-phrases",
-  ...courseData.readingUnits.map((unit) => unit.id)
+  ...courseData.readingUnits.map((unit) => unit.id),
+  courseData.afantiUnit.id
 ]) {
   renderState({ screen: "unit", selectedUnitId: unitId }, `${unitId} unit`);
+}
+
+for (const story of courseData.afantiStories) {
+  renderState(
+    {
+      screen: "afantiStories",
+      selectedUnitId: "afanti-stories",
+      selectedAfantiStoryId: story.id,
+      afantiVisibleLanguages: { latin: false, zh: false, en: false }
+    },
+    `Afanti ${story.id} Uyghur only`,
+    story.uyghur.paragraphs[0]
+  );
+  assert.equal(
+    (app.innerHTML.match(/class="afanti-paragraph"/g) || []).length,
+    story.uyghur.paragraphs.length,
+    `${story.id} should render every approved Uyghur paragraph`
+  );
+  assert.equal(
+    (app.innerHTML.match(/class="afanti-translation /g) || []).length,
+    0,
+    `${story.id} should not render empty auxiliary-language nodes by default`
+  );
+
+  for (const language of ["latin", "zh", "en"]) {
+    renderState(
+      {
+        screen: "afantiStories",
+        selectedUnitId: "afanti-stories",
+        selectedAfantiStoryId: story.id,
+        afantiVisibleLanguages: {
+          latin: language === "latin",
+          zh: language === "zh",
+          en: language === "en"
+        }
+      },
+      `Afanti ${story.id} ${language}`,
+      language === "en" ? story.en.paragraphs[0] : story[language].paragraphs[0]
+    );
+    assert.equal(
+      (app.innerHTML.match(/class="afanti-translation /g) || []).length,
+      story.uyghur.paragraphs.length,
+      `${story.id} ${language} should align one auxiliary paragraph with each Uyghur paragraph`
+    );
+  }
 }
 
 renderState(
@@ -531,6 +577,6 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
   }
 }
 
-assert.equal(renderCount, 744, "full UI audit should render every retained main screen, syllable warmup/rule/judgment/review/sentence state, real 2/4/8 form state, lesson item, reading group, and practice item");
+assert.equal(renderCount, 769, "full UI audit should render every retained main screen, six Afanti stories in each allowed language state, syllable warmup/rule/judgment/review/sentence state, real 2/4/8 form state, lesson item, reading group, and practice item");
 
 console.log(`full content render checks passed (${renderCount} states)`);

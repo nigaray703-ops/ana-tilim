@@ -10,6 +10,7 @@ const appConfig = Object.freeze({
   brandNameUyghur: "ئانا تىلىم",
   logoPath: "./assets/logo.png",
   cloudEnabled: true,
+  afantiLanguages: ["latin", "zh", "en"],
   progressStorageKey: "ana-tilim-progress",
   backupStorageKey: "ana-tilim-guest-progress-backup",
   ...(window.ANA_TILIM_APP_CONFIG || {})
@@ -29,7 +30,9 @@ const {
   syllableTraining,
   vocabGroups,
   practiceGroups,
-  readingUnits
+  readingUnits,
+  afantiStories,
+  afantiUnit
 } = courseData;
 
 function voiceFileBase(file) {
@@ -268,7 +271,20 @@ const readingUnitCatalog = readingUnits.map(({ title: _title, ...unit }) => ({
   ...unit,
   actionTarget: "reading"
 }));
-const learningUnitCatalog = [lettersUnit, latinWritingUnit, combosUnit, syllableTrainingUnit, vocabUnit, ...readingUnitCatalog];
+const afantiUnitCatalog = {
+  ...afantiUnit,
+  groups: [],
+  actionTarget: "afantiStories"
+};
+const learningUnitCatalog = [
+  lettersUnit,
+  latinWritingUnit,
+  combosUnit,
+  syllableTrainingUnit,
+  vocabUnit,
+  ...readingUnitCatalog,
+  afantiUnitCatalog
+];
 const learningUnits = unitOrder.buildVisibleUnits(learningUnitCatalog, appConfig);
 const persistedScreenIds = new Set([
   "welcome",
@@ -301,6 +317,7 @@ const persistedScreenIds = new Set([
   "syllableConnections",
   "syllableSentences",
   "syllableReview",
+  "afantiStories",
   "vocab",
   "vocabRecognition",
   "vocabKeyboard",
@@ -412,6 +429,12 @@ const unitExperience = {
     steps: ["两字母热身", "先找元音中心", "判断辅音边界", "区分构词与音节边界", "连接与断开判断", "分桶复习错题"],
     reviewLabel: "复习连接与断开错题",
     reviewTarget: "syllableReview"
+  },
+  "afanti-stories": {
+    recommended: "按顺序阅读六篇逐步变难的阿凡提小故事，先读维吾尔文，需要时再打开辅助语言。",
+    steps: ["默认阅读维吾尔文", "按需打开辅助语言", "逐篇理解故事道理"],
+    reviewLabel: "阅读六篇故事",
+    reviewTarget: "afantiStories"
   },
   "basic-phrases": {
     recommended: "按主题小课学日常用语和词汇，一行一行看词形。",
@@ -742,6 +765,8 @@ const state = {
   syllableSentenceShowStandard: false,
   syllableSentenceHelperViewed: false,
   syllableSentenceAudioPlayed: false,
+  selectedAfantiStoryId: afantiStories[0]?.id || "",
+  afantiVisibleLanguages: { latin: false, zh: false, en: false },
   practiceSpoken: false,
   emailAuthExpanded: false,
   emailCodeSent: false,
@@ -1911,6 +1936,9 @@ function unitProgressSummaries() {
     } else if (unit.id === "basic-phrases") {
       completed = countCompleted("vocab");
       total = unit.groups.length;
+    } else if (unit.id === "afanti-stories") {
+      completed = countCompletedForIds("afanti", afantiStories.map((story) => story.id));
+      total = afantiStories.length;
     } else {
       completed = unit.groups.filter((group) => state.learningProgress.reading?.[group.id]?.completed).length;
       total = unit.groups.length;
@@ -2813,6 +2841,7 @@ function render({ persist = true } = {}) {
     syllableConnections: renderSyllableConnections,
     syllableSentences: renderSyllableSentences,
     syllableReview: renderSyllableReview,
+    afantiStories: renderAfantiStories,
     vocab: renderVocabLesson,
     vocabRecognition: renderVocabRecognition,
     vocabKeyboard: renderVocabKeyboard,
@@ -3488,6 +3517,126 @@ function renderUnitDetail() {
 
         ${primaryButton}
         ${renderUnitNextActions(unit.id)}
+      </section>
+    `,
+    "learn"
+  );
+}
+
+const afantiLanguageDefinitions = Object.freeze({
+  latin: Object.freeze({ label: "Latin", className: "afanti-latin", lang: "ug-Latn" }),
+  zh: Object.freeze({ label: "中文", className: "afanti-zh", lang: "zh-CN" }),
+  en: Object.freeze({ label: "English", className: "afanti-en", lang: "en" })
+});
+
+function availableAfantiLanguages() {
+  const configured = Array.isArray(appConfig.afantiLanguages) ? appConfig.afantiLanguages : [];
+  return configured.filter(
+    (language, index) =>
+      Object.hasOwn(afantiLanguageDefinitions, language) && configured.indexOf(language) === index
+  );
+}
+
+function currentAfantiStory() {
+  const selected = afantiStories.find((story) => story.id === state.selectedAfantiStoryId);
+  if (selected) return selected;
+  state.selectedAfantiStoryId = afantiStories[0]?.id || "";
+  return afantiStories[0] || null;
+}
+
+function afantiParagraphsForLanguage(story, language) {
+  if (language === "en") return story.en?.paragraphs || [];
+  return story[language]?.paragraphs || [];
+}
+
+function renderAfantiLanguageSwitches() {
+  return `
+    <div class="afanti-language-switches" role="group" aria-label="辅助语言显示">
+      ${availableAfantiLanguages()
+        .map((language) => {
+          const definition = afantiLanguageDefinitions[language];
+          const visible = state.afantiVisibleLanguages[language] === true;
+          return `
+            <button
+              class="afanti-language-toggle${visible ? " is-active" : ""}"
+              data-action="toggle-afanti-language"
+              data-language="${escapeHtml(language)}"
+              type="button"
+              aria-pressed="${visible}"
+            >
+              ${escapeHtml(definition.label)}
+            </button>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
+function renderAfantiParagraph(story, paragraph, index) {
+  const translations = availableAfantiLanguages()
+    .filter((language) => state.afantiVisibleLanguages[language] === true)
+    .map((language) => {
+      const definition = afantiLanguageDefinitions[language];
+      const translatedParagraph = afantiParagraphsForLanguage(story, language)[index];
+      if (!translatedParagraph) return "";
+      return `<p class="afanti-translation ${definition.className}" lang="${definition.lang}" dir="ltr">${escapeHtml(translatedParagraph)}</p>`;
+    })
+    .join("");
+
+  return `
+    <section class="afanti-paragraph" data-afanti-paragraph="${index + 1}">
+      <p class="uyghur afanti-uyghur" lang="ug" dir="rtl">${escapeHtml(paragraph)}</p>
+      ${translations}
+    </section>
+  `;
+}
+
+function renderAfantiStories() {
+  const story = currentAfantiStory();
+  if (!story) {
+    return screen(
+      `${topBar("阿凡提小故事", "故事内容暂不可用", "", `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`)}
+       <article class="card"><p>故事内容暂不可用。</p></article>`,
+      "learn"
+    );
+  }
+
+  return screen(
+    `
+      ${topBar(
+        escapeHtml(story.title.uyghur),
+        `第 ${story.sequence} / ${afantiStories.length} 篇 · 阿凡提小故事`,
+        renderAfantiLanguageSwitches(),
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回本单元">←</button>`
+      )}
+      <section class="afanti-reading-layout">
+        <nav class="afanti-story-list" aria-label="六篇阿凡提故事">
+          ${afantiStories
+            .map(
+              (item) => `
+                <button
+                  class="afanti-story-link${item.id === story.id ? " is-active" : ""}"
+                  data-action="select-afanti-story"
+                  data-id="${escapeHtml(item.id)}"
+                  type="button"
+                  aria-current="${item.id === story.id ? "page" : "false"}"
+                >
+                  <span>${item.sequence}</span>
+                  <b dir="rtl" lang="ug">${escapeHtml(item.title.uyghur)}</b>
+                </button>
+              `
+            )
+            .join("")}
+        </nav>
+        <article class="card afanti-story-card">
+          ${state.afantiVisibleLanguages.zh === true ? `<p class="caption">${escapeHtml(story.primaryTheme)}</p>` : ""}
+          <div class="afanti-paragraphs">
+            ${story.uyghur.paragraphs
+              .map((paragraph, index) => renderAfantiParagraph(story, paragraph, index))
+              .join("")}
+          </div>
+        </article>
       </section>
     `,
     "learn"
@@ -6981,6 +7130,22 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (action === "toggle-afanti-language") {
+    const language = button.dataset.language;
+    if (state.screen !== "afantiStories" || !availableAfantiLanguages().includes(language)) return;
+    state.afantiVisibleLanguages[language] = state.afantiVisibleLanguages[language] !== true;
+    render();
+    return;
+  }
+
+  if (action === "select-afanti-story") {
+    const story = afantiStories.find((item) => item.id === button.dataset.id);
+    if (state.screen !== "afantiStories" || !story) return;
+    state.selectedAfantiStoryId = story.id;
+    render();
+    return;
+  }
+
   if (action === "combine-syllable-warmup") {
     const item = currentSyllableWarmupItem();
     submitSyllableItem(
@@ -7670,6 +7835,9 @@ document.addEventListener("click", (event) => {
       state.syllableSentenceAudioPlayed = false;
       state.syllableSentencePlaybackStatus = "";
       syllableSentenceAudioController?.stop();
+    }
+    if (target === "afantiStories") {
+      state.selectedUnitId = "afanti-stories";
     }
     if (["picture", "listening", "keyboard", "letterOdd", "letterSound", "comboRecognition", "comboBuild", "comboWriting", "comboKeyboard", "vocabRecognition", "vocabKeyboard", "letterWriting"].includes(target)) {
       resetPracticeState();
