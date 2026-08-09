@@ -240,6 +240,19 @@ vm.runInContext(fs.readFileSync("prototype/sentence-glossary.js", "utf8"), conte
 vm.runInContext(fs.readFileSync("prototype/progress-transfer.js", "utf8"), context, { filename: "prototype/progress-transfer.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
 
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(syllableTraining.sentences.map((sentence) => [sentence.id, sentence.standard, sentence.latin, sentence.sourceReadingItemId, syllableSentenceSource(sentence).outputPath]))", context)),
+  [
+    ["syllable-sentence-01", "بۇ كىم؟", "Bu kim?", "sentence-who-what-1", "./assets/audio/human/reading/human_reading_sentence_who_what_1.webm"],
+    ["syllable-sentence-02", "بۇ قەلەم.", "Bu qe-lem.", "sentence-this-that-1", "./assets/audio/human/reading/human_reading_sentence_this_that_1.webm"],
+    ["syllable-sentence-03", "ئۇ دوختۇر.", "U dox-tur.", "sentence-i-you-3", "./assets/audio/human/reading/human_reading_sentence_i_you_3.webm"],
+    ["syllable-sentence-04", "مەندە قەلەم بار.", "Men-de qe-lem bar.", "sentence-have-1", "./assets/audio/human/reading/human_reading_sentence_have_1.webm"],
+    ["syllable-sentence-05", "مەن چاي ئىچىمەن.", "Men chay i-chi-men.", "sentence-like-need-3", "./assets/audio/human/reading/human_reading_sentence_like_need_3.webm"],
+    ["syllable-sentence-06", "مەن ئانا تىلىمنى ياخشى كۆرىمەن.", "Men a-na ti-lim-ni yax-shi kö-ri-men.", "sentence-like-need-4", "./assets/audio/human/reading/human_reading_sentence_like_need_4.webm"]
+  ],
+  "sentence reading must retain the exact approved standard, ULY, source ID, and existing human recording path"
+);
+
 const coverageCategories = JSON.parse(
   vm.runInContext("JSON.stringify(audioCoverageCategories())", context)
 );
