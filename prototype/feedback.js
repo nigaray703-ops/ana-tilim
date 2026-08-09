@@ -3,6 +3,8 @@
 
   const CATEGORIES = Object.freeze(["content", "audio", "display", "account", "other"]);
   const STATUSES = Object.freeze(["new", "reviewed", "resolved"]);
+  const PUBLIC_FEEDBACK_ENDPOINT = "https://haryktjhuazprxkzydcm.supabase.co/rest/v1/user_feedback";
+  const PUBLIC_FEEDBACK_KEY = "sb_publishable_-RuP9whSVENlj_B-A5xIFw_RtIf5F84";
 
   function isObject(value) {
     return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -32,6 +34,11 @@
 
   function createFeedbackClient(options = {}) {
     const supabaseClient = options.supabaseClient || null;
+    const fetchImpl = typeof options.fetchImpl === "function"
+      ? options.fetchImpl
+      : typeof global.fetch === "function"
+        ? global.fetch.bind(global)
+        : null;
     const edition = options.edition === "cn" ? "cn" : "global";
     const appVersion = typeof options.appVersion === "string" ? options.appVersion.slice(0, 80) : "unknown";
 
@@ -42,12 +49,28 @@
 
     async function submit(value) {
       const feedback = validateFeedback(value);
-      const result = await ensureClient().from("user_feedback").insert({
+      const payload = {
         ...feedback,
         edition,
         app_version: appVersion
+      };
+      if (supabaseClient?.from) {
+        const result = await supabaseClient.from("user_feedback").insert(payload);
+        if (result?.error) throw result.error;
+        return true;
+      }
+      if (!fetchImpl) throw new Error("反馈服务尚未连接");
+      const response = await fetchImpl(PUBLIC_FEEDBACK_ENDPOINT, {
+        method: "POST",
+        headers: {
+          apikey: PUBLIC_FEEDBACK_KEY,
+          Authorization: `Bearer ${PUBLIC_FEEDBACK_KEY}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal"
+        },
+        body: JSON.stringify(payload)
       });
-      if (result?.error) throw result.error;
+      if (!response?.ok) throw new Error("反馈暂时无法提交，请稍后重试");
       return true;
     }
 
@@ -60,6 +83,7 @@
     }
 
     async function list() {
+      if (!supabaseClient?.from) throw new Error("反馈记录仅限负责人登录后查看");
       const result = await ensureClient()
         .from("user_feedback")
         .select("id,category,message,contact,edition,status,created_at,updated_at")
