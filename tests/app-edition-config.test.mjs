@@ -458,7 +458,7 @@ assert.equal(
   "duplicate normalization should use the standard feedback tag"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-unit-resume"'),
+  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-feedback-i18n"'),
   "sync should cache-bust the shared resumable-unit styles"
 );
 assert.ok(
@@ -466,11 +466,11 @@ assert.ok(
   "sync should cache-bust the copied bilingual quote-name data"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./progress-transfer.js?v=20260810-unit-resume"'),
+  normalizedDuplicateIndex.includes('src="./progress-transfer.js?v=20260810-feedback-i18n"'),
   "sync should cache-bust the resumable unit progress validator"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-unit-resume"'),
+  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-feedback-i18n"'),
   "sync should cache-bust the shared resumable-unit UI"
 );
 assert.ok(
