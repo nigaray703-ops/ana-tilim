@@ -50,7 +50,7 @@ if (!comboDataScriptMatch || !courseDataMatchAfterSyllableRemoval || comboDataSc
   throw new Error(`Cannot update ${indexPath}: combo-data.js must load before course-data.js.`);
 }
 
-const standardSyllableDataScript = '<script src="./course-data/syllable-data.js?v=20260809-syllable-review"></script>';
+const standardSyllableDataScript = '<script src="./course-data/syllable-data.js?v=20260809-plan3-final-content"></script>';
 const syllableInsertionIndex = comboDataScriptMatch.index + comboDataScriptMatch[0].length;
 normalizedIndex = `${indexWithoutSyllableScripts.slice(0, syllableInsertionIndex)}${comboDataScriptMatch[1]}${standardSyllableDataScript}\n${indexWithoutSyllableScripts.slice(syllableInsertionIndex)}`;
 indexUpdateMessages.push("Normalized index.html: syllable-data.js after combo-data.js");
@@ -116,7 +116,7 @@ const sharedCacheReferences = [
   },
   {
     pattern: /(\bsrc=["']\.\/app\.js)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260809-syllable-sentences$2",
+    replacement: "$1?v=20260809-plan3-stage-guard$2",
     label: "app.js"
   }
 ];

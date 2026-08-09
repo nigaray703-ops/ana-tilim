@@ -324,7 +324,20 @@ for (const [syllableItemIndex, item] of courseData.syllableTraining.twoLetterIte
   assert.ok(app.innerHTML.includes(item.audioPath), `${item.id} should reveal its existing combo audio mapping`);
 }
 
+const completedWarmupForRuleRender = {
+  completedIds: [
+    "warmup-ba", "warmup-pa", "warmup-ta", "warmup-na", "warmup-la",
+    "warmup-ma", "warmup-be-e", "warmup-pe-e", "warmup-te-e", "warmup-ne-e"
+  ],
+  completed: true
+};
 for (const [ruleIndex, rule] of courseData.syllableTraining.rules.entries()) {
+  const completedEarlierRulesForRender = Object.fromEntries(
+    courseData.syllableTraining.rules.slice(0, ruleIndex).map((earlierRule) => [
+      earlierRule.id,
+      { completedIds: earlierRule.exercises.map((item) => item.id), completed: true }
+    ])
+  );
   for (const [exerciseIndex, exercise] of rule.exercises.entries()) {
     renderState(
       {
@@ -338,6 +351,8 @@ for (const [ruleIndex, rule] of courseData.syllableTraining.rules.entries()) {
           letters: {},
           combos: {},
           syllableTraining: {
+            "two-letter-warmup": completedWarmupForRuleRender,
+            ...completedEarlierRulesForRender,
             [rule.id]: { completedIds: rule.exercises.slice(0, exerciseIndex).map((item) => item.id) }
           },
           vocab: {},

@@ -344,7 +344,7 @@ assert.equal(
 );
 assert.equal(
   normalizedDuplicateSyllableTags[0][0].trim(),
-  '<script src="./course-data/syllable-data.js?v=20260809-syllable-review"></script>',
+  '<script src="./course-data/syllable-data.js?v=20260809-plan3-final-content"></script>',
   "duplicate normalization should use the standard syllable-data tag"
 );
 assert.equal(
@@ -366,7 +366,7 @@ assert.ok(
   "sync should cache-bust the copied split syllable mistake validator"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./app.js?v=20260809-syllable-sentences"'),
+  normalizedDuplicateIndex.includes('src="./app.js?v=20260809-plan3-stage-guard"'),
   "sync should cache-bust the copied syllable review app"
 );
 assert.ok(

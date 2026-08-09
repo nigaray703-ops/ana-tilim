@@ -57,7 +57,7 @@ const expectedVersionedAssets = [
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
   "./course-data/latin-writing-data.js?v=20260809-latin-writing",
   "./course-data/combo-data.js?v=20260728-uly-transliteration",
-  "./course-data/syllable-data.js?v=20260809-syllable-review",
+  "./course-data/syllable-data.js?v=20260809-plan3-final-content",
   "./course-data/vocab-data.js?v=20260728-uly-transliteration",
   "./course-data/practice-data.js?v=20260728-learned-markers",
   "./course-data/reading-data.js?v=20260728-uly-transliteration",
@@ -71,7 +71,7 @@ const expectedVersionedAssets = [
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260809-syllable-review",
-  "./app.js?v=20260809-syllable-sentences"
+  "./app.js?v=20260809-plan3-stage-guard"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -2891,7 +2891,7 @@ clickDataset({ action: "toggle-audio-autoplay" });
 assert.equal(savedProgress().preferences.audioAutoplay, true);
 
 vm.runInContext(
-  "state.dailyActivity = { date: localDayKey(), completedIds: [] }; state.preferences.dailyGoal = 15;",
+  "state.currentLetterId = 'be'; state.selectedGroupId = 'dot-bone'; state.dailyActivity = { date: localDayKey(), completedIds: [] }; state.preferences.dailyGoal = 15;",
   context
 );
 assert.ok(renderState("state.screen = 'home'").includes("0 / 15"));
@@ -3174,7 +3174,7 @@ assert.equal(
 assert.ok(!unifiedProverbHtml.includes("clear-medial-mim"), "the proverb lesson should not use a sentence-specific font override");
 assert.ok(!styleSource.includes(".reading-value.clear-medial-mim"), "reading sentences should not define a special-case font");
 
-renderState("state.screen = 'profile'");
+renderState("state.screen = 'profile'; state.learningProgress = emptyLearningProgress(); state.mistakes = []; state.dailyActivity = { date: localDayKey(), completedIds: [] }");
 assert.ok(!app.innerHTML.includes("<strong>强化训练</strong>"), "profile should move practice progress into the practice tab");
 assert.ok(!app.innerHTML.includes("<strong>本地错题</strong>"), "profile should move local mistakes into the practice tab");
 assert.ok(!app.innerHTML.includes("录音工具"), "profile should not keep a duplicate recording tools drawer");
@@ -4037,21 +4037,22 @@ const unreachableConnectionSave = JSON.parse(
     context
   )
 );
-assert.throws(
+assert.doesNotThrow(
   () => vm.runInContext(`validateImportedProgressIds(${JSON.stringify(unreachableConnectionSave)})`, context),
-  /syllableConnections.*前置阶段/u,
-  "import validation should reject a lesson screen without all rule prerequisites"
+  "semantic ID validation should leave unreachable route normalization to the hydration boundary"
 );
-assert.throws(
-  () => vm.runInContext(`applyLocalProgressData(${JSON.stringify(unreachableConnectionSave)})`, context),
-  /syllableConnections.*前置阶段/u,
-  "direct hydration should reject the same unreachable lesson screen"
+assert.equal(
+  vm.runInContext(`applyLocalProgressData(${JSON.stringify(unreachableConnectionSave)})`, context),
+  true,
+  "direct hydration should normalize the same unreachable lesson screen"
 );
-assert.throws(
-  () => vm.runInContext('applyLocalProgressData({ screen: "syllableConnections" })', context),
-  /syllableConnections.*前置阶段/u,
-  "direct hydration should also reject an unreachable lesson screen when legacy data omits learningProgress"
+assert.equal(vm.runInContext("state.screen", context), "syllableWarmup", "unreachable connection hydration should land on warmup");
+assert.equal(
+  vm.runInContext('applyLocalProgressData({ screen: "syllableConnections" })', context),
+  true,
+  "legacy hydration should normalize an unreachable lesson screen when learningProgress is omitted"
 );
+assert.equal(vm.runInContext("state.screen", context), "syllableWarmup", "legacy connection hydration should also land on warmup");
 
 renderState(`
   state.learningProgress = emptyLearningProgress();
@@ -5906,23 +5907,23 @@ assert.doesNotThrow(
   "legacy progress without the new sentence-reading stage must remain compatible"
 );
 const invalidSentenceScreenProgress = { latinWriting: {}, letters: {}, combos: {}, syllableTraining: {}, vocab: {}, practice: {}, reading: {} };
-const stateBeforeInvalidSentenceScreen = vm.runInContext("JSON.stringify(buildLocalProgressData())", context);
-assert.throws(
-  () => vm.runInContext(`applyLocalProgressData(${JSON.stringify({ screen: "syllableSentences", learningProgress: invalidSentenceScreenProgress })})`, context),
-  /syllableSentences 必须先完成连接与断开前置阶段/,
-  "local progress must reject an unreachable sentence-reading screen"
+assert.equal(
+  vm.runInContext(`applyLocalProgressData(${JSON.stringify({ screen: "syllableSentences", learningProgress: invalidSentenceScreenProgress })})`, context),
+  true,
+  "local progress must normalize an unreachable sentence-reading screen"
 );
-assert.equal(vm.runInContext("JSON.stringify(buildLocalProgressData())", context), stateBeforeInvalidSentenceScreen, "invalid local sentence routes must not partially mutate progress");
+assert.equal(vm.runInContext("state.screen", context), "syllableWarmup", "invalid local sentence routes must normalize to warmup");
+assert.equal(vm.runInContext("JSON.stringify(state.learningProgress)", context), JSON.stringify(invalidSentenceScreenProgress), "sentence route normalization must not invent progress");
 const invalidSentenceImport = JSON.parse(vm.runInContext("JSON.stringify(progressTransfer.createExportPayload(buildLocalProgressData(), { edition: appConfig.edition, brandName: appConfig.brandName }))", context));
 invalidSentenceImport.data.screen = "syllableSentences";
 invalidSentenceImport.data.learningProgress = invalidSentenceScreenProgress;
-const pendingImportBeforeInvalidSentence = vm.runInContext("state.pendingProgressImport", context);
-assert.throws(
-  () => vm.runInContext(`importLocalProgressText(${JSON.stringify(JSON.stringify(invalidSentenceImport))})`, context),
-  /syllableSentences 必须先完成连接与断开前置阶段/,
-  "import must reject an unreachable sentence-reading screen"
+const normalizedSentenceImport = vm.runInContext(
+  `importLocalProgressText(${JSON.stringify(JSON.stringify(invalidSentenceImport))})`,
+  context
 );
-assert.equal(vm.runInContext("state.pendingProgressImport", context), pendingImportBeforeInvalidSentence, "invalid sentence import must not stage a pending mutation");
+assert.equal(normalizedSentenceImport.data.screen, "syllableWarmup", "import must normalize an unreachable sentence-reading screen before staging");
+assert.equal(vm.runInContext("state.pendingProgressImport.data.screen", context), "syllableWarmup", "the staged import must contain only its reachable route");
+vm.runInContext("state.pendingProgressImport = null", context);
 const cloudProgressBeforeInvalidSentenceScreen = vm.runInContext("JSON.stringify(state.learningProgress)", context);
 const invalidSentenceCloudProgress = {
   ...invalidSentenceScreenProgress,
@@ -5934,5 +5935,225 @@ assert.throws(
   "cloud validation must reject sentence progress ahead of its required connection stage"
 );
 assert.equal(vm.runInContext("JSON.stringify(state.learningProgress)", context), cloudProgressBeforeInvalidSentenceScreen, "invalid sentence cloud payload must not mutate progress before rejection");
+
+const approvedWarmupStage = {
+  "two-letter-warmup": {
+    completedIds: [
+      "warmup-ba", "warmup-pa", "warmup-ta", "warmup-na", "warmup-la",
+      "warmup-ma", "warmup-be-e", "warmup-pe-e", "warmup-te-e", "warmup-ne-e"
+    ],
+    completed: true
+  }
+};
+const emptySyllableLearningProgress = {
+  latinWriting: {}, letters: {}, combos: {}, syllableTraining: {}, vocab: {}, practice: {}, reading: {}
+};
+
+const writesBeforeBlockedRuleRender = progressStorageWriteCount;
+const progressBeforeBlockedRuleRender = JSON.stringify(emptySyllableLearningProgress);
+vm.runInContext(`
+  state.screen = "syllableRules";
+  state.selectedUnitId = "syllable-training";
+  state.syllableRuleId = "suffix-boundary";
+  state.syllableAnswerId = "answer";
+  state.syllableAnswerSubmitted = false;
+  state.learningProgress = ${progressBeforeBlockedRuleRender};
+  render();
+`, context);
+assert.equal(vm.runInContext("state.screen", context), "syllableWarmup", "render must normalize a rule-only runtime to the reachable warmup");
+assert.match(app.innerHTML, /两字母热身/, "a blocked rule render must show the reachable warmup identity");
+assert.equal(vm.runInContext("JSON.stringify(state.learningProgress)", context), progressBeforeBlockedRuleRender, "a blocked rule render must not create progress");
+assert.equal(progressStorageWriteCount, writesBeforeBlockedRuleRender, "a blocked rule render must not write local storage");
+
+const writesBeforeBlockedRuleGo = progressStorageWriteCount;
+vm.runInContext(`state.screen = "unit"; state.learningProgress = ${progressBeforeBlockedRuleRender}; goTo("syllableRules")`, context);
+assert.equal(vm.runInContext("state.screen", context), "syllableWarmup", "goTo must normalize an unreachable rule route");
+assert.equal(progressStorageWriteCount, writesBeforeBlockedRuleGo, "a blocked rule route must not persist");
+
+const writesBeforeBlockedDelegatedAction = progressStorageWriteCount;
+vm.runInContext(`
+  state.screen = "syllableRules";
+  state.learningProgress = ${progressBeforeBlockedRuleRender};
+  state.syllableRuleId = "vowel-nucleus";
+  state.syllableAnswerId = "";
+  state.syllableAnswerSubmitted = false;
+`, context);
+clickDataset({ action: "pick-syllable-rule-answer", answerId: "answer" });
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify({ screen: state.screen, answer: state.syllableAnswerId, progress: state.learningProgress })", context)),
+  { screen: "syllableWarmup", answer: "", progress: emptySyllableLearningProgress },
+  "a stale delegated rule pick must normalize without mutating answer or progress"
+);
+assert.equal(progressStorageWriteCount, writesBeforeBlockedDelegatedAction, "a blocked delegated rule action must not persist");
+
+vm.runInContext(`
+  state.screen = "syllableRules";
+  state.learningProgress = ${progressBeforeBlockedRuleRender};
+  state.syllableRuleId = "vowel-nucleus";
+  state.syllableAnswerId = "answer";
+  state.syllableAnswerSubmitted = false;
+`, context);
+const writesBeforeBlockedSubmit = progressStorageWriteCount;
+clickDataset({ action: "submit-syllable-rule-answer" });
+assert.equal(vm.runInContext("state.screen", context), "syllableWarmup", "a stale delegated submit must normalize to warmup");
+assert.equal(vm.runInContext("JSON.stringify(state.learningProgress)", context), progressBeforeBlockedRuleRender, "a blocked submit must not add the first exercise");
+assert.equal(progressStorageWriteCount, writesBeforeBlockedSubmit, "a blocked submit must not persist");
+
+vm.runInContext(`
+  state.screen = "syllableRules";
+  state.learningProgress = ${progressBeforeBlockedRuleRender};
+  state.syllableRuleId = "vowel-nucleus";
+  state.syllableAnswerId = "answer";
+  state.syllableAnswerSubmitted = false;
+`, context);
+let blockedRuleKeyPrevented = false;
+const writesBeforeBlockedKey = progressStorageWriteCount;
+keydownHandler({
+  key: "ArrowDown", ctrlKey: false, altKey: false, metaKey: false,
+  target: { closest() { return { dataset: { answerId: "answer" } }; } },
+  preventDefault() { blockedRuleKeyPrevented = true; }
+});
+assert.equal(blockedRuleKeyPrevented, false, "an unreachable rule keyboard event must not be consumed as a valid answer action");
+assert.equal(vm.runInContext("state.screen", context), "syllableWarmup", "an unreachable rule keyboard event must normalize to warmup");
+assert.equal(vm.runInContext("JSON.stringify(state.learningProgress)", context), progressBeforeBlockedRuleRender, "a blocked rule keyboard event must not mutate progress");
+assert.equal(progressStorageWriteCount, writesBeforeBlockedKey, "a blocked rule keyboard event must not persist");
+
+const validWarmupOnlyProgress = { ...emptySyllableLearningProgress, syllableTraining: approvedWarmupStage };
+const writesBeforeRuleIdentityRepair = progressStorageWriteCount;
+vm.runInContext(`
+  state.screen = "syllableRules";
+  state.learningProgress = ${JSON.stringify(validWarmupOnlyProgress)};
+  state.syllableRuleId = "suffix-boundary";
+  state.syllableAnswerId = "distractor";
+  state.syllableAnswerSubmitted = true;
+  render();
+`, context);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify({ screen: state.screen, ruleId: state.syllableRuleId, answer: state.syllableAnswerId, submitted: state.syllableAnswerSubmitted })", context)),
+  { screen: "syllableRules", ruleId: "vowel-nucleus", answer: "", submitted: false },
+  "rules must normalize to the first incomplete rule and clear stale answer evidence"
+);
+assert.match(app.innerHTML, /data-syllable-rule-id="vowel-nucleus"/, "rule normalization must render the first incomplete rule identity");
+assert.equal(progressStorageWriteCount, writesBeforeRuleIdentityRepair, "repairing a stale rule identity must not persist during the blocked render");
+
+const secondRuleReachableProgress = {
+  ...validWarmupOnlyProgress,
+  syllableTraining: { ...approvedWarmupStage, "vowel-nucleus": completeVowelNucleusProgress }
+};
+vm.runInContext(`
+  state.screen = "syllableRules";
+  state.learningProgress = ${JSON.stringify(secondRuleReachableProgress)};
+  state.syllableRuleId = "vowel-nucleus";
+  state.syllableAnswerId = "answer";
+  state.syllableAnswerSubmitted = true;
+  render();
+`, context);
+assert.equal(vm.runInContext("state.syllableRuleId", context), "single-consonant-boundary", "a forged submitted transient must not keep a completed rule active");
+
+vm.runInContext(`
+  state.screen = "syllableRules";
+  state.learningProgress = ${JSON.stringify(secondRuleReachableProgress)};
+  state.syllableRuleId = "suffix-boundary";
+  state.syllableAnswerId = "answer";
+  state.syllableAnswerSubmitted = false;
+  render();
+`, context);
+assert.equal(vm.runInContext("state.syllableRuleId", context), "single-consonant-boundary", "a legal prefix must normalize to its first incomplete rule");
+assert.match(app.innerHTML, /data-syllable-rule-id="single-consonant-boundary"/, "the rendered identity must match the first incomplete rule");
+
+const everyRuleCompleteProgress = {
+  ...validWarmupOnlyProgress,
+  syllableTraining: {
+    ...approvedWarmupStage,
+    "vowel-nucleus": completeVowelNucleusProgress,
+    "single-consonant-boundary": completeSingleConsonantProgress,
+    "two-consonant-boundary": completeTwoConsonantProgress,
+    "suffix-boundary": completeSuffixProgress
+  }
+};
+vm.runInContext(`
+  state.screen = "syllableRules";
+  state.learningProgress = ${JSON.stringify(everyRuleCompleteProgress)};
+  state.syllableRuleId = "vowel-nucleus";
+  state.syllableAnswerId = "";
+  state.syllableAnswerSubmitted = false;
+  render();
+`, context);
+assert.equal(vm.runInContext("state.syllableRuleId", context), "suffix-boundary", "an all-complete rule route may retain only the final rule and its CTA");
+assert.match(app.innerHTML, /data-target="syllableConnections"/, "the all-complete final rule must retain its connection-stage CTA");
+
+vm.runInContext(`
+  state.screen = "home";
+  state.learningProgress = ${progressBeforeBlockedRuleRender};
+  state.syllableRuleId = "suffix-boundary";
+  state.syllableAnswerId = "answer";
+`, context);
+const writesBeforeDirectHydration = progressStorageWriteCount;
+assert.equal(
+  vm.runInContext(`applyLocalProgressData(${JSON.stringify({ screen: "syllableRules", learningProgress: emptySyllableLearningProgress })})`, context),
+  true,
+  "direct hydration should accept structurally valid data after normalizing its unreachable route"
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify({ screen: state.screen, ruleId: state.syllableRuleId, answer: state.syllableAnswerId, progress: state.learningProgress })", context)),
+  { screen: "syllableWarmup", ruleId: "vowel-nucleus", answer: "", progress: emptySyllableLearningProgress },
+  "direct hydration must normalize an unreachable rule route and transient rule identity without progress writes"
+);
+assert.equal(progressStorageWriteCount, writesBeforeDirectHydration, "direct hydration normalization must not write storage");
+
+const blockedRuleImport = JSON.parse(vm.runInContext("JSON.stringify(progressTransfer.createExportPayload(buildLocalProgressData(), { edition: appConfig.edition, brandName: appConfig.brandName }))", context));
+blockedRuleImport.data.screen = "syllableRules";
+blockedRuleImport.data.learningProgress = emptySyllableLearningProgress;
+const writesBeforeBlockedRuleImport = progressStorageWriteCount;
+const normalizedRuleImport = vm.runInContext(`importLocalProgressText(${JSON.stringify(JSON.stringify(blockedRuleImport))})`, context);
+assert.equal(normalizedRuleImport.data.screen, "syllableWarmup", "import preview must normalize an unreachable rule route before staging it");
+assert.equal(progressStorageWriteCount, writesBeforeBlockedRuleImport, "import route normalization must not write storage");
+vm.runInContext("state.pendingProgressImport = null", context);
+
+const invalidLaterRulePrefix = {
+  ...validWarmupOnlyProgress,
+  syllableTraining: {
+    ...approvedWarmupStage,
+    "single-consonant-boundary": { completedIds: ["single-consonant-boundary-01"] }
+  }
+};
+const invalidLaterRulePrefixBytes = JSON.stringify(invalidLaterRulePrefix);
+const writesBeforeInvalidPrefixRender = progressStorageWriteCount;
+vm.runInContext(`
+  state.screen = "syllableRules";
+  state.learningProgress = ${invalidLaterRulePrefixBytes};
+  state.syllableRuleId = "vowel-nucleus";
+  state.syllableAnswerId = "";
+  state.syllableAnswerSubmitted = false;
+  render();
+`, context);
+assert.equal(vm.runInContext("state.screen", context), "syllableRules", "an invalid later prefix should normalize to the reachable first rule screen");
+assert.equal(vm.runInContext("JSON.stringify(state.learningProgress)", context), invalidLaterRulePrefixBytes, "a blocked invalid-prefix render must not ensure or create an empty rule progress entry");
+assert.equal(progressStorageWriteCount, writesBeforeInvalidPrefixRender, "a blocked invalid-prefix render must not persist");
+
+vm.runInContext(`
+  state.screen = "home";
+  state.learningProgress = ${JSON.stringify({
+    ...emptySyllableLearningProgress,
+    syllableTraining: { "vowel-nucleus": { completedIds: ["vowel-nucleus-01"] } }
+  })};
+  state.syncDirty = true;
+  globalThis.invalidSaveScheduleCount = 0;
+  globalThis.cloudBeforeInvalidSave = cloudSync;
+  cloudSync = { ...cloudSync, scheduleSync() { globalThis.invalidSaveScheduleCount += 1; } };
+`, context);
+storage["ana-tilim-progress"] = "preserved-old-bytes";
+const invalidRuntimeBeforeSave = vm.runInContext("JSON.stringify(state.learningProgress)", context);
+assert.equal(vm.runInContext("saveLocalProgress()", context), false, "saveLocalProgress must reject a semantically invalid runtime before storage or cloud work");
+assert.equal(storage["ana-tilim-progress"], "preserved-old-bytes", "an invalid save must preserve the previous local bytes");
+assert.equal(vm.runInContext("JSON.stringify(state.learningProgress)", context), invalidRuntimeBeforeSave, "an invalid save must not partially rewrite runtime progress");
+assert.equal(vm.runInContext("globalThis.invalidSaveScheduleCount", context), 0, "an invalid save must not schedule cloud sync");
+assert.equal(vm.runInContext("state.syncDirty", context), true, "an invalid save must keep syncDirty for a later valid retry");
+assert.throws(
+  () => vm.runInContext("buildCloudSnapshot()", context),
+  /must first complete|\u5fc5\u987b\u5148\u5b8c\u6210/,
+  "buildCloudSnapshot must reject an invalid syllable prefix before it can be uploaded"
+);
+vm.runInContext("cloudSync = globalThis.cloudBeforeInvalidSave", context);
 
 console.log("unit learning experience checks passed");
