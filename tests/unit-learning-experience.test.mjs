@@ -54,7 +54,7 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260810-qwerty-words",
+  "./styles.css?v=20260810-quote-profiles",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
@@ -63,7 +63,7 @@ const expectedVersionedAssets = [
   "./course-data/syllable-data.js?v=20260809-plan3-final-content",
   "./course-data/vocab-data.js?v=20260728-uly-transliteration",
   "./course-data/practice-data.js?v=20260728-learned-markers",
-  "./course-data/reading-data.js?v=20260810-quote-names",
+  "./course-data/reading-data.js?v=20260810-quote-profiles",
   "./course-data/afanti-data.js?v=20260810-afanti-layout",
   "./course-data/afanti-english-data.js?v=20260810-reviewed-afanti",
   "./afanti-content.js?v=20260810-reviewed-afanti",
@@ -77,7 +77,7 @@ const expectedVersionedAssets = [
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260809-syllable-review",
-  "./app.js?v=20260810-qwerty-words"
+  "./app.js?v=20260810-quote-profiles"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -3345,9 +3345,11 @@ includesAll(
 );
 includesAll(
   renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'famous-quotes'; state.selectedReadingGroupId = 'quote-mahmud-kashgari'"),
-  ["名人名言", "人物介绍", "11 世纪", "reading-meaning", "语言是了解一个民族的钥匙。", "词典也能保存民族的记忆。", "学习语言，就是学习看世界的方法。"],
+  ["名人名言", "人物介绍", "11 世纪", "语言学家、词典编纂者", "《突厥语大词典》", "语言、词典与文化记忆", "蜡像资料图（非历史照片）", "摄影：باسم", "CC BY-SA 4.0", "reading-meaning", "语言是了解一个民族的钥匙。", "词典也能保存民族的记忆。", "学习语言，就是学习看世界的方法。"],
   "famous quote reading lesson"
 );
+assert.match(app.innerHTML, /class="reading-profile-portrait"[^>]*src="\.\/assets\/portraits\/mahmud-kashgari-wax\.jpg"[^>]*alt="马赫穆德·喀什噶里蜡像资料图"/);
+assert.match(app.innerHTML, /href="https:\/\/commons\.wikimedia\.org\/wiki\/File:Maḥmūd_al-Kāšġarī,_Wax\.jpg"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
 assertLearnerCopyClean("famous quote reading lesson");
 assert.ok(!app.innerHTML.includes("reading-lesson"), "famous quote reading lesson should not show the meaning/lesson section");
 const unifiedQuoteHtml = renderState(
@@ -3363,6 +3365,15 @@ assert.equal(
   "all three quote sentences should use the same reading sentence class"
 );
 assert.ok(!unifiedQuoteHtml.includes("clear-medial-mim"), "the quote lesson should not use a sentence-specific font override");
+const quoteWithoutPortraitHtml = renderState(
+  "state.screen = 'reading'; state.selectedReadingUnitId = 'famous-quotes'; state.selectedReadingGroupId = 'quote-yusuf-hajib'"
+);
+includesAll(
+  quoteWithoutPortraitHtml,
+  ["11 世纪", "思想家、诗人", "《福乐智慧》", "知识、品德与治理智慧", "暂无可靠肖像资料"],
+  "quote profile without a verified portrait"
+);
+assert.doesNotMatch(quoteWithoutPortraitHtml, /class="reading-profile-portrait"/, "a missing portrait should not invent an image");
 includesAll(
   renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'uyghur-proverbs'; state.selectedReadingGroupId = 'proverb-bilim-kuch'"),
   ["维吾尔谚语", "reading-meaning", "知识就是力量。", "学到的东西不会丢。", "不学的人，路会变窄。"],
