@@ -18,5 +18,6 @@ export const EDITION_CORE_FILES = Object.freeze([
   "sentence-morphemes.js",
   "sentence-glossary.js",
   "progress-transfer.js",
-  "audio-controller.js"
+  "audio-controller.js",
+  "feedback.js"
 ]);

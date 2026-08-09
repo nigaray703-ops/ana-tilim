@@ -68,6 +68,7 @@ for (const scriptPath of [
   "prototype/progress-transfer.js",
   "prototype/cloud-config.js",
   "prototype/cloud-sync.js",
+  "prototype/feedback.js",
   "prototype/app.js"
 ]) {
   vm.runInContext(fs.readFileSync(scriptPath, "utf8"), context, { filename: scriptPath });
@@ -108,6 +109,34 @@ function renderState(assignments, label, expectedText = "") {
 for (const screen of ["welcome", "home", "learn", "writing", "library", "profile"]) {
   renderState({ screen }, `${screen} screen`);
 }
+
+renderState(
+  { screen: "feedback", feedbackSubmitPhase: "idle", feedbackSubmitMessage: "", feedbackRecords: [], feedbackAdminPhase: "idle" },
+  "anonymous feedback screen",
+  "允许匿名提交"
+);
+renderState(
+  { screen: "feedback", feedbackSubmitPhase: "success", feedbackSubmitMessage: "反馈已收到，谢谢你帮助我们改进。" },
+  "successful feedback screen",
+  "反馈已收到"
+);
+renderState(
+  { screen: "feedback", feedbackSubmitPhase: "error", feedbackSubmitMessage: "反馈服务尚未连接" },
+  "feedback retry screen",
+  "反馈服务尚未连接"
+);
+vm.runInContext("globalThis.fullRenderCloudSync = cloudSync; cloudSync = { session() { return { user: { id: 'owner-1', email: 'owner@example.com' } }; } }", context);
+renderState(
+  {
+    screen: "feedback",
+    feedbackAdminPhase: "allowed",
+    feedbackAdminUserId: "owner-1",
+    feedbackRecords: [{ id: "feedback-1", category: "display", message: "字母显示有重叠。", contact: "", edition: "cn", status: "new", created_at: "2026-08-10T00:00:00.000Z" }]
+  },
+  "private owner feedback records",
+  "国内版"
+);
+vm.runInContext("cloudSync = globalThis.fullRenderCloudSync", context);
 
 renderState({ screen: "welcome", authPanelExpanded: false }, "collapsed welcome screen", "直接开始学习");
 assert.ok(app.innerHTML.includes("可选：登录后跨设备同步"), "collapsed welcome should expose the optional sync disclosure");
@@ -586,6 +615,6 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
   }
 }
 
-assert.equal(renderCount, 782, "full UI audit should render every retained main screen, all seven QWERTY lesson states, six Afanti stories in each allowed language state, syllable warmup/rule/judgment/review/sentence state, real 2/4/8 form state, lesson item, reading group, and practice item");
+assert.equal(renderCount, 786, "full UI audit should render every retained main screen, feedback state, all seven QWERTY lesson states, six Afanti stories in each allowed language state, syllable warmup/rule/judgment/review/sentence state, real 2/4/8 form state, lesson item, reading group, and practice item");
 
 console.log(`full content render checks passed (${renderCount} states)`);

@@ -70,6 +70,11 @@ const checks = [
     args: ["--check", "prototype/cloud-sync.js"]
   },
   {
+    label: "syntax: feedback service",
+    command: node,
+    args: ["--check", "prototype/feedback.js"]
+  },
+  {
     label: "syntax: app",
     command: node,
     args: ["--check", "prototype/app.js"]
@@ -198,6 +203,11 @@ const checks = [
     label: "test: Supabase schema and public config",
     command: node,
     args: ["tests/supabase-schema.test.mjs"]
+  },
+  {
+    label: "test: anonymous feedback service",
+    command: node,
+    args: ["tests/feedback-service.test.mjs"]
   },
   {
     label: "test: cloud snapshot and sync controller",

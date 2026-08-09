@@ -3781,6 +3781,102 @@ button {
   line-height: 1.35;
 }
 
+.feedback-entry-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  width: 100%;
+  color: var(--ink);
+  text-align: left;
+}
+
+.feedback-entry-row > span:last-child {
+  color: var(--ink-soft);
+  font-size: 22px;
+}
+
+.feedback-layout,
+.feedback-form-card,
+.feedback-field,
+.feedback-field-grid,
+.feedback-record-card,
+.feedback-admin-card {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.feedback-field > span {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.feedback-field input,
+.feedback-field select,
+.feedback-field textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+  line-height: 1.55;
+}
+
+.feedback-field textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.feedback-field input:focus,
+.feedback-field select:focus,
+.feedback-field textarea:focus {
+  border-color: var(--cyan);
+  outline: 3px solid rgba(14, 155, 177, 0.14);
+}
+
+.feedback-field small {
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
+.feedback-submit-status {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  background: var(--cyan-soft);
+  line-height: 1.5;
+}
+
+.feedback-submit-status.success {
+  color: var(--mint);
+  background: var(--mint-soft);
+}
+
+.feedback-submit-status.error {
+  color: var(--coral);
+  background: var(--coral-soft);
+}
+
+.feedback-record-message {
+  margin: 0;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--soft);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.65;
+}
+
+.feedback-status-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
 .setting-segments {
   display: grid;
   grid-auto-flow: column;

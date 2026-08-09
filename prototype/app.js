@@ -4,6 +4,7 @@ const progressTransfer = window.ANA_TILIM_PROGRESS_TRANSFER;
 const uyghurKeyboard = window.ANA_TILIM_UYGHUR_KEYBOARD;
 const latinKeyboard = window.ANA_TILIM_LATIN_KEYBOARD;
 const unitOrder = window.ANA_TILIM_UNIT_ORDER;
+const feedbackApi = window.ANA_TILIM_FEEDBACK;
 const appConfig = Object.freeze({
   edition: "global",
   brandName: "Ana Tilim",
@@ -16,7 +17,7 @@ const appConfig = Object.freeze({
   ...(window.ANA_TILIM_APP_CONFIG || {})
 });
 
-if (!courseData || !sentenceGlossary || !progressTransfer || !uyghurKeyboard || !latinKeyboard || !unitOrder) {
+if (!courseData || !sentenceGlossary || !progressTransfer || !uyghurKeyboard || !latinKeyboard || !unitOrder || !feedbackApi) {
   throw new Error("Learning data modules failed to load.");
 }
 
@@ -327,6 +328,7 @@ const persistedScreenIds = new Set([
   "practiceComplete",
   "library",
   "profile",
+  "feedback",
   "settings"
 ]);
 const liveCanvasScreenIds = new Set([
@@ -777,6 +779,12 @@ const state = {
   authEmail: "",
   avatarUploading: false,
   profileNameEditing: false,
+  feedbackDraft: { category: "display", message: "", contact: "" },
+  feedbackSubmitPhase: "idle",
+  feedbackSubmitMessage: "",
+  feedbackAdminPhase: "idle",
+  feedbackAdminUserId: "",
+  feedbackRecords: [],
   showGuide: true,
   clearLearningConfirmation: false,
   pendingProgressImport: null,
@@ -795,6 +803,8 @@ let lastAutoplayKey = "";
 let progressImportSelectionGeneration = 0;
 let cloudSync = null;
 let cloudStatus = { phase: "local", error: "" };
+let sharedSupabaseClient = null;
+let feedbackClient = null;
 const syllableSentenceAudioController = window.ANA_TILIM_AUDIO?.createAudioController({
   onStarted: ({ contentKey }) => {
     const sentenceId = contentKey?.replace("syllable-sentence:", "");
@@ -2833,7 +2843,8 @@ function render({ persist = true } = {}) {
     practiceSession: renderPracticeSession,
     practiceComplete: renderPracticeComplete,
     library: renderLibrary,
-    profile: renderProfile
+    profile: renderProfile,
+    feedback: renderFeedback
   };
 
   const screenRenderer = screens[state.screen];
@@ -2996,6 +3007,10 @@ function escapeHtml(value) {
 
 function cloudAccountEmail() {
   return cloudSync?.session()?.user?.email || "";
+}
+
+function cloudAccountUserId() {
+  return cloudSync?.session()?.user?.id || "";
 }
 
 function cloudAccountProfile() {
@@ -7059,6 +7074,14 @@ function renderSettingsPanel() {
             `
         }
       </section>
+
+      <section class="profile-setting-group" aria-labelledby="help-feedback-title">
+        <h3 id="help-feedback-title">帮助与反馈</h3>
+        <button class="profile-setting-block feedback-entry-row" data-action="go" data-target="feedback" type="button">
+          <span><strong>意见反馈</strong><small>允许匿名提交，不支持附件</small></span>
+          <span aria-hidden="true">→</span>
+        </button>
+      </section>
     </article>
   `;
 }
@@ -7073,6 +7096,133 @@ function renderProfile() {
       <section class="stack wide-gap profile-layout">
         ${renderProfileHero(progress, reviewCount)}
         ${renderSettingsPanel()}
+      </section>
+    `,
+    "profile"
+  );
+}
+
+function feedbackCategoryLabel(category) {
+  return {
+    content: "课程内容",
+    audio: "音频",
+    display: "界面显示",
+    account: "账号与数据",
+    other: "其他"
+  }[category] || "其他";
+}
+
+function feedbackStatusLabel(status) {
+  return {
+    new: "新反馈",
+    reviewed: "已查看",
+    resolved: "已解决"
+  }[status] || "新反馈";
+}
+
+function renderFeedbackRecord(record) {
+  const createdAt = typeof record.created_at === "string" ? record.created_at.replace("T", " ").slice(0, 16) : "时间未提供";
+  const editionLabel = record.edition === "cn" ? "国内版" : "海外版";
+  return `
+    <article class="card feedback-record-card">
+      <div class="section-row">
+        <div>
+          <p class="caption">${escapeHtml(editionLabel)} · ${escapeHtml(feedbackCategoryLabel(record.category))}</p>
+          <h3>${escapeHtml(feedbackStatusLabel(record.status))}</h3>
+        </div>
+        <span class="step-state">${escapeHtml(createdAt)}</span>
+      </div>
+      <p class="feedback-record-message">${escapeHtml(record.message)}</p>
+      <p class="muted">联系方式：${escapeHtml(record.contact || "未提供")}</p>
+      <div class="feedback-status-actions" role="group" aria-label="反馈处理状态">
+        ${["new", "reviewed", "resolved"].map((status) => `
+          <button
+            class="setting-segment ${record.status === status ? "active" : ""}"
+            data-action="update-feedback-status"
+            data-id="${escapeHtml(record.id)}"
+            data-status="${status}"
+            aria-pressed="${record.status === status}"
+            type="button"
+          >${feedbackStatusLabel(status)}</button>
+        `).join("")}
+      </div>
+    </article>
+  `;
+}
+
+function renderFeedback() {
+  const draft = state.feedbackDraft;
+  const accountEmail = cloudAccountEmail();
+  const authorizedAdminView = Boolean(
+    state.feedbackAdminPhase === "allowed" &&
+    state.feedbackAdminUserId &&
+    state.feedbackAdminUserId === cloudAccountUserId()
+  );
+  const categoryOptions = [
+    ["content", "课程内容"],
+    ["audio", "音频"],
+    ["display", "界面显示"],
+    ["account", "账号与数据"],
+    ["other", "其他"]
+  ];
+  const submitStatus = state.feedbackSubmitMessage
+    ? `<p class="feedback-submit-status ${state.feedbackSubmitPhase}" role="status">${escapeHtml(state.feedbackSubmitMessage)}</p>`
+    : "";
+  const adminPanel = !accountEmail
+    ? ""
+    : `
+      <article class="card feedback-admin-card">
+        <div class="section-row">
+          <div><p class="caption">私密后台</p><h2 class="section-title">反馈记录</h2></div>
+          <span class="step-state">仅授权账号</span>
+        </div>
+        <p class="muted">系统会在服务器端核对当前账号；其他登录账号不能读取记录。</p>
+        <button class="secondary-button" data-action="load-feedback-records" type="button" ${state.feedbackAdminPhase === "loading" ? "disabled" : ""}>
+          ${state.feedbackAdminPhase === "loading" ? "正在核对权限…" : "查看反馈记录"}
+        </button>
+        ${state.feedbackAdminPhase === "denied" ? '<p class="feedback-submit-status error" role="status">当前账号没有查看权限。</p>' : ""}
+        ${state.feedbackAdminPhase === "error" ? '<p class="feedback-submit-status error" role="status">记录暂时无法读取，请稍后重试。</p>' : ""}
+      </article>
+      ${authorizedAdminView
+        ? `<section class="stack feedback-record-list" aria-label="私密反馈记录">
+            ${state.feedbackRecords.length ? state.feedbackRecords.map(renderFeedbackRecord).join("") : '<article class="card"><p class="muted">目前没有反馈记录。</p></article>'}
+          </section>`
+        : ""}
+    `;
+
+  return screen(
+    `
+      ${topBar("意见反馈", "有问题可以直接告诉我", "", '<button class="back-button" data-action="go" data-target="profile" type="button" aria-label="返回我的">←</button>')}
+      <section class="stack wide-gap feedback-layout">
+        <article class="card feedback-form-card">
+          <div>
+            <p class="caption">匿名也可以提交</p>
+            <h2 class="section-title">告诉我哪里需要修改</h2>
+            <p class="muted">允许匿名提交。反馈会私密保存，并通知负责人。暂不支持附件，请不要填写密码或其他敏感信息。</p>
+          </div>
+          <div class="feedback-field-grid">
+            <label class="feedback-field">
+              <span>反馈类型</span>
+              <select id="feedback-category">
+                ${categoryOptions.map(([value, label]) => `<option value="${value}" ${draft.category === value ? "selected" : ""}>${label}</option>`).join("")}
+              </select>
+            </label>
+            <label class="feedback-field">
+              <span>反馈内容</span>
+              <textarea id="feedback-message" maxlength="2000" rows="7" placeholder="请说明在哪个页面、看到了什么问题，以及你希望怎样修改。">${escapeHtml(draft.message)}</textarea>
+              <small>10–2000 个字</small>
+            </label>
+            <label class="feedback-field">
+              <span>可选联系方式</span>
+              <input id="feedback-contact" type="text" maxlength="120" value="${escapeHtml(draft.contact)}" placeholder="如需回复，可填写邮箱；也可以留空匿名提交" />
+            </label>
+          </div>
+          ${submitStatus}
+          <button class="primary-button" data-action="submit-feedback" type="button" ${state.feedbackSubmitPhase === "sending" ? "disabled" : ""}>
+            ${state.feedbackSubmitPhase === "sending" ? "正在提交…" : "提交反馈"}
+          </button>
+        </article>
+        ${adminPanel}
       </section>
     `,
     "profile"
@@ -7246,6 +7396,98 @@ document.addEventListener("click", (event) => {
     (state.screen !== guardedSyllableActionScreen || !normalizeActiveSyllableRoute())
   ) {
     render({ persist: false });
+    return;
+  }
+
+  if (action === "submit-feedback") {
+    let normalizedDraft;
+    try {
+      normalizedDraft = feedbackApi.validateFeedback({
+        category: document.querySelector("#feedback-category")?.value || "",
+        message: document.querySelector("#feedback-message")?.value || "",
+        contact: document.querySelector("#feedback-contact")?.value || ""
+      });
+    } catch (error) {
+      state.feedbackSubmitPhase = "error";
+      state.feedbackSubmitMessage = error?.message || "请检查反馈内容";
+      render({ persist: false });
+      return;
+    }
+    state.feedbackDraft = normalizedDraft;
+    state.feedbackSubmitPhase = "sending";
+    state.feedbackSubmitMessage = "正在私密提交…";
+    render({ persist: false });
+    Promise.resolve()
+      .then(() => {
+        if (!feedbackClient) throw new Error("反馈服务尚未连接");
+        return feedbackClient.submit(normalizedDraft);
+      })
+      .then(() => {
+        state.feedbackDraft = { category: normalizedDraft.category, message: "", contact: "" };
+        state.feedbackSubmitPhase = "success";
+        state.feedbackSubmitMessage = "反馈已收到，谢谢你帮助我们改进。";
+        render({ persist: false });
+      })
+      .catch((error) => {
+        state.feedbackSubmitPhase = "error";
+        state.feedbackSubmitMessage = error?.message || "提交失败，请稍后重试";
+        render({ persist: false });
+      });
+    return;
+  }
+
+  if (action === "load-feedback-records") {
+    if (!cloudAccountEmail() || !feedbackClient) {
+      state.feedbackAdminPhase = "denied";
+      state.feedbackAdminUserId = "";
+      state.feedbackRecords = [];
+      render({ persist: false });
+      return;
+    }
+    state.feedbackAdminPhase = "loading";
+    render({ persist: false });
+    feedbackClient.isAdmin()
+      .then((allowed) => {
+        if (!allowed) {
+          state.feedbackAdminPhase = "denied";
+          state.feedbackAdminUserId = "";
+          state.feedbackRecords = [];
+          return [];
+        }
+        return feedbackClient.list().then((records) => {
+          state.feedbackAdminPhase = "allowed";
+          state.feedbackAdminUserId = cloudAccountUserId();
+          state.feedbackRecords = records;
+          return records;
+        });
+      })
+      .then(() => render({ persist: false }))
+      .catch(() => {
+        state.feedbackAdminPhase = "error";
+        state.feedbackAdminUserId = "";
+        state.feedbackRecords = [];
+        render({ persist: false });
+      });
+    return;
+  }
+
+  if (action === "update-feedback-status") {
+    if (
+      state.feedbackAdminPhase !== "allowed" ||
+      !state.feedbackAdminUserId ||
+      state.feedbackAdminUserId !== cloudAccountUserId() ||
+      !feedbackClient
+    ) return;
+    const id = button.dataset.id || "";
+    const status = button.dataset.status || "";
+    feedbackClient.updateStatus(id, status)
+      .then(() => {
+        state.feedbackRecords = state.feedbackRecords.map((record) =>
+          record.id === id ? { ...record, status } : record
+        );
+        render({ persist: false });
+      })
+      .catch(() => showToast("状态保存失败，请稍后重试"));
     return;
   }
 
@@ -8587,29 +8829,42 @@ document.addEventListener("change", (event) => {
     });
 });
 
+function configuredSupabaseClient() {
+  if (sharedSupabaseClient) return sharedSupabaseClient;
+  const config = window.ANA_TILIM_CLOUD_CONFIG || {};
+  if (
+    config.supabaseUrl &&
+    config.supabasePublishableKey &&
+    typeof window.supabase?.createClient === "function"
+  ) {
+    sharedSupabaseClient = window.supabase.createClient(
+      config.supabaseUrl,
+      config.supabasePublishableKey
+    );
+  }
+  return sharedSupabaseClient;
+}
+
+function initializeFeedbackService() {
+  feedbackClient = feedbackApi.createFeedbackClient({
+    supabaseClient: configuredSupabaseClient(),
+    edition: appConfig.edition,
+    appVersion: "20260810-feedback"
+  });
+}
+
 function initializeCloudAuthentication() {
   if (!appConfig.cloudEnabled) {
     cloudStatus = { phase: "local", error: "" };
     return;
   }
   const cloudApi = window.ANA_TILIM_CLOUD;
-  const config = window.ANA_TILIM_CLOUD_CONFIG || {};
   if (!cloudApi?.createCloudSync) {
     cloudStatus = { phase: "local", error: "" };
     return;
   }
 
-  let supabaseClient = null;
-  if (
-    config.supabaseUrl &&
-    config.supabasePublishableKey &&
-    typeof window.supabase?.createClient === "function"
-  ) {
-    supabaseClient = window.supabase.createClient(
-      config.supabaseUrl,
-      config.supabasePublishableKey
-    );
-  }
+  const supabaseClient = configuredSupabaseClient();
 
   cloudSync = cloudApi.createCloudSync({
     supabaseClient,
@@ -8635,5 +8890,6 @@ function initializeCloudAuthentication() {
   }
 }
 
+initializeFeedbackService();
 initializeCloudAuthentication();
 render();
