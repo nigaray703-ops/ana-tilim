@@ -514,25 +514,125 @@ function expectedSyllableCompletedIds(progressId) {
   );
 }
 
-function syllableConnectionPrerequisitesComplete(learningProgress = state.learningProgress) {
-  const syllableProgress = learningProgress?.syllableTraining;
+function syllableStageComplete(progressId, learningProgress = state.learningProgress) {
+  const entry = learningProgress?.syllableTraining?.[progressId];
+  const expectedIds = expectedSyllableCompletedIds(progressId);
   return Boolean(
-    syllableProgress?.[syllableTraining.sections[0].id]?.completed === true &&
-    syllableTraining.rules.every((rule) => syllableProgress?.[rule.id]?.completed === true)
+    entry?.completed === true &&
+    Array.isArray(entry.completedIds) &&
+    entry.completedIds.length === expectedIds.length &&
+    entry.completedIds.every((id, index) => id === expectedIds[index])
+  );
+}
+
+function syllableRulesPrerequisitesComplete(learningProgress = state.learningProgress) {
+  return syllableStageComplete(syllableTraining.sections[0].id, learningProgress);
+}
+
+function syllableConnectionPrerequisitesComplete(learningProgress = state.learningProgress) {
+  return Boolean(
+    syllableRulesPrerequisitesComplete(learningProgress) &&
+    syllableTraining.rules.every((rule) => syllableStageComplete(rule.id, learningProgress))
   );
 }
 
 function syllableSentencePrerequisitesComplete(learningProgress = state.learningProgress) {
   return Boolean(
     syllableConnectionPrerequisitesComplete(learningProgress) &&
-    learningProgress?.syllableTraining?.[syllableTraining.sections[2].id]?.completed === true
+    syllableStageComplete(syllableTraining.sections[2].id, learningProgress)
   );
 }
 
 function reachableSyllableTrainingScreen(learningProgress = state.learningProgress) {
   if (syllableSentencePrerequisitesComplete(learningProgress)) return "syllableSentences";
   if (syllableConnectionPrerequisitesComplete(learningProgress)) return "syllableConnections";
-  return learningProgress?.syllableTraining?.[syllableTraining.sections[0].id]?.completed === true ? "syllableRules" : "syllableWarmup";
+  return syllableRulesPrerequisitesComplete(learningProgress) ? "syllableRules" : "syllableWarmup";
+}
+
+function firstReachableSyllableRuleId(learningProgress = state.learningProgress) {
+  return (
+    syllableTraining.rules.find((rule) => !syllableStageComplete(rule.id, learningProgress)) ||
+    syllableTraining.rules[syllableTraining.rules.length - 1]
+  ).id;
+}
+
+function resetSyllableRuleInteraction() {
+  state.syllableAnswerId = "";
+  state.syllableAnswerSubmitted = false;
+  state.syllableRuleCompletionNotice = null;
+}
+
+function normalizedPersistedSyllableScreen(screenId, learningProgress) {
+  if (screenId === "syllableRules" && !syllableRulesPrerequisitesComplete(learningProgress)) {
+    return reachableSyllableTrainingScreen(learningProgress);
+  }
+  if (screenId === "syllableConnections" && !syllableConnectionPrerequisitesComplete(learningProgress)) {
+    return reachableSyllableTrainingScreen(learningProgress);
+  }
+  if (screenId === "syllableSentences" && !syllableSentencePrerequisitesComplete(learningProgress)) {
+    return reachableSyllableTrainingScreen(learningProgress);
+  }
+  return screenId;
+}
+
+function syllableLearningPrefixIsValid(learningProgress = state.learningProgress) {
+  try {
+    progressTransfer.validateLearningProgress(learningProgress || {});
+    validateImportedProgressIds({ learningProgress: learningProgress || {} });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function normalizeActiveSyllableRoute() {
+  const originalScreen = state.screen;
+  if (originalScreen === "syllableConnections" && state.syllableConnectionMode !== "lesson") {
+    if (syllableConnectionScreenIsReachable()) return true;
+    state.screen = "syllableReview";
+    state.syllableConnectionAnswerId = "";
+    state.syllableConnectionSubmitted = false;
+    state.syllableConnectionReviewItemId = "";
+    return false;
+  }
+  if (
+    ["syllableWarmup", "syllableRules", "syllableConnections", "syllableSentences"].includes(originalScreen) &&
+    !syllableLearningPrefixIsValid()
+  ) {
+    state.screen = reachableSyllableTrainingScreen();
+    state.syllableRuleId = firstReachableSyllableRuleId();
+    resetSyllableRuleInteraction();
+    if (originalScreen === "syllableConnections") {
+      state.syllableConnectionMode = "lesson";
+      state.syllableConnectionAnswerId = "";
+      state.syllableConnectionSubmitted = false;
+      state.syllableConnectionReviewItemId = "";
+    }
+    return false;
+  }
+  const normalizedScreen = normalizedPersistedSyllableScreen(originalScreen, state.learningProgress);
+  if (normalizedScreen !== originalScreen) {
+    state.screen = normalizedScreen;
+    resetSyllableRuleInteraction();
+    return false;
+  }
+  if (state.screen === "syllableRules") {
+    const reachableRuleId = firstReachableSyllableRuleId();
+    if (state.syllableRuleId !== reachableRuleId) {
+      state.syllableRuleId = reachableRuleId;
+      resetSyllableRuleInteraction();
+      return false;
+    }
+  }
+  if (state.screen === "syllableConnections" && !syllableConnectionScreenIsReachable()) {
+    state.screen = reachableSyllableTrainingScreen();
+    state.syllableConnectionMode = "lesson";
+    state.syllableConnectionAnswerId = "";
+    state.syllableConnectionSubmitted = false;
+    state.syllableConnectionReviewItemId = "";
+    return false;
+  }
+  return true;
 }
 
 function activeSyllableReviewBucket() {
@@ -632,6 +732,7 @@ const state = {
   syllableAnswerId: "",
   syllableShowStandard: false,
   syllableAnswerSubmitted: false,
+  syllableRuleCompletionNotice: null,
   syllableConnectionAnswerId: "",
   syllableConnectionSubmitted: false,
   syllableConnectionMode: "lesson",
@@ -725,20 +826,25 @@ function applyLocalProgressData(saved) {
     progressTransfer.validateLearningProgress(saved.learningProgress);
   }
   validateImportedProgressIds(saved);
+  const normalizedSavedScreen = normalizedPersistedSyllableScreen(saved.screen, saved.learningProgress);
+  const normalizedSaved = {
+    ...saved,
+    screen: normalizedSavedScreen
+  };
   const previousSyllableSentenceId = activeSyllableSentenceId();
 
-  state.preferences = normalizePreferences(saved.preferences);
-  state.syllableMistakes = normalizeSyllableMistakes(saved.syllableMistakes);
+  state.preferences = normalizePreferences(normalizedSaved.preferences);
+  state.syllableMistakes = normalizeSyllableMistakes(normalizedSaved.syllableMistakes);
 
   if (
-    saved.dailyActivity &&
-    typeof saved.dailyActivity === "object" &&
-    typeof saved.dailyActivity.date === "string" &&
-    Array.isArray(saved.dailyActivity.completedIds)
+    normalizedSaved.dailyActivity &&
+    typeof normalizedSaved.dailyActivity === "object" &&
+    typeof normalizedSaved.dailyActivity.date === "string" &&
+    Array.isArray(normalizedSaved.dailyActivity.completedIds)
   ) {
     state.dailyActivity = {
-      date: saved.dailyActivity.date,
-      completedIds: saved.dailyActivity.completedIds.filter((id) => typeof id === "string")
+      date: normalizedSaved.dailyActivity.date,
+      completedIds: normalizedSaved.dailyActivity.completedIds.filter((id) => typeof id === "string")
     };
   }
 
@@ -761,48 +867,53 @@ function applyLocalProgressData(saved) {
   ];
 
   fields.forEach((field) => {
-    if (typeof saved[field] === "string") {
-      state[field] = saved[field];
+    if (typeof normalizedSaved[field] === "string") {
+      state[field] = normalizedSaved[field];
     }
   });
   if (state.screen === "settings") {
     state.screen = "profile";
   }
 
-  if (typeof saved.favorite === "boolean") {
-    state.favorite = saved.favorite;
+  if (typeof normalizedSaved.favorite === "boolean") {
+    state.favorite = normalizedSaved.favorite;
   }
 
-  if (saved.learningProgress && typeof saved.learningProgress === "object") {
+  if (normalizedSaved.learningProgress && typeof normalizedSaved.learningProgress === "object") {
     state.learningProgress = {
-      latinWriting: saved.learningProgress.latinWriting || {},
-      letters: saved.learningProgress.letters || {},
-      combos: saved.learningProgress.combos || {},
-      syllableTraining: saved.learningProgress.syllableTraining || {},
-      vocab: saved.learningProgress.vocab || {},
-      practice: saved.learningProgress.practice || {},
-      reading: saved.learningProgress.reading || {}
+      latinWriting: normalizedSaved.learningProgress.latinWriting || {},
+      letters: normalizedSaved.learningProgress.letters || {},
+      combos: normalizedSaved.learningProgress.combos || {},
+      syllableTraining: normalizedSaved.learningProgress.syllableTraining || {},
+      vocab: normalizedSaved.learningProgress.vocab || {},
+      practice: normalizedSaved.learningProgress.practice || {},
+      reading: normalizedSaved.learningProgress.reading || {}
     };
   }
 
-  if (Array.isArray(saved.mistakes)) {
-    state.mistakes = saved.mistakes.slice(0, 24);
+  if (Array.isArray(normalizedSaved.mistakes)) {
+    state.mistakes = normalizedSaved.mistakes.slice(0, 24);
   }
 
-  if (Array.isArray(saved.writingChecks)) {
-    state.writingChecks = saved.writingChecks.slice(0, 3);
+  if (Array.isArray(normalizedSaved.writingChecks)) {
+    state.writingChecks = normalizedSaved.writingChecks.slice(0, 3);
   }
 
-  if (saved.localProfile && typeof saved.localProfile === "object") {
+  if (normalizedSaved.localProfile && typeof normalizedSaved.localProfile === "object") {
     state.localProfile = {
-      displayName: typeof saved.localProfile.displayName === "string" ? saved.localProfile.displayName.slice(0, 40) : "",
+      displayName: typeof normalizedSaved.localProfile.displayName === "string" ? normalizedSaved.localProfile.displayName.slice(0, 40) : "",
       avatarDataUrl:
-        typeof saved.localProfile.avatarDataUrl === "string" && saved.localProfile.avatarDataUrl.startsWith("data:image/")
-          ? saved.localProfile.avatarDataUrl
+        typeof normalizedSaved.localProfile.avatarDataUrl === "string" && normalizedSaved.localProfile.avatarDataUrl.startsWith("data:image/")
+          ? normalizedSaved.localProfile.avatarDataUrl
           : ""
     };
   }
 
+  if (normalizedSavedScreen !== saved.screen) {
+    state.syllableRuleId = firstReachableSyllableRuleId();
+  }
+  resetSyllableRuleInteraction();
+  normalizeActiveSyllableRoute();
   reconcileSyllableSentenceProgressChange(previousSyllableSentenceId);
   return true;
 }
@@ -829,6 +940,7 @@ function saveLocalProgress() {
   const saved = buildLocalProgressData();
 
   try {
+    validatePersistedLocalProgressData(saved);
     storage.setItem(progressStorageKey, JSON.stringify(saved));
   } catch {
     return false;
@@ -878,19 +990,20 @@ function exportLocalProgress() {
 function importLocalProgressText(text) {
   const envelope = progressTransfer.parseImportPayload(text, { expectedEdition: appConfig.edition });
   validateImportedProgressIds(envelope.data);
-  state.pendingProgressImport = envelope;
-  return envelope;
+  const normalizedEnvelope = {
+    ...envelope,
+    data: {
+      ...envelope.data,
+      screen: normalizedPersistedSyllableScreen(envelope.data.screen, envelope.data.learningProgress)
+    }
+  };
+  state.pendingProgressImport = normalizedEnvelope;
+  return normalizedEnvelope;
 }
 
 function validateImportedProgressIds(saved) {
   if (saved.screen !== undefined && !persistedScreenIds.has(saved.screen)) {
     throw new Error(`学习数据包含未知页面 ID: ${saved.screen}`);
-  }
-  if (saved.screen === "syllableConnections" && !syllableConnectionPrerequisitesComplete(saved.learningProgress)) {
-    throw new Error("syllableConnections 必须先完成全部规则前置阶段");
-  }
-  if (saved.screen === "syllableSentences" && !syllableSentencePrerequisitesComplete(saved.learningProgress)) {
-    throw new Error("syllableSentences 必须先完成连接与断开前置阶段");
   }
   validateSyllableMistakeIds(saved.syllableMistakes);
 
@@ -1001,6 +1114,16 @@ function validateImportedProgressIds(saved) {
   }
 }
 
+function validatePersistedLocalProgressData(saved) {
+  progressTransfer.validateLearningProgress(saved.learningProgress || {});
+  validateImportedProgressIds(saved);
+  const normalizedScreen = normalizedPersistedSyllableScreen(saved.screen, saved.learningProgress);
+  if (normalizedScreen !== saved.screen) {
+    throw new Error(`${saved.screen} 不是当前可达的音节训练页面`);
+  }
+  return true;
+}
+
 function isRecognizedDailyActivityId(activityId) {
   const parts = activityId.split(":");
   if (parts.length === 4) {
@@ -1067,7 +1190,7 @@ function markCloudDirty(kind = "learning") {
 }
 
 function buildCloudSnapshot() {
-  return {
+  const snapshot = {
     schemaVersion: window.ANA_TILIM_CLOUD?.SCHEMA_VERSION || 1,
     modifiedAt: state.modifiedAt,
     preferencesUpdatedAt: state.preferencesUpdatedAt,
@@ -1079,6 +1202,8 @@ function buildCloudSnapshot() {
     dailyActivity: state.dailyActivity,
     preferences: state.preferences
   };
+  validateCloudProgressSnapshot(snapshot);
+  return snapshot;
 }
 
 function backupGuestProgress() {
@@ -2649,6 +2774,9 @@ function initializeFormExampleHighlights() {
 }
 
 function render({ persist = true } = {}) {
+  if (!normalizeActiveSyllableRoute()) {
+    persist = false;
+  }
   if (state.screen === "settings") {
     state.screen = "profile";
   }
@@ -3389,8 +3517,8 @@ function syllableWarmupSource(item) {
 }
 
 function completedSyllableItemIds(progressId) {
-  const progress = ensureProgress("syllableTraining", progressId);
-  return Array.isArray(progress.completedIds) ? progress.completedIds : [];
+  const progress = state.learningProgress?.syllableTraining?.[progressId];
+  return Array.isArray(progress?.completedIds) ? progress.completedIds : [];
 }
 
 function submitSyllableItem(progressId, itemId, expectedIds) {
@@ -3509,6 +3637,20 @@ function renderSyllableRules() {
         `<button class="back-button" data-action="go" data-target="syllableWarmup" type="button" aria-label="返回">&larr;</button>`
       )}
       <section class="stack syllable-training-screen" data-syllable-rule-id="${escapeHtml(rule.id)}">
+        ${
+          state.syllableRuleCompletionNotice
+            ? `
+              <article class="card syllable-exercise-card">
+                <div class="feedback ${state.syllableRuleCompletionNotice.correct ? "good" : "bad"}" data-syllable-feedback role="status" tabindex="-1">
+                  <strong>${state.syllableRuleCompletionNotice.correct ? "判断正确" : "再看一次规则"}</strong>
+                  <p>${escapeHtml(state.syllableRuleCompletionNotice.explanation)}</p>
+                </div>
+                <div class="feedback good" role="status"><strong>4 / 4</strong><p>本条规则的题目已全部提交。</p></div>
+                <button class="primary-button" data-action="next-syllable-rule" type="button">下一条规则</button>
+              </article>
+            `
+            : ""
+        }
         ${renderItemProgress(`${ruleIndex + 1} / ${syllableTraining.rules.length} 条规则`, "按顺序完成当前规则")}
         <article class="card syllable-rule-card">
           <p class="caption">入门策略</p>
@@ -6677,14 +6819,8 @@ function goTo(target) {
   if (state.screen === "syllableSentences" && target !== "syllableSentences") {
     syllableSentenceAudioController?.stop();
   }
-  if (target === "syllableConnections" && !syllableConnectionScreenIsReachable()) {
-    target = reachableSyllableTrainingScreen();
-  }
-  if (target === "syllableSentences" && !syllableSentencePrerequisitesComplete()) {
-    target = reachableSyllableTrainingScreen();
-  }
   state.screen = target;
-  render();
+  render({ persist: normalizeActiveSyllableRoute() });
 }
 
 const authRedirectStorageKey = "ana-tilim-auth-redirect";
@@ -6773,6 +6909,30 @@ document.addEventListener("click", (event) => {
   }
 
   const action = button.dataset.action;
+  const guardedSyllableActionScreen = {
+    "combine-syllable-warmup": "syllableWarmup",
+    "next-syllable-warmup": "syllableWarmup",
+    "pick-syllable-rule-answer": "syllableRules",
+    "submit-syllable-rule-answer": "syllableRules",
+    "next-syllable-rule-exercise": "syllableRules",
+    "next-syllable-rule": "syllableRules",
+    "pick-syllable-connection-answer": "syllableConnections",
+    "submit-syllable-connection-answer": "syllableConnections",
+    "next-syllable-connection": "syllableConnections",
+    "show-standard-sentence": "syllableSentences",
+    "play-syllable-sentence": "syllableSentences",
+    "continue-syllable-sentence": "syllableSentences",
+    "review-syllable-mistakes": "syllableReview",
+    "next-syllable-connection-review": "syllableConnections",
+    "clear-syllable-mistakes": "syllableReview"
+  }[action];
+  if (
+    guardedSyllableActionScreen &&
+    (state.screen !== guardedSyllableActionScreen || !normalizeActiveSyllableRoute())
+  ) {
+    render({ persist: false });
+    return;
+  }
 
   if (action === "combine-syllable-warmup") {
     const item = currentSyllableWarmupItem();
@@ -6796,6 +6956,7 @@ document.addEventListener("click", (event) => {
 
   if (action === "pick-syllable-rule-answer") {
     if (!["answer", "distractor"].includes(button.dataset.answerId) || state.syllableAnswerSubmitted) return;
+    state.syllableRuleCompletionNotice = null;
     state.syllableAnswerId = button.dataset.answerId;
     render();
     focusSyllableRuleElement(
@@ -6808,7 +6969,23 @@ document.addEventListener("click", (event) => {
     if (!["answer", "distractor"].includes(state.syllableAnswerId) || state.syllableAnswerSubmitted) return;
     const rule = currentSyllableRule();
     const exercise = syllableRuleExercise(rule);
+    const selectedAnswer = state.syllableAnswerId;
     submitSyllableItem(rule.id, exercise.id, rule.exercises.map((item) => item.id));
+    const ruleComplete = syllableStageComplete(rule.id);
+    const ruleIndex = syllableTraining.rules.findIndex((item) => item.id === rule.id);
+    const nextRule = syllableTraining.rules[ruleIndex + 1];
+    if (ruleComplete && nextRule) {
+      state.syllableRuleId = nextRule.id;
+      state.syllableAnswerId = "";
+      state.syllableAnswerSubmitted = false;
+      state.syllableRuleCompletionNotice = {
+        correct: selectedAnswer === "answer",
+        explanation: rule.explanation
+      };
+      render();
+      focusSyllableRuleElement("[data-syllable-feedback]");
+      return;
+    }
     state.syllableAnswerSubmitted = true;
     render();
     focusSyllableRuleElement("[data-syllable-feedback]");
@@ -6825,6 +7002,12 @@ document.addEventListener("click", (event) => {
   }
 
   if (action === "next-syllable-rule") {
+    if (state.syllableRuleCompletionNotice) {
+      state.syllableRuleCompletionNotice = null;
+      render();
+      focusSyllableRuleElement("[data-syllable-question]");
+      return;
+    }
     const rule = currentSyllableRule();
     if (!state.learningProgress.syllableTraining[rule.id]?.completed) return;
     const ruleIndex = syllableTraining.rules.findIndex((item) => item.id === rule.id);
@@ -7417,11 +7600,8 @@ document.addEventListener("click", (event) => {
       state.syllableShowStandard = false;
     }
     if (target === "syllableRules") {
-      const firstIncompleteRule = syllableTraining.rules.find(
-        (rule) => !state.learningProgress.syllableTraining[rule.id]?.completed
-      );
       state.syllableSectionId = syllableTraining.sections[1].id;
-      state.syllableRuleId = (firstIncompleteRule || syllableTraining.rules[syllableTraining.rules.length - 1]).id;
+      state.syllableRuleId = firstReachableSyllableRuleId();
       state.syllableAnswerId = "";
       state.syllableAnswerSubmitted = false;
     }
@@ -7824,6 +8004,13 @@ document.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (
+    ["syllableRules", "syllableConnections", "syllableSentences"].includes(state.screen) &&
+    !normalizeActiveSyllableRoute()
+  ) {
+    render({ persist: false });
+    return;
+  }
   if (state.screen === "syllableRules") {
     const option = event.target?.closest?.('[data-action="pick-syllable-rule-answer"]');
     if (

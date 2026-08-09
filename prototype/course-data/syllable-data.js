@@ -199,6 +199,7 @@
     ["break-06", "ۆ 后应继续连接 گ。", "statement-incorrect", "approved"]
   ];
   const EXPECTED_CRITERIA = ["逻辑通顺", "维吾尔文字与现有标准来源一致", "整句音频与稳定内容 ID 一致"];
+  const APPROVED_PUBLISHED_TUPLE_JSON = "{\"unit\":[\"syllable-training\",\"拼读与音节训练营\",\"从两字母组合到短句分音节朗读\",\"先把两个字母稳定拼起来，再学习音节、连接与断开，最后回到完整短句。\",[\"两字母热身\",\"音节划分策略\",\"连接与断开\",\"短句拆分朗读\"]],\"sections\":[[\"two-letter-warmup\",\"两字母热身\"],[\"syllable-rules\",\"音节划分策略\"],[\"connection-errors\",\"连接与断开判断\"],[\"sentence-reading\",\"短句拆分朗读\"]],\"twoLetterItems\":[[\"warmup-ba\",\"ba\",\"با\",[\"ب\",\"ا\"],\"ba\",\"./assets/audio/human/combos/human_combo_ba.webm\",\"approved\"],[\"warmup-pa\",\"pa\",\"پا\",[\"پ\",\"ا\"],\"pa\",\"./assets/audio/human/combos/human_combo_pa.webm\",\"approved\"],[\"warmup-ta\",\"ta\",\"تا\",[\"ت\",\"ا\"],\"ta\",\"./assets/audio/human/combos/human_combo_ta.webm\",\"approved\"],[\"warmup-na\",\"na\",\"نا\",[\"ن\",\"ا\"],\"na\",\"./assets/audio/human/combos/human_combo_na.webm\",\"approved\"],[\"warmup-la\",\"la\",\"لا\",[\"ل\",\"ا\"],\"la\",\"./assets/audio/human/combos/human_combo_la.webm\",\"approved\"],[\"warmup-ma\",\"ma\",\"ما\",[\"م\",\"ا\"],\"ma\",\"./assets/audio/human/combos/human_combo_ma.webm\",\"approved\"],[\"warmup-be-e\",\"be-e\",\"بە\",[\"ب\",\"ە\"],\"be\",\"./assets/audio/human/combos/human_combo_be_e.webm\",\"approved\"],[\"warmup-pe-e\",\"pe-e\",\"پە\",[\"پ\",\"ە\"],\"pe\",\"./assets/audio/human/combos/human_combo_pe_e.webm\",\"approved\"],[\"warmup-te-e\",\"te-e\",\"تە\",[\"ت\",\"ە\"],\"te\",\"./assets/audio/human/combos/human_combo_te_e.webm\",\"approved\"],[\"warmup-ne-e\",\"ne-e\",\"نە\",[\"ن\",\"ە\"],\"ne\",\"./assets/audio/human/combos/human_combo_ne_e.webm\",\"approved\"]],\"rules\":[[\"vowel-nucleus\",\"先找元音中心\",\"学习时可先找每个读音小块中的元音，再看它前后有哪些辅音。这是帮助初学者找候选音节的方法，不能覆盖所有借词、缩合或语流变化。\",\"入门范围：先在已验证的短组合和短句中寻找元音中心。\",\"approved\",[[\"vowel-nucleus-01\",\"با 有几个候选音节中心？\",\"1 个，中心是 ا。\",\"2 个。\",\"ba\",\"approved\"],[\"vowel-nucleus-02\",\"بە 有几个候选音节中心？\",\"1 个，中心是 ە。\",\"没有元音中心。\",\"be-e\",\"approved\"],[\"vowel-nucleus-03\",\"为 بۇ كىم؟ 选择候选拆分。\",\"بۇ | كىم؟\",\"ب | ۇكىم؟\",\"sentence-who-what-1\",\"approved\"],[\"vowel-nucleus-04\",\"为 بۇ قەلەم. 选择候选拆分。\",\"بۇ | قە-لەم.\",\"بۇ | قەل-ەم.\",\"sentence-this-that-1\",\"approved\"]]],[\"single-consonant-boundary\",\"一个辅音时先尝试向后分\",\"当两个元音中心之间只有一个辅音时，可先尝试把该辅音放到后一个读音小块的开头。这是入门策略，不总是适用于所有词。\",\"仅用于下列已核对例子，连写断点与音节边界需分开判断。\",\"approved\",[[\"single-consonant-boundary-01\",\"为 دادا 选择候选拆分。\",\"دا-دا\",\"داد-ا\",\"dada-connection\",\"approved\"],[\"single-consonant-boundary-02\",\"为 تۆگە 选择候选拆分。\",\"تۆ-گە\",\"تۆگ-ە\",\"toge-connection\",\"approved\"],[\"single-consonant-boundary-03\",\"为 ۋەتەن 选择候选拆分。\",\"ۋە-تەن\",\"ۋەت-ەن\",\"weten-connection\",\"approved\"],[\"single-consonant-boundary-04\",\"为句中 ئانا 选择候选拆分。\",\"ئا-نا\",\"ئان-ا\",\"sentence-like-need-4\",\"approved\"]]],[\"two-consonant-boundary\",\"辅音群内部逐词判断\",\"当两个元音中心之间出现两个或更多辅音时，可先把边界候选放在辅音群内部。具体位置必须逐词核对，不能只按字符数量机械处理。\",\"存在借词、词源和发音例外；ULY 的 sh 等双字符只代表一个维吾尔字母。\",\"approved\",[[\"two-consonant-boundary-01\",\"为句中 دوختۇر 选择候选拆分。\",\"دوخ-تۇر\",\"دو-ختۇر\",\"sentence-i-you-3\",\"approved\"],[\"two-consonant-boundary-02\",\"为句中 مەكتەپ 选择候选拆分。\",\"مەك-تەپ\",\"مە-كتەپ\",\"sentence-this-that-3\",\"approved\"],[\"two-consonant-boundary-03\",\"为句中 ياخشى 选择候选拆分。\",\"ياخ-شى\",\"يا-خشى\",\"sentence-like-need-4\",\"approved\"],[\"two-consonant-boundary-04\",\"为句中 دوستلۇق 选择候选拆分。\",\"دوست-لۇق\",\"دو-ستلۇق\",\"story-friend-5\",\"approved\"]]],[\"suffix-boundary\",\"构词边界不等于音节边界\",\"学习者可以同时标出词干/后缀边界和读音音节边界，但两者不能自动视为完全相同。先看构词边界有助于理解词形，再按真实读音判断音节。\",\"后缀边界不总是音节边界；下列只是受控入门例子。\",\"approved\",[[\"suffix-boundary-01\",\"分别标出 بازارغا 的候选构词和音节边界。\",\"بازار + غا；با-زار-غا\",\"只要见到后缀就等于一个音节。\",\"grammar-word-order-3\",\"approved\"],[\"suffix-boundary-02\",\"分别标出 كىتابمۇ 的候选构词和音节边界。\",\"كىتاب + مۇ；كى-تاب-مۇ\",\"把 مۇ 并入前一音节且不说明理由。\",\"grammar-yes-no-mu-1\",\"approved\"],[\"suffix-boundary-03\",\"分别标出 مەكتەپكە 的候选构词和音节边界。\",\"مەكتەپ + كە；مەك-تەپ-كە\",\"把构词边界当成唯一切分依据。\",\"story-my-day-4\",\"approved\"],[\"suffix-boundary-04\",\"比较 تىلىمنى 的两种候选边界。\",\"构词 تىل + ىم + نى；音节 تى-لىم-نى\",\"声称两种边界必须完全重合。\",\"sentence-like-need-4\",\"approved\"]]]],\"connectionItems\":[[\"connection-01\",\"bal\",\"بال\",\"statement-judgment\",\"connection\",\"错误判断：ب 与 ا 之间应断开。\",\"开头 ب 与后面的 ا 连接。\",\"statement-correct\",\"开头 ب 与后面的 ا 连接；ا 后不继续连接 ل。\",\"approved\",\"approved\"],[\"connection-02\",\"man\",\"مان\",\"statement-judgment\",\"connection\",\"错误判断：م 与 ا 之间应断开。\",\"م 与 ا 之间应断开。\",\"statement-incorrect\",\"开头 م 与后面的 ا 连接；ا 后不继续连接 ن。\",\"approved\",\"approved\"],[\"connection-03\",\"nan\",\"نان\",\"statement-judgment\",\"connection\",\"错误判断：第一个 ن 与 ا 之间应断开。\",\"第一个 ن 与后面的 ا 连接。\",\"statement-correct\",\"开头 ن 与 ا 连接；ا 后面的 ن 重新开始。\",\"approved\",\"approved\"],[\"connection-04\",\"tal\",\"تال\",\"statement-judgment\",\"connection\",\"错误判断：ت 与 ا 之间应断开。\",\"ت 与 ا 之间应断开。\",\"statement-incorrect\",\"ت 与 ا 连接；ا 后面的 ل 重新开始。\",\"approved\",\"approved\"],[\"connection-05\",\"bel\",\"بەل\",\"statement-judgment\",\"connection\",\"错误判断：ب 与 ە 之间应断开。\",\"ب 与 ە 连接；ە 后不继续连接 ل。\",\"statement-correct\",\"ب 与 ە 连接，但 ە 后不继续连接 ل。\",\"approved\",\"approved\"],[\"connection-06\",\"kel\",\"كەل\",\"statement-judgment\",\"connection\",\"错误判断：ك 与 ە 之间应断开。\",\"ك 与 ە 之间应断开。\",\"statement-incorrect\",\"ك 与 ە 连接，但 ە 后面的 ل 重新开始。\",\"approved\",\"approved\"],[\"break-01\",\"dada-connection\",\"دادا\",\"statement-judgment\",\"break\",\"错误判断：د 和 ا 后都应继续连接后一个字母。\",\"د 后不继续连接后一个字母。\",\"statement-correct\",\"د 和 ا 后不继续连接，所以中间会自然断开。\",\"approved\",\"approved\"],[\"break-02\",\"reng-connection\",\"رەڭ\",\"statement-judgment\",\"break\",\"错误判断：ر 或 ە 后应继续连接。\",\"ر 或 ە 后应继续连接。\",\"statement-incorrect\",\"ر 后不继续连接，ە 后也不继续连接，ڭ 重新开始。\",\"approved\",\"approved\"],[\"break-03\",\"qiz-connection\",\"قىز\",\"statement-judgment\",\"break\",\"错误判断：ى 后应继续连接 ز。\",\"ى 后不继续连接最后的 ز。\",\"statement-correct\",\"ق 接 ى，而 ى 后不继续连接，最后的 ز 重新开始。\",\"approved\",\"approved\"],[\"break-04\",\"weten-connection\",\"ۋەتەن\",\"statement-judgment\",\"break\",\"错误判断：ۋ 和 ە 后都无需重启后面的字母。\",\"ۋ 和 ە 后都无需重启后面的字母。\",\"statement-incorrect\",\"ۋ、ە 会使后面的字母重新开始。\",\"approved\",\"approved\"],[\"break-05\",\"mewe-connection\",\"مېۋە\",\"statement-judgment\",\"break\",\"错误判断：ې 和 ۋ 后都可继续连接。\",\"ۋ 后不继续连接后面的字母。\",\"statement-correct\",\"م 接 ې 后断开；ۋ 后也不继续连接。\",\"approved\",\"approved\"],[\"break-06\",\"toge-connection\",\"تۆگە\",\"statement-judgment\",\"break\",\"错误判断：ۆ 后应继续连接 گ。\",\"ۆ 后应继续连接 گ。\",\"statement-incorrect\",\"ت 接 ۆ，ۆ 后断开，再从 گ 开始。\",\"approved\",\"approved\"]],\"sentences\":[[\"syllable-sentence-01\",\"sentence-who-what-1\",\"بۇ كىم؟\",\"这是谁？\",\"Bu kim?\",\"./assets/audio/human/reading/human_reading_sentence_who_what_1.webm\",\"available\",[[\"بۇ\",\"Bu\",null,null,\"unavailable\",\"pending-listening\"],[\"كىم؟\",\"kim?\",null,null,\"unavailable\",\"pending-listening\"]],\"approved\",\"产品负责人验收标准 + 项目来源与数据校验\",\"2026-08-09\"],[\"syllable-sentence-02\",\"sentence-this-that-1\",\"بۇ قەلەم.\",\"这是笔。\",\"Bu qe-lem.\",\"./assets/audio/human/reading/human_reading_sentence_this_that_1.webm\",\"available\",[[\"بۇ\",\"Bu\",null,null,\"unavailable\",\"pending-listening\"],[\"قە\",\"qe\",null,null,\"unavailable\",\"pending-listening\"],[\"لەم.\",\"lem.\",null,null,\"unavailable\",\"pending-listening\"]],\"approved\",\"产品负责人验收标准 + 项目来源与数据校验\",\"2026-08-09\"],[\"syllable-sentence-03\",\"sentence-i-you-3\",\"ئۇ دوختۇر.\",\"他/她是医生。\",\"U dox-tur.\",\"./assets/audio/human/reading/human_reading_sentence_i_you_3.webm\",\"available\",[[\"ئۇ\",\"U\",null,null,\"unavailable\",\"pending-listening\"],[\"دوخ\",\"dox\",null,null,\"unavailable\",\"pending-listening\"],[\"تۇر.\",\"tur.\",null,null,\"unavailable\",\"pending-listening\"]],\"approved\",\"产品负责人验收标准 + 项目来源与数据校验\",\"2026-08-09\"],[\"syllable-sentence-04\",\"sentence-have-1\",\"مەندە قەلەم بار.\",\"我有笔。\",\"Men-de qe-lem bar.\",\"./assets/audio/human/reading/human_reading_sentence_have_1.webm\",\"available\",[[\"مەن\",\"Men\",null,null,\"unavailable\",\"pending-listening\"],[\"دە\",\"de\",null,null,\"unavailable\",\"pending-listening\"],[\"قە\",\"qe\",null,null,\"unavailable\",\"pending-listening\"],[\"لەم\",\"lem\",null,null,\"unavailable\",\"pending-listening\"],[\"بار.\",\"bar.\",null,null,\"unavailable\",\"pending-listening\"]],\"approved\",\"产品负责人验收标准 + 项目来源与数据校验\",\"2026-08-09\"],[\"syllable-sentence-05\",\"sentence-like-need-3\",\"مەن چاي ئىچىمەن.\",\"我喝茶。\",\"Men chay i-chi-men.\",\"./assets/audio/human/reading/human_reading_sentence_like_need_3.webm\",\"available\",[[\"مەن\",\"Men\",null,null,\"unavailable\",\"pending-listening\"],[\"چاي\",\"chay\",null,null,\"unavailable\",\"pending-listening\"],[\"ئى\",\"i\",null,null,\"unavailable\",\"pending-listening\"],[\"چى\",\"chi\",null,null,\"unavailable\",\"pending-listening\"],[\"مەن.\",\"men.\",null,null,\"unavailable\",\"pending-listening\"]],\"approved\",\"产品负责人验收标准 + 项目来源与数据校验\",\"2026-08-09\"],[\"syllable-sentence-06\",\"sentence-like-need-4\",\"مەن ئانا تىلىمنى ياخشى كۆرىمەن.\",\"我喜欢我的母语。\",\"Men a-na ti-lim-ni yax-shi kö-ri-men.\",\"./assets/audio/human/reading/human_reading_sentence_like_need_4.webm\",\"available\",[[\"مەن\",\"Men\",null,null,\"unavailable\",\"pending-listening\"],[\"ئا\",\"a\",null,null,\"unavailable\",\"pending-listening\"],[\"نا\",\"na\",null,null,\"unavailable\",\"pending-listening\"],[\"تى\",\"ti\",null,null,\"unavailable\",\"pending-listening\"],[\"لىم\",\"lim\",null,null,\"unavailable\",\"pending-listening\"],[\"نى\",\"ni\",null,null,\"unavailable\",\"pending-listening\"],[\"ياخ\",\"yax\",null,null,\"unavailable\",\"pending-listening\"],[\"شى\",\"shi\",null,null,\"unavailable\",\"pending-listening\"],[\"كۆ\",\"kö\",null,null,\"unavailable\",\"pending-listening\"],[\"رى\",\"ri\",null,null,\"unavailable\",\"pending-listening\"],[\"مەن.\",\"men.\",null,null,\"unavailable\",\"pending-listening\"]],\"approved\",\"产品负责人验收标准 + 项目来源与数据校验\",\"2026-08-09\"]],\"review\":[\"approved\",\"产品负责人验收标准 + 项目来源与数据校验\",\"2026-08-09\",[\"逻辑通顺\",\"维吾尔文字与现有标准来源一致\",\"整句音频与稳定内容 ID 一致\"],\"pending-listening\"]}";
   const UNSAFE_TEXT = /[\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufb50-\ufdff\ufe70-\ufeff]/u;
   const isPlainObject = (value) => {
     if (!value || Object.prototype.toString.call(value) !== "[object Object]") return false;
@@ -231,6 +232,71 @@
     if (!Array.isArray(value) || value.length !== expected.length || value.some((item, index) => item !== expected[index])) {
       throw new TypeError(`${label} must match the published stable-id contract`);
     }
+  }
+
+  function publishedContentTuple(value) {
+    return {
+      unit: [value.unit.id, value.unit.name, value.unit.subtitle, value.unit.description, value.unit.bullets],
+      sections: value.sections.map((section) => [section.id, section.title]),
+      twoLetterItems: value.twoLetterItems.map((item) => [
+        item.id, item.sourceComboId, item.standard, item.parts, item.latin, item.audioPath, item.reviewStatus
+      ]),
+      rules: value.rules.map((rule) => [
+        rule.id,
+        rule.title,
+        rule.explanation,
+        rule.scope,
+        rule.reviewStatus,
+        rule.exercises.map((exercise) => [
+          exercise.id,
+          exercise.prompt,
+          exercise.answer,
+          exercise.distractor,
+          exercise.sourceId,
+          exercise.reviewStatus
+        ])
+      ]),
+      connectionItems: value.connectionItems.map((item) => [
+        item.id,
+        item.sourceComboId,
+        item.standard,
+        item.interaction,
+        item.mistakeBucket,
+        item.distractor,
+        item.statement,
+        item.expectedAnswer,
+        item.explanation,
+        item.statementReviewStatus,
+        item.reviewStatus
+      ]),
+      sentences: value.sentences.map((sentence) => [
+        sentence.id,
+        sentence.sourceReadingItemId,
+        sentence.standard,
+        sentence.meaning,
+        sentence.latin,
+        sentence.audioPath,
+        sentence.wholeAudioStatus,
+        sentence.syllables.map((part) => [
+          part.text,
+          part.latin,
+          part.startMs,
+          part.endMs,
+          part.segmentStatus,
+          part.reviewStatus
+        ]),
+        sentence.reviewStatus,
+        sentence.reviewedBy,
+        sentence.reviewedAt
+      ]),
+      review: [
+        value.review.reviewStatus,
+        value.review.reviewedBy,
+        value.review.reviewedAt,
+        value.review.criteria,
+        value.review.segmentTimingStatus
+      ]
+    };
   }
 
   function validateSyllableTraining(value) {
@@ -382,6 +448,9 @@
     if (value.review.reviewedAt !== REVIEWED_AT) throw new TypeError("review.reviewedAt must match the product-owner decision");
     assertStringList(value.review.criteria, EXPECTED_CRITERIA, "review.criteria");
     if (value.review.segmentTimingStatus !== "pending-listening") throw new TypeError("review.segmentTimingStatus must remain pending-listening");
+    if (JSON.stringify(publishedContentTuple(value)) !== APPROVED_PUBLISHED_TUPLE_JSON) {
+      throw new TypeError("syllable training data must match the complete ordered published content contract");
+    }
     return true;
   }
 

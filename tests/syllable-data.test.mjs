@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import vm from "node:vm";
 
@@ -17,6 +18,11 @@ assert.equal(typeof api.validateSyllableTraining, "function", "syllable module s
 const data = api.syllableTraining;
 assert.ok(data, "syllable module should expose reviewed training data");
 assert.equal(Object.isFrozen(data), true, "syllable training data should be immutable at its public boundary");
+assert.equal(
+  createHash("sha256").update(JSON.stringify(data)).digest("hex"),
+  "334da5f72655b9faf8d9a9f117bdb374f4345b6dd215d53b3f7f8bee0d0f81fe",
+  "the complete independently pinned published snapshot must retain every ordered literal and null timing field"
+);
 assert.deepEqual(JSON.parse(JSON.stringify(data.unit)), {
   id: "syllable-training",
   name: "拼读与音节训练营",
@@ -427,6 +433,27 @@ assert.throws(
   /exercise ids must match the published stable-id contract/i,
   "validator should preserve all sixteen published exercise IDs"
 );
+
+for (const [label, mutate] of [
+  ["approved rule answer", (candidate) => { candidate.rules[0].exercises[0].answer = "2 个。"; }],
+  ["approved exercise source", (candidate) => { candidate.rules[0].exercises[0].sourceId = "bal"; }],
+  ["approved connection explanation", (candidate) => { candidate.connectionItems[0].explanation = "任意替换的解释。"; }],
+  ["approved sentence split", (candidate) => {
+    candidate.sentences[1].syllables[1].text = "قەل";
+    candidate.sentences[1].syllables[2].text = "ەم.";
+  }],
+  ["approved warmup literal", (candidate) => { candidate.twoLetterItems[0].latin = "baa"; }],
+  ["approved section literal", (candidate) => { candidate.sections[0].title = "两字母自由练习"; }],
+  ["approved unit metadata", (candidate) => { candidate.unit.subtitle = "任意替换的副标题"; }]
+]) {
+  const candidate = cloneData();
+  mutate(candidate);
+  assert.throws(
+    () => api.validateSyllableTraining(candidate),
+    /published content contract/i,
+    `validator should reject drift in the ${label}`
+  );
+}
 
 const remappedConnection = cloneData();
 remappedConnection.connectionItems[0].sourceComboId = "man";
