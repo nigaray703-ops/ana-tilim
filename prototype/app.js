@@ -6279,6 +6279,53 @@ function renderSentenceGlosses(value) {
   `;
 }
 
+function renderReadingProfile(group) {
+  const profile = group.profile;
+  if (!profile) {
+    return `<article class="card reading-intro-card"><p class="caption">人物介绍</p><p class="reading-intro-text">${escapeHtml(group.intro)}</p></article>`;
+  }
+
+  const portrait = profile.portrait;
+  const portraitHtml = portrait
+    ? `
+      <figure class="reading-profile-visual">
+        <img class="reading-profile-portrait" src="${escapeHtml(portrait.src)}" alt="${escapeHtml(portrait.alt)}" loading="lazy" />
+        <figcaption>
+          <strong>${escapeHtml(portrait.caption)}</strong>
+          <span>${escapeHtml(portrait.credit)}</span>
+          <span>
+            <a href="${escapeHtml(portrait.sourceUrl)}" target="_blank" rel="noopener noreferrer">图片来源</a>
+            ·
+            <a href="${escapeHtml(portrait.licenseUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(portrait.license)}</a>
+          </span>
+        </figcaption>
+      </figure>
+    `
+    : `
+      <div class="reading-profile-visual reading-profile-placeholder" role="img" aria-label="暂无可靠肖像资料">
+        <span aria-hidden="true">人</span>
+        <strong>暂无可靠肖像资料</strong>
+        <small>保留真实资料边界，不使用无来源图片</small>
+      </div>
+    `;
+
+  return `
+    <article class="card reading-intro-card reading-profile-card">
+      <div class="reading-profile-copy">
+        <p class="caption">人物介绍</p>
+        <p class="reading-intro-text">${escapeHtml(group.intro)}</p>
+        <dl class="reading-profile-facts">
+          <div><dt>时代</dt><dd>${escapeHtml(profile.era)}</dd></div>
+          <div><dt>身份</dt><dd>${escapeHtml(profile.role)}</dd></div>
+          <div><dt>相关</dt><dd>${escapeHtml(profile.relatedWork)}</dd></div>
+          <div><dt>本课关注</dt><dd>${escapeHtml(profile.learningFocus)}</dd></div>
+        </dl>
+      </div>
+      ${portraitHtml}
+    </article>
+  `;
+}
+
 function renderReadingLesson() {
   const unit = currentReadingUnit();
   const group = currentReadingGroup();
@@ -6295,10 +6342,7 @@ function renderReadingLesson() {
       <section class="stack">
         ${
           unit.readingKind === "quote" && group.intro
-            ? `<article class="card reading-intro-card">
-                <p class="caption">人物介绍</p>
-                <p class="reading-intro-text">${group.intro}</p>
-              </article>`
+            ? renderReadingProfile(group)
             : ""
         }
         <div class="reading-list ${unit.readingKind}">

@@ -105,7 +105,8 @@ const expectedCoreFiles = [
   "sentence-morphemes.js",
   "sentence-glossary.js",
   "progress-transfer.js",
-  "audio-controller.js"
+  "audio-controller.js",
+  "assets/portraits/mahmud-kashgari-wax.jpg"
 ];
 const syncTargetPath = path.join(os.tmpdir(), "ana-tilim-cn-core-sync-test");
 const excludedFiles = ["app-config.js", "manifest.webmanifest", "assets/logo.png"];
@@ -412,11 +413,11 @@ assert.equal(
   "duplicate normalization should use the standard unit-order tag"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-qwerty-words"'),
+  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-quote-profiles"'),
   "sync should cache-bust the copied quote-name UI styles"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./course-data/reading-data.js?v=20260810-quote-names"'),
+  normalizedDuplicateIndex.includes('src="./course-data/reading-data.js?v=20260810-quote-profiles"'),
   "sync should cache-bust the copied bilingual quote-name data"
 );
 assert.ok(
@@ -424,7 +425,7 @@ assert.ok(
   "sync should cache-bust the copied split syllable mistake validator"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-qwerty-words"'),
+  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-quote-profiles"'),
   "sync should cache-bust the copied bilingual quote-name app"
 );
 assert.ok(
