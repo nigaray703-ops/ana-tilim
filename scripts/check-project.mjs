@@ -100,6 +100,11 @@ const checks = [
     args: ["--check", "prototype/course-data/combo-data.js"]
   },
   {
+    label: "syntax: syllable training data",
+    command: node,
+    args: ["--check", "prototype/course-data/syllable-data.js"]
+  },
+  {
     label: "syntax: vocab data",
     command: node,
     args: ["--check", "prototype/course-data/vocab-data.js"]
@@ -138,6 +143,11 @@ const checks = [
     label: "test: latin writing course data",
     command: node,
     args: ["tests/latin-writing-data.test.mjs"]
+  },
+  {
+    label: "test: syllable training course data",
+    command: node,
+    args: ["tests/syllable-data.test.mjs"]
   },
   {
     label: "test: Latin keyboard",
