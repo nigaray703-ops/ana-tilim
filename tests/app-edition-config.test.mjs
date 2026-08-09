@@ -414,7 +414,7 @@ assert.equal(
 assert.equal(normalizedDuplicateIndex.includes("afanti-english-data.js"), false, "duplicate normalization should remove global-only English from domestic index");
 assert.equal(
   normalizedDuplicateLatinWritingTags[0][0].trim(),
-  '<script src="./course-data/latin-writing-data.js?v=20260810-qwerty-words"></script>',
+  '<script src="./course-data/latin-writing-data.js?v=20260810-unit-maps"></script>',
   "duplicate normalization should use the standard latin-writing-data tag"
 );
 assert.equal(
@@ -438,20 +438,20 @@ assert.equal(
   "duplicate normalization should use the standard feedback tag"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-feedback"'),
-  "sync should cache-bust the copied quote-name UI styles"
+  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-unit-maps"'),
+  "sync should cache-bust the shared unit-map styles"
 );
 assert.ok(
   normalizedDuplicateIndex.includes('src="./course-data/reading-data.js?v=20260810-quote-profiles"'),
   "sync should cache-bust the copied bilingual quote-name data"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./progress-transfer.js?v=20260809-syllable-review"'),
-  "sync should cache-bust the copied split syllable mistake validator"
+  normalizedDuplicateIndex.includes('src="./progress-transfer.js?v=20260810-unit-maps"'),
+  "sync should cache-bust the resumable unit progress validator"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-feedback"'),
-  "sync should cache-bust the shared feedback UI"
+  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-unit-maps"'),
+  "sync should cache-bust the shared unit-map UI"
 );
 assert.ok(
   normalizedDuplicateIndex.indexOf("./course-data/alphabet-data.js") < normalizedDuplicateIndex.indexOf("./course-data/latin-writing-data.js")
