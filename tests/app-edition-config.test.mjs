@@ -412,7 +412,7 @@ assert.equal(
   "duplicate normalization should use the standard unit-order tag"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-letter-writing"'),
+  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-letter-writing-2"'),
   "sync should cache-bust the copied quote-name UI styles"
 );
 assert.ok(
@@ -424,7 +424,7 @@ assert.ok(
   "sync should cache-bust the copied split syllable mistake validator"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-letter-writing"'),
+  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-letter-writing-2"'),
   "sync should cache-bust the copied bilingual quote-name app"
 );
 assert.ok(

@@ -1211,7 +1211,7 @@ button {
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 132px;
+  min-height: 176px;
   padding: 12px;
   border-radius: var(--radius);
   color: var(--ink);
@@ -1226,11 +1226,11 @@ button {
 
 .letter-focus-copy {
   display: grid;
-  grid-template-rows: minmax(68px, auto) auto auto;
+  grid-template-rows: minmax(96px, auto) auto auto;
   place-items: center;
-  gap: 4px;
+  gap: 8px;
   min-width: 0;
-  min-height: 112px;
+  min-height: 152px;
   padding: 8px 0;
 }
 
@@ -1503,10 +1503,41 @@ button {
 .letter-big {
   display: grid;
   place-items: center;
-  min-height: 68px;
+  min-height: 96px;
   font-size: 54px;
   font-weight: 650;
-  line-height: 1.15;
+  line-height: 1.6;
+}
+
+.writing-target-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  min-height: 48px;
+}
+
+.writing-target-letter {
+  display: inline-grid;
+  place-items: center;
+  min-width: 52px;
+  min-height: 48px;
+  font-size: 34px;
+  line-height: 1.45;
+  direction: rtl;
+  unicode-bidi: isolate;
+}
+
+.letter-writing-target-latin {
+  display: inline-block;
+  width: auto;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.writing-target-form-label {
+  margin-top: 4px;
+  font-size: 12px;
 }
 
 .combo-big {

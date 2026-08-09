@@ -4451,10 +4451,11 @@ function renderLetterWriting() {
           <div class="section-row">
             <div>
               <p class="caption">目标字母</p>
-              <h2 class="section-title">
-                描摹 <span data-letter-writing-target-label>${escapeHtml(selectedForm.label)}</span>
-                <span class="uyghur" data-letter-writing-target-glyph>${escapeHtml(displayLetterFormGlyph(selectedForm.value))}</span>
+              <h2 class="section-title writing-target-heading">
+                <span class="uyghur writing-target-letter" lang="ug" dir="rtl" data-letter-writing-target-letter>${escapeHtml(letter.letter)}</span>
+                ${renderLatinTransliteration(letter.latin, "letter-writing-target-latin")}
               </h2>
+              <p class="muted writing-target-form-label">当前临摹：<strong data-letter-writing-target-label>${escapeHtml(selectedForm.label)}</strong></p>
             </div>
             <button class="ghost-button" data-action="toggle-guide" type="button">
               ${state.showGuide ? "隐藏参考" : "显示参考"}
@@ -8288,12 +8289,8 @@ document.addEventListener("click", (event) => {
       guide.textContent = displayLetterFormGlyph(nextForm.value);
     }
     const targetLabel = document.querySelector("[data-letter-writing-target-label]");
-    const targetGlyph = document.querySelector("[data-letter-writing-target-glyph]");
     if (targetLabel) {
       targetLabel.textContent = nextForm.label;
-    }
-    if (targetGlyph) {
-      targetGlyph.textContent = displayLetterFormGlyph(nextForm.value);
     }
     document.querySelectorAll("[data-letter-writing-form-option]").forEach((option) => {
       const selected = Number.parseInt(option.dataset.formIndex || "-1", 10) === nextIndex;

@@ -54,7 +54,7 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260810-letter-writing",
+  "./styles.css?v=20260810-letter-writing-2",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
@@ -77,7 +77,7 @@ const expectedVersionedAssets = [
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260809-syllable-review",
-  "./app.js?v=20260810-letter-writing"
+  "./app.js?v=20260810-letter-writing-2"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -98,7 +98,7 @@ assert.match(
 );
 assert.match(
   styleSource,
-  /\.letter-focus-copy\s*\{[^}]*grid-template-rows:\s*minmax\(68px,\s*auto\)\s+auto\s+auto;/s,
+  /\.letter-focus-copy\s*\{[^}]*grid-template-rows:\s*minmax\(96px,\s*auto\)\s+auto\s+auto;/s,
   "large letter, category, and ULY should occupy separate stable rows"
 );
 assert.match(
@@ -398,7 +398,7 @@ latinWritingCanvasFallback.hidden = true;
 const letterWritingGuide = makeElement("letter-writing-guide");
 const letterWritingPad = makeElement("letter-writing-pad");
 const letterWritingTargetLabel = makeElement("letter-writing-target-label");
-const letterWritingTargetGlyph = makeElement("letter-writing-target-glyph");
+const letterWritingTargetLetter = makeElement("letter-writing-target-letter");
 let latinWritingFormTabsForTest = [];
 let latinWritingCanvasOnlyForTest = [];
 let letterWritingFormOptionsForTest = [];
@@ -480,7 +480,7 @@ const context = {
       if (selector === "[data-letter-writing-guide]") return letterWritingGuide;
       if (selector === "[data-letter-writing-pad]") return letterWritingPad;
       if (selector === "[data-letter-writing-target-label]") return letterWritingTargetLabel;
-      if (selector === "[data-letter-writing-target-glyph]") return letterWritingTargetGlyph;
+      if (selector === "[data-letter-writing-target-letter]") return letterWritingTargetLetter;
       return null;
     },
     querySelectorAll(selector) {
@@ -3804,6 +3804,7 @@ const allLetterWritingLayouts = vm.runInContext(
       id: letter.id,
       formCount: letter.forms.length,
       optionCount: (html.match(/data-letter-writing-form-option/g) || []).length,
+      canonicalTargetCount: (html.match(new RegExp("data-letter-writing-target-letter[^>]*>" + letter.letter + "<", "g")) || []).length,
       hasSelfCheck: /完成后评价|自查完成|主体稳定|点位正确|连接清楚/.test(html)
     };
   })`,
@@ -3817,6 +3818,7 @@ assert.deepEqual(
 );
 for (const layout of allLetterWritingLayouts) {
   assert.equal(layout.optionCount, layout.formCount, `${layout.id} should render every real form as one selectable option`);
+  assert.equal(layout.canonicalTargetCount, 1, `${layout.id} should keep its canonical learned letter as the single target`);
   assert.equal(layout.hasSelfCheck, false, `${layout.id} should remove the old self-check block`);
 }
 
@@ -3834,11 +3836,12 @@ letterWritingFormOptionsForTest = vm.runInContext(
 const appWritesBeforeFormSwitch = appHtmlWriteCount;
 const canvasCallsBeforeFormSwitch = writingCanvasBeforeFormSwitch.calls.length;
 const expectedThirdFormGlyph = vm.runInContext("displayLetterFormGlyph(currentLetter().forms[2].value)", context);
+letterWritingTargetLetter.textContent = vm.runInContext("currentLetter().letter", context);
 clickDataset({ action: "select-letter-writing-form", formIndex: "2" });
 assert.equal(vm.runInContext("state.letterWritingFormIndex", context), 2, "clicking a form should select that stable form index");
 assert.equal(letterWritingGuide.textContent, expectedThirdFormGlyph, "clicking a form should replace the faint tracing guide");
 assert.equal(letterWritingTargetLabel.textContent, vm.runInContext("currentLetter().forms[2].label", context), "target heading should name the newly selected form");
-assert.equal(letterWritingTargetGlyph.textContent, expectedThirdFormGlyph, "target heading should show the newly selected glyph");
+assert.equal(letterWritingTargetLetter.textContent, vm.runInContext("currentLetter().letter", context), "form switching must never replace the canonical target letter");
 assert.equal(appHtmlWriteCount, appWritesBeforeFormSwitch, "form switching should update locally without replacing the page");
 assert.equal(writingCanvasesForTest[0], writingCanvasBeforeFormSwitch, "form switching should preserve the live Canvas node");
 assert.equal(writingCanvasBeforeFormSwitch.calls.length, canvasCallsBeforeFormSwitch, "form switching should preserve existing strokes");
