@@ -633,7 +633,7 @@ assert.deepEqual(globalUnits.map(({ id, title }) => [id, title]), [
 const learningProgressBeforeSyllableSummaryRegression = JSON.parse(
   vm.runInContext("JSON.stringify(state.learningProgress)", context)
 );
-vm.runInContext("state.learningProgress.syllableTraining = {}", context);
+vm.runInContext("delete state.learningProgress.syllableTraining", context);
 assert.deepEqual(
   JSON.parse(
     vm.runInContext(
