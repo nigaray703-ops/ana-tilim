@@ -670,7 +670,6 @@ const syllableSentenceAudioController = window.ANA_TILIM_AUDIO?.createAudioContr
     if (state.screen !== "syllableSentences" || currentSyllableSentence()?.id !== sentenceId) return;
     state.syllableSentenceAudioPlayed = true;
     state.syllableSentencePlaybackStatus = "真人整句音频播放中";
-    completeCurrentSyllableSentenceIfReady();
     render();
   },
   onError: () => {
@@ -726,6 +725,7 @@ function applyLocalProgressData(saved) {
     progressTransfer.validateLearningProgress(saved.learningProgress);
   }
   validateImportedProgressIds(saved);
+  const previousSyllableSentenceId = activeSyllableSentenceId();
 
   state.preferences = normalizePreferences(saved.preferences);
   state.syllableMistakes = normalizeSyllableMistakes(saved.syllableMistakes);
@@ -803,6 +803,7 @@ function applyLocalProgressData(saved) {
     };
   }
 
+  reconcileSyllableSentenceProgressChange(previousSyllableSentenceId);
   return true;
 }
 
@@ -1024,11 +1025,13 @@ function confirmLocalProgressImport() {
   }
   const previousProgressState = JSON.parse(JSON.stringify(buildLocalProgressData()));
   const previousSyncDirty = state.syncDirty;
+  const previousSyllableSentenceId = activeSyllableSentenceId();
 
   try {
     resetPersistedLocalProgressState();
     applyLocalProgressData(state.pendingProgressImport.data);
     state.screen = "profile";
+    reconcileSyllableSentenceProgressChange(previousSyllableSentenceId);
     markCloudDirty("learning");
     markCloudDirty("preferences");
     markCloudDirty("favorite");
@@ -1130,6 +1133,7 @@ function validateCloudProgressSnapshot(snapshot) {
 
 function applyCloudSnapshot(snapshot) {
   validateCloudProgressSnapshot(snapshot);
+  const previousSyllableSentenceId = activeSyllableSentenceId();
   const normalized = window.ANA_TILIM_CLOUD.normalizeSnapshot(snapshot);
   state.learningProgress = normalized.learningProgress;
   state.mistakes = normalized.mistakes;
@@ -1141,6 +1145,7 @@ function applyCloudSnapshot(snapshot) {
   state.preferencesUpdatedAt = normalized.preferencesUpdatedAt;
   state.favoriteUpdatedAt = normalized.favoriteUpdatedAt;
   state.syncDirty = false;
+  reconcileSyllableSentenceProgressChange(previousSyllableSentenceId);
 }
 
 function emptyLearningProgress() {
@@ -3755,6 +3760,25 @@ function currentSyllableSentence() {
   return syllableTraining.sentences[index];
 }
 
+function activeSyllableSentenceId() {
+  if (state.screen !== "syllableSentences" || !syllableSentencePrerequisitesComplete()) return "";
+  return currentSyllableSentence()?.id || "";
+}
+
+function resetSyllableSentenceTransientState() {
+  state.syllableSentenceShowStandard = false;
+  state.syllableSentenceHelperViewed = false;
+  state.syllableSentenceAudioPlayed = false;
+  state.syllableSentencePlaybackStatus = "";
+}
+
+function reconcileSyllableSentenceProgressChange(previousSentenceId) {
+  if (!previousSentenceId || activeSyllableSentenceId() === previousSentenceId) return false;
+  syllableSentenceAudioController?.stop();
+  resetSyllableSentenceTransientState();
+  return true;
+}
+
 function syllableSentenceSource(sentence) {
   const sourceAudio = readingAudioByItemId[sentence.sourceReadingItemId];
   const sourceItem = readingUnits.flatMap((unit) => unit.groups.flatMap((group) => group.items)).find((item) => item.id === sentence.sourceReadingItemId);
@@ -3764,25 +3788,34 @@ function syllableSentenceSource(sentence) {
   return sourceAudio;
 }
 
-function completeCurrentSyllableSentenceIfReady() {
+function syllableSentenceReadyToContinue() {
+  return state.syllableSentenceHelperViewed && state.syllableSentenceShowStandard && state.syllableSentenceAudioPlayed;
+}
+
+function continueCurrentSyllableSentence() {
   const sentence = currentSyllableSentence();
-  if (!state.syllableSentenceHelperViewed || !state.syllableSentenceShowStandard || !state.syllableSentenceAudioPlayed) return false;
+  if (!syllableSentenceReadyToContinue()) return false;
+  syllableSentenceAudioController?.stop();
   submitSyllableItem(
     syllableTraining.sections[3].id,
     sentence.id,
     syllableTraining.sentences.map((item) => item.id)
   );
-  state.syllableSentenceShowStandard = false;
-  state.syllableSentenceHelperViewed = false;
-  state.syllableSentenceAudioPlayed = false;
+  resetSyllableSentenceTransientState();
   return true;
+}
+
+function renderReachableSyllableTrainingScreen(screenId) {
+  if (screenId === "syllableWarmup") return renderSyllableWarmup();
+  if (screenId === "syllableConnections") return renderSyllableConnections();
+  return renderSyllableRules();
 }
 
 function renderSyllableSentences() {
   if (!syllableSentencePrerequisitesComplete()) {
     const fallbackScreen = reachableSyllableTrainingScreen();
     state.screen = fallbackScreen;
-    return fallbackScreen === "syllableConnections" ? renderSyllableConnections() : renderSyllableRules();
+    return renderReachableSyllableTrainingScreen(fallbackScreen);
   }
   const sentence = currentSyllableSentence();
   const audio = syllableSentenceSource(sentence);
@@ -3790,6 +3823,7 @@ function renderSyllableSentences() {
   const completed = completedIds.length === syllableTraining.sentences.length;
   const nextUnitId = unitOrder.nextUnitId("syllable-training", learningUnits);
   state.syllableSentenceHelperViewed = true;
+  const readyToContinue = !completed && syllableSentenceReadyToContinue();
 
   return screen(
     `
@@ -3814,7 +3848,9 @@ function renderSyllableSentences() {
           <p class="feedback" data-syllable-sentence-status role="status" tabindex="-1">${escapeHtml(state.syllableSentencePlaybackStatus || "请先查看两种文字层，再播放任一整句模式。")}</p>
         </article>
         ${
-          completed
+          readyToContinue
+            ? `<button class="primary-button" data-action="continue-syllable-sentence" type="button">${completedIds.length === syllableTraining.sentences.length - 1 ? "完成短句训练" : "继续下一句"}</button>`
+            : completed
             ? `<button class="primary-button" data-action="open-unit" data-id="${escapeHtml(nextUnitId || "basic-phrases")}" type="button">继续：${escapeHtml(learningUnitTitle(nextUnitId || "basic-phrases"))}</button>`
             : ""
         }
@@ -6858,7 +6894,6 @@ document.addEventListener("click", (event) => {
       return;
     }
     state.syllableSentenceShowStandard = true;
-    completeCurrentSyllableSentenceIfReady();
     render();
     focusSyllableRuleElement("[data-syllable-sentence-status]");
     return;
@@ -6886,6 +6921,17 @@ document.addEventListener("click", (event) => {
       contentKey: `syllable-sentence:${sentence.id}`
     });
     render();
+    return;
+  }
+
+  if (action === "continue-syllable-sentence") {
+    if (!syllableSentencePrerequisitesComplete()) {
+      goTo("syllableSentences");
+      return;
+    }
+    if (!continueCurrentSyllableSentence()) return;
+    render();
+    focusSyllableRuleElement("[data-syllable-sentence-status]");
     return;
   }
 
