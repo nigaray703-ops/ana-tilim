@@ -2879,6 +2879,15 @@ includesAll(
 assert.match(app.innerHTML, /id="feedback-message"[^>]+maxlength="2000"/s, "feedback should enforce the approved message limit in the real form");
 assert.doesNotMatch(app.innerHTML, /<input[^>]+type="file"/s, "the feedback screen should not expose an attachment picker");
 
+setLanguage("en");
+includesAll(
+  app.innerHTML,
+  ["Feedback", "Feedback type", "Feedback details", "Optional contact", "Anonymous submissions are allowed", "Attachments are not supported", "Submit feedback"],
+  "global English feedback form"
+);
+assert.ok(!app.innerHTML.includes("意见反馈"), "global English feedback form should not retain its Chinese heading");
+setLanguage("zh");
+
 vm.runInContext(
   `
     globalThis.feedbackCalls = [];
