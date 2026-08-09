@@ -459,7 +459,7 @@ for (const [itemIndex, item] of courseData.syllableTraining.connectionItems.entr
 for (const [label, syllableMistakes, expectedText] of [
   ["connection mistakes", { connection: ["connection-01"], break: [] }, "1 道"],
   ["break mistakes", { connection: [], break: ["break-01"] }, "1 道"],
-  ["empty split review", { connection: [], break: [] }, "连接错误已清空"]
+  ["empty split review", { connection: [], break: [] }, "当前没有连接或断开错题"]
 ]) {
   renderState({ screen: "syllableReview", syllableMistakes }, `syllable review ${label}`, expectedText);
 }

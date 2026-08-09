@@ -418,6 +418,7 @@ const context = {
           "[data-syllable-question]",
           "[data-syllable-connection-feedback]",
           "[data-syllable-connection-question]",
+          "[data-syllable-review-empty]",
           '[data-syllable-review-bucket="connection"]',
           '[data-syllable-review-bucket="break"]'
         ].includes(selector)
@@ -3788,9 +3789,19 @@ assert.match(
   /data-action="go"[^>]*data-target="syllableReview"[^>]*>\s*复习连接与断开错题\s*<\/button>/,
   "the syllable unit detail should expose the real split mistake review entry"
 );
+clickDataset({ action: "go", target: "syllableReview" });
+assert.equal(vm.runInContext("state.screen", context), "syllableReview", "the unit detail review entry should open the review screen");
+assert.match(
+  app.innerHTML,
+  /data-action="go"[^>]*data-target="unit"[^>]*aria-label="返回"/,
+  "review opened from the fourth-unit detail should return to that unit detail"
+);
+clickDataset({ action: "go", target: "unit" });
+assert.equal(vm.runInContext("state.screen", context), "unit", "the fourth-unit review back button should restore the unit detail");
 clickDataset({ action: "go", target: "syllableWarmup" });
 assert.equal(vm.runInContext("state.screen", context), "syllableWarmup", "the syllable unit entry must not be dead");
 includesAll(app.innerHTML, ["两字母热身", "warmup-ba", "ب", "ا", "合起来读", "1 / 10"], "syllable warmup parts");
+assert.match(app.innerHTML, /data-target="unit"[^>]*aria-label="返回"/, "the warmup back button should return to the fourth-unit detail");
 assert.match(app.innerHTML, /data-syllable-part="0"[\s\S]*?data-syllable-part="1"/, "warmup should expose the two source parts in order");
 assert.doesNotMatch(app.innerHTML, /data-syllable-standard/, "warmup must hide the standard form before the learner combines it");
 assert.doesNotMatch(app.innerHTML, /data-action="play-audio"/, "warmup must hide audio before the combine action");
@@ -3842,6 +3853,7 @@ assert.match(
 
 clickDataset({ action: "go", target: "syllableRules" });
 assert.equal(vm.runInContext("state.screen", context), "syllableRules");
+assert.match(app.innerHTML, /data-target="syllableWarmup"[^>]*aria-label="返回"/, "the rule back button should return to the warmup stage");
 includesAll(
   app.innerHTML,
   ["音节划分策略", "先找元音中心", "入门范围", "با 有几个候选音节中心？", "1 / 4", "1 / 4 条规则"],
@@ -4086,6 +4098,7 @@ assert.match(
 );
 clickDataset({ action: "go", target: "syllableConnections" });
 assert.equal(vm.runInContext("state.screen", context), "syllableConnections", "the connection stage target should be a real screen");
+assert.match(app.innerHTML, /data-target="syllableRules"[^>]*aria-label="返回"/, "the lesson connection back button should return to the rule stage");
 includesAll(
   app.innerHTML,
   ["连读与断读专项", "بال", "开头 ب 与后面的 ا 连接。", "1 / 12"],
@@ -4241,6 +4254,7 @@ assert.deepEqual(
 );
 clickDataset({ action: "go", target: "syllableReview" });
 assert.equal(vm.runInContext("state.screen", context), "syllableReview", "the completed stage should open a real split review screen");
+assert.match(app.innerHTML, /data-target="syllableConnections"[^>]*aria-label="返回"/, "review opened from the lesson should return to connection training");
 includesAll(
   app.innerHTML,
   ["连接与断开错题复习", "连接错误", "2 道", "断开错误", "1 道", 'data-mistake-bucket="connection"', 'data-mistake-bucket="break"'],
@@ -4250,6 +4264,7 @@ focusedSyllableSelector = "";
 clickDataset({ action: "review-syllable-mistakes", mistakeBucket: "connection" });
 assert.equal(vm.runInContext("state.screen", context), "syllableConnections", "connection review should reuse the real textual judgment screen");
 assert.equal(vm.runInContext("state.syllableConnectionMode", context), "review-connection");
+assert.match(app.innerHTML, /data-target="syllableReview"[^>]*aria-label="返回"/, "a mistake retry should return to the split review screen");
 assert.equal(focusedSyllableSelector, "[data-syllable-connection-question]", "opening a split review bucket should focus its question");
 includesAll(app.innerHTML, ["错题复习 · 连接判断", "بال", "开头 ب 与后面的 ا 连接。"], "first connection mistake retry");
 assert.ok(!app.innerHTML.includes("开头 ب 与后面的 ا 连接；ا 后不继续连接 ل。"), "retry should also hide explanation before answer");
@@ -4278,7 +4293,16 @@ assert.deepEqual(
   "clearing connection review should not clear break review"
 );
 assert.equal(focusedSyllableSelector, '[data-syllable-review-bucket="connection"]', "clearing connection mistakes should focus that bucket's empty state");
-includesAll(app.innerHTML, ["连接错误已清空", "断开错误", "1 道"], "connection empty state with break mistakes retained");
+includesAll(app.innerHTML, ["连接错误", "暂无连接错题", "断开错误", "1 道"], "compact connection empty state with break mistakes retained");
+assert.ok(
+  app.innerHTML.includes('class="syllable-review-empty-row" data-syllable-review-bucket="connection"'),
+  "an empty bucket beside remaining mistakes should use the compact status row"
+);
+assert.equal(
+  (app.innerHTML.match(/class="card syllable-review-card"/g) || []).length,
+  1,
+  "only the actionable mistake bucket should remain a full card"
+);
 assert.ok(!app.innerHTML.includes('data-action="review-syllable-mistakes" data-mistake-bucket="connection"'), "an empty connection bucket should not render a dead review entry");
 focusedSyllableSelector = "";
 clickDataset({ action: "clear-syllable-mistakes", mistakeBucket: "break" });
@@ -4287,8 +4311,20 @@ assert.deepEqual(
   { connection: [], break: [] },
   "clearing break review should leave both buckets empty after connection is already empty"
 );
-assert.equal(focusedSyllableSelector, '[data-syllable-review-bucket="break"]', "clearing break mistakes should focus that bucket's empty state");
-includesAll(app.innerHTML, ["连接错误已清空", "断开错误已清空"], "fully empty split review state");
+assert.equal(focusedSyllableSelector, "[data-syllable-review-empty]", "clearing the final mistake should focus the unified empty state");
+includesAll(
+  app.innerHTML,
+  [
+    "当前没有连接或断开错题",
+    "完成连接与断开练习后，答错的题目会自动出现在这里。",
+    'data-action="go" data-target="syllableConnections"',
+    "继续连接与断开练习"
+  ],
+  "fully empty review should provide one useful next step"
+);
+assert.equal((app.innerHTML.match(/data-syllable-review-empty/g) || []).length, 1, "fully empty review should render one unified empty state");
+assert.ok(!app.innerHTML.includes("连接错误已清空"), "a fresh empty state should not claim that connection mistakes were cleared");
+assert.ok(!app.innerHTML.includes("断开错误已清空"), "a fresh empty state should not claim that break mistakes were cleared");
 
 const latinUnitHtml = renderState(
   "state.screen = 'unit'; state.selectedUnitId = 'latin-keyboard-writing'; state.latinKeyboardValue = ''"
@@ -5643,6 +5679,7 @@ const syllableSentenceHtml = renderState(`
   state.syllableSentenceShowStandard = false;
 `);
 assert.match(syllableSentenceHtml, new RegExp(`data-syllable-sentence-id="${firstSyllableSentence.id}"`), "the first unlocked sentence should render its stable sentence ID");
+assert.match(syllableSentenceHtml, /data-target="syllableConnections"[^>]*aria-label="返回"/, "the sentence back button should return to connection training");
 assert.match(syllableSentenceHtml, /data-action="show-standard-sentence"/, "sentence reading should let the learner view the exact standard layer");
 assert.equal((syllableSentenceHtml.match(/data-syllable-sentence-chip/g) || []).length, firstSyllableSentence.syllables.length, "the helper layer should keep one DOM chip per approved syllable");
 assert.match(syllableSentenceHtml, /data-action="play-syllable-part"[^>]*disabled/, "unlistened syllable segments must stay visibly disabled");
