@@ -2875,6 +2875,64 @@ button {
   flex-grow: 1.5;
 }
 
+.uyghur-keyboard-course {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.uyghur-keyboard-target-word {
+  display: block;
+  min-height: 72px;
+  color: var(--ink);
+  font-size: clamp(32px, 5vw, 48px);
+  line-height: 1.55;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.uyghur-keyboard-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.uyghur-keyboard-course-input {
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: var(--paper);
+  font-size: clamp(25px, 4vw, 34px);
+  line-height: 1.5;
+  text-align: right;
+}
+
+.uyghur-physical-key-guide {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.uyghur-physical-key-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.uyghur-physical-key-row kbd {
+  min-width: 34px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 0 2px 0 rgba(22, 38, 87, 0.12);
+  color: var(--ink);
+  font: 800 12px/1.2 ui-sans-serif, system-ui, sans-serif;
+  text-align: center;
+}
+
 .latin-letter-class-section {
   display: grid;
   gap: 12px;
@@ -3363,6 +3421,10 @@ button {
   }
 
   .latin-writing-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .uyghur-keyboard-mode-switch {
     grid-template-columns: 1fr;
   }
 

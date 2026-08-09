@@ -293,6 +293,7 @@ const persistedScreenIds = new Set([
   "learn",
   "unit",
   "latinKeyboardIntro",
+  "uyghurKeyboardWords",
   "latinLetterClasses",
   "latinVowelCompare",
   "latinDictation",
@@ -762,6 +763,8 @@ const state = {
   keyboardShift: false,
   latinKeyboardValue: "",
   latinKeyboardLessonIndex: 0,
+  uyghurKeyboardMode: "onscreen",
+  uyghurKeyboardValue: "",
   latinVowelComparisonIndex: 0,
   latinDictationIndex: 0,
   latinDictationRevealed: false,
@@ -2201,9 +2204,9 @@ function keyboardGuideState(parts, targetValue, currentValue = state.keyboardVal
   };
 }
 
-function renderKeyboardGuide(parts, targetValue) {
-  const guide = keyboardGuideState(parts, targetValue);
-  const nextStroke = nextPhysicalKeyboardStroke(targetValue);
+function renderKeyboardGuide(parts, targetValue, currentValue = state.keyboardValue) {
+  const guide = keyboardGuideState(parts, targetValue, currentValue);
+  const nextStroke = nextPhysicalKeyboardStroke(targetValue, currentValue);
   const needsShiftToggle = Boolean(nextStroke) && Boolean(state.keyboardShift) !== nextStroke.shifted;
   const nextPartLabel = keyboardPartLabel(guide.nextPart);
   const stepText = guide.isComplete
@@ -2262,12 +2265,15 @@ function nextPhysicalKeyboardStroke(targetValue, currentValue = state.keyboardVa
   return null;
 }
 
-function renderUyghurKeyboard(targetValue = "") {
-  const nextStroke = nextPhysicalKeyboardStroke(targetValue);
+function renderUyghurKeyboard(targetValue = "", options = {}) {
+  const currentValue = typeof options.currentValue === "string" ? options.currentValue : state.keyboardValue;
+  const keyAction = options.keyAction || "key";
+  const backspaceAction = options.backspaceAction || "backspace";
+  const nextStroke = nextPhysicalKeyboardStroke(targetValue, currentValue);
   const shiftMatchesNextStroke = Boolean(nextStroke) && Boolean(state.keyboardShift) === nextStroke.shifted;
   const needsShiftToggle = Boolean(nextStroke) && !shiftMatchesNextStroke;
   const isSpaceNext = shiftMatchesNextStroke && nextStroke?.code === "Space";
-  const isComplete = Boolean(targetValue) && state.keyboardValue === targetValue;
+  const isComplete = Boolean(targetValue) && currentValue === targetValue;
   const [topRow, homeRow, physicalBottomRow] = uyghurKeyboard.rows;
   const bottomRow = physicalBottomRow.filter((key) =>
     ["KeyZ", "KeyX", "KeyC", "KeyV", "KeyB", "KeyN", "KeyM", "Slash"].includes(key.code)
@@ -2279,7 +2285,7 @@ function renderUyghurKeyboard(targetValue = "") {
     return `
       <button
         class="key-button uyghur physical-key ${isNext ? "next-key" : ""}"
-        data-action="key"
+        data-action="${escapeHtml(keyAction)}"
         data-key="${escapeHtml(output)}"
         data-code="${key.code}"
         data-physical-key="${key.physical}"
@@ -2303,10 +2309,10 @@ function renderUyghurKeyboard(targetValue = "") {
       <div class="uyghur-keyboard-row row-bottom">
         <button class="key-button utility keyboard-shift ${state.keyboardShift ? "active" : ""} ${needsShiftToggle ? "next-key" : ""}" data-action="toggle-keyboard-shift" type="button" aria-label="Shift" aria-pressed="${state.keyboardShift}">⇧</button>
         ${bottomRow.map(renderLetterKey).join("")}
-        <button class="key-button utility keyboard-backspace" data-action="backspace" type="button" aria-label="删除">⌫</button>
+        <button class="key-button utility keyboard-backspace" data-action="${escapeHtml(backspaceAction)}" type="button" aria-label="删除">⌫</button>
       </div>
       <div class="uyghur-keyboard-tools" aria-label="键盘工具">
-        <button class="key-button utility keyboard-space uyghur ${isSpaceNext ? "next-key" : ""}" data-action="key" data-key=" " data-code="Space" data-physical-key="Space" type="button" aria-label="Space 键，输入空格">بوشلۇق</button>
+        <button class="key-button utility keyboard-space uyghur ${isSpaceNext ? "next-key" : ""}" data-action="${escapeHtml(keyAction)}" data-key=" " data-code="Space" data-physical-key="Space" type="button" aria-label="Space 键，输入空格">بوشلۇق</button>
       </div>
     </div>
   `;
@@ -2841,6 +2847,7 @@ function render({ persist = true } = {}) {
     learn: renderLearnPath,
     unit: renderUnitDetail,
     latinKeyboardIntro: renderLatinKeyboardIntro,
+    uyghurKeyboardWords: renderUyghurKeyboardWords,
     latinLetterClasses: renderLatinLetterClasses,
     latinVowelCompare: renderLatinVowelCompare,
     latinDictation: renderLatinDictation,
@@ -4926,6 +4933,130 @@ function renderLatinKeyboardIntro() {
           <button class="secondary-button" data-action="go" data-target="home" type="button">回到首页</button>
           ${isComplete && !isFinalLesson ? `<button class="primary-button" data-action="next-latin-keyboard-lesson" type="button">下一关：${escapeHtml(lessons[lessonIndex + 1].latin)}</button>` : ""}
           ${isComplete && isFinalLesson ? `<button class="primary-button" data-action="go" data-target="latinLetterClasses" type="button">继续：元辅音分类</button>` : ""}
+        </div>
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function completedUyghurKeyboardLessonIds() {
+  const ids = state.learningProgress.latinWriting?.["uyghur-keyboard"]?.completedIds;
+  return Array.isArray(ids) ? ids : [];
+}
+
+function currentUyghurKeyboardLesson() {
+  const lessons = latinWriting.uyghurKeyboardLessons;
+  const completedIds = completedUyghurKeyboardLessonIds();
+  const lastCompletedLesson = lessons.find((item) => item.id === completedIds[completedIds.length - 1]);
+  if (lastCompletedLesson && state.uyghurKeyboardValue === lastCompletedLesson.value) {
+    return lastCompletedLesson;
+  }
+  return lessons.find((item) => !completedIds.includes(item.id)) || lessons[lessons.length - 1];
+}
+
+function recordUyghurKeyboardLessonCompletion(lesson) {
+  const lessons = latinWriting.uyghurKeyboardLessons;
+  const expectedIds = lessons.map((item) => item.id);
+  const progress = ensureProgress("latinWriting", "uyghur-keyboard");
+  const completedIds = Array.isArray(progress.completedIds) ? progress.completedIds : [];
+  if (expectedIds[completedIds.length] !== lesson.id || completedIds.includes(lesson.id)) return;
+  progress.completedIds = [...completedIds, lesson.id];
+  if (progress.completedIds.length === expectedIds.length) {
+    progress.completed = true;
+    recordDailyActivity("latinWriting:uyghur-keyboard:completed");
+  }
+}
+
+function appendUyghurKeyboardLessonValue(value) {
+  const lesson = currentUyghurKeyboardLesson();
+  if (!lesson || state.uyghurKeyboardValue === lesson.value) return;
+  state.uyghurKeyboardValue += value;
+  if (state.uyghurKeyboardValue === lesson.value) {
+    recordUyghurKeyboardLessonCompletion(lesson);
+  }
+}
+
+function renderUyghurKeyboardWords() {
+  const lessons = latinWriting.uyghurKeyboardLessons;
+  const lesson = currentUyghurKeyboardLesson();
+  const lessonIndex = Math.max(0, lessons.findIndex((item) => item.id === lesson.id));
+  const completedIds = completedUyghurKeyboardLessonIds();
+  const isComplete = state.uyghurKeyboardValue === lesson.value;
+  const isFinalLesson = lessonIndex === lessons.length - 1;
+  const isPrefix = lesson.value.startsWith(state.uyghurKeyboardValue);
+  const physicalStrokes = uyghurKeyboard.keystrokesForText(lesson.value);
+  const keyboardParts = Array.from(lesson.value);
+
+  return screen(
+    `
+      ${topBar(
+        "维吾尔语键盘",
+        learningUnitTitle("latin-keyboard-writing"),
+        "",
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回第二单元">←</button>`
+      )}
+      <section class="stack uyghur-keyboard-course">
+        <article class="card latin-keyboard-target">
+          <div class="section-row">
+            <p class="caption">第 ${lessonIndex + 1} / ${lessons.length} 关 · ${escapeHtml(lesson.focus)}</p>
+            <span class="progress-pill">已完成 ${completedIds.length} / ${lessons.length}</span>
+          </div>
+          <strong class="uyghur uyghur-keyboard-target-word" lang="ug" dir="rtl">${escapeHtml(lesson.value)}</strong>
+          <p class="latin-keyboard-meaning">${escapeHtml(lesson.meaning)}</p>
+          <p class="muted">先看目标，再选择屏幕键盘或实体键盘完成输入。</p>
+        </article>
+        <div class="uyghur-keyboard-mode-switch" role="group" aria-label="维吾尔语键盘模式">
+          <button
+            class="${state.uyghurKeyboardMode === "onscreen" ? "primary-button" : "secondary-button"}"
+            data-action="set-uyghur-keyboard-mode"
+            data-mode="onscreen"
+            type="button"
+            aria-pressed="${state.uyghurKeyboardMode === "onscreen"}"
+          >屏幕键盘</button>
+          <button
+            class="${state.uyghurKeyboardMode === "physical" ? "primary-button" : "secondary-button"}"
+            data-action="set-uyghur-keyboard-mode"
+            data-mode="physical"
+            type="button"
+            aria-pressed="${state.uyghurKeyboardMode === "physical"}"
+          >实体键盘</button>
+        </div>
+        <input
+          class="rtl-input uyghur uyghur-keyboard-course-input"
+          value="${escapeHtml(state.uyghurKeyboardValue)}"
+          aria-label="维吾尔语课程输入框"
+          readonly
+          dir="rtl"
+        />
+        ${state.uyghurKeyboardMode === "onscreen"
+          ? renderUyghurKeyboard(lesson.value, {
+              currentValue: state.uyghurKeyboardValue,
+              keyAction: "uyghur-keyboard-key",
+              backspaceAction: "uyghur-keyboard-backspace"
+            })
+          : `
+            ${renderKeyboardGuide(keyboardParts, lesson.value, state.uyghurKeyboardValue)}
+            <article class="card uyghur-physical-key-guide" aria-label="实体键盘按键顺序">
+              <p class="caption">实体键盘按键顺序</p>
+              <div class="uyghur-physical-key-row" dir="ltr">
+                ${physicalStrokes.map((stroke) => `<kbd>${stroke.shifted ? "Shift + " : ""}${escapeHtml(stroke.code === "Space" ? "Space" : stroke.code.replace(/^Key/, ""))}</kbd>`).join("")}
+              </div>
+            </article>
+          `}
+        <div class="feedback ${isComplete ? "good" : isPrefix ? "" : "bad"}" role="status">
+          ${isComplete
+            ? isFinalLesson
+              ? "输入正确，7 关全部完成。"
+              : "输入正确，可以继续下一关。"
+            : isPrefix
+              ? "继续输入目标文字。"
+              : "当前输入和目标不一致，请删除错误部分后继续。"}
+        </div>
+        <div class="action-grid">
+          <button class="secondary-button" data-action="go" data-target="unit" type="button">返回本单元</button>
+          ${isComplete && !isFinalLesson ? `<button class="primary-button" data-action="next-uyghur-keyboard-lesson" type="button">下一关</button>` : ""}
+          ${isComplete && isFinalLesson ? `<button class="primary-button" data-action="go" data-target="unit" type="button">完成并返回本单元</button>` : ""}
         </div>
       </section>
     `,
@@ -7851,6 +7982,35 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (action === "set-uyghur-keyboard-mode") {
+    if (!["onscreen", "physical"].includes(button.dataset.mode)) return;
+    state.uyghurKeyboardMode = button.dataset.mode;
+    render();
+    return;
+  }
+
+  if (action === "uyghur-keyboard-key") {
+    appendUyghurKeyboardLessonValue(button.dataset.key || "");
+    state.keyboardShift = false;
+    render();
+    return;
+  }
+
+  if (action === "uyghur-keyboard-backspace") {
+    state.uyghurKeyboardValue = state.uyghurKeyboardValue.slice(0, -1);
+    render();
+    return;
+  }
+
+  if (action === "next-uyghur-keyboard-lesson") {
+    const lesson = currentUyghurKeyboardLesson();
+    if (state.uyghurKeyboardValue !== lesson.value) return;
+    state.uyghurKeyboardValue = "";
+    state.keyboardShift = false;
+    render();
+    return;
+  }
+
   if (action === "latin-key") {
     updateLatinKeyboardValue(latinKeyboard.applyKey(state.latinKeyboardValue, { key: button.dataset.key || "" }));
     render();
@@ -8731,6 +8891,23 @@ document.addEventListener("keydown", (event) => {
       document.querySelectorAll?.("[data-latin-writing-form-tab]")[nextIndex]?.focus?.();
       return;
     }
+  }
+
+  if (state.screen === "uyghurKeyboardWords" && state.uyghurKeyboardMode === "physical") {
+    if (event.ctrlKey || event.altKey || event.metaKey) return;
+    if (event.target?.matches?.("textarea, select, [contenteditable='true'], input:not([readonly])")) return;
+    if (event.code === "Backspace") {
+      event.preventDefault();
+      state.uyghurKeyboardValue = state.uyghurKeyboardValue.slice(0, -1);
+      render();
+      return;
+    }
+    const mappedKey = uyghurKeyboard.keyForCode(event.code, event.shiftKey);
+    if (!mappedKey) return;
+    event.preventDefault();
+    appendUyghurKeyboardLessonValue(mappedKey.value);
+    render();
+    return;
   }
 
   if (state.screen === "latinKeyboardIntro") {
