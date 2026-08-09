@@ -97,8 +97,31 @@ assert.ok(calls.some((call) => call[0] === "update" && call[1].status === "resol
 assert.ok(calls.some((call) => call[0] === "eq" && call[1] === "id" && call[2] === "feedback-1"));
 await assert.rejects(() => client.updateStatus("feedback-1", "deleted"), /无效的反馈状态/);
 
+const restCalls = [];
+const domesticClient = feedbackApi.createFeedbackClient({
+  edition: "cn",
+  appVersion: "20260810-feedback",
+  fetchImpl: async (url, options) => {
+    restCalls.push([url, options]);
+    return { ok: true, status: 201, async text() { return ""; } };
+  }
+});
+await domesticClient.submit({ category: "content", message: "国内版匿名反馈应直接保存到私密后台。", contact: "" });
+assert.equal(restCalls.length, 1, "domestic anonymous feedback should use the public insert-only REST endpoint");
+assert.equal(restCalls[0][0], "https://haryktjhuazprxkzydcm.supabase.co/rest/v1/user_feedback");
+assert.equal(restCalls[0][1].method, "POST");
+assert.equal(restCalls[0][1].headers.apikey, "sb_publishable_-RuP9whSVENlj_B-A5xIFw_RtIf5F84");
+assert.equal(restCalls[0][1].headers.Authorization, "Bearer sb_publishable_-RuP9whSVENlj_B-A5xIFw_RtIf5F84");
+assert.deepEqual(JSON.parse(restCalls[0][1].body), {
+  category: "content",
+  message: "国内版匿名反馈应直接保存到私密后台。",
+  contact: "",
+  edition: "cn",
+  app_version: "20260810-feedback"
+});
+await assert.rejects(() => domesticClient.list(), /反馈记录仅限负责人登录后查看/);
+
 const unavailable = feedbackApi.createFeedbackClient({ edition: "global", appVersion: "test" });
-await assert.rejects(() => unavailable.submit({ category: "other", message: "这是一条足够长的匿名反馈。" }), /反馈服务尚未连接/);
-await assert.rejects(() => unavailable.list(), /反馈服务尚未连接/);
+await assert.rejects(() => unavailable.list(), /反馈记录仅限负责人登录后查看/);
 
 console.log("anonymous feedback service checks passed");

@@ -1007,9 +1007,37 @@ function applyLocalProgressData(saved) {
     state.syllableRuleId = firstReachableSyllableRuleId();
   }
   resetSyllableRuleInteraction();
+  restoreHydratedLessonPosition();
   normalizeActiveSyllableRoute();
   reconcileSyllableSentenceProgressChange(previousSyllableSentenceId);
   return true;
+}
+
+function restoreHydratedLessonPosition() {
+  if (state.screen === "latinKeyboardIntro") {
+    state.latinKeyboardLessonIndex = latinKeyboardResumeIndex();
+    state.latinKeyboardValue = "";
+    return;
+  }
+  if (state.screen === "uyghurKeyboardWords") {
+    state.uyghurKeyboardValue = "";
+    state.keyboardShift = false;
+    return;
+  }
+  if (state.screen === "latinVowelCompare") {
+    state.latinVowelComparisonIndex = firstIncompleteLatinWritingIndex("vowel-contrast");
+    return;
+  }
+  if (state.screen === "latinDictation") {
+    state.latinDictationIndex = firstIncompleteLatinWritingIndex("dictation");
+    state.latinDictationRevealed = false;
+    state.latinWritingForm = 0;
+    return;
+  }
+  if (state.screen === "syllableWarmup") {
+    state.syllableItemIndex = syllableWarmupResumeIndex();
+    state.syllableShowStandard = false;
+  }
 }
 
 function hydrateLocalProgress() {

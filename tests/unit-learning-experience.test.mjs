@@ -4238,6 +4238,16 @@ vm.runInContext(`
 `, context);
 clickDataset({ action: "open-unit-stage", unitId: "syllable-training", target: "syllableWarmup" });
 assert.equal(vm.runInContext("state.syllableItemIndex", context), 3, "re-entering a partial warmup should resume the first unfinished combination");
+vm.runInContext(`
+  const warmupReload = buildLocalProgressData();
+  warmupReload.screen = 'syllableWarmup';
+  warmupReload.learningProgress.syllableTraining['two-letter-warmup'] = {
+    completedIds: syllableTraining.twoLetterItems.slice(0, 3).map((item) => item.id)
+  };
+  state.syllableItemIndex = 0;
+  applyLocalProgressData(warmupReload);
+`, context);
+assert.equal(vm.runInContext("state.syllableItemIndex", context), 3, "reloading a partial warmup screen should resume the first unfinished combination");
 clickDataset({ action: "go", target: "unit" });
 vm.runInContext("state.learningProgress.syllableTraining = {}; render()", context);
 clickDataset({ action: "open-unit-stage", unitId: "syllable-training", target: "syllableWarmup" });
@@ -4793,6 +4803,37 @@ assert.equal(vm.runInContext("state.latinVowelComparisonIndex", context), 2, "vo
 clickDataset({ action: "go", target: "unit" });
 clickDataset({ action: "open-unit-stage", unitId: "latin-keyboard-writing", target: "latinDictation" });
 assert.equal(vm.runInContext("state.latinDictationIndex", context), 5, "ULY dictation should resume its first unfinished letter");
+vm.runInContext(`
+  const qwertyReload = buildLocalProgressData();
+  qwertyReload.screen = 'latinKeyboardIntro';
+  qwertyReload.learningProgress.latinWriting = {
+    qwerty: { completedIds: latinWriting.keyboardLessons.slice(0, 1).map((item) => item.id) }
+  };
+  state.latinKeyboardLessonIndex = 0;
+  applyLocalProgressData(qwertyReload);
+`, context);
+assert.equal(vm.runInContext("state.latinKeyboardLessonIndex", context), 1, "reloading a partial QWERTY screen should resume the first unfinished lesson");
+vm.runInContext(`
+  const contrastReload = buildLocalProgressData();
+  contrastReload.screen = 'latinVowelCompare';
+  contrastReload.learningProgress.latinWriting = {
+    classification: { completed: true },
+    'vowel-contrast': { completedIds: latinWriting.vowelComparisons.slice(0, 2).map((item) => item.id) }
+  };
+  state.latinVowelComparisonIndex = 0;
+  applyLocalProgressData(contrastReload);
+`, context);
+assert.equal(vm.runInContext("state.latinVowelComparisonIndex", context), 2, "reloading vowel comparison should resume the first unfinished pair");
+vm.runInContext(`
+  const dictationReload = buildLocalProgressData();
+  dictationReload.screen = 'latinDictation';
+  dictationReload.learningProgress.latinWriting = {
+    dictation: { completedIds: [...latinWriting.vowelLetterIds, ...latinWriting.consonantLetterIds].slice(0, 5) }
+  };
+  state.latinDictationIndex = 0;
+  applyLocalProgressData(dictationReload);
+`, context);
+assert.equal(vm.runInContext("state.latinDictationIndex", context), 5, "reloading ULY dictation should resume the first unfinished letter");
 clickDataset({ action: "go", target: "unit" });
 vm.runInContext("state.learningProgress.latinWriting = {}; render()", context);
 app.scrollTop = 230;
