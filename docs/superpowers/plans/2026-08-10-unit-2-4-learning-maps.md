@@ -22,6 +22,12 @@
 - Use a failing behavioral test before every production change.
 - Never bulk-delete files or directories.
 
+### Approved addendum: alphabet-library writing forms
+
+The user additionally approved changing the first-unit alphabet-library **书写** practice so it uses the same trusted real-form data as the dedicated writing reference. For every one of the 32 letters, the practice renders the published 2, 4, or 8 forms in one horizontally scrollable selector. Selecting a form updates the tracing target and live Canvas guide without replacing or clearing the Canvas. This addendum removes the duplicate self-evaluation card, does not add stroke-order animation, and does not invent new forms.
+
+Regression coverage must prove that the practice route derives forms from the current stable `letterId`, an 8-form letter exposes eight options, selecting a later form updates both the visible target and Canvas guide without clearing strokes, and the other alphabet-library modes remain isolated.
+
 ---
 
 ## File Structure

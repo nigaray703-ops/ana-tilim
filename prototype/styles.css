@@ -513,6 +513,49 @@ button {
   gap: 12px;
 }
 
+.unit-learning-map {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.unit-learning-map-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 210px);
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  border-left: 4px solid transparent;
+}
+
+.unit-learning-map-card.is-recommended {
+  border-left-color: var(--teal);
+  background: linear-gradient(135deg, var(--paper), rgba(225, 247, 247, 0.78));
+}
+
+.unit-learning-map-card.is-complete {
+  border-left-color: var(--teal);
+}
+
+.unit-learning-map-card.is-locked {
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.unit-learning-map-copy,
+.unit-learning-map-actions {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.unit-learning-map-copy p,
+.unit-learning-map-copy h2 {
+  overflow-wrap: anywhere;
+}
+
+.unit-learning-map-actions button {
+  width: 100%;
+}
+
 .wide-gap {
   gap: 14px;
 }
@@ -4076,6 +4119,10 @@ button {
 }
 
 @media (max-width: 719px) {
+  .unit-learning-map-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .top-row:has(.afanti-language-switches) {
     align-items: flex-start;
     flex-wrap: wrap;
