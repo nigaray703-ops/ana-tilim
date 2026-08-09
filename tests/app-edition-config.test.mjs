@@ -52,6 +52,7 @@ function aggregateReadingUnits(appConfig) {
       ANA_TILIM_ALPHABET: {},
       ANA_TILIM_LATIN_WRITING: {},
       ANA_TILIM_COMBOS: {},
+      ANA_TILIM_SYLLABLE: {},
       ANA_TILIM_VOCAB: {},
       ANA_TILIM_PRACTICE: {},
       ANA_TILIM_READING: {
@@ -90,6 +91,7 @@ const expectedCoreFiles = [
   "course-data/alphabet-data.js",
   "course-data/latin-writing-data.js",
   "course-data/combo-data.js",
+  "course-data/syllable-data.js",
   "course-data/vocab-data.js",
   "course-data/practice-data.js",
   "course-data/reading-data.js",
@@ -117,6 +119,7 @@ const domesticIndexFixture = `<!doctype html>
   <body>
     <main data-domestic-marker="keep"></main>
     <script src="./course-data/alphabet-data.js?v=cn-alphabet"></script>
+    <script src="./course-data/combo-data.js?v=cn-combo"></script>
     <script src="./course-data.js?v=cn-course"></script>
     <script src="./domestic-only.js?v=1"></script>
     <script src="./app.js?v=cn-app"></script>
@@ -171,6 +174,8 @@ assert.equal(
 );
 const alphabetDataScriptIndex = syncedDomesticIndex.indexOf("./course-data/alphabet-data.js");
 const latinWritingDataScriptIndex = syncedDomesticIndex.indexOf("./course-data/latin-writing-data.js");
+const comboDataScriptIndex = syncedDomesticIndex.indexOf("./course-data/combo-data.js");
+const syllableDataScriptIndex = syncedDomesticIndex.indexOf("./course-data/syllable-data.js");
 const courseDataScriptIndex = syncedDomesticIndex.indexOf("./course-data.js");
 const unitOrderScriptIndex = syncedDomesticIndex.indexOf("./unit-order.js");
 const latinKeyboardScriptIndex = syncedDomesticIndex.indexOf("./latin-keyboard.js");
@@ -178,7 +183,9 @@ const appScriptIndex = syncedDomesticIndex.indexOf("./app.js");
 assert.ok(
   alphabetDataScriptIndex >= 0
     && alphabetDataScriptIndex < latinWritingDataScriptIndex
-    && latinWritingDataScriptIndex < courseDataScriptIndex
+    && latinWritingDataScriptIndex < comboDataScriptIndex
+    && comboDataScriptIndex < syllableDataScriptIndex
+    && syllableDataScriptIndex < courseDataScriptIndex
     && courseDataScriptIndex >= 0
     && courseDataScriptIndex < unitOrderScriptIndex
     && unitOrderScriptIndex < appScriptIndex
@@ -190,6 +197,11 @@ assert.equal(
   [...syncedDomesticIndex.matchAll(/<script\s+[^>]*src=["']\.\/course-data\/latin-writing-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)].length,
   1,
   "repeated sync should leave exactly one domestic latin-writing-data script"
+);
+assert.equal(
+  [...syncedDomesticIndex.matchAll(/<script\s+[^>]*src=["']\.\/course-data\/syllable-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)].length,
+  1,
+  "repeated sync should leave exactly one domestic syllable-data script"
 );
 assert.equal(
   [...syncedDomesticIndex.matchAll(/<script\s+[^>]*src=["']\.\/latin-keyboard\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)].length,
@@ -218,10 +230,12 @@ fs.writeFileSync(path.join(misplacedUnitOrderTargetPath, "index.html"), `<!docty
   <body>
     <main data-misplaced-domestic-marker="keep"></main>
     <script src="./course-data/alphabet-data.js?v=cn-alphabet"></script>
+    <script src="./course-data/combo-data.js?v=cn-combo"></script>
     <script src="./course-data.js?v=cn-course"></script>
     <script src="./app.js?v=cn-app"></script>
     <script src="./domestic-after-app.js?v=1"></script>
     <script src="./course-data/latin-writing-data.js?v=misplaced"></script>
+    <script src="./course-data/syllable-data.js?v=misplaced"></script>
     <script src="./unit-order.js?v=misplaced"></script>
     <script src="./latin-keyboard.js?v=misplaced"></script>
   </body>
@@ -239,15 +253,21 @@ const normalizedMisplacedLatinWritingTags = [
 const normalizedMisplacedUnitOrderTags = [
   ...normalizedMisplacedIndex.matchAll(/<script\s+[^>]*src=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
 ];
+const normalizedMisplacedSyllableTags = [
+  ...normalizedMisplacedIndex.matchAll(/<script\s+[^>]*src=["']\.\/course-data\/syllable-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
+];
 const normalizedMisplacedLatinKeyboardTags = [
   ...normalizedMisplacedIndex.matchAll(/<script\s+[^>]*src=["']\.\/latin-keyboard\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
 ];
 assert.equal(normalizedMisplacedLatinWritingTags.length, 1, "sync should keep one normalized latin-writing-data tag");
+assert.equal(normalizedMisplacedSyllableTags.length, 1, "sync should keep one normalized syllable-data tag");
 assert.equal(normalizedMisplacedUnitOrderTags.length, 1, "sync should keep one normalized unit-order tag");
 assert.equal(normalizedMisplacedLatinKeyboardTags.length, 1, "sync should keep one normalized latin-keyboard tag");
 assert.ok(
   normalizedMisplacedIndex.indexOf("./course-data/alphabet-data.js") < normalizedMisplacedIndex.indexOf("./course-data/latin-writing-data.js")
-    && normalizedMisplacedIndex.indexOf("./course-data/latin-writing-data.js") < normalizedMisplacedIndex.indexOf("./course-data.js")
+    && normalizedMisplacedIndex.indexOf("./course-data/latin-writing-data.js") < normalizedMisplacedIndex.indexOf("./course-data/combo-data.js")
+    && normalizedMisplacedIndex.indexOf("./course-data/combo-data.js") < normalizedMisplacedIndex.indexOf("./course-data/syllable-data.js")
+    && normalizedMisplacedIndex.indexOf("./course-data/syllable-data.js") < normalizedMisplacedIndex.indexOf("./course-data.js")
     && normalizedMisplacedIndex.indexOf("./course-data.js") < normalizedMisplacedIndex.indexOf("./unit-order.js")
     && normalizedMisplacedIndex.indexOf("./unit-order.js") < normalizedMisplacedIndex.indexOf("./app.js")
     && normalizedMisplacedIndex.indexOf("./latin-keyboard.js") < normalizedMisplacedIndex.indexOf("./app.js"),
@@ -278,12 +298,15 @@ fs.writeFileSync(path.join(duplicateUnitOrderTargetPath, "index.html"), `<!docty
     <main data-duplicate-domestic-marker="keep"></main>
     <script src="./course-data/alphabet-data.js?v=cn-alphabet"></script>
     <script src="./course-data/latin-writing-data.js?v=old-before"></script>
+    <script src="./course-data/combo-data.js?v=cn-combo"></script>
+    <script src="./course-data/syllable-data.js?v=old-before"></script>
     <script src="./course-data.js?v=cn-course"></script>
     <script src="./unit-order.js?v=old-before"></script>
     <script src="./latin-keyboard.js?v=old-before"></script>
     <script src="./domestic-duplicate-fixture.js?v=1"></script>
     <script src="./app.js?v=cn-app"></script>
     <script src="./course-data/latin-writing-data.js?v=old-after"></script>
+    <script src="./course-data/syllable-data.js?v=old-after"></script>
     <script src="./unit-order.js?v=old-after"></script>
     <script src="./latin-keyboard.js?v=old-after"></script>
   </body>
@@ -301,16 +324,25 @@ const normalizedDuplicateLatinWritingTags = [
 const normalizedDuplicateUnitOrderTags = [
   ...normalizedDuplicateIndex.matchAll(/<script\s+[^>]*src=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
 ];
+const normalizedDuplicateSyllableTags = [
+  ...normalizedDuplicateIndex.matchAll(/<script\s+[^>]*src=["']\.\/course-data\/syllable-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
+];
 const normalizedDuplicateLatinKeyboardTags = [
   ...normalizedDuplicateIndex.matchAll(/<script\s+[^>]*src=["']\.\/latin-keyboard\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
 ];
 assert.equal(normalizedDuplicateLatinWritingTags.length, 1, "sync should collapse duplicate latin-writing-data tags");
+assert.equal(normalizedDuplicateSyllableTags.length, 1, "sync should collapse duplicate syllable-data tags");
 assert.equal(normalizedDuplicateUnitOrderTags.length, 1, "sync should collapse duplicate unit-order tags");
 assert.equal(normalizedDuplicateLatinKeyboardTags.length, 1, "sync should collapse duplicate latin-keyboard tags");
 assert.equal(
   normalizedDuplicateLatinWritingTags[0][0].trim(),
   '<script src="./course-data/latin-writing-data.js?v=20260809-latin-writing"></script>',
   "duplicate normalization should use the standard latin-writing-data tag"
+);
+assert.equal(
+  normalizedDuplicateSyllableTags[0][0].trim(),
+  '<script src="./course-data/syllable-data.js?v=20260809-syllable-training"></script>',
+  "duplicate normalization should use the standard syllable-data tag"
 );
 assert.equal(
   normalizedDuplicateLatinKeyboardTags[0][0],
@@ -324,7 +356,9 @@ assert.equal(
 );
 assert.ok(
   normalizedDuplicateIndex.indexOf("./course-data/alphabet-data.js") < normalizedDuplicateIndex.indexOf("./course-data/latin-writing-data.js")
-    && normalizedDuplicateIndex.indexOf("./course-data/latin-writing-data.js") < normalizedDuplicateIndex.indexOf("./course-data.js")
+    && normalizedDuplicateIndex.indexOf("./course-data/latin-writing-data.js") < normalizedDuplicateIndex.indexOf("./course-data/combo-data.js")
+    && normalizedDuplicateIndex.indexOf("./course-data/combo-data.js") < normalizedDuplicateIndex.indexOf("./course-data/syllable-data.js")
+    && normalizedDuplicateIndex.indexOf("./course-data/syllable-data.js") < normalizedDuplicateIndex.indexOf("./course-data.js")
     && normalizedDuplicateIndex.indexOf("./course-data.js") < normalizedDuplicateIndex.indexOf("./unit-order.js")
     && normalizedDuplicateIndex.indexOf("./unit-order.js") < normalizedDuplicateIndex.indexOf("./app.js")
     && normalizedDuplicateIndex.indexOf("./latin-keyboard.js") < normalizedDuplicateIndex.indexOf("./app.js"),

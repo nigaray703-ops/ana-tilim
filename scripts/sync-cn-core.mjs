@@ -15,6 +15,7 @@ const indexSource = fs.readFileSync(indexPath, "utf8");
 const unitOrderScriptPattern = /<script\b[^>]*\bsrc=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g;
 const latinKeyboardScriptPattern = /<script\b[^>]*\bsrc=["']\.\/latin-keyboard\.js(?:\?[^"']*)?["'][^>]*><\/script>/g;
 const latinWritingScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/course-data\/latin-writing-data\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
+const syllableDataScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/course-data\/syllable-data\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
 const appScriptPattern = /^([ \t]*)(<script\b[^>]*\bsrc=["']\.\/app\.js(?:\?[^"']*)?["'][^>]*><\/script>)/m;
 const appScriptMatch = appScriptPattern.exec(indexSource);
 
@@ -39,6 +40,20 @@ const standardLatinWritingScript = '<script src="./course-data/latin-writing-dat
 const latinWritingInsertionIndex = alphabetDataScriptMatch.index + alphabetDataScriptMatch[0].length;
 let normalizedIndex = `${indexWithoutLatinWritingScripts.slice(0, latinWritingInsertionIndex)}\n${alphabetDataScriptMatch[1]}${standardLatinWritingScript}${indexWithoutLatinWritingScripts.slice(latinWritingInsertionIndex)}`;
 const indexUpdateMessages = ["Normalized index.html: latin-writing-data.js after alphabet-data.js"];
+
+const comboDataScriptPattern = /^([ \t]*)(<script\b[^>]*\bsrc=["']\.\/course-data\/combo-data\.js(?:\?[^"']*)?["'][^>]*><\/script>)[ \t]*(?:\r?\n|$)/m;
+const indexWithoutSyllableScripts = normalizedIndex.replace(syllableDataScriptPattern, "");
+const comboDataScriptMatch = comboDataScriptPattern.exec(indexWithoutSyllableScripts);
+const courseDataMatchAfterSyllableRemoval = courseDataScriptPattern.exec(indexWithoutSyllableScripts);
+
+if (!comboDataScriptMatch || !courseDataMatchAfterSyllableRemoval || comboDataScriptMatch.index > courseDataMatchAfterSyllableRemoval.index) {
+  throw new Error(`Cannot update ${indexPath}: combo-data.js must load before course-data.js.`);
+}
+
+const standardSyllableDataScript = '<script src="./course-data/syllable-data.js?v=20260809-syllable-training"></script>';
+const syllableInsertionIndex = comboDataScriptMatch.index + comboDataScriptMatch[0].length;
+normalizedIndex = `${indexWithoutSyllableScripts.slice(0, syllableInsertionIndex)}${comboDataScriptMatch[1]}${standardSyllableDataScript}\n${indexWithoutSyllableScripts.slice(syllableInsertionIndex)}`;
+indexUpdateMessages.push("Normalized index.html: syllable-data.js after combo-data.js");
 
 const standardUnitOrderScript = '<script src="./unit-order.js?v=20260809-edition-unit-order"></script>';
 const unitOrderScripts = normalizedIndex.match(unitOrderScriptPattern) || [];

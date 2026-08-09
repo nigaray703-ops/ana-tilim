@@ -7,6 +7,7 @@ const courseDataScriptPaths = [
   "prototype/course-data/alphabet-data.js",
   "prototype/course-data/latin-writing-data.js",
   "prototype/course-data/combo-data.js",
+  "prototype/course-data/syllable-data.js",
   "prototype/course-data/vocab-data.js",
   "prototype/course-data/practice-data.js",
   "prototype/course-data/reading-data.js",
@@ -33,10 +34,13 @@ const {
   alphabetGroups,
   alphabetAudioItems,
   comboGroups,
+  syllableTraining,
   vocabGroups,
   practiceGroups,
   readingUnits
 } = courseData;
+
+assert.equal(syllableTraining.unit.id, "syllable-training", "reviewed syllable training data should be available to course consumers");
 
 function assertText(value, label) {
   assert.equal(typeof value, "string", `${label} should be text`);

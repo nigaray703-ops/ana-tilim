@@ -15,6 +15,7 @@ const courseDataScriptPaths = [
   "prototype/course-data/alphabet-data.js",
   "prototype/course-data/latin-writing-data.js",
   "prototype/course-data/combo-data.js",
+  "prototype/course-data/syllable-data.js",
   "prototype/course-data/vocab-data.js",
   "prototype/course-data/practice-data.js",
   "prototype/course-data/reading-data.js"
@@ -56,6 +57,7 @@ const expectedVersionedAssets = [
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
   "./course-data/latin-writing-data.js?v=20260809-latin-writing",
   "./course-data/combo-data.js?v=20260728-uly-transliteration",
+  "./course-data/syllable-data.js?v=20260809-syllable-training",
   "./course-data/vocab-data.js?v=20260728-uly-transliteration",
   "./course-data/practice-data.js?v=20260728-learned-markers",
   "./course-data/reading-data.js?v=20260728-uly-transliteration",

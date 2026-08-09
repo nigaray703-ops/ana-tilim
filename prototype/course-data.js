@@ -3,6 +3,7 @@
   const alphabetData = window.ANA_TILIM_ALPHABET;
   const latinWriting = window.ANA_TILIM_LATIN_WRITING;
   const comboData = window.ANA_TILIM_COMBOS;
+  const syllableData = window.ANA_TILIM_SYLLABLE;
   const vocabData = window.ANA_TILIM_VOCAB;
   const practiceData = window.ANA_TILIM_PRACTICE;
   const readingData = window.ANA_TILIM_READING;
@@ -10,6 +11,10 @@
 
   if (!latinWriting) {
     throw new Error("Ana Tilim focused course data file ANA_TILIM_LATIN_WRITING failed to load.");
+  }
+
+  if (!syllableData) {
+    throw new Error("Ana Tilim focused course data file ANA_TILIM_SYLLABLE failed to load.");
   }
 
   if (!uly || !alphabetData || !comboData || !vocabData || !practiceData || !readingData) {
@@ -23,6 +28,7 @@
     ...alphabetData,
     latinWriting,
     ...comboData,
+    ...syllableData,
     ...vocabData,
     ...practiceData,
     ...readingData,

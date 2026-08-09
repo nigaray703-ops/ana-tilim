@@ -79,6 +79,7 @@ const focusedCoursePaths = [
   "prototype/uly-transliteration.js",
   "prototype/course-data/alphabet-data.js",
   "prototype/course-data/combo-data.js",
+  "prototype/course-data/syllable-data.js",
   "prototype/course-data/vocab-data.js",
   "prototype/course-data/practice-data.js",
   "prototype/course-data/reading-data.js"

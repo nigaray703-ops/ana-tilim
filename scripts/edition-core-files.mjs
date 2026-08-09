@@ -7,6 +7,7 @@ export const EDITION_CORE_FILES = Object.freeze([
   "course-data/alphabet-data.js",
   "course-data/latin-writing-data.js",
   "course-data/combo-data.js",
+  "course-data/syllable-data.js",
   "course-data/vocab-data.js",
   "course-data/practice-data.js",
   "course-data/reading-data.js",
