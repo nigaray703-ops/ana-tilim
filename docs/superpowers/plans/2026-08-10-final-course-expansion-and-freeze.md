@@ -4,7 +4,7 @@
 
 **Goal:** 在不增加单元和底部导航的前提下，为语法入门新增 4 组 12 条、为基础句型新增 4 组 16 条，配齐严格对应的真人音频和五步练习，保证中途退出后续学，并在两版上线后正式冻结课程内容。
 
-**Architecture:** 先在不被站点加载的审校目录中建立 28 条四语内容、练习和音频目标合同；通过本地录音工作台录制、批准并导入 28 个 WebM 后，再一次性把批准数据、英语覆盖、manifest 和互动练习接入现有 `reading` 单元。新增组复用现有 `reading` 进度桶，使用有序 `completedIds` 派生当前五步，不新增持久化瞬时字段。共享实现通过安全同步脚本进入国内版，国内版继续隐藏名人名言、保持无登录/无外链；最终用内容冻结测试锁定两版单元、组数、条目数和音频数。
+**Architecture:** 先在不被站点加载的审校目录中建立 28 条四语阅读内容、练习及一条词汇纠错合同；通过本地录音工作台录制、批准并导入 29 个 WebM 后，再一次性把批准数据、英语覆盖、manifest 和互动练习接入现有课程。新增组复用现有 `reading` 进度桶，使用有序 `completedIds` 派生当前五步，不新增持久化瞬时字段。共享实现通过安全同步脚本进入国内版，国内版继续隐藏名人名言、保持无登录/无外链；最终用内容冻结测试锁定两版单元、组数、条目数和音频数。
 
 **Tech Stack:** 原生 JavaScript/HTML/CSS、现有静态 course-data/i18n 架构、现有 local/export/import/Supabase cloud progress、WebM manifests、本地录音工作台、Node.js VM/assert 测试、Vercel、CloudBase 静态托管。
 
@@ -15,6 +15,9 @@
 - Global 仍为 12 个可见单元；CN 仍为 11 个可见单元，仅按既有配置隐藏 `famous-quotes`。
 - 不新增“练习”底部导航，不新增第十三单元，不重排现有 12 个稳定 unit ID。
 - 语法组从 6 增至 10，基础句型组从 8 增至 12；阅读条目从 164 增至 192。
+- 负责人已明确移除词汇 `hayr`（`خەير / xeyr / 再见、告辞`）：课程数据、分组引用、词汇 manifest 和唯一文件 `prototype/assets/audio/human/vocab/human_vocab_hayr.webm` 必须一起移除；删除只允许针对这个明确文件执行一次，不得批量删除。最终词汇为 202 项，最终录音目录为 554 项。
+- 负责人已明确把词汇 `marhaba`（当前 `مەرھابا / merhaba / 不客气、请`）更正为新稳定 ID `erzimaydu`、标准维文 `ئەرزىمەيدۇ`、ULY `erzimeydu`、中文“不客气、不用谢”、英文“You're welcome.”。新词先作为未发布待录目标，真人音频批准并导入后才原子替换课程与 manifest，最后逐个删除旧 `human_vocab_marhaba.webm`；不得先让无音频的新词进入正式课程。
+- 负责人要求全量审听：最终 554 个正式目录目标都必须是 `approved-current` 或 `imported`，不得遗留 `pending-review`、`needs-rerecord`、无效或错文音频。程序负责全量文字、ID、路径、哈希和 WebM 接线验证，负责人通过本地工作台完成真人发音逐条听审。
 - 新增 28 条必须逐条包含稳定 ID、维文、ULY、中文、英语、教学说明和审校状态；不得用机器翻译运行时生成。
 - 新内容只允许使用课程已教词汇或在同卡中解释的新词；不得突然加入超出入门层级的长句和抽象语法术语。
 - 每个新增组固定五步：规则、对比例句、识别、排序、补全；旧组保持当前读例句界面，不强行重写。
@@ -88,6 +91,11 @@ sentence-polite-reason
 - Create: `课程/语法与基础句型/最终增补审校表.md`
 - Create: `课程/语法与基础句型/final-reading-additions.json`
 - Create: `tests/final-reading-additions.test.mjs`
+- Modify: `prototype/course-data/vocab-data.js`
+- Modify: `prototype/assets/audio/human/vocab/manifest.json`
+- Modify: `tests/course-data-integrity.test.mjs`
+- Modify: `tests/human-audio.test.mjs`
+- Delete exactly: `prototype/assets/audio/human/vocab/human_vocab_hayr.webm`
 - Modify: `scripts/check-project.mjs`
 
 **JSON contract:**
@@ -144,6 +152,10 @@ assert.equal(
 
 It must reject duplicate IDs, ULY with Arabic/Cyrillic text, missing translations, `pending` rows, answer IDs outside options, and an ordering result that does not exactly equal an approved item value.
 
+The same RED must assert that `hayr` still exists in the current vocabulary rows/section/manifest/file. GREEN removes all four references and the one explicit WebM file, keeps `korushkunche`, renumbers manifest `order` contiguously, and leaves every unrelated vocabulary literal and audio byte unchanged.
+
+The review JSON must also contain one independently frozen `vocabularyCorrections` row for `erzimaydu` with old ID/path, new ID/path, exact Uyghur/ULY/Chinese/English literals, `reviewStatus: "approved"`, and reliable-source notes. Task 1 does not yet alter the production `marhaba` row/file; it only approves the replacement contract and its future recording text.
+
 - [ ] **Step 2: Run RED**
 
 ```bash
@@ -185,13 +197,13 @@ git diff --check
 - [ ] **Step 6: Commit Task 1**
 
 ```bash
-git add '课程/语法与基础句型/最终增补审校表.md' '课程/语法与基础句型/final-reading-additions.json' tests/final-reading-additions.test.mjs scripts/check-project.mjs
+git add '课程/语法与基础句型/最终增补审校表.md' '课程/语法与基础句型/final-reading-additions.json' prototype/course-data/vocab-data.js prototype/assets/audio/human/vocab/manifest.json prototype/assets/audio/human/vocab/human_vocab_hayr.webm tests/final-reading-additions.test.mjs tests/course-data-integrity.test.mjs tests/human-audio.test.mjs scripts/check-project.mjs
 git commit -m "content: approve final grammar and sentence additions"
 ```
 
 ---
 
-### Task 2: Add the 28 approved pending targets to the recording studio
+### Task 2: Add the 28 reading targets and one approved vocabulary correction to the recording studio
 
 **Files:**
 - Modify: `tools/recording-studio/catalog.mjs`
@@ -200,7 +212,7 @@ git commit -m "content: approve final grammar and sentence additions"
 - Create: `tests/build-final-reading-manifest.test.mjs`
 - Modify: `scripts/check-project.mjs`
 
-- [ ] **Step 1: Write the failing 555-target catalog test**
+- [ ] **Step 1: Write the failing 555-target pending catalog test**
 
 After loading the approved review contract, expect:
 
@@ -208,6 +220,12 @@ After loading the approved review contract, expect:
 assert.equal(catalog.targets.length, 555);
 assert.equal(catalog.targets.filter((item) => item.category === "reading").length, 192);
 assert.equal(catalog.targets.filter((item) => item.category === "reading" && !item.playable).length, 28);
+assert.equal(catalog.targets.filter((item) => !item.playable).length, 29);
+const correction = catalog.targets.find((item) => item.stableId === "vocab:erzimaydu");
+assert.deepEqual(
+  { value: correction.value, latin: correction.latin, meaning: correction.meaning, currentFile: correction.currentFile, playable: correction.playable },
+  { value: "ئەرزىمەيدۇ", latin: "erzimeydu", meaning: "不客气、不用谢", currentFile: "human_vocab_erzimeydu.webm", playable: false }
+);
 const target = catalog.targets.find((item) => item.stableId === "reading:grammar-person-verbs-1");
 assert.equal(target.source, "approved-final-additions");
 assert.equal(target.currentFile, "human_reading_grammar_person_verbs_1.webm");
@@ -221,11 +239,11 @@ assert.equal(target.playable, false);
 $NODE tests/recording-studio-catalog.test.mjs
 ```
 
-Expected: catalog remains 527 and does not include the new stable IDs.
+Expected: after the approved `hayr` removal, catalog remains 526 and does not include the new stable IDs.
 
 - [ ] **Step 3: Merge approved, unpublished targets into the studio only**
 
-`catalog.mjs` must read `final-reading-additions.json`, require `ownerDecision === "approved-topics"` and all row reviews approved, and append only IDs absent from the production reading manifest. Their fixed filename is:
+`catalog.mjs` must read `final-reading-additions.json`, require `ownerDecision === "approved-topics"` and all row reviews approved, append only reading IDs absent from the production reading manifest, and append the approved `vocab:erzimaydu` correction while `vocab:marhaba` remains available for old/new comparison. Reading filenames are:
 
 ```js
 const file = `human_reading_${item.id.replaceAll("-", "_")}.webm`;
@@ -286,12 +304,13 @@ git commit -m "feat: queue final course recordings"
 
 ---
 
-### Task 3: Record, approve and import all 28 new human-audio files
+### Task 3: Record, approve and import all 29 new human-audio files
 
 **Files:**
 - Generate through studio: `recording-workspace/takes/**` (ignored, never commit)
 - Create through approved import: `prototype/assets/audio/human/reading/human_reading_grammar_*.webm`
 - Create through approved import: `prototype/assets/audio/human/reading/human_reading_sentence_*.webm`
+- Create through approved import: `prototype/assets/audio/human/vocab/human_vocab_erzimeydu.webm`
 - Modify after validation: `prototype/assets/audio/human/reading/manifest.json`
 
 - [ ] **Step 1: Start the studio and filter pending final-course items**
@@ -300,7 +319,7 @@ git commit -m "feat: queue final course recordings"
 $NODE tools/start-recording-studio.mjs --port 4175
 ```
 
-Use category `阅读` and status `待录`; assert the UI shows exactly 28 additions and no current production item appears as pending.
+Use status `待录`; assert the UI shows exactly 29 additions: 28 reading sentences plus `vocab:erzimaydu`. Current production `vocab:marhaba` remains playable only for comparison and is not itself a pending target.
 
 - [ ] **Step 2: Record and compare takes**
 
@@ -316,7 +335,7 @@ The approved take’s `recordingTextHash` must still match the reviewed row.
 
 - [ ] **Step 3: Preview all imports**
 
-Preview must show 28 operations, all inside `prototype/assets/audio/human/reading/`, all with unique stable IDs and replacement hashes. Because these are new targets, `targetExisted` must be false for every operation.
+Preview must show 29 operations with unique stable IDs and replacement hashes: 28 inside `prototype/assets/audio/human/reading/` and one exact `prototype/assets/audio/human/vocab/human_vocab_erzimeydu.webm`. Because these are new targets, `targetExisted` must be false for every operation.
 
 - [ ] **Step 4: Import and validate audio bytes**
 
@@ -335,7 +354,7 @@ $NODE tests/build-final-reading-manifest.test.mjs
 $NODE --input-type=module -e "import fs from 'node:fs'; const m=JSON.parse(fs.readFileSync('prototype/assets/audio/human/reading/manifest.json')); if(m.items.length!==192) process.exit(1); console.log('reading manifest 192');"
 ```
 
-Check `git status --short` shows exactly 28 new WebM files plus the manifest, not `recording-workspace/`.
+Check `git status --short` shows exactly 29 new WebM files plus the manifest, not `recording-workspace/`.
 
 - [ ] **Step 6: Commit Task 3**
 
@@ -349,10 +368,11 @@ git add prototype/assets/audio/human/reading/human_reading_sentence_self_introdu
 git add prototype/assets/audio/human/reading/human_reading_sentence_location_direction_*.webm
 git add prototype/assets/audio/human/reading/human_reading_sentence_ability_preference_*.webm
 git add prototype/assets/audio/human/reading/human_reading_sentence_polite_reason_*.webm
+git add prototype/assets/audio/human/vocab/human_vocab_erzimeydu.webm
 git commit -m "content: add final grammar and sentence audio"
 ```
 
-Before committing, inspect the staged file list and confirm only the approved 28 new filenames and the reading manifest are staged; do not use a broad asset-directory add if unrelated audio changes exist.
+Before committing, inspect the staged file list and confirm only the approved 29 new filenames and the reading manifest are staged; do not use a broad asset-directory add if unrelated audio changes exist.
 
 ---
 
@@ -360,8 +380,11 @@ Before committing, inspect the staged file list and confirm only the approved 28
 
 **Files:**
 - Modify: `prototype/course-data/reading-data.js`
+- Modify: `prototype/course-data/vocab-data.js`
 - Modify: `prototype/i18n/reading-en.js`
 - Modify: `prototype/course-data.js`
+- Modify: `prototype/assets/audio/human/vocab/manifest.json`
+- Delete exactly after new audio validation: `prototype/assets/audio/human/vocab/human_vocab_marhaba.webm`
 - Modify: `tests/course-data-integrity.test.mjs`
 - Modify: `tests/human-audio.test.mjs`
 - Modify: `tests/unit-learning-experience.test.mjs`
@@ -393,6 +416,8 @@ for (const approvedGroup of approvedUnits.flatMap((unit) => unit.groups)) {
 
 Also assert the English runtime maps every new group and item to the approved English fields.
 
+Assert the approved `erzimaydu` tuple replaces `marhaba` in the greetings group, section and manifest; keeps the production vocabulary count at 202; points to the newly validated `human_vocab_erzimeydu.webm`; and leaves no `marhaba` ID, literal, manifest path or file. The old file may be removed only after the new file passes shared WebM validation and exact text binding.
+
 - [ ] **Step 2: Run RED**
 
 ```bash
@@ -423,7 +448,7 @@ $NODE tests/human-audio.test.mjs
 $NODE tests/unit-learning-experience.test.mjs
 $NODE tests/full-content-render.test.mjs
 git diff --check
-git add prototype/course-data/reading-data.js prototype/i18n/reading-en.js prototype/course-data.js tests/course-data-integrity.test.mjs tests/human-audio.test.mjs tests/unit-learning-experience.test.mjs tests/full-content-render.test.mjs
+git add prototype/course-data/reading-data.js prototype/course-data/vocab-data.js prototype/i18n/reading-en.js prototype/course-data.js prototype/assets/audio/human/vocab/manifest.json prototype/assets/audio/human/vocab/human_vocab_marhaba.webm tests/course-data-integrity.test.mjs tests/human-audio.test.mjs tests/unit-learning-experience.test.mjs tests/full-content-render.test.mjs
 git commit -m "feat: add final grammar and sentence content"
 ```
 
@@ -703,8 +728,10 @@ assert.deepEqual(cnVisibleUnitIds, globalVisibleUnitIds.filter((id) => id !== "f
 assert.equal(grammarUnit.groups.length, 10);
 assert.equal(sentenceUnit.groups.length, 12);
 assert.equal(readingItems.length, 192);
-assert.equal(allStudioTargets.length, 555);
-assert.equal(allStudioTargets.filter((item) => item.playable).length, 555);
+assert.equal(vocabItems.length, 202);
+assert.equal(allStudioTargets.length, 554);
+assert.equal(allStudioTargets.filter((item) => item.playable).length, 554);
+assert.equal(allStudioTargets.filter((item) => ["pending-review", "needs-rerecord"].includes(item.status)).length, 0);
 ```
 
 Also assert no production course item has `pending`/`待母语者审校`, no manifest item is missing, and all eight new groups contain the five exact training steps.
@@ -766,7 +793,7 @@ git diff --check
 git status --short
 ```
 
-Expected: full-render reports exactly 854 states; all 555 studio targets are playable; no ignored recording workspace is staged.
+Expected: full-render reports exactly 854 states; all 554 studio targets are playable; no ignored recording workspace is staged.
 
 - [ ] **Step 2: Synchronize and rebuild the domestic edition**
 
@@ -828,6 +855,8 @@ Keep `dist-cn/index.html` at hosting root. Do not create a second environment or
 
 Load both production URLs with `?v=20260810-final-course-freeze`. Repeat the eight-group flow at desktop/mobile, play at least one new audio from every group, refresh mid-progress, verify Global optional auth/guest behavior, verify CN local-only behavior, and confirm the new cache token is served.
 
+Confirm the final studio/catalog audit has 554/554 targets marked `approved-current` or `imported`, including corrected `alphabet:zhe`, `vocab:korushkunche` and `vocab:erzimaydu`. Verify neither `hayr` nor `marhaba` survives in course data, manifests, referenced assets or deployed files.
+
 - [ ] **Step 8: Final release report**
 
 Report:
@@ -836,7 +865,7 @@ Report:
 - Vercel deployment ID/status/URL;
 - CloudBase deployment result/URL;
 - Global 12 and CN 11 unit lists;
-- grammar 10, sentence 12, reading 192, audio 555;
+- grammar 10, sentence 12, vocab 202, reading 192, audio 554;
 - 854 render states and full-suite result;
 - desktop/mobile overflow and console results;
 - resume/import/cloud results;
@@ -847,7 +876,9 @@ Report:
 The V1 course is complete and frozen only when:
 
 - all 28 content rows are approved and match production literals;
-- all 28 new human recordings are connected and match visible text;
+- the `erzimaydu` vocabulary correction is approved and atomically replaces `marhaba` only after its new audio is validated;
+- all 29 new human recordings are connected and match visible text;
+- all retained current recordings were explicitly audited, and every pronunciation issue discovered during that audit was re-recorded before release;
 - all eight new groups complete and resume through five ordered steps;
 - local/export/import/cloud progress remains backward compatible;
 - Global/CN unit counts and edition boundaries are intact;

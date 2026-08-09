@@ -14,11 +14,14 @@
 - 工作区固定为仓库根目录 `recording-workspace/`，并加入 `.gitignore`；录音草稿、批准状态、备份和导入日志都不得提交。
 - 稳定录音 ID 使用 `alphabet:<id>`、`combos:<id>`、`vocab:<id>`、`reading:<id>`、`form-examples:<id>`；显示名称或顺序变化不得改变 ID。
 - 当前目录基线必须严格等于 527 项：字母 32、组合 34、词汇 203、阅读 164、写法例词 94。
+- 负责人已明确要求 `alphabet:zhe`（`ژ`）与 `vocab:korushkunche`（`كۆرۈشكىچە`，回头见、再会）重新录制；新建工作区时这两项必须直接显示为“需要重录”，不能依赖人工再次标记。
+- 其余 525 个当前目标在新工作区中必须显示为“待审听”，不能自动冒充发音已通过；只有负责人逐条试听后才能标记 `approved-current`，发现问题则进入 `needs-rerecord`。
 - 每个目标显示维文、ULY、中文释义；存在英语释义时显示英语，没有时明确显示“暂无英语释义”，不得伪造翻译。
 - 每个目标可以保存多个 take；录制新 take 不覆盖旧 take，也不自动批准。
 - “批准 take”只改变工作区状态；“导入课程”必须经过独立预览和第二次确认。
 - 导入前校验 WebM EBML 头、正数时长、最小字节数、稳定 ID、目标路径、录音文本哈希和重复目标。
 - 导入前逐个备份已有目标文件；失败回滚不得批量删除。对于原先不存在的目标文件，把失败创建的文件移动到 `recording-workspace/failed-imports/`，不删除。
+- 新版导入并试听确认后，允许负责人按单个稳定 ID 执行“确认新版并删除旧版备份”；每次只能删除一个已经验证且仍与导入日志匹配的明确备份文件，禁止批量清理和递归删除。
 - 旧的 `prototype/re-record-audio.html` 与 `prototype/re-record-audio.js` 保留，不能删除或改成公开后台。
 - 不读取 Gmail、不发送邮件、不处理用户反馈；该工作台仅用于本地课程音频制作。
 - 所有测试命令使用：
@@ -176,7 +179,8 @@ export function buildRecordingCatalog({ projectRoot }): {
   outputPath: "./assets/audio/human/reading/human_reading_sentence_this_that_1.webm",
   absoluteOutputPath: path.join(projectRoot, "prototype/assets/audio/human/reading/human_reading_sentence_this_that_1.webm"),
   recordingTextHash: "sha256-hex",
-  playable: true
+  playable: true,
+  initialStatus: "pending-review" | "needs-rerecord"
 }
 ```
 
@@ -208,6 +212,10 @@ for (const target of catalog.targets) {
 }
 assert.ok(catalog.targets.find((item) => item.stableId === "alphabet:aa"));
 assert.ok(catalog.targets.find((item) => item.stableId === "form-examples:form-example-1bieeo2"));
+assert.equal(catalog.targets.find((item) => item.stableId === "alphabet:zhe").initialStatus, "needs-rerecord");
+assert.equal(catalog.targets.find((item) => item.stableId === "vocab:korushkunche").initialStatus, "needs-rerecord");
+assert.equal(catalog.targets.filter((item) => item.initialStatus === "needs-rerecord").length, 2);
+assert.equal(catalog.targets.filter((item) => item.initialStatus === "pending-review").length, 525);
 ```
 
 - [ ] **Step 2: Run RED**
@@ -353,7 +361,7 @@ Validate WebM before creating the take file. Validate `recordingTextHash` agains
 
 - [ ] **Step 4: Add recovery and corruption tests**
 
-Cover: missing state creates empty schema; malformed JSON is rejected without overwrite; `needs-rerecord` survives restart; stale catalog text hash makes prior takes visible but unapprovable; a failed state rename leaves old `state.json` bytes unchanged.
+Cover: missing state creates the schema with `alphabet:zhe` and `vocab:korushkunche` visibly derived as `needs-rerecord` and the other 525 targets as `pending-review`; `markCurrentApproved()` is the only way to turn an unmodified current file into `approved-current`; malformed JSON is rejected without overwrite; `needs-rerecord` and `approved-current` survive restart; stale catalog text hash makes prior approval/takes visible but unapprovable; a failed state rename leaves old `state.json` bytes unchanged.
 
 - [ ] **Step 5: Ignore only the workspace root**
 
@@ -390,7 +398,8 @@ git commit -m "feat: persist recording studio takes"
 export function createImportController({ projectRoot, workspaceRoot, catalog, workspace }) {
   return {
     previewImport(): ImportPlan,
-    applyImport({ planId }): ImportResult
+    applyImport({ planId }): ImportResult,
+    finalizeReplacement({ importId, stableId }): FinalizeResult
   };
 }
 ```
@@ -420,6 +429,7 @@ The test fixture must include three targets: one unchanged current file, two app
 - success writes backups and exact replacements, then marks only imported targets.
 - injected failure on the second replacement restores the first target’s exact bytes and moves any newly created target into `failed-imports/`.
 - no code path calls `rm`, recursive deletion, `rmSync`, or `rmdirSync`.
+- `finalizeReplacement()` rejects unknown, failed, rolled-back or stale imports; after a successful replacement it deletes exactly one verified backup with `unlinkSync`, keeps the imported production file unchanged, and appends a finalization log.
 
 - [ ] **Step 2: Run RED**
 
@@ -458,6 +468,8 @@ Stage every replacement as a sibling `.ana-tilim-import-<planId>.tmp`, validate 
 - move remaining temp files into the same failed-import folder;
 - restore old workspace state bytes;
 - write an immutable JSON failure log; do not delete files.
+
+After the operator has played the imported production audio, `finalizeReplacement({ importId, stableId })` must re-check the exact replacement SHA, import log, backup path containment and symlink boundary, then remove only that one explicit backup with `unlinkSync`. There is no “finalize all” API.
 
 - [ ] **Step 5: Run GREEN, full checks and commit**
 
@@ -502,6 +514,7 @@ API:
 - `POST /api/targets/:stableId/approve-current` with `{}`
 - `POST /api/import/preview` with `{}`
 - `POST /api/import/apply` with `{ "planId": "7c3a21b4427c66859adfb51c85c3cb94f8a5ae2d4fa3f698ad0bf8d637b621ca" }`
+- `POST /api/import/finalize` with `{ "importId": "import-id", "stableId": "alphabet:zhe" }`
 
 - [ ] **Step 1: Write server security and behavior tests**
 
@@ -514,6 +527,7 @@ Start with `port: 0`, assert the returned address uses `127.0.0.1`, and exercise
 - non-local `Origin` header;
 - unknown routes;
 - import apply without a fresh preview plan.
+- finalize without a matching successful import, finalize the same backup twice, or any request that implies more than one stable ID.
 
 - [ ] **Step 2: Run RED**
 
