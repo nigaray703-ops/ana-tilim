@@ -4822,6 +4822,78 @@ assert.match(
   /data-action="go"[^>]*data-target="latinLetterClasses"[^>]*>\s*继续：元辅音分类\s*<\/button>/,
   "QWERTY success should link to the real letter classification screen"
 );
+clickDataset({ action: "go", target: "uyghurKeyboardWords" });
+assert.equal(
+  vm.runInContext("state.screen", context),
+  "uyghurKeyboardWords",
+  "the second unit should expose a real Uyghur keyboard learning screen"
+);
+includesAll(
+  app.innerHTML,
+  ["维吾尔语键盘", "第 1 / 7 关", "با", "两字母组合", "屏幕键盘", "实体键盘"],
+  "two-mode Uyghur keyboard screen"
+);
+assert.equal(vm.runInContext("persistedScreenIds.has('uyghurKeyboardWords')", context), true);
+clickDataset({ action: "uyghur-keyboard-key", key: "ب" });
+clickDataset({ action: "uyghur-keyboard-key", key: "ا" });
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.latinWriting['uyghur-keyboard'])", context)),
+  { completedIds: ["uyghur-keyboard-ba"] },
+  "typing the first exact target should complete only the first reviewed lesson"
+);
+clickDataset({ action: "set-uyghur-keyboard-mode", mode: "physical" });
+assert.equal(vm.runInContext("state.uyghurKeyboardMode", context), "physical");
+assert.equal(vm.runInContext("state.uyghurKeyboardValue", context), "با", "mode switching should preserve input");
+clickDataset({ action: "next-uyghur-keyboard-lesson" });
+assert.equal(vm.runInContext("state.uyghurKeyboardValue", context), "");
+includesAll(app.innerHTML, ["第 2 / 7 关", "بە"], "second Uyghur keyboard lesson");
+vm.runInContext("state.latinKeyboardValue = 'latin-buffer'", context);
+for (const event of [
+  { code: "KeyB", key: "b" },
+  { code: "KeyG", key: "g" }
+]) {
+  keydownHandler({
+    ...event,
+    shiftKey: false,
+    ctrlKey: false,
+    altKey: false,
+    metaKey: false,
+    target: { matches: () => false },
+    preventDefault() {}
+  });
+}
+assert.equal(vm.runInContext("state.uyghurKeyboardValue", context), "بە");
+assert.equal(vm.runInContext("state.latinKeyboardValue", context), "latin-buffer", "physical Uyghur input must not alter the Latin buffer");
+
+vm.runInContext(
+  `state.learningProgress.latinWriting["uyghur-keyboard"] = {
+     completedIds: ${JSON.stringify([
+       "uyghur-keyboard-ba", "uyghur-keyboard-be", "uyghur-keyboard-ana", "uyghur-keyboard-kitab",
+       "uyghur-keyboard-mewe", "uyghur-keyboard-ana-til"
+     ])}
+   };
+   state.uyghurKeyboardMode = "onscreen";
+   state.uyghurKeyboardValue = "";
+   render();`,
+  context
+);
+for (const key of "مەن ئانا تىلىمنى ياخشى كۆرىمەن") {
+  clickDataset({ action: "uyghur-keyboard-key", key });
+}
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.latinWriting['uyghur-keyboard'])", context)),
+  {
+    completedIds: [
+      "uyghur-keyboard-ba", "uyghur-keyboard-be", "uyghur-keyboard-ana", "uyghur-keyboard-kitab",
+      "uyghur-keyboard-mewe", "uyghur-keyboard-ana-til", "uyghur-keyboard-mother-language"
+    ],
+    completed: true
+  },
+  "the final reviewed target should complete the ordered Uyghur keyboard course"
+);
+clickDataset({ action: "go", target: "unit" });
+assert.equal(vm.runInContext("state.selectedUnitId", context), "latin-keyboard-writing");
+assert.equal(vm.runInContext("state.screen", context), "unit", "Uyghur keyboard back should return to the second unit");
 clickDataset({ action: "go", target: "latinLetterClasses" });
 assert.equal(vm.runInContext("state.screen", context), "latinLetterClasses");
 assert.equal(
@@ -5158,8 +5230,8 @@ assert.ok(
 );
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(unitProgressSummaries().find((item) => item.label.includes('拉丁键盘与字母书写强化')))", context)),
-  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 4, total: 6 },
-  "revealed dictation should retain four completed stages in the expanded six-stage summary"
+  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 5, total: 6 },
+  "revealed dictation should retain five completed stages after the Uyghur keyboard course"
 );
 
 const dictationDrawingCanvas = makeWritingCanvas();
@@ -5332,8 +5404,8 @@ assert.match(
 );
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(Object.keys(state.learningProgress.latinWriting).sort())", context)),
-  ["classification", "dictation", "qwerty", "vowel-contrast"],
-  "Task 4 should add only the dictation stable step"
+  ["classification", "dictation", "qwerty", "uyghur-keyboard", "vowel-contrast"],
+  "dictation and the separately completed Uyghur keyboard stage should retain stable progress"
 );
 const allStableLatinSteps = {
   qwerty: { completed: true },
@@ -5404,7 +5476,7 @@ assert.doesNotThrow(
 );
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(unitProgressSummaries().find((item) => item.label.includes('拉丁键盘与字母书写强化')))", context)),
-  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 4, total: 6 },
+  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 5, total: 6 },
   "the course progress summary should include dictation and the new Uyghur keyboard stage"
 );
 
@@ -5702,7 +5774,7 @@ includesAll(
 );
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(unitProgressSummaries().find((item) => item.label.includes('拉丁键盘与字母书写强化')))", context)),
-  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 5, total: 6 },
+  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 6, total: 6 },
   "revealing the forms comparison should complete the fifth stable step"
 );
 const completedLatinNextActions = vm.runInContext(

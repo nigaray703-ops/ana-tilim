@@ -237,6 +237,55 @@ for (const [latinKeyboardLessonIndex, lesson] of courseData.latinWriting.keyboar
     "输入正确"
   );
 }
+for (const [lessonIndex, lesson] of courseData.latinWriting.uyghurKeyboardLessons.entries()) {
+  const completedBefore = courseData.latinWriting.uyghurKeyboardLessons.slice(0, lessonIndex).map((item) => item.id);
+  for (const uyghurKeyboardMode of ["onscreen", "physical"]) {
+    const baseProgress = {
+      latinWriting: {
+        "uyghur-keyboard": { completedIds: completedBefore }
+      },
+      letters: {},
+      combos: {},
+      syllableTraining: {},
+      vocab: {},
+      practice: {},
+      reading: {}
+    };
+    renderState(
+      {
+        screen: "uyghurKeyboardWords",
+        selectedUnitId: "latin-keyboard-writing",
+        uyghurKeyboardMode,
+        uyghurKeyboardValue: "",
+        learningProgress: baseProgress
+      },
+      `Uyghur keyboard ${lesson.id} ${uyghurKeyboardMode} ready`,
+      lesson.value
+    );
+    const completedIds = [...completedBefore, lesson.id];
+    renderState(
+      {
+        screen: "uyghurKeyboardWords",
+        selectedUnitId: "latin-keyboard-writing",
+        uyghurKeyboardMode,
+        uyghurKeyboardValue: lesson.value,
+        learningProgress: {
+          ...baseProgress,
+          latinWriting: {
+            "uyghur-keyboard": {
+              completedIds,
+              ...(completedIds.length === courseData.latinWriting.uyghurKeyboardLessons.length
+                ? { completed: true }
+                : {})
+            }
+          }
+        }
+      },
+      `Uyghur keyboard ${lesson.id} ${uyghurKeyboardMode} complete`,
+      "输入正确"
+    );
+  }
+}
 renderState(
   { screen: "latinLetterClasses", selectedUnitId: "latin-keyboard-writing" },
   "Latin letter classification",
@@ -615,6 +664,6 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
   }
 }
 
-assert.equal(renderCount, 786, "full UI audit should render every retained main screen, feedback state, all seven QWERTY lesson states, six Afanti stories in each allowed language state, syllable warmup/rule/judgment/review/sentence state, real 2/4/8 form state, lesson item, reading group, and practice item");
+assert.equal(renderCount, 814, "full UI audit should render every retained main screen, feedback state, both modes of all seven Uyghur keyboard lessons, all seven QWERTY lesson states, six Afanti stories in each allowed language state, syllable warmup/rule/judgment/review/sentence state, real 2/4/8 form state, lesson item, reading group, and practice item");
 
 console.log(`full content render checks passed (${renderCount} states)`);
