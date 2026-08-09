@@ -406,7 +406,7 @@ assert.equal(
   "duplicate normalization should use the standard unit-order tag"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('href="./styles.css?v=20260809-syllable-sentences"'),
+  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-afanti-reading"'),
   "sync should cache-bust the copied syllable UI styles"
 );
 assert.ok(
@@ -414,7 +414,7 @@ assert.ok(
   "sync should cache-bust the copied split syllable mistake validator"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./app.js?v=20260809-plan3-stage-guard"'),
+  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-afanti-reading"'),
   "sync should cache-bust the copied syllable review app"
 );
 assert.ok(
