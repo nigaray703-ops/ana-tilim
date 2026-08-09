@@ -151,6 +151,8 @@ git commit -m "refactor: share WebM audio validation"
 **Files:**
 - Create: `tools/recording-studio/catalog.mjs`
 - Create: `tests/recording-studio-catalog.test.mjs`
+- Modify: `prototype/assets/audio/human/form-examples/manifest.json`
+- Modify: `tests/human-audio.test.mjs`
 - Modify: `scripts/check-project.mjs`
 
 **Interfaces:**
@@ -265,6 +267,8 @@ export function buildRecordingCatalog({ projectRoot }) {
 
 `normalizeTarget` must join by exact stable ID to `letterDetails`, `comboGroups`, `vocabGroups`, `readingUnits` and `formExamples`. It must reject missing joins, duplicate IDs, output paths outside `prototype/assets/audio/human`, or mismatched manifest `value`/`latin`.
 
+The baseline audit found 14 existing form-example manifest `latin` values that drifted from the current canonical course ULY. Task 2 must first prove those exact mismatches in RED, then update only those 14 manifest `latin` fields from the current course data. No compatibility allowlist is permitted: GREEN locks all 94 form-example manifest/course ULY values exactly, while preserving every ID, value, path, order, status and WebM byte.
+
 - [ ] **Step 4: Add drift and path-escape negative tests**
 
 Copy one manifest to a temp project fixture and mutate its ID, value and `outputPath` one at a time. Assert each build throws before returning any catalog.
@@ -280,7 +284,7 @@ $NODE scripts/check-project.mjs
 - [ ] **Step 6: Commit Task 2**
 
 ```bash
-git add tools/recording-studio/catalog.mjs tests/recording-studio-catalog.test.mjs scripts/check-project.mjs
+git add tools/recording-studio/catalog.mjs tests/recording-studio-catalog.test.mjs prototype/assets/audio/human/form-examples/manifest.json tests/human-audio.test.mjs scripts/check-project.mjs
 git commit -m "feat: build complete recording catalog"
 ```
 
