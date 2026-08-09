@@ -2943,6 +2943,41 @@ button {
   gap: 14px;
 }
 
+.syllable-review-empty-card {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding-block: 24px;
+}
+
+.syllable-review-empty-card p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.syllable-review-empty-card .primary-button {
+  width: min(100%, 360px);
+}
+
+.syllable-review-empty-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.syllable-review-empty-summary {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
 .syllable-parts {
   display: flex;
   align-items: center;

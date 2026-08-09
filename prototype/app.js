@@ -737,6 +737,7 @@ const state = {
   syllableConnectionSubmitted: false,
   syllableConnectionMode: "lesson",
   syllableConnectionReviewItemId: "",
+  syllableReviewReturnTarget: "",
   syllableSentenceIndex: 0,
   syllableSentenceShowStandard: false,
   syllableSentenceHelperViewed: false,
@@ -3845,7 +3846,20 @@ function renderSyllableConnections() {
 
 function renderSyllableReviewBucket(bucketName, label) {
   const ids = state.syllableMistakes[bucketName];
-  const emptyLabel = `${label}已清空`;
+  if (!ids.length) {
+    return `
+      <div class="syllable-review-empty-row" data-syllable-review-bucket="${bucketName}" tabindex="-1">
+        <div>
+          <p class="caption">专项错题</p>
+          <h2 class="section-title">${label}</h2>
+        </div>
+        <div class="syllable-review-empty-summary">
+          <span class="step-state">0 道</span>
+          <span>暂无${label.replace("错误", "")}错题</span>
+        </div>
+      </div>
+    `;
+  }
   return `
     <article class="card syllable-review-card" data-syllable-review-bucket="${bucketName}" tabindex="-1">
       <div class="section-row">
@@ -3855,24 +3869,26 @@ function renderSyllableReviewBucket(bucketName, label) {
         </div>
         <span class="step-state">${ids.length} 道</span>
       </div>
-      ${
-        ids.length
-          ? `
-            <div class="action-grid">
-              <button class="primary-button" data-action="review-syllable-mistakes" data-mistake-bucket="${bucketName}" type="button">进入复习</button>
-              <button class="secondary-button" data-action="clear-syllable-mistakes" data-mistake-bucket="${bucketName}" type="button">清空本类</button>
-            </div>
-          `
-          : `<p class="feedback good">${emptyLabel}</p>`
-      }
+      <div class="action-grid">
+        <button class="primary-button" data-action="review-syllable-mistakes" data-mistake-bucket="${bucketName}" type="button">进入复习</button>
+        <button class="secondary-button" data-action="clear-syllable-mistakes" data-mistake-bucket="${bucketName}" type="button">清空本类</button>
+      </div>
     </article>
   `;
 }
 
+function syllableReviewFocusTarget(bucketName) {
+  const allEmpty = state.syllableMistakes.connection.length === 0 && state.syllableMistakes.break.length === 0;
+  return allEmpty ? "[data-syllable-review-empty]" : `[data-syllable-review-bucket="${bucketName}"]`;
+}
+
 function renderSyllableReview() {
-  const backTarget = syllableConnectionPrerequisitesComplete()
-    ? "syllableConnections"
-    : reachableSyllableTrainingScreen();
+  const backTarget = ["unit", "syllableConnections"].includes(state.syllableReviewReturnTarget)
+    ? state.syllableReviewReturnTarget
+    : syllableConnectionPrerequisitesComplete()
+      ? "syllableConnections"
+      : reachableSyllableTrainingScreen();
+  const allEmpty = state.syllableMistakes.connection.length === 0 && state.syllableMistakes.break.length === 0;
   return screen(
     `
       ${topBar(
@@ -3882,8 +3898,27 @@ function renderSyllableReview() {
         `<button class="back-button" data-action="go" data-target="${backTarget}" type="button" aria-label="返回">&larr;</button>`
       )}
       <section class="stack syllable-training-screen">
-        ${renderSyllableReviewBucket("connection", "连接错误")}
-        ${renderSyllableReviewBucket("break", "断开错误")}
+        ${
+          allEmpty
+            ? `
+              <article class="card syllable-review-empty-card" data-syllable-review-empty tabindex="-1">
+                <p class="caption">专项错题</p>
+                <h2 class="section-title">当前没有连接或断开错题</h2>
+                <p>完成连接与断开练习后，答错的题目会自动出现在这里。</p>
+                <button class="primary-button" data-action="go" data-target="${backTarget}" type="button">${
+                  backTarget === "unit"
+                    ? "返回本单元"
+                    : backTarget === "syllableConnections"
+                      ? "继续连接与断开练习"
+                      : "返回当前训练"
+                }</button>
+              </article>
+            `
+            : `
+              ${renderSyllableReviewBucket("connection", "连接错误")}
+              ${renderSyllableReviewBucket("break", "断开错误")}
+            `
+        }
       </section>
     `,
     "learn"
@@ -6816,6 +6851,18 @@ function playAudio(src, label, { autoplay = false } = {}) {
 }
 
 function goTo(target) {
+  if (target === "syllableReview") {
+    if (state.screen === "unit" && state.selectedUnitId === "syllable-training") {
+      state.syllableReviewReturnTarget = "unit";
+    } else if (state.screen === "syllableConnections" && state.syllableConnectionMode === "lesson") {
+      state.syllableReviewReturnTarget = "syllableConnections";
+    }
+  } else if (
+    state.screen === "syllableReview" &&
+    !(target === "syllableConnections" && state.syllableConnectionMode !== "lesson")
+  ) {
+    state.syllableReviewReturnTarget = "";
+  }
   if (state.screen === "syllableSentences" && target !== "syllableSentences") {
     syllableSentenceAudioController?.stop();
   }
@@ -7140,7 +7187,7 @@ document.addEventListener("click", (event) => {
     state.syllableConnectionReviewItemId = nextItemId;
     if (!nextItemId) {
       goTo("syllableReview");
-      focusSyllableRuleElement(`[data-syllable-review-bucket="${bucketName}"]`);
+      focusSyllableRuleElement(syllableReviewFocusTarget(bucketName));
       return;
     }
     render();
@@ -7156,7 +7203,7 @@ document.addEventListener("click", (event) => {
       markCloudDirty("learning");
     }
     render();
-    focusSyllableRuleElement(`[data-syllable-review-bucket="${bucketName}"]`);
+    focusSyllableRuleElement(syllableReviewFocusTarget(bucketName));
     return;
   }
 
