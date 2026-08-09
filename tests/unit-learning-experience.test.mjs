@@ -10,6 +10,7 @@ const courseDataAggregatorPath = "prototype/course-data.js";
 const unitOrderPath = "prototype/unit-order.js";
 const uyghurKeyboardPath = "prototype/uyghur-keyboard.js";
 const latinKeyboardPath = "prototype/latin-keyboard.js";
+const feedbackPath = "prototype/feedback.js";
 const courseDataScriptPaths = [
   "prototype/uly-transliteration.js",
   "prototype/course-data/alphabet-data.js",
@@ -27,6 +28,7 @@ assert.ok(fs.existsSync(courseDataAggregatorPath), "course data aggregator shoul
 assert.ok(fs.existsSync(unitOrderPath), "edition-aware unit order module should exist");
 assert.ok(fs.existsSync(uyghurKeyboardPath), "focused Uyghur keyboard mapping module should exist");
 assert.ok(fs.existsSync(latinKeyboardPath), "focused Latin keyboard module should exist");
+assert.ok(fs.existsSync(feedbackPath), "anonymous feedback service module should exist");
 for (const scriptPath of courseDataScriptPaths) {
   assert.ok(fs.existsSync(scriptPath), `${scriptPath} should exist as a focused course data file`);
 }
@@ -54,7 +56,7 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260810-quote-profiles",
+  "./styles.css?v=20260810-feedback",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
@@ -77,11 +79,12 @@ const expectedVersionedAssets = [
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260809-syllable-review",
-  "./app.js?v=20260810-quote-profiles"
+  "./feedback.js?v=20260810-feedback",
+  "./app.js?v=20260810-feedback"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
-    /(?:href|src)="(?<url>(?:\.\/(?:styles\.css|app-config\.js|uly-transliteration\.js|course-data\/[^"]+\.js|course-data\.js|afanti-content\.js|uyghur-keyboard\.js|latin-keyboard\.js|sentence-morphemes\.js|sentence-glossary\.js|progress-transfer\.js|audio-controller\.js|cloud-config\.js|cloud-sync\.js|app\.js)[^"]*|https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2\.110\.8))"/g
+    /(?:href|src)="(?<url>(?:\.\/(?:styles\.css|app-config\.js|uly-transliteration\.js|course-data\/[^"]+\.js|course-data\.js|afanti-content\.js|uyghur-keyboard\.js|latin-keyboard\.js|sentence-morphemes\.js|sentence-glossary\.js|progress-transfer\.js|audio-controller\.js|cloud-config\.js|feedback\.js|cloud-sync\.js|app\.js)[^"]*|https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2\.110\.8))"/g
   )
 ].map((match) => match.groups.url);
 assert.deepEqual(
@@ -283,6 +286,7 @@ const htmlScriptOrder = [
   "prototype/progress-transfer.js",
   "prototype/cloud-config.js",
   "prototype/cloud-sync.js",
+  feedbackPath,
   "prototype/app.js"
 ].map((scriptPath) => scriptPath.replace("prototype/", "./"));
 for (let index = 0; index < htmlScriptOrder.length - 1; index += 1) {
@@ -420,6 +424,9 @@ const playedAudioSources = [];
 let audioPlayShouldReject = false;
 let profileDisplayNameValue = "";
 let profileDisplayNameFocused = false;
+let feedbackCategoryValue = "display";
+let feedbackMessageValue = "";
+let feedbackContactValue = "";
 let authPanelToggleFocused = false;
 let focusedSyllableSelector = "";
 const context = {
@@ -444,6 +451,15 @@ const context = {
             profileDisplayNameFocused = true;
           }
         };
+      }
+      if (selector === "#feedback-category") {
+        return { get value() { return feedbackCategoryValue; } };
+      }
+      if (selector === "#feedback-message") {
+        return { get value() { return feedbackMessageValue; } };
+      }
+      if (selector === "#feedback-contact") {
+        return { get value() { return feedbackContactValue; } };
       }
       if (
         [
@@ -599,6 +615,7 @@ vm.runInContext(fs.readFileSync("prototype/sentence-glossary.js", "utf8"), conte
 vm.runInContext(fs.readFileSync("prototype/progress-transfer.js", "utf8"), context, { filename: "prototype/progress-transfer.js" });
 vm.runInContext(fs.readFileSync("prototype/audio-controller.js", "utf8"), context, { filename: "prototype/audio-controller.js" });
 vm.runInContext(fs.readFileSync("prototype/cloud-config.js", "utf8"), context, { filename: "prototype/cloud-config.js" });
+vm.runInContext(fs.readFileSync(feedbackPath, "utf8"), context, { filename: feedbackPath });
 vm.runInContext(fs.readFileSync("prototype/cloud-sync.js", "utf8"), context, { filename: "prototype/cloud-sync.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
 
@@ -820,6 +837,7 @@ function createConfiguredAppVm(
     "prototype/sentence-morphemes.js",
     "prototype/sentence-glossary.js",
     "prototype/progress-transfer.js",
+    feedbackPath,
     "prototype/app.js"
   ]) {
     vm.runInContext(fs.readFileSync(scriptPath, "utf8"), configuredContext, { filename: scriptPath });
@@ -1832,6 +1850,102 @@ assert.ok(
   !profileHtml.includes('capture="camera"'),
   "the avatar picker should not force the camera instead of the photo library"
 );
+
+assert.equal(vm.runInContext("persistedScreenIds.has('feedback')", context), true, "the private feedback page should be a stable app screen");
+includesAll(
+  profileHtml,
+  ["帮助与反馈", "意见反馈", "允许匿名提交，不支持附件"],
+  "profile feedback entry"
+);
+clickDataset({ action: "go", target: "feedback" });
+assert.equal(vm.runInContext("state.screen", context), "feedback", "My should open the real feedback page");
+includesAll(
+  app.innerHTML,
+  ["意见反馈", "反馈类型", "反馈内容", "可选联系方式", "允许匿名提交", "暂不支持附件", "提交反馈"],
+  "anonymous feedback form"
+);
+assert.match(app.innerHTML, /id="feedback-message"[^>]+maxlength="2000"/s, "feedback should enforce the approved message limit in the real form");
+assert.doesNotMatch(app.innerHTML, /<input[^>]+type="file"/s, "the feedback screen should not expose an attachment picker");
+
+vm.runInContext(
+  `
+    globalThis.feedbackCalls = [];
+    globalThis.feedbackAdminAllowed = true;
+    feedbackClient = {
+      async submit(payload) { globalThis.feedbackCalls.push(["submit", payload]); return true; },
+      async isAdmin() { globalThis.feedbackCalls.push(["isAdmin"]); return globalThis.feedbackAdminAllowed; },
+      async list() {
+        globalThis.feedbackCalls.push(["list"]);
+        return [{
+          id: "feedback-1",
+          category: "display",
+          message: "<img src=x onerror=alert(1)>",
+          contact: "owner-test@example.com",
+          edition: "cn",
+          status: "new",
+          created_at: "2026-08-10T00:00:00.000Z"
+        }];
+      },
+      async updateStatus(id, status) { globalThis.feedbackCalls.push(["update", id, status]); return true; }
+    };
+  `,
+  context
+);
+feedbackCategoryValue = "display";
+feedbackMessageValue = "  字母与中文说明发生重叠，请调整间距。  ";
+feedbackContactValue = "  learner@example.com  ";
+clickDataset({ action: "submit-feedback" });
+await new Promise((resolve) => setImmediate(resolve));
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(globalThis.feedbackCalls[0])", context)),
+  ["submit", { category: "display", message: "字母与中文说明发生重叠，请调整间距。", contact: "learner@example.com" }],
+  "anonymous feedback should submit the learner's normalized text through the private service"
+);
+assert.ok(app.innerHTML.includes("反馈已收到"), "successful anonymous feedback should show a clear success state");
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.feedbackDraft)", context)),
+  { category: "display", message: "", contact: "" },
+  "successful feedback should clear the private draft"
+);
+
+vm.runInContext("cloudSync = { session() { return { user: { id: 'owner-1', email: 'owner@example.com' } }; } }; cloudStatus = { phase: 'signed-in', error: '' }; render({ persist: false })", context);
+assert.ok(app.innerHTML.includes("查看反馈记录"), "a signed-in account should be able to ask the server-side owner gate");
+clickDataset({ action: "load-feedback-records" });
+await new Promise((resolve) => setImmediate(resolve));
+assert.ok(app.innerHTML.includes("国内版"), "the private owner view should identify the source edition");
+assert.ok(app.innerHTML.includes("&lt;img src=x onerror=alert(1)&gt;"), "private feedback text should be escaped before rendering");
+assert.ok(!app.innerHTML.includes("<img src=x onerror"), "private feedback records must not inject markup");
+clickDataset({ action: "update-feedback-status", id: "feedback-1", status: "resolved" });
+await new Promise((resolve) => setImmediate(resolve));
+assert.ok(
+  vm.runInContext("globalThis.feedbackCalls.some((call) => call[0] === 'update' && call[1] === 'feedback-1' && call[2] === 'resolved')", context),
+  "the owner should update a private feedback record through the protected service"
+);
+assert.ok(app.innerHTML.includes("已解决"), "the updated private record should show its saved workflow status");
+
+const ownerUpdateCallCount = vm.runInContext("globalThis.feedbackCalls.filter((call) => call[0] === 'update').length", context);
+vm.runInContext("cloudSync = { session() { return { user: { id: 'learner-2', email: 'learner@example.com' } }; } }; render({ persist: false })", context);
+assert.ok(!app.innerHTML.includes("owner-test@example.com"), "switching Gmail accounts must immediately hide the previous owner's private records");
+assert.ok(!app.innerHTML.includes("&lt;img src=x onerror=alert(1)&gt;"), "a different signed-in account must not inherit the owner's record list");
+clickDataset({ action: "update-feedback-status", id: "feedback-1", status: "new" });
+await new Promise((resolve) => setImmediate(resolve));
+assert.equal(
+  vm.runInContext("globalThis.feedbackCalls.filter((call) => call[0] === 'update').length", context),
+  ownerUpdateCallCount,
+  "a different signed-in account must not update a record retained in memory"
+);
+const ownerListCallCount = vm.runInContext("globalThis.feedbackCalls.filter((call) => call[0] === 'list').length", context);
+vm.runInContext("globalThis.feedbackAdminAllowed = false", context);
+clickDataset({ action: "load-feedback-records" });
+await new Promise((resolve) => setImmediate(resolve));
+assert.ok(app.innerHTML.includes("当前账号没有查看权限"), "a non-owner Gmail should receive a clear server-gated denial");
+assert.equal(
+  vm.runInContext("globalThis.feedbackCalls.filter((call) => call[0] === 'list').length", context),
+  ownerListCallCount,
+  "a non-owner Gmail must not request the private feedback rows after the server denies access"
+);
+
+vm.runInContext("cloudSync = null; cloudStatus = { phase: 'local', error: '' }; state.screen = 'profile'; render({ persist: false })", context);
 
 vm.runInContext(
   `

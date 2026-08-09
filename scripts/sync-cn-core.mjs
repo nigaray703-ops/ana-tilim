@@ -14,6 +14,7 @@ const indexPath = path.join(cnSiteRoot, "index.html");
 const indexSource = fs.readFileSync(indexPath, "utf8");
 const unitOrderScriptPattern = /<script\b[^>]*\bsrc=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g;
 const latinKeyboardScriptPattern = /<script\b[^>]*\bsrc=["']\.\/latin-keyboard\.js(?:\?[^"']*)?["'][^>]*><\/script>/g;
+const feedbackScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/feedback\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
 const latinWritingScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/course-data\/latin-writing-data\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
 const syllableDataScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/course-data\/syllable-data\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
 const afantiDataScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/course-data\/afanti-data\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
@@ -122,10 +123,22 @@ if (latinKeyboardScripts.length === 0) {
   indexUpdateMessages.push("Index already loads latin-keyboard.js");
 }
 
+const indexWithoutFeedbackScripts = normalizedIndex.replace(feedbackScriptPattern, "");
+const appMatchBeforeFeedback = appScriptPattern.exec(indexWithoutFeedbackScripts);
+if (!appMatchBeforeFeedback) {
+  throw new Error("Cannot update " + indexPath + ": app.js script tag not found after feedback normalization.");
+}
+const standardFeedbackScript = '<script src="./feedback.js?v=20260810-feedback"></script>';
+const feedbackInsertion = appMatchBeforeFeedback[1] + standardFeedbackScript + "\n";
+normalizedIndex = indexWithoutFeedbackScripts.slice(0, appMatchBeforeFeedback.index)
+  + feedbackInsertion
+  + indexWithoutFeedbackScripts.slice(appMatchBeforeFeedback.index);
+indexUpdateMessages.push("Normalized index.html: feedback.js before app.js");
+
 const sharedCacheReferences = [
   {
     pattern: /(\bhref=["']\.\/styles\.css)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260810-quote-profiles$2",
+    replacement: "$1?v=20260810-feedback$2",
     label: "styles.css"
   },
   {
@@ -145,7 +158,7 @@ const sharedCacheReferences = [
   },
   {
     pattern: /(\bsrc=["']\.\/app\.js)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260810-quote-profiles$2",
+    replacement: "$1?v=20260810-feedback$2",
     label: "app.js"
   }
 ];

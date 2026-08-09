@@ -244,6 +244,7 @@ vm.runInContext(fs.readFileSync("prototype/latin-keyboard.js", "utf8"), context,
 vm.runInContext(fs.readFileSync("prototype/sentence-morphemes.js", "utf8"), context, { filename: "prototype/sentence-morphemes.js" });
 vm.runInContext(fs.readFileSync("prototype/sentence-glossary.js", "utf8"), context, { filename: "prototype/sentence-glossary.js" });
 vm.runInContext(fs.readFileSync("prototype/progress-transfer.js", "utf8"), context, { filename: "prototype/progress-transfer.js" });
+vm.runInContext(fs.readFileSync("prototype/feedback.js", "utf8"), context, { filename: "prototype/feedback.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
 
 assert.deepEqual(

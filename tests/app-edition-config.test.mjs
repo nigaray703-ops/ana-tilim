@@ -105,7 +105,8 @@ const expectedCoreFiles = [
   "sentence-morphemes.js",
   "sentence-glossary.js",
   "progress-transfer.js",
-  "audio-controller.js"
+  "audio-controller.js",
+  "feedback.js"
 ];
 const syncTargetPath = path.join(os.tmpdir(), "ana-tilim-cn-core-sync-test");
 const excludedFiles = ["app-config.js", "manifest.webmanifest", "assets/logo.png"];
@@ -187,6 +188,7 @@ const afantiContentScriptIndex = syncedDomesticIndex.indexOf("./afanti-content.j
 const courseDataScriptIndex = syncedDomesticIndex.indexOf("./course-data.js");
 const unitOrderScriptIndex = syncedDomesticIndex.indexOf("./unit-order.js");
 const latinKeyboardScriptIndex = syncedDomesticIndex.indexOf("./latin-keyboard.js");
+const feedbackScriptIndex = syncedDomesticIndex.indexOf("./feedback.js");
 const appScriptIndex = syncedDomesticIndex.indexOf("./app.js");
 assert.ok(
   alphabetDataScriptIndex >= 0
@@ -200,8 +202,15 @@ assert.ok(
     && courseDataScriptIndex < unitOrderScriptIndex
     && unitOrderScriptIndex < appScriptIndex
     && latinKeyboardScriptIndex >= 0
-    && latinKeyboardScriptIndex < appScriptIndex,
+    && latinKeyboardScriptIndex < appScriptIndex
+    && feedbackScriptIndex >= 0
+    && feedbackScriptIndex < appScriptIndex,
   "domestic scripts should load course data, unit order, and the Latin keyboard before app"
+);
+assert.equal(
+  [...syncedDomesticIndex.matchAll(/<script\s+[^>]*src=["']\.\/feedback\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)].length,
+  1,
+  "repeated sync should leave exactly one domestic feedback script"
 );
 assert.equal(
   [...syncedDomesticIndex.matchAll(/<script\s+[^>]*src=["']\.\/course-data\/latin-writing-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)].length,
@@ -262,6 +271,7 @@ fs.writeFileSync(path.join(misplacedUnitOrderTargetPath, "index.html"), `<!docty
     <script src="./afanti-content.js?v=misplaced"></script>
     <script src="./unit-order.js?v=misplaced"></script>
     <script src="./latin-keyboard.js?v=misplaced"></script>
+    <script src="./feedback.js?v=misplaced"></script>
   </body>
 </html>
 `);
@@ -283,6 +293,9 @@ const normalizedMisplacedSyllableTags = [
 const normalizedMisplacedLatinKeyboardTags = [
   ...normalizedMisplacedIndex.matchAll(/<script\s+[^>]*src=["']\.\/latin-keyboard\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
 ];
+const normalizedMisplacedFeedbackTags = [
+  ...normalizedMisplacedIndex.matchAll(/<script\s+[^>]*src=["']\.\/feedback\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
+];
 const normalizedMisplacedAfantiDataTags = [
   ...normalizedMisplacedIndex.matchAll(/<script\s+[^>]*src=["']\.\/course-data\/afanti-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
 ];
@@ -293,6 +306,7 @@ assert.equal(normalizedMisplacedLatinWritingTags.length, 1, "sync should keep on
 assert.equal(normalizedMisplacedSyllableTags.length, 1, "sync should keep one normalized syllable-data tag");
 assert.equal(normalizedMisplacedUnitOrderTags.length, 1, "sync should keep one normalized unit-order tag");
 assert.equal(normalizedMisplacedLatinKeyboardTags.length, 1, "sync should keep one normalized latin-keyboard tag");
+assert.equal(normalizedMisplacedFeedbackTags.length, 1, "sync should keep one normalized feedback tag");
 assert.equal(normalizedMisplacedAfantiDataTags.length, 1, "sync should keep one normalized shared Afanti data tag");
 assert.equal(normalizedMisplacedAfantiContentTags.length, 1, "sync should keep one normalized Afanti validator tag");
 assert.equal(normalizedMisplacedIndex.includes("afanti-english-data.js"), false, "sync should remove a misplaced global-only English tag from domestic index");
@@ -305,7 +319,8 @@ assert.ok(
     && normalizedMisplacedIndex.indexOf("./afanti-content.js") < normalizedMisplacedIndex.indexOf("./course-data.js")
     && normalizedMisplacedIndex.indexOf("./course-data.js") < normalizedMisplacedIndex.indexOf("./unit-order.js")
     && normalizedMisplacedIndex.indexOf("./unit-order.js") < normalizedMisplacedIndex.indexOf("./app.js")
-    && normalizedMisplacedIndex.indexOf("./latin-keyboard.js") < normalizedMisplacedIndex.indexOf("./app.js"),
+    && normalizedMisplacedIndex.indexOf("./latin-keyboard.js") < normalizedMisplacedIndex.indexOf("./app.js")
+    && normalizedMisplacedIndex.indexOf("./feedback.js") < normalizedMisplacedIndex.indexOf("./app.js"),
   "sync should move misplaced strict dependencies before app.js"
 );
 assert.ok(
@@ -342,6 +357,7 @@ fs.writeFileSync(path.join(duplicateUnitOrderTargetPath, "index.html"), `<!docty
     <script src="./course-data.js?v=cn-course"></script>
     <script src="./unit-order.js?v=old-before"></script>
     <script src="./latin-keyboard.js?v=old-before"></script>
+    <script src="./feedback.js?v=old-before"></script>
     <script src="./domestic-duplicate-fixture.js?v=1"></script>
     <script src="./progress-transfer.js?v=old-syllable"></script>
     <script src="./app.js?v=cn-app"></script>
@@ -352,6 +368,7 @@ fs.writeFileSync(path.join(duplicateUnitOrderTargetPath, "index.html"), `<!docty
     <script src="./afanti-content.js?v=old-after"></script>
     <script src="./unit-order.js?v=old-after"></script>
     <script src="./latin-keyboard.js?v=old-after"></script>
+    <script src="./feedback.js?v=old-after"></script>
   </body>
 </html>
 `);
@@ -373,6 +390,9 @@ const normalizedDuplicateSyllableTags = [
 const normalizedDuplicateLatinKeyboardTags = [
   ...normalizedDuplicateIndex.matchAll(/<script\s+[^>]*src=["']\.\/latin-keyboard\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
 ];
+const normalizedDuplicateFeedbackTags = [
+  ...normalizedDuplicateIndex.matchAll(/<script\s+[^>]*src=["']\.\/feedback\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
+];
 const normalizedDuplicateAfantiDataTags = [
   ...normalizedDuplicateIndex.matchAll(/<script\s+[^>]*src=["']\.\/course-data\/afanti-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
 ];
@@ -383,6 +403,7 @@ assert.equal(normalizedDuplicateLatinWritingTags.length, 1, "sync should collaps
 assert.equal(normalizedDuplicateSyllableTags.length, 1, "sync should collapse duplicate syllable-data tags");
 assert.equal(normalizedDuplicateUnitOrderTags.length, 1, "sync should collapse duplicate unit-order tags");
 assert.equal(normalizedDuplicateLatinKeyboardTags.length, 1, "sync should collapse duplicate latin-keyboard tags");
+assert.equal(normalizedDuplicateFeedbackTags.length, 1, "sync should collapse duplicate feedback tags");
 assert.equal(normalizedDuplicateAfantiDataTags.length, 1, "sync should collapse duplicate shared Afanti data tags");
 assert.equal(normalizedDuplicateAfantiContentTags.length, 1, "sync should collapse duplicate Afanti validator tags");
 assert.equal(
@@ -411,8 +432,13 @@ assert.equal(
   '<script src="./unit-order.js?v=20260809-edition-unit-order"></script>',
   "duplicate normalization should use the standard unit-order tag"
 );
+assert.equal(
+  normalizedDuplicateFeedbackTags[0][0],
+  '<script src="./feedback.js?v=20260810-feedback"></script>',
+  "duplicate normalization should use the standard feedback tag"
+);
 assert.ok(
-  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-quote-profiles"'),
+  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-feedback"'),
   "sync should cache-bust the copied quote-name UI styles"
 );
 assert.ok(
@@ -424,8 +450,8 @@ assert.ok(
   "sync should cache-bust the copied split syllable mistake validator"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-quote-profiles"'),
-  "sync should cache-bust the copied bilingual quote-name app"
+  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-feedback"'),
+  "sync should cache-bust the shared feedback UI"
 );
 assert.ok(
   normalizedDuplicateIndex.indexOf("./course-data/alphabet-data.js") < normalizedDuplicateIndex.indexOf("./course-data/latin-writing-data.js")
@@ -436,7 +462,8 @@ assert.ok(
     && normalizedDuplicateIndex.indexOf("./afanti-content.js") < normalizedDuplicateIndex.indexOf("./course-data.js")
     && normalizedDuplicateIndex.indexOf("./course-data.js") < normalizedDuplicateIndex.indexOf("./unit-order.js")
     && normalizedDuplicateIndex.indexOf("./unit-order.js") < normalizedDuplicateIndex.indexOf("./app.js")
-    && normalizedDuplicateIndex.indexOf("./latin-keyboard.js") < normalizedDuplicateIndex.indexOf("./app.js"),
+    && normalizedDuplicateIndex.indexOf("./latin-keyboard.js") < normalizedDuplicateIndex.indexOf("./app.js")
+    && normalizedDuplicateIndex.indexOf("./feedback.js") < normalizedDuplicateIndex.indexOf("./app.js"),
   "duplicate normalization should place strict dependencies before app.js"
 );
 assert.ok(

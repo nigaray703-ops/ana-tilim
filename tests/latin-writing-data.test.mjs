@@ -185,6 +185,7 @@ for (const scriptPath of [
   "prototype/progress-transfer.js",
   "prototype/cloud-config.js",
   "prototype/cloud-sync.js",
+  "prototype/feedback.js",
   "prototype/app.js"
 ]) {
   runScript(scriptPath, appContext);
