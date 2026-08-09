@@ -25,10 +25,19 @@ const expectedKeyboardLessons = [
   ["keyboard-ana-til", "ئانا تىل", "ana til", "母语", "词组与空格"],
   ["keyboard-mother-language", "مەن ئانا تىلىمنى ياخشى كۆرىمەن", "men ana tilimni yaxshi körimen", "我喜欢我的母语", "完整短句"]
 ];
+const expectedUyghurKeyboardLessons = [
+  ["uyghur-keyboard-ba", "با"],
+  ["uyghur-keyboard-be", "بە"],
+  ["uyghur-keyboard-ana", "ئانا"],
+  ["uyghur-keyboard-kitab", "كىتاب"],
+  ["uyghur-keyboard-mewe", "مېۋە"],
+  ["uyghur-keyboard-ana-til", "ئانا تىل"],
+  ["uyghur-keyboard-mother-language", "مەن ئانا تىلىمنى ياخشى كۆرىمەن"]
+];
 const expectedUnit = {
   id: "latin-keyboard-writing",
   name: "拉丁键盘与字母书写强化",
-  subtitle: "普通 QWERTY、元辅音分类与 ULY 默写",
+  subtitle: "拉丁与维吾尔键盘、元辅音分类与 ULY 默写",
   description: "先认识普通拉丁键位，再按元音和辅音整理字母，最后看拉丁提示练习维吾尔字母书写。",
   bullets: ["普通 QWERTY", "8 个元音", "24 个辅音", "拉丁提示默写", "真实字母形式"]
 };
@@ -71,6 +80,23 @@ for (const lesson of data.keyboardLessons) {
     lesson.latin,
     `${lesson.id} should keep its Uyghur and ULY target aligned`
   );
+  assert.equal(Object.isFrozen(lesson), true, `${lesson.id} should be immutable`);
+}
+assert.deepEqual(
+  JSON.parse(JSON.stringify(data.uyghurKeyboardLessons.map(({ id, value }) => [id, value]))),
+  expectedUyghurKeyboardLessons,
+  "Uyghur keyboard practice should progress from two-letter forms to one reviewed sentence"
+);
+assert.equal(
+  new Set(data.uyghurKeyboardLessons.map((item) => item.id)).size,
+  expectedUyghurKeyboardLessons.length,
+  "Uyghur keyboard lesson IDs should remain unique"
+);
+for (const lesson of data.uyghurKeyboardLessons) {
+  assert.equal(typeof lesson.meaning, "string");
+  assert.ok(lesson.meaning.trim(), `${lesson.id} should include a learner-facing meaning`);
+  assert.equal(typeof lesson.focus, "string");
+  assert.ok(lesson.focus.trim(), `${lesson.id} should include a learner-facing focus`);
   assert.equal(Object.isFrozen(lesson), true, `${lesson.id} should be immutable`);
 }
 assert.deepEqual(JSON.parse(JSON.stringify(data.unit)), expectedUnit);
