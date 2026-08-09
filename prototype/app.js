@@ -742,6 +742,7 @@ const state = {
   keyboardValue: "",
   keyboardShift: false,
   latinKeyboardValue: "",
+  latinKeyboardLessonIndex: 0,
   latinVowelComparisonIndex: 0,
   latinDictationIndex: 0,
   latinDictationRevealed: false,
@@ -1328,6 +1329,7 @@ function learningRecordSnapshot() {
       practiceAudioPlayed: state.practiceAudioPlayed,
       keyboardValue: state.keyboardValue,
       latinKeyboardValue: state.latinKeyboardValue,
+      latinKeyboardLessonIndex: state.latinKeyboardLessonIndex,
       syllableSectionId: state.syllableSectionId,
       syllableItemIndex: state.syllableItemIndex,
       syllableRuleId: state.syllableRuleId,
@@ -1370,6 +1372,7 @@ function clearLearningRecords() {
   state.practiceAudioPlayed = false;
   state.keyboardValue = "";
   state.latinKeyboardValue = "";
+  state.latinKeyboardLessonIndex = 0;
   state.syllableSectionId = "two-letter-warmup";
   state.syllableItemIndex = 0;
   state.syllableRuleId = syllableTraining.rules[0].id;
@@ -4799,22 +4802,37 @@ function renderKeyboardPractice() {
 }
 
 function renderLatinKeyboardIntro() {
-  const targetValue = "qwerty";
+  const lessons = latinWriting.keyboardLessons;
+  const lessonIndex = Math.max(0, Math.min(lessons.length - 1, state.latinKeyboardLessonIndex));
+  const lesson = lessons[lessonIndex];
+  const targetValue = lesson.latin;
   const isComplete = state.latinKeyboardValue === targetValue;
+  const isFinalLesson = lessonIndex === lessons.length - 1;
+  const isPrefix = targetValue.startsWith(state.latinKeyboardValue);
+  const expectedKey = isPrefix ? targetValue[state.latinKeyboardValue.length] || "" : "Backspace";
+  const keyClass = (key) => key === expectedKey ? " next-key" : "";
 
   return screen(
     `
       ${topBar(
-        "普通拉丁 QWERTY",
+        "QWERTY 词语训练",
         learningUnitTitle("latin-keyboard-writing"),
         "",
         `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回">←</button>`
       )}
       <section class="stack">
         <article class="card latin-keyboard-target">
-          <p class="caption">目标</p>
-          <strong dir="ltr">${targetValue}</strong>
-          <p>用普通拉丁键位按顺序输入；大写字母会按小写记录。</p>
+          <div class="section-row">
+            <p class="caption">第 ${lessonIndex + 1} / ${lessons.length} 关 · ${escapeHtml(lesson.focus)}</p>
+            <span class="progress-pill">${lessonIndex + 1} / ${lessons.length}</span>
+          </div>
+          <strong class="uyghur latin-keyboard-word" lang="ug" dir="rtl">${escapeHtml(lesson.value)}</strong>
+          <p class="latin-keyboard-meaning">${escapeHtml(lesson.meaning)}</p>
+          <div class="latin-keyboard-copy-target" dir="ltr">
+            <span>照着 ULY 输入</span>
+            <strong>${escapeHtml(targetValue)}</strong>
+          </div>
+          <p class="muted">用普通拉丁键位输入；大写会按小写记录，空格与 ë / ö / ü 使用下方对应键。</p>
         </article>
         <input
           class="latin-keyboard-input"
@@ -4829,7 +4847,7 @@ function renderLatinKeyboardIntro() {
               <div class="latin-keyboard-row">
                 ${Array.from(row)
                   .map(
-                    (key) => `<button class="key-button" data-action="latin-key" data-key="${key}" type="button">${key.toUpperCase()}</button>`
+                    (key) => `<button class="key-button${keyClass(key)}" data-action="latin-key" data-key="${key}" type="button">${key.toUpperCase()}</button>`
                   )
                   .join("")}
               </div>
@@ -4837,21 +4855,30 @@ function renderLatinKeyboardIntro() {
           ).join("")}
           <div class="latin-keyboard-extended" aria-label="拉丁扩展键">
             ${latinKeyboard.EXTENDED_KEYS.map(
-              (key) => `<button class="key-button" data-action="latin-extended-key" data-key="${key}" type="button">${key}</button>`
+              (key) => `<button class="key-button${keyClass(key)}" data-action="latin-extended-key" data-key="${key}" type="button">${key}</button>`
             ).join("")}
           </div>
           <div class="latin-keyboard-tools">
-            <button class="key-button utility" data-action="latin-backspace" type="button" aria-label="Backspace">Backspace</button>
-            <button class="key-button utility latin-keyboard-space" data-action="latin-space" type="button" aria-label="Space">Space</button>
+            <button class="key-button utility${keyClass("Backspace")}" data-action="latin-backspace" type="button" aria-label="Backspace">Backspace</button>
+            <button class="key-button utility latin-keyboard-space${keyClass(" ")}" data-action="latin-space" type="button" aria-label="Space">Space</button>
           </div>
         </div>
-        <div class="feedback ${isComplete ? "good" : ""}">
-          ${isComplete ? "输入完全一致。普通拉丁 QWERTY 已完成。" : "只有输入完全等于 qwerty 时才会完成。"}
+        <div class="feedback ${isComplete ? "good" : isPrefix ? "" : "bad"}">
+          ${
+            isComplete
+              ? isFinalLesson
+                ? "输入正确，7 关全部完成。"
+                : `输入正确：${escapeHtml(targetValue)}。可以继续下一关。`
+              : isPrefix
+                ? `下一键：${expectedKey === " " ? "Space" : escapeHtml(expectedKey.toUpperCase())}`
+                : "当前输入和目标不一致，请按 Backspace 回退后继续。"
+          }
         </div>
         <div class="action-grid">
           <button class="secondary-button" data-action="go" data-target="unit" type="button">返回本单元</button>
           <button class="secondary-button" data-action="go" data-target="home" type="button">回到首页</button>
-          ${isComplete ? `<button class="primary-button" data-action="go" data-target="latinLetterClasses" type="button">继续：元辅音分类</button>` : ""}
+          ${isComplete && !isFinalLesson ? `<button class="primary-button" data-action="next-latin-keyboard-lesson" type="button">下一关：${escapeHtml(lessons[lessonIndex + 1].latin)}</button>` : ""}
+          ${isComplete && isFinalLesson ? `<button class="primary-button" data-action="go" data-target="latinLetterClasses" type="button">继续：元辅音分类</button>` : ""}
         </div>
       </section>
     `,
@@ -7182,7 +7209,9 @@ function appendKeyboardValue(value) {
 
 function updateLatinKeyboardValue(nextValue) {
   state.latinKeyboardValue = nextValue;
-  if (state.latinKeyboardValue === "qwerty") {
+  const lessonIndex = Math.max(0, Math.min(latinWriting.keyboardLessons.length - 1, state.latinKeyboardLessonIndex));
+  const lesson = latinWriting.keyboardLessons[lessonIndex];
+  if (lessonIndex === latinWriting.keyboardLessons.length - 1 && state.latinKeyboardValue === lesson.latin) {
     markProgress("latinWriting", "qwerty", "completed");
   }
 }
@@ -7571,6 +7600,15 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (action === "next-latin-keyboard-lesson") {
+    const lessonIndex = Math.max(0, Math.min(latinWriting.keyboardLessons.length - 1, state.latinKeyboardLessonIndex));
+    if (state.latinKeyboardValue !== latinWriting.keyboardLessons[lessonIndex].latin) return;
+    state.latinKeyboardLessonIndex = Math.min(latinWriting.keyboardLessons.length - 1, lessonIndex + 1);
+    state.latinKeyboardValue = "";
+    render();
+    return;
+  }
+
   if (action === "toggle-learning-reminder") {
     setPreference("learningReminder", !state.preferences.learningReminder);
     render();
@@ -7903,6 +7941,7 @@ document.addEventListener("click", (event) => {
     }
     if (target === "latinKeyboardIntro") {
       state.latinKeyboardValue = "";
+      state.latinKeyboardLessonIndex = 0;
     }
     if (target === "syllableWarmup") {
       state.syllableSectionId = syllableTraining.sections[0].id;

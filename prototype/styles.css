@@ -2744,10 +2744,42 @@ button {
   gap: 8px;
 }
 
-.latin-keyboard-target strong {
+.latin-keyboard-target .latin-keyboard-word {
   color: var(--ink);
-  font-size: 30px;
-  letter-spacing: 0.16em;
+  font-size: clamp(32px, 5vw, 46px);
+  line-height: 1.55;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.latin-keyboard-meaning {
+  color: var(--ink-soft);
+  font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.latin-keyboard-copy-target {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid rgba(14, 155, 177, 0.28);
+  border-radius: var(--radius);
+  background: var(--teal-soft);
+  text-align: left;
+}
+
+.latin-keyboard-copy-target span {
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.latin-keyboard-copy-target strong {
+  color: var(--ink);
+  font-size: clamp(22px, 3.4vw, 30px);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .latin-keyboard-input {
@@ -2809,6 +2841,12 @@ button {
   box-shadow: 0 2px 0 rgba(22, 38, 87, 0.13);
   font-family: ui-sans-serif, system-ui, sans-serif;
   font-size: 16px;
+}
+
+.latin-keyboard .key-button.next-key {
+  border-color: var(--teal);
+  background: var(--teal-soft);
+  box-shadow: 0 0 0 2px rgba(14, 155, 177, 0.22), 0 2px 0 rgba(22, 38, 87, 0.13);
 }
 
 .latin-keyboard-extended {

@@ -16,6 +16,15 @@ const expectedComparisonIds = [
   ["oe", "ue"],
   ["ee", "ii"]
 ];
+const expectedKeyboardLessons = [
+  ["keyboard-ana", "ئانا", "ana", "妈妈", "词语"],
+  ["keyboard-kitab", "كىتاب", "kitab", "书", "词语"],
+  ["keyboard-mewe", "مېۋە", "mëwe", "水果", "扩展字母 ë"],
+  ["keyboard-kok", "كۆك", "kök", "蓝色", "扩展字母 ö"],
+  ["keyboard-uzum", "ئۈزۈم", "üzüm", "葡萄", "扩展字母 ü"],
+  ["keyboard-ana-til", "ئانا تىل", "ana til", "母语", "词组与空格"],
+  ["keyboard-mother-language", "مەن ئانا تىلىمنى ياخشى كۆرىمەن", "men ana tilimni yaxshi körimen", "我喜欢我的母语", "完整短句"]
+];
 const expectedUnit = {
   id: "latin-keyboard-writing",
   name: "拉丁键盘与字母书写强化",
@@ -36,6 +45,7 @@ function makeContext() {
 }
 
 const focusedContext = makeContext();
+runScript("prototype/uly-transliteration.js", focusedContext);
 runScript("prototype/course-data/alphabet-data.js", focusedContext);
 runScript(latinWritingPath, focusedContext);
 
@@ -49,6 +59,20 @@ assert.deepEqual(
   JSON.parse(JSON.stringify(data.vowelComparisons.map((item) => item.letterIds))),
   expectedComparisonIds
 );
+assert.deepEqual(
+  JSON.parse(JSON.stringify(data.keyboardLessons.map((item) => [item.id, item.value, item.latin, item.meaning, item.focus]))),
+  expectedKeyboardLessons,
+  "QWERTY should progress through reviewed words, extended vowels, a phrase, and one short sentence"
+);
+assert.equal(new Set(data.keyboardLessons.map((item) => item.id)).size, expectedKeyboardLessons.length);
+for (const lesson of data.keyboardLessons) {
+  assert.equal(
+    focusedContext.window.ANA_TILIM_ULY.transliterateUyghur(lesson.value),
+    lesson.latin,
+    `${lesson.id} should keep its Uyghur and ULY target aligned`
+  );
+  assert.equal(Object.isFrozen(lesson), true, `${lesson.id} should be immutable`);
+}
 assert.deepEqual(JSON.parse(JSON.stringify(data.unit)), expectedUnit);
 assert.ok(
   data.unit.bullets.includes("真实字母形式"),

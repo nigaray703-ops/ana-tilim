@@ -39,7 +39,7 @@ if (alphabetDataScriptMatch.index > courseDataScriptMatch.index) {
   throw new Error(`Cannot update ${indexPath}: alphabet-data.js must load before course-data.js.`);
 }
 
-const standardLatinWritingScript = '<script src="./course-data/latin-writing-data.js?v=20260809-latin-writing"></script>';
+const standardLatinWritingScript = '<script src="./course-data/latin-writing-data.js?v=20260810-qwerty-words"></script>';
 const latinWritingInsertionIndex = alphabetDataScriptMatch.index + alphabetDataScriptMatch[0].length;
 let normalizedIndex = `${indexWithoutLatinWritingScripts.slice(0, latinWritingInsertionIndex)}\n${alphabetDataScriptMatch[1]}${standardLatinWritingScript}${indexWithoutLatinWritingScripts.slice(latinWritingInsertionIndex)}`;
 const indexUpdateMessages = ["Normalized index.html: latin-writing-data.js after alphabet-data.js"];
@@ -125,7 +125,7 @@ if (latinKeyboardScripts.length === 0) {
 const sharedCacheReferences = [
   {
     pattern: /(\bhref=["']\.\/styles\.css)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260810-letter-writing-2$2",
+    replacement: "$1?v=20260810-qwerty-words$2",
     label: "styles.css"
   },
   {
@@ -145,7 +145,7 @@ const sharedCacheReferences = [
   },
   {
     pattern: /(\bsrc=["']\.\/app\.js)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260810-letter-writing-2$2",
+    replacement: "$1?v=20260810-qwerty-words$2",
     label: "app.js"
   }
 ];

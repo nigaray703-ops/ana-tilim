@@ -54,11 +54,11 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260810-letter-writing-2",
+  "./styles.css?v=20260810-qwerty-words",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
-  "./course-data/latin-writing-data.js?v=20260809-latin-writing",
+  "./course-data/latin-writing-data.js?v=20260810-qwerty-words",
   "./course-data/combo-data.js?v=20260728-uly-transliteration",
   "./course-data/syllable-data.js?v=20260809-plan3-final-content",
   "./course-data/vocab-data.js?v=20260728-uly-transliteration",
@@ -77,7 +77,7 @@ const expectedVersionedAssets = [
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260809-syllable-review",
-  "./app.js?v=20260810-letter-writing-2"
+  "./app.js?v=20260810-qwerty-words"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -4607,31 +4607,55 @@ clickDataset({ action: "go", target: "latinKeyboardIntro" });
 assert.equal(vm.runInContext("state.screen", context), "latinKeyboardIntro", "the Task 1 unit entry should no longer be dead");
 includesAll(
   app.innerHTML,
-  ["普通拉丁 QWERTY", "目标", "qwerty", 'aria-label="普通拉丁 QWERTY 键盘"', 'dir="ltr"', "Backspace", "Space", "ë", "ö", "ü"],
-  "Latin QWERTY screen"
+  ["QWERTY 词语训练", "第 1 / 7 关", "ئانا", "妈妈", "ana", "词语", 'aria-label="普通拉丁 QWERTY 键盘"', 'dir="ltr"', "Backspace", "Space", "ë", "ö", "ü"],
+  "word-based Latin QWERTY screen"
 );
 assert.equal((app.innerHTML.match(/class="latin-keyboard-row"/g) || []).length, 3, "Latin keyboard should render three QWERTY rows");
 assert.equal((app.innerHTML.match(/data-action="latin-key"/g) || []).length, 26, "Latin keyboard should render all 26 ordinary letters");
-assert.doesNotMatch(app.innerHTML, /[\u0600-\u06ff]/u, "the isolated Latin keyboard screen should not render Arabic Unicode");
+assert.match(app.innerHTML, /class="uyghur latin-keyboard-word"[^>]*>ئانا</, "the keyboard lesson should pair ULY with its Uyghur word");
 assert.doesNotMatch(app.innerHTML, /accuracy|准确率|得分|分数/i, "literal keyboard completion should not invent an accuracy score");
 
-vm.runInContext("state.learningProgress.latinWriting = {}; state.latinKeyboardValue = ''; render()", context);
-for (const key of "qwertx") clickDataset({ action: "latin-key", key });
-assert.equal(vm.runInContext("state.latinKeyboardValue", context), "qwertx", "screen keys should type literal lowercase Latin letters");
+vm.runInContext("state.learningProgress.latinWriting = {}; state.latinKeyboardLessonIndex = 0; state.latinKeyboardValue = ''; render()", context);
+for (const key of "anx") clickDataset({ action: "latin-key", key });
+assert.equal(vm.runInContext("state.latinKeyboardValue", context), "anx", "screen keys should type literal lowercase Latin letters");
 assert.equal(
   vm.runInContext("state.learningProgress.latinWriting.qwerty?.completed", context),
   undefined,
-  "a near match must not complete the QWERTY exercise"
+  "a near word match must not complete the QWERTY course"
 );
 clickDataset({ action: "latin-backspace" });
-clickDataset({ action: "latin-key", key: "y" });
-assert.equal(vm.runInContext("state.latinKeyboardValue", context), "qwerty");
+clickDataset({ action: "latin-key", key: "a" });
+assert.equal(vm.runInContext("state.latinKeyboardValue", context), "ana");
+assert.equal(
+  vm.runInContext("state.learningProgress.latinWriting.qwerty?.completed", context),
+  undefined,
+  "finishing the first word should not finish all seven lessons"
+);
+assert.match(app.innerHTML, /data-action="next-latin-keyboard-lesson"[^>]*>\s*下一关：kitab\s*</, "an exact word should unlock the next reviewed target");
+clickDataset({ action: "next-latin-keyboard-lesson" });
+assert.equal(vm.runInContext("state.latinKeyboardLessonIndex", context), 1);
+assert.equal(vm.runInContext("state.latinKeyboardValue", context), "");
+includesAll(app.innerHTML, ["第 2 / 7 关", "كىتاب", "kitab", "书"], "second QWERTY word");
+
+const remainingLatinKeyboardTargets = ["kitab", "mëwe", "kök", "üzüm", "ana til", "men ana tilimni yaxshi körimen"];
+for (const [targetIndex, target] of remainingLatinKeyboardTargets.entries()) {
+  for (const key of target) {
+    if (["ë", "ö", "ü"].includes(key)) clickDataset({ action: "latin-extended-key", key });
+    else if (key === " ") clickDataset({ action: "latin-space" });
+    else clickDataset({ action: "latin-key", key });
+  }
+  assert.equal(vm.runInContext("state.latinKeyboardValue", context), target, `${target} should be typed exactly`);
+  if (targetIndex < remainingLatinKeyboardTargets.length - 1) {
+    assert.equal(vm.runInContext("state.learningProgress.latinWriting.qwerty?.completed", context), undefined);
+    clickDataset({ action: "next-latin-keyboard-lesson" });
+  }
+}
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.latinWriting.qwerty)", context)),
   { completed: true },
-  "an exact literal match should persist one completion flag and no fabricated score"
+  "finishing the exact final sentence should persist one completion flag and no fabricated score"
 );
-includesAll(app.innerHTML, ["输入完全一致", "返回本单元", "回到首页"], "Latin QWERTY success");
+includesAll(app.innerHTML, ["7 关全部完成", "返回本单元", "回到首页"], "word-based Latin QWERTY success");
 assert.match(
   app.innerHTML,
   /data-action="go"[^>]*data-target="latinLetterClasses"[^>]*>\s*继续：元辅音分类\s*<\/button>/,
@@ -5698,7 +5722,7 @@ clickDataset({ action: "latin-backspace" });
 assert.equal(vm.runInContext("state.latinKeyboardValue", context), "që", "extended, Space, and Backspace screen keys should stay literal");
 assert.doesNotMatch(vm.runInContext("state.latinKeyboardValue", context), /[\u0600-\u06ff]/u);
 
-vm.runInContext("state.learningProgress.latinWriting = {}; state.latinKeyboardValue = ''; render()", context);
+vm.runInContext("state.learningProgress.latinWriting = {}; state.latinKeyboardLessonIndex = 0; state.latinKeyboardValue = ''; render()", context);
 pressPhysicalKey("A", { metaKey: true });
 pressPhysicalKey("A", { ctrlKey: true });
 pressPhysicalKey("A", { altKey: true });
@@ -5717,12 +5741,12 @@ assert.equal(
   "physical Latin input should still work when the readonly LTR display has focus"
 );
 vm.runInContext("state.latinKeyboardValue = ''; render()", context);
-for (const key of "QWERTY") pressPhysicalKey(key);
-assert.equal(vm.runInContext("state.latinKeyboardValue", context), "qwerty", "physical QWERTY should stay literal Latin");
+for (const key of "ANA") pressPhysicalKey(key);
+assert.equal(vm.runInContext("state.latinKeyboardValue", context), "ana", "physical QWERTY should type the current reviewed ULY word in lowercase");
 pressPhysicalKey(" ");
 pressPhysicalKey("Backspace");
-assert.equal(vm.runInContext("state.latinKeyboardValue", context), "qwerty", "physical Space and Backspace should use the Latin API");
-assert.equal(vm.runInContext("state.learningProgress.latinWriting.qwerty.completed", context), true);
+assert.equal(vm.runInContext("state.latinKeyboardValue", context), "ana", "physical Space and Backspace should use the Latin API");
+assert.equal(vm.runInContext("state.learningProgress.latinWriting.qwerty?.completed", context), undefined);
 assert.doesNotMatch(vm.runInContext("state.latinKeyboardValue", context), /[\u0600-\u06ff]/u);
 vm.runInContext(
   "state.learningProgress = emptyLearningProgress(); state.learningProgress.latinWriting.qwerty = { completed: true }; state.dailyActivity = { date: localDayKey(), completedIds: ['latinWriting:qwerty:completed'] }",
@@ -5795,7 +5819,7 @@ keydownHandler({
 assert.equal(vm.runInContext("state.keyboardValue", context), "ئە", "physical keyboard keys should type the mapped Uyghur target");
 assert.equal(
   vm.runInContext("state.latinKeyboardValue", context),
-  "qwerty",
+  "ana",
   "the existing Uyghur keyboard screen should not mutate isolated Latin keyboard state"
 );
 
