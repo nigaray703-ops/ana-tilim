@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { validateWebmBuffer } from "../lib/webm-audio.mjs";
 
 const STATE_SCHEMA_VERSION = 1;
 const STATE_FILE = "state.json";
 const TEMP_STATE_FILE = "state.json.tmp";
+const RECOVERY_DIRECTORY = "recovery";
 const TAKE_ID_PATTERN = /^[A-Za-z0-9-]+$/;
 const HASH_PATTERN = /^[a-f0-9]{64}$/;
 const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
@@ -16,6 +18,10 @@ const MANUAL_STATUSES = new Set(["pending-review", "pending", "needs-rerecord"])
 function isInside(root, candidate) {
   const relative = path.relative(root, candidate);
   return relative !== "" && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+}
+
+function isInsideOrEqual(root, candidate) {
+  return root === candidate || isInside(root, candidate);
 }
 
 function assertIsoTimestamp(value, label) {
@@ -41,6 +47,7 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
 
   const normalizedProjectRoot = path.resolve(projectRoot);
   const normalizedWorkspaceRoot = path.resolve(workspaceRoot);
+  const normalizedTemporaryRoot = path.resolve(os.tmpdir());
   const catalogById = new Map();
 
   for (const target of catalog.targets) {
@@ -50,8 +57,51 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
     catalogById.set(target.stableId, target);
   }
 
+  function lstatIfExists(candidate) {
+    try {
+      return fsApi.lstatSync(candidate);
+    } catch (error) {
+      if (error?.code === "ENOENT") return null;
+      throw error;
+    }
+  }
+
+  function normalizeMacTemporaryAlias(candidate) {
+    if (normalizedTemporaryRoot.startsWith("/var/") && candidate.startsWith("/private/var/")) return `/var/${candidate.slice("/private/var/".length)}`;
+    if (normalizedTemporaryRoot.startsWith("/private/var/") && candidate.startsWith("/var/")) return `/private/var/${candidate.slice("/var/".length)}`;
+    return candidate;
+  }
+
+  function trustedAnchorFor(candidate, label) {
+    const inspectionCandidate = normalizeMacTemporaryAlias(candidate);
+    if (isInsideOrEqual(normalizedProjectRoot, inspectionCandidate)) return { anchor: normalizedProjectRoot, inspectionCandidate };
+    if (isInsideOrEqual(normalizedTemporaryRoot, inspectionCandidate)) return { anchor: normalizedTemporaryRoot, inspectionCandidate };
+    assert.fail(`${label} must be inside the project root or the system temporary root`);
+  }
+
+  function assertNoSymlinkFromTrustedAnchor(candidate, label) {
+    const { anchor, inspectionCandidate } = trustedAnchorFor(candidate, label);
+    const anchorStat = fsApi.lstatSync(anchor);
+    assert.ok(!anchorStat.isSymbolicLink() && anchorStat.isDirectory(), `${label} trusted root must not be a symbolic link`);
+    let current = anchor;
+    for (const segment of path.relative(anchor, inspectionCandidate).split(path.sep)) {
+      if (!segment) continue;
+      current = path.join(current, segment);
+      const stat = lstatIfExists(current);
+      if (!stat) break;
+      assert.ok(!stat.isSymbolicLink(), `${label} must not traverse a symbolic link`);
+    }
+    const candidateStat = lstatIfExists(candidate);
+    if (candidateStat) {
+      assert.ok(!candidateStat.isSymbolicLink(), `${label} must not be a symbolic link`);
+      assert.ok(isInsideOrEqual(fsApi.realpathSync(anchor), fsApi.realpathSync(candidate)), `${label} escapes its trusted root after realpath resolution`);
+    }
+  }
+
   function ensureWorkspaceRoot() {
+    assertNoSymlinkFromTrustedAnchor(normalizedWorkspaceRoot, "workspace root");
     if (!fsApi.existsSync(normalizedWorkspaceRoot)) fsApi.mkdirSync(normalizedWorkspaceRoot, { recursive: true });
+    assertNoSymlinkFromTrustedAnchor(normalizedWorkspaceRoot, "workspace root");
     assertRegularDirectory(fsApi, normalizedWorkspaceRoot, "workspace root");
   }
 
@@ -63,6 +113,7 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
 
   function assertNoSymlinkWithinWorkspace(candidate, label) {
     assert.ok(candidate === normalizedWorkspaceRoot || isInside(normalizedWorkspaceRoot, candidate), `${label} escapes workspace root`);
+    assertNoSymlinkFromTrustedAnchor(normalizedWorkspaceRoot, "workspace root");
     assertRegularDirectory(fsApi, normalizedWorkspaceRoot, "workspace root");
     const relative = path.relative(normalizedWorkspaceRoot, candidate);
     let current = normalizedWorkspaceRoot;
@@ -140,6 +191,24 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
         takeIds.add(take.id);
       }
       if (target.approvedTakeId !== null) assert.ok(takeIds.has(target.approvedTakeId), `state target ${stableId} approved take is missing`);
+      const selectedTake = target.approvedTakeId === null ? null : target.takes.find((take) => take.id === target.approvedTakeId);
+      const catalogTarget = catalogById.get(stableId);
+      if (target.status === "approved-take" || target.status === "imported") {
+        assert.ok(selectedTake, `state target ${stableId} approved take ID is required`);
+        assert.equal(target.recordingTextHash, catalogTarget.recordingTextHash, `state target ${stableId} approved take has stale recording text`);
+        assert.equal(selectedTake.recordingTextHash, catalogTarget.recordingTextHash, `state target ${stableId} approved take has stale recording text`);
+        assertStoredTakeIsValid(stableId, selectedTake);
+      } else if (target.status === "approved-current") {
+        assert.equal(target.approvedTakeId, null, `state target ${stableId} approved-current must not retain an approved take`);
+        assert.equal(catalogTarget.playable, true, `state target ${stableId} approved-current has no playable current audio`);
+        const currentPath = path.resolve(catalogTarget.absoluteOutputPath);
+        const audioRoot = path.resolve(normalizedProjectRoot, "prototype/assets/audio/human");
+        assertCurrentAudioPath(stableId, currentPath, audioRoot);
+        validateWebmBuffer(fsApi.readFileSync(currentPath));
+      } else {
+        assert.equal(target.approvedTakeId, null, `state target ${stableId} ${target.status} must not retain an approved take`);
+        if (target.status === "recorded") assert.ok(target.takes.length > 0, `state target ${stableId} recorded status requires at least one take`);
+      }
     }
     return state;
   }
@@ -189,7 +258,9 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
     } catch (error) {
       assert.fail(`malformed recording workspace state: ${error.message}`);
     }
-    return validateState(state);
+    validateState(state);
+    recoverPendingTakeRollback(state);
+    return state;
   }
 
   function requireTarget(stableId) {
@@ -218,8 +289,72 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
     return { relativePath, absolutePath: result };
   }
 
+  function rollbackJournalPath(takeId) {
+    assert.match(takeId, TAKE_ID_PATTERN, "take ID is invalid");
+    return resolveWorkspacePath(path.join(RECOVERY_DIRECTORY, `rollback-${takeId}.json`), "take rollback journal");
+  }
+
+  function recordTakeRollback({ stableId, take }) {
+    const recoveryDirectory = ensureDirectory(RECOVERY_DIRECTORY, "take recovery directory");
+    const journalPath = rollbackJournalPath(take.id);
+    assert.equal(path.dirname(journalPath), recoveryDirectory, "take rollback journal must remain in the recovery directory");
+    const journal = {
+      schemaVersion: 1,
+      stableId,
+      takeId: take.id,
+      relativePath: take.relativePath,
+      sha256: take.sha256,
+      createdAt: new Date().toISOString()
+    };
+    let descriptor;
+    try {
+      descriptor = fsApi.openSync(journalPath, "wx", 0o600);
+      fsApi.writeFileSync(descriptor, `${JSON.stringify(journal, null, 2)}\n`, "utf8");
+      fsApi.fsyncSync(descriptor);
+    } finally {
+      if (descriptor !== undefined) fsApi.closeSync(descriptor);
+    }
+  }
+
+  function recoverPendingTakeRollback(state) {
+    const recoveryDirectory = resolveWorkspacePath(RECOVERY_DIRECTORY, "take recovery directory");
+    assertNoSymlinkWithinWorkspace(recoveryDirectory, "take recovery directory");
+    if (!fsApi.existsSync(recoveryDirectory)) return;
+    assertRegularDirectory(fsApi, recoveryDirectory, "take recovery directory");
+    const journals = fsApi.readdirSync(recoveryDirectory).filter((file) => /^rollback-[A-Za-z0-9-]+\.json$/.test(file));
+    assert.ok(journals.length <= 1, "multiple take rollback journals require manual recovery");
+    if (journals.length === 0) return;
+
+    const journalPath = resolveWorkspacePath(path.join(RECOVERY_DIRECTORY, journals[0]), "take rollback journal");
+    assertNoSymlinkWithinWorkspace(journalPath, "take rollback journal");
+    const journalStat = fsApi.lstatSync(journalPath);
+    assert.ok(!journalStat.isSymbolicLink() && journalStat.isFile(), "take rollback journal must be a regular file");
+    let journal;
+    try {
+      journal = JSON.parse(fsApi.readFileSync(journalPath, "utf8"));
+    } catch (error) {
+      assert.fail(`malformed take rollback journal: ${error.message}`);
+    }
+    assert.equal(journal?.schemaVersion, 1, "unsupported take rollback journal schema");
+    const catalogTarget = requireTarget(journal.stableId);
+    assert.equal(typeof journal.takeId, "string", "take rollback journal take ID is required");
+    assert.match(journal.takeId, TAKE_ID_PATTERN, "take rollback journal take ID is invalid");
+    assert.equal(journal.relativePath, expectedTakeRelativePath(journal.stableId, journal.takeId), "take rollback journal has an unsafe path");
+    assert.match(journal.sha256, HASH_PATTERN, "take rollback journal content hash is invalid");
+    assert.ok(!state.targets[catalogTarget.stableId].takes.some((take) => take.id === journal.takeId), "take rollback journal conflicts with persisted state");
+    const { absolutePath } = safeTakePath(catalogTarget.stableId, journal.takeId);
+    if (fsApi.existsSync(absolutePath)) {
+      const takeStat = fsApi.lstatSync(absolutePath);
+      assert.ok(!takeStat.isSymbolicLink() && takeStat.isFile(), "take rollback path is unsafe");
+      fsApi.unlinkSync(absolutePath);
+      assert.equal(fsApi.existsSync(absolutePath), false, "take rollback did not remove its explicit take file");
+    }
+    fsApi.renameSync(journalPath, `${journalPath}.recovered`);
+  }
+
   function assertCurrentAudioPath(stableId, currentPath, audioRoot) {
     assert.ok(isInside(audioRoot, currentPath), `recording target ${stableId} current audio escapes human-audio root`);
+    assertNoSymlinkFromTrustedAnchor(currentPath, `recording target ${stableId} current audio`);
     let component = audioRoot;
     const rootStat = fsApi.lstatSync(component);
     assert.ok(!rootStat.isSymbolicLink() && rootStat.isDirectory(), `recording target ${stableId} current audio must not traverse a symbolic link`);
@@ -289,7 +424,17 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
       };
       targetState.takes.push(take);
       if (!["approved-current", "approved-take", "imported"].includes(targetState.status)) targetState.status = "recorded";
-      saveUpdatedState(state);
+      try {
+        saveUpdatedState(state);
+      } catch (error) {
+        try {
+          fsApi.unlinkSync(absolutePath);
+          assert.equal(fsApi.existsSync(absolutePath), false, "take rollback did not remove its explicit take file");
+        } catch (rollbackError) {
+          recordTakeRollback({ stableId, take });
+        }
+        throw error;
+      }
       return clone(take);
     },
 
