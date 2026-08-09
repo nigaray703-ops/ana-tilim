@@ -602,39 +602,13 @@ const approvedQuoteNamesUyghur = new Map([
   ["quote-zordun-sabir", "زوردۇن سابىر"],
   ["quote-teyipjan-eliyev", "تېيىپجان ئېلىيېف"]
 ]);
-const approvedQuoteProfiles = new Map([
-  ["quote-mahmud-kashgari", ["11 世纪", "语言学家、词典编纂者", "《突厥语大词典》", "语言、词典与文化记忆"]],
-  ["quote-yusuf-hajib", ["11 世纪", "思想家、诗人", "《福乐智慧》", "知识、品德与治理智慧"]],
-  ["quote-ahmet-yukneki", ["中世纪", "文学人物", "《真理的入门》", "礼仪、道德与学习"]],
-  ["quote-molla-musa", ["近代", "历史书写者", "新疆地方史与文化记录", "历史、记录与记忆"]],
-  ["quote-abdulkhaliq-uyghur", ["20 世纪", "诗人", "觉醒与青年主题", "学习、青年与母语"]],
-  ["quote-lutpulla-mutellip", ["20 世纪", "诗人", "青年文学人物", "希望、表达与家园"]],
-  ["quote-abdurehim-otkur", ["现代", "作家、诗人", "历史记忆与文化传承", "足迹、行动与记忆"]],
-  ["quote-zunun-qadiri", ["现代", "作家", "小说、戏剧与日常生活叙事", "故事、生活与舞台"]],
-  ["quote-zordun-sabir", ["现代", "作家", "小说与生活观察", "幽默、观察与表达"]],
-  ["quote-teyipjan-eliyev", ["现代", "诗人", "诗歌与文学教育", "诗意、语言与情感"]]
-]);
 for (const group of quoteUnit.groups) {
   assert.equal(
     group.titleUyghur,
     approvedQuoteNamesUyghur.get(group.id),
     `${group.id} should keep its approved Uyghur name`
   );
-  assert.deepEqual(
-    [group.profile?.era, group.profile?.role, group.profile?.relatedWork, group.profile?.learningFocus],
-    approvedQuoteProfiles.get(group.id),
-    `${group.id} should keep one concise structured learner profile`
-  );
-}
-const kashgariProfile = quoteUnit.groups.find((group) => group.id === "quote-mahmud-kashgari").profile;
-assert.deepEqual(
-  [kashgariProfile.portrait?.src, kashgariProfile.portrait?.alt, kashgariProfile.portrait?.caption, kashgariProfile.portrait?.license],
-  ["./assets/portraits/mahmud-kashgari-wax.jpg", "马赫穆德·喀什噶里蜡像资料图", "蜡像资料图（非历史照片）", "CC BY-SA 4.0"],
-  "the available Kashgari visual should identify itself as a wax reference rather than a historical portrait"
-);
-assert.ok(fs.existsSync(`prototype/${kashgariProfile.portrait.src.replace(/^\.\//, "")}`), "the reviewed portrait asset should exist locally");
-for (const group of quoteUnit.groups.filter((item) => item.id !== "quote-mahmud-kashgari")) {
-  assert.equal(group.profile.portrait, undefined, `${group.id} should not invent an unverified portrait`);
+  assert.equal(group.profile, undefined, `${group.id} should keep the introduction simple without a portrait or fact grid`);
 }
 
 for (const group of proverbUnit.groups) {

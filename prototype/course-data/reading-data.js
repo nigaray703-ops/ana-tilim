@@ -439,21 +439,6 @@ const readingUnits = [
         title: "马赫穆德·喀什噶里",
         titleUyghur: "مەھمۇد قەشقىرى",
         intro: "11 世纪语言学家，《突厥语大词典》的作者，常被视为突厥语言文化的重要记录者。",
-        profile: {
-          era: "11 世纪",
-          role: "语言学家、词典编纂者",
-          relatedWork: "《突厥语大词典》",
-          learningFocus: "语言、词典与文化记忆",
-          portrait: {
-            src: "./assets/portraits/mahmud-kashgari-wax.jpg",
-            alt: "马赫穆德·喀什噶里蜡像资料图",
-            caption: "蜡像资料图（非历史照片）",
-            credit: "摄影：باسم · Wikimedia Commons",
-            sourceUrl: "https://commons.wikimedia.org/wiki/File:Maḥmūd_al-Kāšġarī,_Wax.jpg",
-            license: "CC BY-SA 4.0",
-            licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/"
-          }
-        },
         items: [
           { id: "quote-mahmud-kashgari-line-1", value: "تىل بىر خەلقنى تونۇشنىڭ ئاچقۇچىدۇر.", meaning: "语言是了解一个民族的钥匙。", lesson: "学习母语，也是在认识自己的文化。", reviewStatus: "学习版译句，待来源审校" },
           { id: "quote-mahmud-kashgari-line-2", value: "لۇغەت خەلقنىڭ ئەسلىمىسىنى ساقلايدۇ.", meaning: "词典也能保存民族的记忆。", lesson: "词语记录生活，也记录来处。", reviewStatus: "学习版译句，待来源审校" },
@@ -465,7 +450,6 @@ const readingUnits = [
         title: "玉素甫·哈斯·哈吉甫",
         titleUyghur: "يۈسۈپ خاس ھاجىپ",
         intro: "11 世纪思想家、诗人，《福乐智慧》的作者，作品重视知识、品德和治理智慧。",
-        profile: { era: "11 世纪", role: "思想家、诗人", relatedWork: "《福乐智慧》", learningFocus: "知识、品德与治理智慧" },
         items: [
           { id: "quote-yusuf-hajib-line-1", value: "بىلىم ئادەمنىڭ يولىنى يورۇتىدۇ.", meaning: "知识照亮人的道路。", lesson: "学习让人看清方向。", reviewStatus: "学习版译句，待来源审校" },
           { id: "quote-yusuf-hajib-line-2", value: "ياخشى سۆز كۆڭۈلنى يورۇتىدۇ.", meaning: "好话能照亮人的心。", lesson: "语言也能带来温度。", reviewStatus: "学习版译句，待来源审校" },
@@ -477,7 +461,6 @@ const readingUnits = [
         title: "艾合买提·玉克乃克",
         titleUyghur: "ئەھمەد يۈكنەكى",
         intro: "中世纪文学人物，《真理的入门》常与他的名字联系在一起，作品重视礼仪和道德。",
-        profile: { era: "中世纪", role: "文学人物", relatedWork: "《真理的入门》", learningFocus: "礼仪、道德与学习" },
         items: [
           { id: "quote-ahmet-yukneki-line-1", value: "ئەدەب ئادەمنىڭ زىننىتىدۇر.", meaning: "礼貌是人的装饰。", lesson: "说话有礼，是语言学习的重要习惯。", reviewStatus: "学习版译句，待来源审校" },
           { id: "quote-ahmet-yukneki-line-2", value: "ياخشى خۇلق ئادەمنى گۈزەل قىلىدۇ.", meaning: "好的品行让人更美。", lesson: "语言和品行常常连在一起。", reviewStatus: "学习版译句，待来源审校" },
@@ -489,7 +472,6 @@ const readingUnits = [
         title: "毛拉·穆萨·赛拉米",
         titleUyghur: "موللا مۇسا سايرامى",
         intro: "近代历史书写者，常被提到与新疆地方史、文化记录相关。",
-        profile: { era: "近代", role: "历史书写者", relatedWork: "新疆地方史与文化记录", learningFocus: "历史、记录与记忆" },
         items: [
           { id: "quote-molla-musa-line-1", value: "تارىخنى بىلگەن ئادەم ئۆزىنى ياخشىراق تونۇيدۇ.", meaning: "懂得历史的人，更能认识自己。", lesson: "了解来处，才能看清自己。", reviewStatus: "学习版译句，待来源审校" },
           { id: "quote-molla-musa-line-2", value: "يېزىلغان سۆز ئۇنتۇلغان ئىشنى ساقلايدۇ.", meaning: "写下来的话能保存被遗忘的事。", lesson: "记录能保护记忆。", reviewStatus: "学习版译句，待来源审校" },
@@ -501,7 +483,6 @@ const readingUnits = [
         title: "阿不都哈力克·维吾尔",
         titleUyghur: "ئابدۇخالىق ئۇيغۇر",
         intro: "20 世纪维吾尔诗人，作品常与觉醒、学习和青年精神联系在一起。",
-        profile: { era: "20 世纪", role: "诗人", relatedWork: "觉醒与青年主题", learningFocus: "学习、青年与母语" },
         items: [
           { id: "quote-abdulkhaliq-uyghur-line-1", value: "ئويغانغان كۆڭۈل ئۆگىنىشتىن توختىمايدۇ.", meaning: "醒来的心不会停止学习。", lesson: "学习贵在一直向前。", reviewStatus: "学习版译句，待来源审校" },
           { id: "quote-abdulkhaliq-uyghur-line-2", value: "ياشلارنىڭ يولى بىلىم بىلەن ئېچىلىدۇ.", meaning: "青年的路靠知识打开。", lesson: "年轻时学习，会给未来打基础。", reviewStatus: "学习版译句，待来源审校" },
@@ -513,7 +494,6 @@ const readingUnits = [
         title: "鲁特普拉·穆塔里甫",
         titleUyghur: "لۇتپۇللا مۇتەللىپ",
         intro: "20 世纪维吾尔诗人，常被记住为年轻、有激情的文学人物。",
-        profile: { era: "20 世纪", role: "诗人", relatedWork: "青年文学人物", learningFocus: "希望、表达与家园" },
         items: [
           { id: "quote-lutpulla-mutellip-line-1", value: "ياشلىق ئۈمىد بىلەن گۈزەل.", meaning: "青春因希望而美丽。", lesson: "学习也需要希望。", reviewStatus: "学习版译句，待来源审校" },
           { id: "quote-lutpulla-mutellip-line-2", value: "يۈرەكتىكى ئوت سۆزگە ئايلىنىدۇ.", meaning: "心里的火会变成语言。", lesson: "表达来自真实的情感。", reviewStatus: "学习版译句，待来源审校" },
@@ -525,7 +505,6 @@ const readingUnits = [
         title: "阿不都热依木·吾提库尔",
         titleUyghur: "ئابدۇرېھىم ئۆتكۈر",
         intro: "现代维吾尔作家、诗人，作品常与历史记忆、足迹和文化传承联系在一起。",
-        profile: { era: "现代", role: "作家、诗人", relatedWork: "历史记忆与文化传承", learningFocus: "足迹、行动与记忆" },
         items: [
           { id: "quote-abdurehim-otkur-line-1", value: "ئىز قالدۇرۇش ئۈچۈن قەدەم بېسىش كېرەك.", meaning: "想留下足迹，就要迈出脚步。", lesson: "每天练一点，也是在留下足迹。", reviewStatus: "学习版译句，待来源审校" },
           { id: "quote-abdurehim-otkur-line-2", value: "ھەر قەدەم بىر يولنىڭ باشلىنىشى.", meaning: "每一步都是一条路的开始。", lesson: "小进步也值得认真对待。", reviewStatus: "学习版译句，待来源审校" },
@@ -537,7 +516,6 @@ const readingUnits = [
         title: "祖农·卡迪尔",
         titleUyghur: "زۇنۇن قادىرى",
         intro: "现代维吾尔作家，作品常与小说、戏剧和日常生活叙事联系在一起。",
-        profile: { era: "现代", role: "作家", relatedWork: "小说、戏剧与日常生活叙事", learningFocus: "故事、生活与舞台" },
         items: [
           { id: "quote-zunun-qadiri-line-1", value: "ھېكايە ئادەمنىڭ كۆڭلىنى ئاچىدۇ.", meaning: "故事能打开人的心。", lesson: "故事能把词语放回生活。", reviewStatus: "学习版译句，待来源审校" },
           { id: "quote-zunun-qadiri-line-2", value: "كىچىك ئادەمنىڭ تۇرمۇشىمۇ چوڭ مەنىگە ئىگە.", meaning: "普通人的生活也有大的意义。", lesson: "日常生活值得被表达。", reviewStatus: "学习版译句，待来源审校" },
@@ -549,7 +527,6 @@ const readingUnits = [
         title: "祖尔东·萨比尔",
         titleUyghur: "زوردۇن سابىر",
         intro: "现代维吾尔作家，常以小说和幽默、生活观察被读者记住。",
-        profile: { era: "现代", role: "作家", relatedWork: "小说与生活观察", learningFocus: "幽默、观察与表达" },
         items: [
           { id: "quote-zordun-sabir-line-1", value: "كۈلكە ھەقىقەتنى يۇمشاق ئېيتىدۇ.", meaning: "笑声能温和地说出真实。", lesson: "幽默也能表达认真。", reviewStatus: "学习版译句，待来源审校" },
           { id: "quote-zordun-sabir-line-2", value: "تۇرمۇشنى كۆزىتىش يازغۇچىنىڭ دەرسى.", meaning: "观察生活，是作家的课堂。", lesson: "语言从生活里来。", reviewStatus: "学习版译句，待来源审校" },
@@ -561,7 +538,6 @@ const readingUnits = [
         title: "铁依甫江·艾力耶夫",
         titleUyghur: "تېيىپجان ئېلىيېف",
         intro: "现代维吾尔诗人，常与诗歌、抒情和文学教育联系在一起。",
-        profile: { era: "现代", role: "诗人", relatedWork: "诗歌与文学教育", learningFocus: "诗意、语言与情感" },
         items: [
           { id: "quote-teyipjan-eliyev-line-1", value: "شېئىر يۈرەكتىكى سۆزنى ئاڭلىتىدۇ.", meaning: "诗让心里的话被听见。", lesson: "诗歌适合先感受语气。", reviewStatus: "学习版译句，待来源审校" },
           { id: "quote-teyipjan-eliyev-line-2", value: "گۈزەل سۆز كۆڭۈلگە گۈل تىكىدۇ.", meaning: "美好的话会在心里种花。", lesson: "好语言能留下美感。", reviewStatus: "学习版译句，待来源审校" },
