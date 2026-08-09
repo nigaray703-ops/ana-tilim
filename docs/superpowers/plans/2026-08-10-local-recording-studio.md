@@ -341,7 +341,7 @@ Use this state contract:
   updatedAt: "ISO timestamp",
   targets: {
     "alphabet:aa": {
-      status: "pending" | "needs-rerecord" | "recorded" | "approved-current" | "approved-take" | "imported",
+      status: "pending-review" | "pending" | "needs-rerecord" | "recorded" | "approved-current" | "approved-take" | "imported",
       approvedTakeId: null | "take-id",
       takes: [{ id, relativePath, createdAt, size, durationMs, recordingTextHash }]
     }
@@ -509,7 +509,7 @@ API:
 - `GET /api/audio/current/:stableId`
 - `GET /api/audio/take/:stableId/:takeId`
 - `POST /api/takes/:stableId` with raw `audio/webm` body, max 20 MiB
-- `POST /api/targets/:stableId/status` with `{ "status": "needs-rerecord" }` or `{ "status": "pending" }`
+- `POST /api/targets/:stableId/status` with `{ "status": "needs-rerecord" }`, `{ "status": "pending-review" }` or `{ "status": "pending" }`
 - `POST /api/targets/:stableId/approve` with `{ "takeId": "2026-08-10T01-00-00-000Z-a1b2c3d4" }`
 - `POST /api/targets/:stableId/approve-current` with `{}`
 - `POST /api/import/preview` with `{}`
@@ -592,6 +592,7 @@ The harness must load the real `public/app.js` with fake `fetch`, `MediaRecorder
 - catalog renders all five categories and count summary;
 - search matches维文、ULY、中文、英文和 stable ID;
 - status filters distinguish current approved, take approved, recorded, imported and pending;
+- the initial audit summary is exactly 525 `pending-review` plus 2 `needs-rerecord`, and no current target is silently approved;
 - clicking a row selects it without changing approval;
 - current audio and every take have independent play controls;
 - start/stop records immutable `recordingTargetId` even if a row click occurs while finalizing;
@@ -599,6 +600,7 @@ The harness must load the real `public/app.js` with fake `fetch`, `MediaRecorder
 - a failed upload retains the local preview and allows retry;
 - approving a take does not call import preview/apply;
 - import apply is disabled until a successful fresh preview exists.
+- after a successful imported replacement is played, a per-target finalization action can remove only its one verified old backup; there is no bulk finalization action.
 
 - [ ] **Step 2: Run RED**
 
@@ -649,10 +651,11 @@ The target detail must show:
 - take cards ordered newest first with duration, created time, play, approve;
 - a visible `已批准当前音频` or `已批准 take N` state;
 - an explicit “重新录一条” action that never removes old takes.
+- explicit “当前音频正确” and “需要重录” audit actions; either action applies only to the selected stable ID and persists immediately.
 
 - [ ] **Step 6: Implement import preview**
 
-The first click calls `/api/import/preview` and renders exact target count, filenames, old/new hashes, backup destination and changed text warnings. The second button says `确认导入 N 个批准录音`; after success it refreshes catalog/state and clears only the in-memory plan.
+The first click calls `/api/import/preview` and renders exact target count, filenames, old/new hashes, backup destination and changed text warnings. The second button says `确认导入 N 个批准录音`; after success it refreshes catalog/state and clears only the in-memory plan. An imported replacement must then be played from the production path before its row exposes `确认新版并删除这一条旧版备份`; the UI calls `/api/import/finalize` with exactly one `stableId` and never offers “delete all”.
 
 - [ ] **Step 7: Add accessibility and error regression tests**
 
@@ -710,10 +713,12 @@ $NODE tests/start-recording-studio.test.mjs
 6. approve one take or keep current;
 7. preview import;
 8. confirm import;
-9. where drafts/backups/logs live;
-10. how to stop the server;
-11. that importing is not deployment;
-12. how final course expansion will add new pending targets.
+9. play the imported production file, then optionally finalize one replacement and delete only that one old backup;
+10. where drafts/backups/logs live;
+11. how to stop the server;
+12. that importing is not deployment;
+13. how to audit every current target and mark either `approved-current` or `needs-rerecord`;
+14. how final course expansion will add new pending targets.
 
 - [ ] **Step 5: Run automated verification**
 
@@ -740,10 +745,12 @@ Verify in Chrome at desktop and 390×844:
 
 - page loads only from `127.0.0.1` and console has no errors;
 - catalog totals 527 and filters/search work;
+- initial audit counts are 525 pending review and 2 needs re-recording; after a fixture current-audio approval, reload preserves the reduced pending count;
 - record two takes for one target, reload, and confirm both remain;
 - compare current and both takes;
 - approve one take, reload, and confirm approval remains;
 - preview import without applying and confirm target bytes remain unchanged;
+- after a fixture replacement import, play the production replacement, finalize that one stable ID, and verify only its exact old backup is removed;
 - perform a fixture import, verify backup and target hashes, then use fixture-only rollback fault to verify exact restoration;
 - no page-level horizontal overflow; long维文/ULY/Chinese/English labels wrap safely;
 - closing and reopening Chrome resumes unfinished status.
@@ -762,6 +769,7 @@ git commit -m "docs: finish local recording studio workflow"
 Do not start the final course expansion plan until all of the following are true:
 
 - the studio shows exactly 527 current targets;
+- all 527 current targets can be individually audited, and the final-course plan remains blocked while any target is `pending-review` or `needs-rerecord`;
 - multiple takes and approvals survive browser/server restart;
 - a real WebM take passes shared validation;
 - import preview is read-only;
