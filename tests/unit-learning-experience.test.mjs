@@ -11,6 +11,16 @@ const unitOrderPath = "prototype/unit-order.js";
 const uyghurKeyboardPath = "prototype/uyghur-keyboard.js";
 const latinKeyboardPath = "prototype/latin-keyboard.js";
 const feedbackPath = "prototype/feedback.js";
+const i18nScriptPaths = [
+  "prototype/i18n/ui-messages.js",
+  "prototype/i18n/alphabet-en.js",
+  "prototype/i18n/combo-en.js",
+  "prototype/i18n/vocab-en.js",
+  "prototype/i18n/practice-en.js",
+  "prototype/i18n/reading-en.js",
+  "prototype/i18n/course-en.js",
+  "prototype/i18n/runtime.js"
+];
 const courseDataScriptPaths = [
   "prototype/uly-transliteration.js",
   "prototype/course-data/alphabet-data.js",
@@ -35,6 +45,19 @@ for (const scriptPath of courseDataScriptPaths) {
 assert.ok(fs.existsSync(courseDataGuidePath), "course data editing guide should exist for non-technical review");
 assert.ok(fs.existsSync(courseDataIntegrityTestPath), "course data integrity checker should exist");
 assert.ok(fs.existsSync(projectCheckScriptPath), "one-command project check script should exist");
+const projectCheckSource = fs.readFileSync(projectCheckScriptPath, "utf8");
+for (const i18nScriptPath of i18nScriptPaths) {
+  assert.ok(
+    projectCheckSource.includes(`["--check", "${i18nScriptPath}"]`),
+    `one-command project checks should syntax-check ${i18nScriptPath}`
+  );
+}
+for (const i18nTestPath of ["tests/i18n-runtime.test.mjs", "tests/i18n-course-content.test.mjs"]) {
+  assert.ok(
+    projectCheckSource.includes(`["${i18nTestPath}"]`),
+    `one-command project checks should run ${i18nTestPath}`
+  );
+}
 const courseDataSource = fs.readFileSync(courseDataAggregatorPath, "utf8");
 const courseDataSources = Object.fromEntries(
   courseDataScriptPaths.map((scriptPath) => [scriptPath, fs.readFileSync(scriptPath, "utf8")])
@@ -42,24 +65,14 @@ const courseDataSources = Object.fromEntries(
 const courseDataGuide = fs.readFileSync(courseDataGuidePath, "utf8");
 const appSource = fs.readFileSync("prototype/app.js", "utf8");
 const styleSource = fs.readFileSync("prototype/styles.css", "utf8");
-const bottomNavSource = appSource.slice(
-  appSource.indexOf("function bottomNav"),
-  appSource.indexOf("function iconHome")
-);
-assert.deepEqual(
-  [...bottomNavSource.matchAll(/\["([^"]+)", "([^"]+)"/g)].map((match) => match.slice(1, 3)),
-  [["home", "首页"], ["library", "字母"], ["learn", "学习"], ["profile", "我的"]],
-  "bottom navigation should expose exactly the four final learner destinations in order"
-);
-
 assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode should not leave unreachable CSS");
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260810-unit-maps",
+  "./styles.css?v=20260810-unit-resume",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
-  "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
+  "./course-data/alphabet-data.js?v=20260809-bilingual",
   "./course-data/latin-writing-data.js?v=20260810-unit-maps",
   "./course-data/combo-data.js?v=20260728-uly-transliteration",
   "./course-data/syllable-data.js?v=20260809-plan3-final-content",
@@ -70,28 +83,74 @@ const expectedVersionedAssets = [
   "./course-data/afanti-english-data.js?v=20260810-reviewed-afanti",
   "./afanti-content.js?v=20260810-reviewed-afanti",
   "./course-data.js?v=20260810-reviewed-afanti",
+  "./i18n/ui-messages.js?v=20260810-unit-resume",
+  "./i18n/alphabet-en.js?v=20260809-bilingual",
+  "./i18n/combo-en.js?v=20260809-bilingual",
+  "./i18n/vocab-en.js?v=20260809-bilingual",
+  "./i18n/practice-en.js?v=20260809-bilingual",
+  "./i18n/reading-en.js?v=20260809-bilingual",
+  "./i18n/course-en.js?v=20260809-bilingual",
+  "./i18n/runtime.js?v=20260810-unit-resume",
+  "./unit-order.js?v=20260809-edition-unit-order",
   "./uyghur-keyboard.js?v=20260809-phone-morphemes",
   "./latin-keyboard.js?v=20260809-latin-qwerty",
   "./sentence-morphemes.js?v=20260809-word-formation",
   "./sentence-glossary.js?v=20260809-word-formation",
-  "./progress-transfer.js?v=20260810-unit-maps",
+  "./progress-transfer.js?v=20260810-unit-resume",
   "./audio-controller.js?v=20260728-uly-transliteration",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260810-unit-maps",
   "./feedback.js?v=20260810-feedback",
-  "./app.js?v=20260810-unit-maps"
+  "./app.js?v=20260810-unit-resume"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
-    /(?:href|src)="(?<url>(?:\.\/(?:styles\.css|app-config\.js|uly-transliteration\.js|course-data\/[^"]+\.js|course-data\.js|afanti-content\.js|uyghur-keyboard\.js|latin-keyboard\.js|sentence-morphemes\.js|sentence-glossary\.js|progress-transfer\.js|audio-controller\.js|cloud-config\.js|feedback\.js|cloud-sync\.js|app\.js)[^"]*|https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2\.110\.8))"/g
+    /(?:href|src)="(?<url>(?:\.\/(?:styles\.css|app-config\.js|uly-transliteration\.js|course-data\/[^"]+\.js|course-data\.js|afanti-content\.js|i18n\/[^"]+\.js|unit-order\.js|uyghur-keyboard\.js|latin-keyboard\.js|sentence-morphemes\.js|sentence-glossary\.js|progress-transfer\.js|audio-controller\.js|cloud-config\.js|feedback\.js|cloud-sync\.js|app\.js)[^"]*|https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2\.110\.8))"/g
   )
 ].map((match) => match.groups.url);
 assert.deepEqual(
   versionedAppAssets,
   expectedVersionedAssets,
-  "every prototype CSS, course-data, audio controller, and app asset should use its reviewed release cache version"
+  "the international build should load every reviewed local asset in release order with its required cache version"
 );
+const previousEnglishUiCache = new Map([
+  ["./styles.css?v=20260809-bilingual", { release: "before-english-layout" }],
+  ["./app.js?v=20260809-bilingual-final", { release: "before-english-layout" }]
+]);
+for (const url of ["./styles.css?v=20260810-unit-resume", "./app.js?v=20260810-unit-resume"]) {
+  assert.ok(versionedAppAssets.includes(url));
+  assert.equal(previousEnglishUiCache.get(url), undefined);
+}
+const staleAlphabetCache = new Map([
+  ["./course-data/alphabet-data.js?v=20260728-uly-transliteration", { release: "pre-bilingual" }]
+]);
+const requestedAlphabetAsset = versionedAppAssets.find((url) => url.includes("course-data/alphabet-data.js"));
+assert.equal(
+  requestedAlphabetAsset,
+  "./course-data/alphabet-data.js?v=20260809-bilingual",
+  "the bilingual runtime should request the bilingual alphabet data release"
+);
+assert.equal(
+  staleAlphabetCache.get(requestedAlphabetAsset),
+  undefined,
+  "an old alphabet-data cache entry must not satisfy the bilingual release URL"
+);
+const previousFinalReviewCache = new Map([
+  ["./i18n/ui-messages.js?v=20260809-bilingual", { release: "pr-5" }],
+  ["./i18n/runtime.js?v=20260809-bilingual", { release: "pr-5" }]
+]);
+for (const finalAssetUrl of [
+  "./i18n/ui-messages.js?v=20260810-unit-resume",
+  "./i18n/runtime.js?v=20260810-unit-resume"
+]) {
+  assert.ok(versionedAppAssets.includes(finalAssetUrl), `${finalAssetUrl} should be requested by production HTML`);
+  assert.equal(
+    previousFinalReviewCache.get(finalAssetUrl),
+    undefined,
+    `${finalAssetUrl} must not be satisfied by the PR #5 cache key`
+  );
+}
 assert.ok(styleSource.includes("--content-max-width: 1120px;"), "prototype should define a tablet-friendly content width");
 assert.ok(styleSource.includes("--nav-rail-width: 96px;"), "prototype should define a tablet side navigation width");
 assert.match(
@@ -193,6 +252,9 @@ assert.ok(homeCenterStyle.includes("align-content: center;"), "home content shou
 assert.ok(homeCenterStyle.includes("align-items: start;"), "home content should keep natural card heights while centered");
 const homeCenterChildStyle = styleSource.match(/^\.home-center > \*\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
 assert.ok(homeCenterChildStyle.includes("width: 100%;"), "home cards should fill the centered home column");
+assert.ok(homeCenterChildStyle.includes("min-width: 0;"), "home cards should shrink within the phone content column");
+const homeCenterGrandchildStyle = styleSource.match(/^\.home-center > \* > \*\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
+assert.ok(homeCenterGrandchildStyle.includes("min-width: 0;"), "home card content should shrink without clipping long English copy");
 const stepStateStyle = styleSource.match(/^\.step-state\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
 for (const declaration of ["overflow: visible;", "text-overflow: clip;", "min-width: max-content;", "flex: 0 0 auto;"]) {
   assert.ok(stepStateStyle.includes(declaration), `status labels should include ${declaration}`);
@@ -280,10 +342,14 @@ const htmlScriptOrder = [
   "prototype/app-config.js",
   ...courseDataScriptPaths,
   courseDataAggregatorPath,
+  ...i18nScriptPaths,
+  unitOrderPath,
   uyghurKeyboardPath,
   latinKeyboardPath,
+  "prototype/sentence-morphemes.js",
   "prototype/sentence-glossary.js",
   "prototype/progress-transfer.js",
+  "prototype/audio-controller.js",
   "prototype/cloud-config.js",
   "prototype/cloud-sync.js",
   feedbackPath,
@@ -340,6 +406,7 @@ function makeWritingCanvas({ contextAvailable = true } = {}) {
   const calls = [];
   const attributes = {};
   const drawingContext = {
+    operations: calls,
     setTransform(...args) { calls.push(["setTransform", ...args]); },
     beginPath() { calls.push(["beginPath"]); },
     moveTo(...args) { calls.push(["moveTo", ...args]); },
@@ -355,6 +422,7 @@ function makeWritingCanvas({ contextAvailable = true } = {}) {
     height: 360,
     listeners,
     calls,
+    context2d: drawingContext,
     getContext(type) {
       assert.equal(type, "2d");
       return contextAvailable ? drawingContext : null;
@@ -372,7 +440,15 @@ function makeWritingCanvas({ contextAvailable = true } = {}) {
       return Object.prototype.hasOwnProperty.call(attributes, name) ? attributes[name] : null;
     },
     setPointerCapture() {},
-    releasePointerCapture() {}
+    releasePointerCapture() {},
+    dispatchPointer(eventName, values) {
+      assert.ok(listeners[eventName], eventName + " should be registered on the writing canvas");
+      listeners[eventName]({
+        pointerId: 1,
+        preventDefault() {},
+        ...values
+      });
+    }
   };
   return canvas;
 }
@@ -380,12 +456,14 @@ function makeWritingCanvas({ contextAvailable = true } = {}) {
 const app = makeElement("app");
 let appHtmlValue = "";
 let appHtmlWriteCount = 0;
+let activeWritingCanvas = null;
 Object.defineProperty(app, "innerHTML", {
   configurable: true,
   get() { return appHtmlValue; },
   set(value) {
     appHtmlValue = String(value);
     appHtmlWriteCount += 1;
+    activeWritingCanvas = appHtmlValue.includes("data-writing-canvas") ? makeWritingCanvas() : null;
   }
 });
 const toast = makeElement("toast");
@@ -432,6 +510,7 @@ let focusedSyllableSelector = "";
 const context = {
   console,
   document: {
+    documentElement: { lang: "" },
     querySelector(selector) {
       if (selector === "#app") return app;
       if (selector === "#toast") return toast;
@@ -505,7 +584,9 @@ const context = {
       return null;
     },
     querySelectorAll(selector) {
-      if (selector === "[data-writing-canvas]") return writingCanvasesForTest;
+      if (selector === "[data-writing-canvas]") {
+        return writingCanvasesForTest.length ? writingCanvasesForTest : activeWritingCanvas ? [activeWritingCanvas] : [];
+      }
       if (selector === "[data-latin-writing-form-tab]") return latinWritingFormTabsForTest;
       if (selector === "[data-latin-writing-canvas-only]") return latinWritingCanvasOnlyForTest;
       if (selector === "[data-letter-writing-form-option]") return letterWritingFormOptionsForTest;
@@ -524,6 +605,7 @@ const context = {
     }
   },
   window: {
+    navigator: { languages: ["en-NZ"], language: "en-NZ" },
     setTimeout() {
       return 1;
     },
@@ -607,6 +689,9 @@ for (const scriptPath of courseDataScriptPaths) {
   vm.runInContext(fs.readFileSync(scriptPath, "utf8"), context, { filename: scriptPath });
 }
 vm.runInContext(fs.readFileSync(courseDataAggregatorPath, "utf8"), context, { filename: courseDataAggregatorPath });
+for (const scriptPath of i18nScriptPaths) {
+  vm.runInContext(fs.readFileSync(scriptPath, "utf8"), context, { filename: scriptPath });
+}
 vm.runInContext(fs.readFileSync(unitOrderPath, "utf8"), context, { filename: unitOrderPath });
 vm.runInContext(fs.readFileSync(uyghurKeyboardPath, "utf8"), context, { filename: uyghurKeyboardPath });
 vm.runInContext(fs.readFileSync(latinKeyboardPath, "utf8"), context, { filename: latinKeyboardPath });
@@ -672,6 +757,7 @@ assert.doesNotThrow(
   "the app's current real export should pass both structural and course-derived semantic validation"
 );
 vm.runInContext("state.pendingProgressImport = null", context);
+vm.runInContext('applyInterfaceLanguage("zh");', context);
 
 const globalUnits = JSON.parse(
   vm.runInContext("JSON.stringify(learningUnits.map(({ id, title }) => ({ id, title })))", context)
@@ -762,6 +848,7 @@ function createConfiguredAppVm(
   const configuredContext = {
     console,
     document: {
+      documentElement: { lang: "" },
       querySelector(selector) {
         if (selector === "#app") return configuredApp;
         if (selector === "#toast") return configuredToast;
@@ -772,6 +859,7 @@ function createConfiguredAppVm(
       }
     },
     window: {
+      navigator: { languages: ["zh-CN"], language: "zh-CN" },
       setTimeout() {
         return 1;
       },
@@ -831,12 +919,15 @@ function createConfiguredAppVm(
   }
   for (const scriptPath of [
     courseDataAggregatorPath,
+    ...i18nScriptPaths,
     unitOrderPath,
     uyghurKeyboardPath,
     ...(includeLatinKeyboard ? [latinKeyboardPath] : []),
     "prototype/sentence-morphemes.js",
     "prototype/sentence-glossary.js",
     "prototype/progress-transfer.js",
+    "prototype/audio-controller.js",
+    "prototype/cloud-config.js",
     feedbackPath,
     "prototype/app.js"
   ]) {
@@ -878,7 +969,7 @@ const domesticApp = createConfiguredAppVm(["famous-quotes"], {
 const domesticWelcomeHtml = domesticApp.render("state.screen = 'welcome'");
 assert.match(
   domesticWelcomeHtml,
-  /<button class="primary-button" data-action="continue-local"[^>]*>\s*开始学习\s*<\/button>/,
+  /<button class="primary-button" data-action="continue-local"[^>]*>\s*(?:(?:无需登录，)?直接)?开始学习\s*<\/button>/,
   "domestic guest learning should be the welcome screen primary action"
 );
 assert.ok(
@@ -1095,7 +1186,121 @@ assert.equal(
   "كۆپ رەھمەت",
   "the keyboard should type multi-word learning targets without dropping spaces"
 );
+const storageDeniedApp = makeElement("app");
+const storageDeniedToast = makeElement("toast");
+const storageDeniedWindow = {
+  navigator: { languages: ["en-NZ"], language: "en-NZ" },
+  setTimeout() {
+    return 1;
+  },
+  clearTimeout() {}
+};
+Object.defineProperty(storageDeniedWindow, "localStorage", {
+  get() {
+    throw new Error("localStorage access denied");
+  }
+});
+const storageDeniedContext = {
+  console,
+  document: {
+    documentElement: { lang: "" },
+    querySelector(selector) {
+      if (selector === "#app") return storageDeniedApp;
+      if (selector === "#toast") return storageDeniedToast;
+      return null;
+    },
+    addEventListener() {}
+  },
+  window: storageDeniedWindow,
+  Audio: function StorageDeniedAudio() {
+    this.pause = () => {};
+    this.play = () => Promise.resolve();
+  }
+};
+storageDeniedContext.globalThis = storageDeniedContext;
+vm.createContext(storageDeniedContext);
+for (const scriptPath of [
+  ...courseDataScriptPaths,
+  courseDataAggregatorPath,
+  ...i18nScriptPaths,
+  unitOrderPath,
+  uyghurKeyboardPath,
+  latinKeyboardPath,
+  "prototype/sentence-morphemes.js",
+  "prototype/sentence-glossary.js",
+  "prototype/progress-transfer.js",
+  "prototype/audio-controller.js",
+  "prototype/cloud-config.js",
+  feedbackPath,
+  "prototype/cloud-sync.js",
+  "prototype/app.js"
+]) {
+  vm.runInContext(fs.readFileSync(scriptPath, "utf8"), storageDeniedContext, { filename: scriptPath });
+}
+assert.ok(
+  storageDeniedApp.innerHTML.includes("Continue as guest"),
+  "guest learning should still start when browser storage access is denied"
+);
+assert.equal(
+  vm.runInContext("state.interfaceLanguage", storageDeniedContext),
+  "en",
+  "storage denial should not prevent system-language startup"
+);
 
+const savedLanguageStorage = {
+  "ana-tilim-progress": JSON.stringify({ preferences: { uiLanguage: "zh" } })
+};
+const savedLanguageContext = {
+  ...context,
+  document: {
+    ...context.document,
+    documentElement: { lang: "" },
+    addEventListener() {}
+  },
+  window: {
+    ...context.window,
+    navigator: { languages: ["en-NZ"], language: "en-NZ" },
+    localStorage: {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(savedLanguageStorage, key)
+          ? savedLanguageStorage[key]
+          : null;
+      },
+      setItem(key, value) {
+        savedLanguageStorage[key] = String(value);
+      },
+      removeItem(key) {
+        delete savedLanguageStorage[key];
+      }
+    }
+  }
+};
+savedLanguageContext.globalThis = savedLanguageContext;
+vm.createContext(savedLanguageContext);
+for (const scriptPath of courseDataScriptPaths) {
+  vm.runInContext(fs.readFileSync(scriptPath, "utf8"), savedLanguageContext, { filename: scriptPath });
+}
+for (const scriptPath of [
+  courseDataAggregatorPath,
+  ...i18nScriptPaths,
+  unitOrderPath,
+  uyghurKeyboardPath,
+  latinKeyboardPath,
+  "prototype/sentence-morphemes.js",
+  "prototype/sentence-glossary.js",
+  "prototype/progress-transfer.js",
+  "prototype/audio-controller.js",
+  "prototype/cloud-config.js",
+  feedbackPath,
+  "prototype/cloud-sync.js",
+  "prototype/app.js"
+]) {
+  vm.runInContext(fs.readFileSync(scriptPath, "utf8"), savedLanguageContext, { filename: scriptPath });
+}
+assert.equal(vm.runInContext("state.interfaceLanguage", savedLanguageContext), "zh");
+assert.equal(savedLanguageContext.document.documentElement.lang, "zh");
+
+vm.runInContext('applyInterfaceLanguage("en");', context);
 const defaultPreferences = JSON.parse(
   vm.runInContext("JSON.stringify(normalizePreferences(null))", context)
 );
@@ -1103,8 +1308,95 @@ assert.deepEqual(defaultPreferences, {
   audioAutoplay: false,
   dailyGoal: 10,
   learningReminder: false,
-  showLatin: true
+  showLatin: true,
+  uiLanguage: null
 });
+assert.equal(vm.runInContext("state.interfaceLanguage", context), "en");
+assert.equal(context.document.documentElement.lang, "en");
+assert.equal(
+  vm.runInContext('normalizePreferences({ uiLanguage: "zh" }).uiLanguage', context),
+  "zh"
+);
+assert.equal(
+  vm.runInContext('normalizePreferences({ uiLanguage: "fr" }).uiLanguage', context),
+  null
+);
+assert.equal(
+  vm.runInContext("buildCloudSnapshot().preferences.uiLanguage", context),
+  null,
+  "system detection must not become an uploaded explicit preference"
+);
+const freshDeviceCloudMerge = JSON.parse(
+  vm.runInContext(
+    `JSON.stringify(window.ANA_TILIM_CLOUD.mergeSnapshots(buildCloudSnapshot(), {
+      schemaVersion: 1,
+      modifiedAt: "2026-01-02T00:00:00.000Z",
+      preferencesUpdatedAt: "2026-01-02T00:00:00.000Z",
+      favoriteUpdatedAt: "2026-01-02T00:00:00.000Z",
+      learningProgress: { letters: {}, combos: {}, vocab: {}, practice: {}, reading: {} },
+      mistakes: [],
+      favorite: false,
+      dailyActivity: { date: "", completedIds: [] },
+      preferences: {
+        audioAutoplay: true,
+        dailyGoal: 15,
+        learningReminder: true,
+        showLatin: false,
+        uiLanguage: "zh"
+      }
+    }))`,
+    context
+  )
+);
+assert.deepEqual(
+  freshDeviceCloudMerge.preferences,
+  {
+    audioAutoplay: true,
+    dailyGoal: 15,
+    learningReminder: true,
+    showLatin: false,
+    uiLanguage: "zh"
+  },
+  "a fresh device with no explicit local preference must not replace an existing cloud preference with null"
+);
+assert.equal(
+  freshDeviceCloudMerge.preferencesUpdatedAt,
+  "2026-01-02T00:00:00.000Z",
+  "the explicit cloud preference timestamp should win over an untouched fresh-device preference"
+);
+vm.runInContext(
+  `
+    state.syncDirty = false;
+    applyInterfaceLanguage("zh", { explicit: false });
+  `,
+  context
+);
+assert.equal(vm.runInContext("state.interfaceLanguage", context), "zh");
+assert.equal(vm.runInContext("state.preferences.uiLanguage", context), null);
+assert.equal(vm.runInContext("state.syncDirty", context), false);
+assert.equal(context.document.documentElement.lang, "zh");
+assert.equal(context.window.ANA_TILIM_I18N.getLanguage(), "zh");
+vm.runInContext(
+  `
+    globalThis.languageTestCloudSync = cloudSync;
+    cloudSync = null;
+    applyInterfaceLanguage("en", { explicit: true });
+  `,
+  context
+);
+assert.equal(vm.runInContext("state.preferences.uiLanguage", context), "en");
+assert.equal(vm.runInContext("state.syncDirty", context), true);
+assert.equal(JSON.parse(storage["ana-tilim-progress"]).preferences.uiLanguage, "en");
+vm.runInContext(
+  `
+    cloudSync = globalThis.languageTestCloudSync;
+    state.preferences = normalizePreferences(null);
+    state.syncDirty = false;
+    applyInterfaceLanguage("en", { explicit: false });
+  `,
+  context
+);
+delete storage["ana-tilim-progress"];
 
 vm.runInContext("globalThis.preCloudTestState = JSON.stringify(state)", context);
 const cloudSnapshotKeys = JSON.parse(
@@ -1146,13 +1438,18 @@ vm.runInContext(
       mistakes: [],
       favorite: true,
       dailyActivity: { date: "2026-07-28", completedIds: ["letters:dot-bone:completed"] },
-      preferences: { audioAutoplay: false, dailyGoal: 10, learningReminder: false, showLatin: true }
+      preferences: { audioAutoplay: false, dailyGoal: 10, learningReminder: false, showLatin: true, uiLanguage: "zh" }
     });
   `,
   context
 );
 assert.equal(vm.runInContext("state.screen", context), "library", "cloud merge should preserve current page");
 assert.equal(vm.runInContext("state.favorite", context), true);
+assert.equal(vm.runInContext("state.preferences.uiLanguage", context), "zh");
+assert.equal(vm.runInContext("state.interfaceLanguage", context), "zh");
+assert.equal(context.document.documentElement.lang, "zh");
+assert.equal(context.window.ANA_TILIM_I18N.getLanguage(), "zh");
+assert.equal(vm.runInContext("buildCloudSnapshot().preferences.uiLanguage", context), "zh");
 assert.equal(
   vm.runInContext("state.learningProgress.letters['dot-bone'].completed", context),
   true
@@ -1270,7 +1567,8 @@ const repairedPreferences = JSON.parse(
       audioAutoplay: 1,
       dailyGoal: 99,
       learningReminder: "yes",
-      showLatin: "yes"
+      showLatin: "yes",
+      uiLanguage: "fr"
     }))`,
     context
   )
@@ -1314,7 +1612,8 @@ vm.runInContext(
       audioAutoplay: true,
       dailyGoal: 15,
       learningReminder: true,
-      showLatin: true
+      showLatin: true,
+      uiLanguage: "zh"
     };
     state.dailyActivity = { date: "2026-07-26", completedIds: ["letters:dot-bone:viewed"] };
     saveLocalProgress();
@@ -1325,7 +1624,8 @@ assert.deepEqual(savedProgress().preferences, {
   audioAutoplay: true,
   dailyGoal: 15,
   learningReminder: true,
-  showLatin: true
+  showLatin: true,
+  uiLanguage: "zh"
 });
 assert.deepEqual(savedProgress().dailyActivity, {
   date: "2026-07-26",
@@ -1349,6 +1649,10 @@ assert.equal(
 function renderState(script) {
   vm.runInContext(`${script}; render();`, context);
   return app.innerHTML;
+}
+
+function setLanguage(language) {
+  vm.runInContext(`applyInterfaceLanguage(${JSON.stringify(language)}, { explicit: true }); render();`, context);
 }
 
 function assertLearnerCopyClean(screenName) {
@@ -1375,6 +1679,7 @@ function clickDataset(dataset) {
   });
 }
 
+setLanguage("zh");
 renderState("state.screen = 'learn'");
 app.scrollTop = 420;
 clickDataset({ action: "open-unit", id: "afanti-stories" });
@@ -1539,10 +1844,712 @@ async function flushProgressImport() {
   await new Promise((resolve) => setImmediate(resolve));
 }
 
+function changeLanguageSelect(value) {
+  assert.ok(changeHandler, "change handler should be registered");
+  changeHandler({
+    target: {
+      value,
+      dataset: { action: "set-language-select" }
+    }
+  });
+}
+
 function savedProgress() {
   assert.ok(storage["ana-tilim-progress"], "local progress should be saved");
   return JSON.parse(storage["ana-tilim-progress"]);
 }
+
+const requiredGlobalMessageKeys = [
+  "nav.home", "nav.alphabet", "nav.learn", "nav.profile",
+  "language.label", "language.chinese", "language.english",
+  "welcome.title", "welcome.subtitle", "welcome.continueGuest",
+  "auth.guestTitle", "auth.guestDetail", "auth.google", "auth.signOut",
+  "home.continue", "home.today", "home.progress",
+  "settings.title", "settings.learning", "settings.audio", "settings.account",
+  "settings.reminder", "settings.showLatin", "settings.autoplay",
+  "vocab.unitTitle", "vocab.lessonWords", "vocab.lessonInstruction", "vocab.current",
+  "vocab.recognitionTitle", "vocab.chooseWordForm", "vocab.recognitionCorrect", "vocab.continueKeyboard",
+  "vocab.keyboardTitle", "vocab.keyboardPrompt", "vocab.inputAria", "vocab.keyboardCorrect",
+  "vocab.finishGroup", "vocab.completeTitle", "vocab.completeSummary", "vocab.learningPath",
+  "practice.chooseLetter", "practice.listenInstruction", "practice.repeatSteps", "practice.writingPad",
+  "practice.keyboardAria", "practice.noMistakes", "practice.results", "practice.tryAgain",
+  "common.back", "common.previous", "common.next", "common.cancel", "common.confirm",
+  "audio.play", "audio.playing", "audio.unavailable", "audio.humanRecording",
+  "error.storage", "error.cloud", "error.avatar", "progress.count"
+];
+for (const language of ["zh", "en"]) {
+  context.window.ANA_TILIM_I18N.setLanguage(language);
+  for (const key of requiredGlobalMessageKeys) {
+    assert.ok(context.window.ANA_TILIM_I18N.t(key), `${language} should define ${key}`);
+  }
+}
+
+setLanguage("zh");
+vm.runInContext(
+  `
+    state.screen = "letterWriting";
+    state.selectedUnitId = "letters";
+    state.selectedGroupId = "dot-bone";
+    state.currentLetterId = "pe";
+    state.selectedPicture = "be";
+    state.selectedListening = "te";
+    state.practiceAudioPlayed = true;
+    state.keyboardValue = "ب";
+    state.currentComboItemId = "ba";
+    state.selectedComboGroupId = "open-a";
+    state.currentVocabItemId = "yaxshimusiz";
+    state.selectedVocabGroupId = "greetings";
+    state.currentPracticeItemId = "practice-write-be";
+    state.selectedPracticeGroupId = "writing-loop";
+    state.selectedReadingUnitId = "sentence-patterns";
+    state.selectedReadingGroupId = "sentence-this-that";
+    state.practiceSpoken = true;
+    state.writingChecks = ["shape"];
+    state.showGuide = false;
+    state.favorite = true;
+    render();
+  `,
+  context
+);
+assert.ok(activeWritingCanvas, "the active handwriting exercise should initialize a real canvas surface");
+const writingCanvasBeforeLanguageSwitch = activeWritingCanvas;
+writingCanvasBeforeLanguageSwitch.dispatchPointer("pointerdown", { clientX: 40, clientY: 36 });
+writingCanvasBeforeLanguageSwitch.dispatchPointer("pointermove", { clientX: 200, clientY: 126 });
+writingCanvasBeforeLanguageSwitch.dispatchPointer("pointerup", { clientX: 200, clientY: 126 });
+writingCanvasBeforeLanguageSwitch.dispatchPointer("pointerdown", { clientX: 80, clientY: 54 });
+writingCanvasBeforeLanguageSwitch.dispatchPointer("pointermove", { clientX: 240, clientY: 144 });
+writingCanvasBeforeLanguageSwitch.dispatchPointer("pointerup", { clientX: 240, clientY: 144 });
+vm.runInContext('state.screen = "profile"; render();', context);
+const learningStateBeforeLanguageSwitch = vm.runInContext(
+  `JSON.stringify({
+    screen: state.screen,
+    selectedUnitId: state.selectedUnitId,
+    selectedGroupId: state.selectedGroupId,
+    currentLetterId: state.currentLetterId,
+    selectedPicture: state.selectedPicture,
+    selectedListening: state.selectedListening,
+    practiceAudioPlayed: state.practiceAudioPlayed,
+    keyboardValue: state.keyboardValue,
+    currentComboItemId: state.currentComboItemId,
+    selectedComboGroupId: state.selectedComboGroupId,
+    currentVocabItemId: state.currentVocabItemId,
+    selectedVocabGroupId: state.selectedVocabGroupId,
+    currentPracticeItemId: state.currentPracticeItemId,
+    selectedPracticeGroupId: state.selectedPracticeGroupId,
+    selectedReadingUnitId: state.selectedReadingUnitId,
+    selectedReadingGroupId: state.selectedReadingGroupId,
+    practiceSpoken: state.practiceSpoken,
+    writingChecks: state.writingChecks,
+    showGuide: state.showGuide,
+    favorite: state.favorite,
+    writingStrokes: state.writingStrokes
+  })`,
+  context
+);
+changeLanguageSelect("en");
+assert.equal(
+  vm.runInContext(
+    `JSON.stringify({
+      screen: state.screen,
+      selectedUnitId: state.selectedUnitId,
+      selectedGroupId: state.selectedGroupId,
+      currentLetterId: state.currentLetterId,
+      selectedPicture: state.selectedPicture,
+      selectedListening: state.selectedListening,
+      practiceAudioPlayed: state.practiceAudioPlayed,
+      keyboardValue: state.keyboardValue,
+      currentComboItemId: state.currentComboItemId,
+      selectedComboGroupId: state.selectedComboGroupId,
+      currentVocabItemId: state.currentVocabItemId,
+      selectedVocabGroupId: state.selectedVocabGroupId,
+      currentPracticeItemId: state.currentPracticeItemId,
+      selectedPracticeGroupId: state.selectedPracticeGroupId,
+      selectedReadingUnitId: state.selectedReadingUnitId,
+      selectedReadingGroupId: state.selectedReadingGroupId,
+      practiceSpoken: state.practiceSpoken,
+      writingChecks: state.writingChecks,
+      showGuide: state.showGuide,
+      favorite: state.favorite,
+      writingStrokes: state.writingStrokes
+    })`,
+    context
+  ),
+  learningStateBeforeLanguageSwitch,
+  "changing the Profile language select should preserve the current learning state"
+);
+assert.equal(vm.runInContext("state.screen", context), "profile", "Profile should remain active after changing its language select");
+assert.equal(vm.runInContext("state.interfaceLanguage", context), "en");
+assert.equal(savedProgress().preferences.uiLanguage, "en");
+vm.runInContext('state.screen = "letterWriting"; render();', context);
+assert.notEqual(
+  activeWritingCanvas,
+  writingCanvasBeforeLanguageSwitch,
+  "the preserved learning state should replace the canvas element on its next render"
+);
+assert.deepEqual(
+  activeWritingCanvas.context2d.operations
+    .filter(([operation]) => operation === "moveTo" || operation === "lineTo")
+    .map(([operation, x, y]) => [operation, Math.round(x), Math.round(y)]),
+  [
+    ["moveTo", 40, 36], ["lineTo", 200, 126],
+    ["moveTo", 80, 54], ["lineTo", 240, 144]
+  ],
+  "the replacement canvas should redraw all of the learner's existing strokes"
+);
+assert.equal(
+  Object.prototype.hasOwnProperty.call(savedProgress(), "writingStrokes"),
+  false,
+  "temporary handwriting strokes must not be added to persisted local learning progress"
+);
+assert.equal(
+  vm.runInContext("Object.prototype.hasOwnProperty.call(buildCloudSnapshot(), 'writingStrokes')", context),
+  false,
+  "temporary handwriting strokes must not be added to cloud learning snapshots"
+);
+
+clickDataset({ action: "clear-canvas" });
+vm.runInContext("render()", context);
+assert.equal(
+  activeWritingCanvas.context2d.operations.some(([operation]) => operation === "lineTo"),
+  false,
+  "clearing a handwriting pad should keep the next render empty"
+);
+
+const englishWelcomeHtml = renderState("state.screen = 'welcome'");
+includesAll(
+  englishWelcomeHtml,
+  ["Continue as guest", "Optional: sign in to sync across devices"],
+  "English welcome and optional authentication disclosure"
+);
+assert.ok(
+  !englishWelcomeHtml.includes("Local guest mode") && !englishWelcomeHtml.includes("Continue with Google"),
+  "collapsed English welcome should not render authentication controls"
+);
+const englishHomeHtml = renderState("state.screen = 'home'");
+includesAll(
+  englishHomeHtml,
+  ["Home", "Alphabet", "Learn", "Profile"],
+  "English home navigation"
+);
+assert.deepEqual(
+  ["Home", "Alphabet", "Learn", "Profile"].map((label) => englishHomeHtml.indexOf(label)),
+  ["Home", "Alphabet", "Learn", "Profile"].map((label) => englishHomeHtml.indexOf(label)).toSorted((left, right) => left - right),
+  "bottom navigation should keep Home, Alphabet, Learn, and Profile in order"
+);
+const englishProfileHtml = renderState("state.screen = 'profile'");
+includesAll(
+  englishProfileHtml,
+  [
+    'class="profile-setting-block language-setting"',
+    'id="profile-language-select"',
+    'data-action="set-language-select"',
+    '<option value="zh">Chinese</option>',
+    '<option value="en" selected>English</option>'
+  ],
+  "English Profile language select"
+);
+assert.ok(!englishProfileHtml.includes('class="language-switcher "'));
+assert.ok(englishHomeHtml.includes('class="language-switcher is-compact"'));
+
+const compactLanguageControl = vm.runInContext("languageSwitcher(true)", context);
+assert.ok(compactLanguageControl.includes('aria-label="Language"'));
+assert.equal(
+  (compactLanguageControl.match(/data-action="set-language"/g) || []).length,
+  2,
+  "the compact language control should render exactly two language buttons"
+);
+assert.equal(
+  (compactLanguageControl.match(/aria-pressed="true"/g) || []).length,
+  1,
+  "the compact language control should expose exactly one active language"
+);
+assert.ok(englishHomeHtml.includes(compactLanguageControl), "the Home greeting row should include the compact language control");
+assert.ok(
+  !renderState("state.screen = 'learn'").includes('class="language-switcher is-compact"'),
+  "course and learning-path top bars should not repeat the compact language control"
+);
+assert.ok(!compactLanguageControl.includes("🇨🇳") && !compactLanguageControl.includes("🇬🇧"), "language controls should not use flag icons");
+
+const languageSwitcherStyle = styleSource.match(/^\.language-switcher\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
+assert.ok(languageSwitcherStyle.includes("width: max-content;"), "language controls should use intrinsic width");
+const profileLanguageSelectStyle = styleSource.match(/^\.language-select\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
+assert.ok(profileLanguageSelectStyle.includes("min-height: 44px;"), "Profile language select should meet the 44px touch target");
+assert.ok(
+  /\.language-select:focus-visible\s*\{[^}]*outline:/s.test(styleSource),
+  "Profile language select should expose a visible keyboard focus indicator"
+);
+const phoneLanguageStyle = styleSource.match(/@media \(max-width: 719px\)\s*\{(?<body>[\s\S]*?)\n\}/m)?.groups?.body || "";
+assert.ok(
+  /\.brand-lockup\s*\{[^}]*min-width:\s*0;/s.test(phoneLanguageStyle),
+  "the Home brand lockup should be allowed to shrink at phone width"
+);
+assert.ok(
+  phoneLanguageStyle.includes("overflow-wrap: anywhere;"),
+  "long English headings and buttons should wrap safely on phones"
+);
+const phoneSectionTitleStyle = phoneLanguageStyle.match(/\.section-title:not\(\.unit-goal-text\)\s*\{(?<body>[^}]*)\}/m)?.groups?.body || "";
+assert.ok(
+  phoneSectionTitleStyle.includes("white-space: normal;") &&
+    phoneSectionTitleStyle.includes("text-overflow: clip;") &&
+    phoneSectionTitleStyle.includes("overflow-wrap: anywhere;"),
+  "long English section headings should override the desktop ellipsis rule on phones"
+);
+for (const selector of [
+  ".brand-name",
+  ".brand-subtitle",
+  ".section-title",
+  ".lesson-step strong",
+  ".lesson-step .caption",
+  ".combo-part-note",
+  ".profile-account-metrics span",
+  ".profile-setting-row strong",
+  ".profile-setting-row small",
+  ".nav-button"
+]) {
+  assert.match(
+    styleSource,
+    new RegExp(`html\\[lang="en"\\][^{}]*${selector.replaceAll(".", "\\.")}[^{}]*\\{[^}]*white-space:\\s*normal;`, "s"),
+    `${selector} should show complete English text`
+  );
+}
+assert.match(styleSource, /html\[lang="en"\] \.primary-button[^{]*\{[^}]*font-size:\s*clamp\(/s);
+assert.ok(!/html\[lang="en"\][^{]*\.uyghur/.test(styleSource));
+
+setLanguage("zh");
+vm.runInContext("state.screen = 'profile'; render();", context);
+changeLanguageSelect("zh");
+assert.equal(vm.runInContext("state.interfaceLanguage", context), "zh");
+assert.equal(savedProgress().preferences.uiLanguage, "zh");
+assert.equal(vm.runInContext("state.screen", context), "profile");
+assert.ok(app.innerHTML.includes('<option value="zh" selected>'));
+changeLanguageSelect("fr");
+assert.equal(vm.runInContext("state.interfaceLanguage", context), "zh");
+
+vm.runInContext("state.screen = 'home'; render();", context);
+clickDataset({ action: "set-language", language: "en" });
+assert.equal(vm.runInContext("state.interfaceLanguage", context), "en", "the language control should switch the live interface");
+assert.equal(savedProgress().preferences.uiLanguage, "en", "the language control should persist the explicit preference");
+assert.ok(app.innerHTML.includes("Good morning"), "the language control should rerender the current screen");
+assert.equal(toast.textContent, "Interface language changed to English", "the switch toast should use the newly selected language");
+clickDataset({ action: "set-language", language: "fr" });
+assert.equal(vm.runInContext("state.interfaceLanguage", context), "en", "unsupported language controls should be ignored");
+assert.equal(toast.textContent, "Interface language changed to English", "an invalid language control should not show another toast");
+assert.equal(vm.runInContext('playAudio("", "Lesson")', context), false);
+assert.equal(toast.textContent, "No audio available", "audio errors should use the selected interface language");
+
+const englishAudioChrome = vm.runInContext(
+  `
+    (() => {
+      const audio = {
+        playable: true,
+        outputPath: "./test.webm",
+        file: "test.webm",
+        statusLabel: "真人音频"
+      };
+      return [
+        renderAudioButton({ audio, label: "ب" }),
+        renderAudioWord({ value: "ب", audio }),
+        renderAudioFocus({ audio, label: "ب", title: "ب", hint: "", hideFile: true }),
+        renderAudioFocus({ audio: null, label: "ب", title: "ب", hint: "" })
+      ].join("");
+    })()
+  `,
+  context
+);
+includesAll(
+  englishAudioChrome,
+  [
+    'aria-label="Play ب"',
+    'class="speaker-icon"',
+    'aria-hidden="true"',
+    'data-action="play-audio"'
+  ],
+  "English reusable audio chrome"
+);
+assert.ok(!englishAudioChrome.includes(">Play</button>"));
+setLanguage("zh");
+const chineseSpeakerButton = vm.runInContext(
+  `renderAudioButton({ audio: { playable: true, outputPath: "./test.webm" }, label: "ب" })`,
+  context
+);
+assert.ok(chineseSpeakerButton.includes('aria-label="播放 ب"'));
+assert.ok(!chineseSpeakerButton.includes(">播放</button>"));
+setLanguage("en");
+for (const chineseChrome of ['aria-label="播放', "播放发音", ">听</button>", "真人音频", "音频待录"]) {
+  assert.ok(
+    !englishAudioChrome.includes(chineseChrome),
+    `English reusable audio chrome should not include ${chineseChrome}`
+  );
+}
+
+vm.runInContext(
+  `
+    state.selectedUnitId = "letters";
+    state.selectedGroupId = "dot-bone";
+    state.currentLetterId = "be";
+    state.selectedPicture = "pe";
+    state.selectedListening = "pe";
+    state.keyboardValue = "پ";
+    state.mistakes = [];
+    state.learningProgress = { letters: {}, combos: {}, vocab: {}, practice: {}, reading: {} };
+  `,
+  context
+);
+assert.equal(
+  vm.runInContext(`formExampleItems.find((item) => item.value === "كىتاب").meaning`, context),
+  "book",
+  "switching to English should rebuild derived form-example text"
+);
+const englishAlphabetScreens = {
+  home: renderState("state.screen = 'home'"),
+  unit: renderState("state.selectedUnitId = 'letters'; state.screen = 'unit'"),
+  group: renderState("state.screen = 'group'"),
+  letterWriting: renderState("state.screen = 'letterWriting'"),
+  picture: renderState("state.screen = 'picture'"),
+  listening: renderState("state.screen = 'listening'"),
+  letterOdd: renderState("state.screen = 'letterOdd'"),
+  letterSound: renderState("state.screen = 'letterSound'"),
+  keyboard: renderState("state.screen = 'keyboard'"),
+  complete: renderState("state.screen = 'complete'")
+};
+includesAll(
+  englishAlphabetScreens.home,
+  ["Unit 1: Meet the alphabet", "Review the Unit 1 letter groups before moving to the next unit."],
+  "English Home alphabet recommendation"
+);
+includesAll(
+  englishAlphabetScreens.unit,
+  ["Unit 1: Meet the alphabet", "32 letters grouped by similarity", "Start current lesson", "Next step", "Review this group", "Enter Unit 2"],
+  "English alphabet unit overview"
+);
+includesAll(
+  englishAlphabetScreens.group,
+  ["Play", "Consonant", "One dot below", "Isolated form", "book", "Shape", "Connections", "Writing"],
+  "English alphabet letter lesson"
+);
+includesAll(
+  englishAlphabetScreens.keyboard,
+  ["Keyboard input", "Keyboard steps", "Entered: پ", "Remove the incorrect part first", "Standard Uyghur keyboard", "Backspace", "Keep typing. The target letter is ب.", "Finish lesson"],
+  "English alphabet keyboard page"
+);
+includesAll(
+  englishAlphabetScreens.complete,
+  ["Lesson complete", "Unit 1 complete", "What you learned", "Letters", "Progress", "Mistakes in this group", "Next step", "Review this group", "Enter Unit 2", "Back to Home"],
+  "English alphabet completion page"
+);
+for (const [screenName, html] of Object.entries(englishAlphabetScreens)) {
+  if (screenName === "home") continue;
+  assert.ok(
+    !/[\u3400-\u9fff]/u.test(html),
+    `English alphabet ${screenName} screen should not contain Chinese course or interface text`
+  );
+}
+
+vm.runInContext(
+  `
+    state.selectedUnitId = "combos";
+    state.selectedComboGroupId = "connection-breaks";
+    state.currentComboItemId = "dada-connection";
+    state.selectedPicture = "reng-connection";
+    state.keyboardValue = "د";
+    state.showGuide = true;
+  `,
+  context
+);
+const englishComboScreens = {
+  lesson: renderState("state.screen = 'combo'"),
+  recognition: renderState("state.screen = 'comboRecognition'"),
+  building: renderState("state.keyboardValue = 'ب'; state.screen = 'comboBuild'"),
+  writing: renderState("state.screen = 'comboWriting'"),
+  keyboard: renderState("state.keyboardValue = 'ب'; state.screen = 'comboKeyboard'"),
+  completion: renderState("state.screen = 'comboComplete'")
+};
+includesAll(
+  englishComboScreens.lesson,
+  ["Unit 3: Basic combinations", "Letters that break connections", "Connection-break word form", "Dad; a family form of address", "Break it down", "Actual connected form", "does not connect forward", "Recognize", "Build", "Writing", "Keyboard"],
+  "English combination lesson"
+);
+includesAll(
+  englishComboScreens.recognition,
+  ["Recognize combinations", "Choose the correct combination", "Choose the word form for dada", "Try again", "Continue to keyboard"],
+  "English combination recognition"
+);
+includesAll(
+  englishComboScreens.building,
+  ["Build a combination", "Build the whole from its parts", "Current build", "Backspace", "Clear", "The target combination is دادا. You chose ب. Compare it with the ULY guide dada.", "Continue to keyboard"],
+  "English combination building"
+);
+includesAll(
+  englishComboScreens.writing,
+  ["Write a combination", "Target combination", "Hide guide", "Clear pad", "Continue to keyboard"],
+  "English combination writing"
+);
+includesAll(
+  englishComboScreens.keyboard,
+  ["Combination keyboard", "Type this combination", "Uyghur combination input", "Keyboard steps", "Remove the incorrect part first", "Standard Uyghur keyboard", "Backspace", "Keep typing. The target combination is دادا.", "Finish this group"],
+  "English combination keyboard"
+);
+includesAll(
+  englishComboScreens.completion,
+  ["Unit 3 complete", "This practice", "Combinations", "Input", "Word form", "Understanding", "Next step", "Review combinations", "Enter Unit 4", "Learning path"],
+  "English combination completion"
+);
+for (const [screenName, html] of Object.entries(englishComboScreens)) {
+  assert.ok(
+    !/[\u3400-\u9fff]/u.test(html),
+    `English combination ${screenName} screen should not contain Chinese course or interface text`
+  );
+}
+
+vm.runInContext(
+  `
+    state.selectedUnitId = "basic-phrases";
+    state.selectedVocabGroupId = "greetings";
+    state.currentVocabItemId = "yaxshimusiz";
+    state.selectedPicture = "rahmat";
+    state.keyboardValue = "ياخشى";
+  `,
+  context
+);
+const englishVocabScreens = {
+  unit: renderState("state.learningProgress.vocab.greetings = { viewed: true }; state.screen = 'unit'"),
+  lesson: renderState("state.screen = 'vocab'"),
+  recognition: renderState("state.selectedPicture = 'xeyirlik-etigen'; state.screen = 'vocabRecognition'"),
+  keyboard: renderState("state.keyboardValue = 'ياخشى'; state.screen = 'vocabKeyboard'"),
+  completion: renderState("state.screen = 'vocabComplete'")
+};
+includesAll(
+  englishVocabScreens.unit,
+  ["Unit 5: Everyday phrases and vocabulary", "Greetings", "Personal pronouns", "Family and forms of address", "Numbers", "Animals", "Learned"],
+  "English vocabulary unit overview"
+);
+includesAll(
+  englishVocabScreens.lesson,
+  ["Unit 5: Everyday phrases and vocabulary", "Greetings", "Lesson vocabulary", "Everyday greetings", "13 words", "Hello; how are you?", "Recognize", "Keyboard"],
+  "English vocabulary lesson"
+);
+includesAll(
+  englishVocabScreens.recognition,
+  ["Recognize word forms", "Choose the correct word form", "Choose the word form for yaxshimusiz", "Meaning: Hello; how are you?", "Try again", "The target word form is ياخشىمۇسىز. You chose خەيرلىك ئەتىگەن.", "Continue to keyboard"],
+  "English vocabulary recognition"
+);
+includesAll(
+  englishVocabScreens.keyboard,
+  ["Word-form keyboard", "Type this word form", "Uyghur word-form input", "Word-form shortcuts for this section", "Current word-form parts", "Keyboard steps", "Entered: ياخشى", "Standard Uyghur keyboard", "Backspace", "Keep typing. The target word form is ياخشىمۇسىز.", "Finish this group"],
+  "English vocabulary keyboard"
+);
+includesAll(
+  englishVocabScreens.completion,
+  ["Unit 5 complete", "This practice", "You recognized and typed ياخشىمۇسىز.", "Everyday greetings", "Input", "Meaning", "Understanding", "Next step", "Review vocabulary", "Enter Unit 6", "Learning path"],
+  "English vocabulary completion"
+);
+for (const [screenName, html] of Object.entries(englishVocabScreens)) {
+  assert.ok(
+    !/[\u3400-\u9fff]/u.test(html),
+    `English vocabulary ${screenName} screen should not contain Chinese learner copy`
+  );
+}
+
+const expectedListeningChoiceValues = [
+  "ئا", "ئە", "ب", "پ", "ت", "ج", "چ", "خ", "د", "ر", "ز", "ژ", "س", "ش", "غ", "ف",
+  "ق", "ك", "گ", "ڭ", "ل", "م", "ن", "ھ", "ئو", "ئۇ", "ئۆ", "ئۈ", "ۋ", "ئې", "ئى", "ي"
+];
+
+function listeningChoiceRecords(html) {
+  const strip = html.match(/<div class="alphabet-strip compact listening-choice-strip"[\s\S]*?<\/div>/)?.[0] || "";
+  return [...strip.matchAll(/<button\b[\s\S]*?aria-label="([^"]+)"[\s\S]*?<span class="uyghur">([^<]+)<\/span>[\s\S]*?<\/button>/g)]
+    .map((match) => ({ aria: match[1], text: match[2].trim() }));
+}
+
+setLanguage("zh");
+const chineseListeningChoiceRecords = listeningChoiceRecords(
+  renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'listening-loop'; state.currentPracticeItemId = 'practice-listen-be'; state.practiceAudioPlayed = true; state.selectedListening = ''")
+);
+assert.deepEqual(
+  chineseListeningChoiceRecords.map((choice) => choice.aria),
+  expectedListeningChoiceValues.map((letter, index) => `字母选项 ${index + 1}：${letter}`),
+  "all 32 Chinese listening choices should identify their one-based index and actual Uyghur letter"
+);
+assert.deepEqual(
+  chineseListeningChoiceRecords.map((choice) => choice.text),
+  expectedListeningChoiceValues,
+  "Chinese listening choice buttons should display only the Uyghur letter"
+);
+
+setLanguage("en");
+const englishPracticeScreens = {
+  listen: renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'listening-loop'; state.currentPracticeItemId = 'practice-listen-be'; state.practiceAudioPlayed = true; state.selectedListening = ''"),
+  repeat: renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'repeat-loop'; state.currentPracticeItemId = 'practice-repeat-be'; state.practiceSpoken = false"),
+  write: renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'writing-loop'; state.currentPracticeItemId = 'practice-write-be'; state.showGuide = true"),
+  keyboard: renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'keyboard-loop'; state.currentPracticeItemId = 'practice-keyboard-be'; state.keyboardValue = ''"),
+  review: renderState(`state.mistakes = [{ key: 'practice:practice-listen-be', kind: 'practice', kindLabel: '练习', targetId: 'practice-listen-be', value: 'ب', latin: 'b', source: '练习错题', note: '需要复习 ب', help: '目标线索：下方一个点。', attempts: 1 }]; state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'review-loop'; state.currentPracticeItemId = 'mistake-practice:practice-listen-be'`),
+  completion: renderState("state.screen = 'practiceComplete'; state.selectedPracticeGroupId = 'keyboard-loop'; state.currentPracticeItemId = 'practice-keyboard-be'; state.keyboardValue = 'ب'")
+};
+includesAll(
+  englishPracticeScreens.listen,
+  ["Sound recognition", "Listening letter", "Choose a letter", "Choose the letter you hear from all 32 letters", "0 / 32"],
+  "English listening practice"
+);
+const listeningChoiceStrip = englishPracticeScreens.listen.match(/<div class="alphabet-strip compact listening-choice-strip"[\s\S]*?<\/div>/)?.[0] || "";
+assert.equal((listeningChoiceStrip.match(/data-action="pick-practice"/g) || []).length, 32, "English listening practice should show all 32 answer letters");
+const englishListeningChoiceRecords = listeningChoiceRecords(englishPracticeScreens.listen);
+assert.deepEqual(
+  englishListeningChoiceRecords.map((choice) => choice.aria),
+  expectedListeningChoiceValues.map((letter, index) => `Letter choice ${index + 1}: ${letter}`),
+  "all 32 English listening choices should identify their one-based index and actual Uyghur letter"
+);
+assert.deepEqual(
+  englishListeningChoiceRecords.map((choice) => choice.text),
+  expectedListeningChoiceValues,
+  "English listening choice buttons should display only the Uyghur letter"
+);
+assert.equal((listeningChoiceStrip.match(/<small>/g) || []).length, 0, "point-identification answer choices should show letters only");
+assert.ok(!/One dot below|Three dots below|sound|hint/i.test(listeningChoiceStrip), "point-identification answer choices should not expose answer-revealing cue or hint text");
+includesAll(englishPracticeScreens.repeat, ["Repeat aloud", "Letter to repeat", "Repeat steps", "Look at the letter", "Read the hint", "Repeat softly"], "English repeat practice");
+includesAll(englishPracticeScreens.write, ["Writing", "Letter to write", "Writing pad", "Clear pad", "Hide guide", "one dot below"], "English writing practice");
+includesAll(englishPracticeScreens.keyboard, ["Keyboard", "Keyboard letter", "Standard Uyghur keyboard", "Keyboard tools", "Backspace"], "English keyboard practice");
+includesAll(englishPracticeScreens.review, ["Mistake review", "Today's review", "Mistakes this round", "Practice mistake", "Saved locally"], "English mistake review");
+includesAll(englishPracticeScreens.completion, ["Practice results", "Round target", "Practice record", "Listening", "Repeat", "Writing", "Keyboard", "Next step", "Practice another round"], "English practice completion");
+for (const [screenName, html] of Object.entries(englishPracticeScreens)) {
+  assert.ok(
+    !/[\u3400-\u9fff]/u.test(html),
+    `English practice ${screenName} screen should not contain Chinese course or interface text`
+  );
+}
+const englishViewedPracticeList = renderState("state.learningProgress.practice['listening-loop'] = { viewed: true }; state.screen = 'library'");
+assert.ok(
+  englishViewedPracticeList.includes('aria-label="Learned">✓ Learned'),
+  "English practice list should localize the learned marker after viewed progress exists"
+);
+assert.ok(
+  !englishViewedPracticeList.includes("已学") && !englishViewedPracticeList.includes("已学习"),
+  "English practice list should not show the Chinese learned marker after viewed progress exists"
+);
+assert.ok(
+  !/[\u3400-\u9fff]/u.test(englishViewedPracticeList),
+  "English practice list with viewed progress should not contain Chinese course or interface text"
+);
+
+vm.runInContext(
+  `
+    state.selectedUnitId = "grammar-basics";
+    state.selectedReadingUnitId = "grammar-basics";
+    state.selectedReadingGroupId = "grammar-word-order";
+    state.learningProgress.letters["dot-bone"] = { viewed: true };
+    state.learningProgress.reading = { "grammar-word-order": { viewed: true } };
+  `,
+  context
+);
+const englishReadingScreens = {
+  unit: renderState("state.screen = 'unit'"),
+  grammar: renderState("state.screen = 'reading'"),
+  quote: renderState("state.selectedReadingUnitId = 'famous-quotes'; state.selectedReadingGroupId = 'quote-mahmud-kashgari'; state.screen = 'reading'")
+};
+includesAll(
+  englishReadingScreens.unit,
+  ["Unit 6: Grammar basics", "Subject + object + verb", "3 grammar points", "Learned"],
+  "English reading unit overview"
+);
+includesAll(
+  englishReadingScreens.grammar,
+  ["Who + what + does what", "I read a book.", "A common Uyghur word order", "Back to lessons"],
+  "English grammar reading lesson"
+);
+includesAll(
+  englishReadingScreens.quote,
+  ["Mahmud al-Kashgari", "Language is the key to understanding a people.", "Back to lessons"],
+  "English quote reading lesson"
+);
+assert.ok(
+  !englishReadingScreens.quote.includes("About this person") && !englishReadingScreens.quote.includes("11th-century linguist"),
+  "quote lessons should omit the removed person introduction panel"
+);
+for (const [screenName, html] of Object.entries(englishReadingScreens)) {
+  assert.ok(
+    !/[\u3400-\u9fff]/u.test(html),
+    `English reading ${screenName} screen should not contain Chinese course or interface text`
+  );
+}
+
+const englishReadingExperience = vm.runInContext(
+  `[
+    currentUnitExperience("grammar-basics").recommended,
+    renderStepList("grammar-basics"),
+    renderUnitNextActions("grammar-basics"),
+    JSON.stringify(unitProgressSummaries()),
+    renderLearningMap(unitProgressSummaries()),
+    JSON.stringify(audioCoverageCategories()),
+    renderLearnedMarker("letters", "dot-bone")
+  ].join("\\n")`,
+  context
+);
+includesAll(
+  englishReadingExperience,
+  [
+    "Start with the basic grammar rules",
+    "Choose a grammar point",
+    "Learning steps",
+    "Next step",
+    "Review grammar",
+    "Enter Unit 7",
+    "Unit 1",
+    "Meet the alphabet",
+    "Learning map",
+    "Letters",
+    "Form examples",
+    "Combinations",
+    "Vocabulary",
+    "Sentences",
+    "Learned"
+  ],
+  "English reading navigation, progress, audio metadata, and learned fallbacks"
+);
+assert.ok(
+  !/[\u3400-\u9fff]/u.test(englishReadingExperience),
+  "English reading navigation, progress, audio metadata, and learned fallbacks should not contain Chinese learner copy"
+);
+const englishPracticeMistakeFeedback = vm.runInContext(
+  `itemMistakeFeedback(
+    { value: "ب", latin: "b" },
+    { value: "پ", latin: "p" },
+    t("practice.choiceTarget")
+  )`,
+  context
+);
+assert.equal(
+  englishPracticeMistakeFeedback,
+  "The target is ب. You chose پ. Compare the ULY hint b.",
+  "English practice mistake feedback should localize the conditional wrong-answer branch"
+);
+assert.ok(
+  !/[\u3400-\u9fff]/u.test(englishPracticeMistakeFeedback),
+  "English practice mistake feedback should not contain Chinese learner copy"
+);
+
+setLanguage("zh");
+assert.equal(
+  vm.runInContext(`formExampleItems.find((item) => item.value === "كىتاب").meaning`, context),
+  "书",
+  "switching back to Chinese should rebuild the original derived form-example text"
+);
+assert.equal(
+  vm.runInContext(`vocabGroups.find((group) => group.id === "greetings").items.find((item) => item.id === "yaxshimusiz").meaning`, context),
+  "你好、你好吗",
+  "switching back to Chinese should restore the original vocabulary meaning"
+);
+assert.equal(
+  vm.runInContext(`vocabGroups.find((group) => group.id === "greetings").items.find((item) => item.id === "yaxshimusiz").tip`, context),
+  "先分成 ياخشى、مۇ、سىز 三块看。",
+  "switching back to Chinese should restore the original vocabulary tip"
+);
+const restoredChineseAlphabetHtml = renderState("state.screen = 'group'");
+includesAll(
+  restoredChineseAlphabetHtml,
+  ["辅音", "下方一个点", "独立式", "书", "认形", "连接", "书写"],
+  "restored Chinese alphabet letter lesson"
+);
+
+setLanguage("zh");
 
 vm.runInContext(
   `
@@ -1564,6 +2571,10 @@ assert.deepEqual(
   JSON.parse(storage["ana-tilim-guest-progress-backup"]).snapshot.syllableMistakes,
   validSyllableMistakes,
   "guest backup should preserve the two syllable mistake buckets"
+);
+assert.equal(
+  JSON.parse(storage["ana-tilim-guest-progress-backup"]).snapshot.preferences.uiLanguage,
+  "zh"
 );
 
 storage["ana-tilim-guest-progress-backup"] = "previous-backup";
@@ -1796,6 +2807,7 @@ assert.ok(
 
 vm.runInContext("state.preferences = normalizePreferences(null)", context);
 const profileHtml = renderState("state.screen = 'profile'");
+assert.ok(profileHtml.includes("清除学习记录"));
 includesAll(
   profileHtml,
   [
@@ -2046,9 +3058,10 @@ vm.runInContext(
 const signedInProfileHtml = renderState("state.screen = 'profile'");
 includesAll(
   signedInProfileHtml,
-  ["学习记录会自动同步到云端。", "导出学习记录", "导入学习记录"],
+  ["learner@example.com", "退出登录", "学习记录会自动同步到云端。", "导出学习记录", "导入学习记录"],
   "signed-in profile cloud and manual transfer controls"
 );
+assert.ok(!signedInProfileHtml.includes("使用 Google 登录"));
 
 const storedBytesBeforeImport = '{ "screen": "home", "marker": "preserve exact bytes" }';
 storage["ana-tilim-progress"] = storedBytesBeforeImport;
@@ -2574,7 +3587,7 @@ assert.deepEqual(
 );
 assert.deepEqual(
   replacedProgress.preferences,
-  { audioAutoplay: false, dailyGoal: 10, learningReminder: false, showLatin: true },
+  { audioAutoplay: false, dailyGoal: 10, learningReminder: false, showLatin: true, uiLanguage: null },
   "missing preferences should use clean defaults"
 );
 assert.deepEqual(
@@ -2856,6 +3869,10 @@ vm.runInContext(
     state.mistakes = [{ key: "letter:be", targetId: "be" }];
     state.syllableMistakes = { connection: ["connection-01"], break: ["break-01"] };
     state.writingChecks = ["shape"];
+    state.writingStrokes = {
+      "letter:pe": [[{ x: 0.1, y: 0.2 }, { x: 0.7, y: 0.8 }]],
+      "combo:ta": [[{ x: 0.2, y: 0.3 }, { x: 0.6, y: 0.7 }]]
+    };
     state.favorite = true;
     state.selectedPicture = "be";
     state.selectedListening = "practice-listen-be";
@@ -2896,6 +3913,7 @@ const populatedLearningRecord = vm.runInContext(
     mistakes: state.mistakes,
     syllableMistakes: state.syllableMistakes,
     writingChecks: state.writingChecks,
+    writingStrokes: state.writingStrokes,
     favorite: state.favorite,
     selectedPicture: state.selectedPicture,
     selectedListening: state.selectedListening,
@@ -2926,6 +3944,11 @@ const populatedLearningRecord = vm.runInContext(
   })`,
   context
 );
+assert.equal(
+  vm.runInContext("Object.prototype.hasOwnProperty.call(learningRecordSnapshot(), 'writingStrokes')", context),
+  true,
+  "the failed-save rollback snapshot should include session handwriting strokes"
+);
 
 clickDataset({ action: "request-clear-learning" });
 includesAll(app.innerHTML, ["确认清除学习记录", "取消", "确认清除"], "clear confirmation");
@@ -2947,6 +3970,7 @@ assert.equal(
       mistakes: state.mistakes,
       syllableMistakes: state.syllableMistakes,
       writingChecks: state.writingChecks,
+      writingStrokes: state.writingStrokes,
       favorite: state.favorite,
       selectedPicture: state.selectedPicture,
       selectedListening: state.selectedListening,
@@ -2996,6 +4020,11 @@ assert.deepEqual(
   "successful clear should empty both syllable mistake buckets"
 );
 assert.equal(vm.runInContext("state.writingChecks.length", context), 0);
+assert.equal(
+  vm.runInContext("Object.keys(state.writingStrokes).length", context),
+  0,
+  "successfully clearing learning records should also clear session handwriting strokes"
+);
 assert.equal(vm.runInContext("state.favorite", context), false);
 assert.equal(vm.runInContext("state.dailyActivity.completedIds.length", context), 0);
 assert.equal(vm.runInContext("Object.keys(state.learningProgress.letters).length", context), 0);
@@ -3500,9 +4529,10 @@ includesAll(
 );
 includesAll(
   renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'famous-quotes'; state.selectedReadingGroupId = 'quote-mahmud-kashgari'"),
-  ["名人名言", "人物介绍", "11 世纪语言学家，《突厥语大词典》的作者", "reading-meaning", "语言是了解一个民族的钥匙。", "词典也能保存民族的记忆。", "学习语言，就是学习看世界的方法。"],
+  ["名人名言", "reading-meaning", "语言是了解一个民族的钥匙。", "词典也能保存民族的记忆。", "学习语言，就是学习看世界的方法。"],
   "famous quote reading lesson"
 );
+assert.ok(!app.innerHTML.includes("人物介绍") && !app.innerHTML.includes("11 世纪语言学家"), "quote pages should omit the removed person introduction");
 assert.doesNotMatch(app.innerHTML, /reading-profile-(?:facts|visual|portrait|placeholder)/, "quote pages should not show the removed portrait or fact grid");
 assertLearnerCopyClean("famous quote reading lesson");
 assert.ok(!app.innerHTML.includes("reading-lesson"), "famous quote reading lesson should not show the meaning/lesson section");
@@ -3522,7 +4552,7 @@ assert.ok(!unifiedQuoteHtml.includes("clear-medial-mim"), "the quote lesson shou
 const simpleQuoteIntroHtml = renderState(
   "state.screen = 'reading'; state.selectedReadingUnitId = 'famous-quotes'; state.selectedReadingGroupId = 'quote-yusuf-hajib'"
 );
-assert.ok(simpleQuoteIntroHtml.includes("11 世纪思想家、诗人，《福乐智慧》的作者"), "each quote page should retain its concise introduction");
+assert.ok(!simpleQuoteIntroHtml.includes("11 世纪思想家、诗人，《福乐智慧》的作者"), "all quote pages should omit person introductions");
 assert.doesNotMatch(simpleQuoteIntroHtml, /reading-profile-(?:facts|visual|portrait|placeholder)/, "all quote pages should use the same simple introduction layout");
 includesAll(
   renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'uyghur-proverbs'; state.selectedReadingGroupId = 'proverb-bilim-kuch'"),
@@ -3794,6 +4824,24 @@ assert.ok(
 );
 vm.runInContext(`letterDetails.ee.formExamples[5] = ${savedEeSeparatedMedialExample}`, context);
 
+const letterPictureHtml = renderState(
+  "state.screen = 'picture'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'; state.selectedPicture = ''"
+);
+const letterPictureChoiceGrid = letterPictureHtml.match(/<div class="choice-grid">([\s\S]*?)<\/div>\s*<button class="primary-button"/)?.[1] || "";
+assert.equal(
+  (letterPictureChoiceGrid.match(/class="choice-card letter-only-choice"/g) || []).length,
+  3,
+  "point-identification options should render every group letter as a letter-only button"
+);
+includesAll(
+  letterPictureChoiceGrid,
+  ['aria-label="字母选项 1：ب"', 'aria-label="字母选项 2：پ"', 'aria-label="字母选项 3：ت"'],
+  "point-identification accessibility names"
+);
+for (const hiddenAnswer of ["<strong>", "class=\"caption\"", "class=\"step-state\"", ">选择<", "下方一个点", "下方三个点", "上方两个点", "辅音，b", "辅音，p"]) {
+  assert.ok(!letterPictureChoiceGrid.includes(hiddenAnswer), `point-identification options should hide answer hint ${hiddenAnswer}`);
+}
+
 const letterOddHtml = renderState("state.screen = 'letterOdd'; state.selectedGroupId = 'vowels-basic'; state.currentLetterId = 'aa'; state.selectedPicture = ''");
 const letterOddChoiceGrid = letterOddHtml.match(/<div class="choice-grid">[\s\S]*?<\/div>/)?.[0] || "";
 includesAll(
@@ -3816,13 +4864,46 @@ includesAll(
 );
 assert.ok(!listeningPracticeHtml.includes('<div class="audio-strip">'), "letter listening should put the listen button in the gradient card");
 assert.ok(!listeningPracticeHtml.includes("播放：b"), "letter listening should not reveal the latin answer before choosing");
+const listeningPracticeChoiceGrid = listeningPracticeHtml.match(/<div class="choice-grid">([\s\S]*?)<\/div>\s*<button class="primary-button"/)?.[1] || "";
+assert.equal(
+  (listeningPracticeChoiceGrid.match(/class="choice-card letter-only-choice"/g) || []).length,
+  3,
+  "letter listening options should render every group letter as a letter-only button"
+);
+includesAll(
+  listeningPracticeChoiceGrid,
+  ['aria-label="字母选项 1：ب"', 'aria-label="字母选项 2：پ"', 'aria-label="字母选项 3：ت"'],
+  "letter listening accessibility names"
+);
+for (const hiddenAnswer of ["<strong>", "class=\"caption\"", "class=\"step-state\"", ">选择<", "辅音，b", "辅音，p", "字母 b", "字母 p"]) {
+  assert.ok(!listeningPracticeChoiceGrid.includes(hiddenAnswer), `letter listening options should hide answer hint ${hiddenAnswer}`);
+}
+
+setLanguage("en");
+const englishPictureAccessibilityHtml = renderState(
+  "state.screen = 'picture'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'; state.selectedPicture = ''"
+);
+const englishListeningAccessibilityHtml = renderState(
+  "state.screen = 'listening'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'; state.selectedListening = ''"
+);
+for (const [html, label] of [
+  [englishPictureAccessibilityHtml, "English point-identification accessibility names"],
+  [englishListeningAccessibilityHtml, "English letter-listening accessibility names"]
+]) {
+  includesAll(
+    html,
+    ['aria-label="Letter choice 1: ب"', 'aria-label="Letter choice 2: پ"', 'aria-label="Letter choice 3: ت"'],
+    label
+  );
+}
+setLanguage("zh");
 
 const letterSoundChoiceHtml = renderState(
   "state.screen = 'letterSound'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'; state.selectedListening = ''; state.mistakes = []"
 );
 includesAll(
   letterSoundChoiceHtml,
-  ["读音选择", "选择正确字母", "b", "audio-focus", "audio-only-focus", "letter-focus-play", ">听</button>"],
+  ["读音选择", "选择正确字母", "b", "audio-focus", "audio-only-focus", "letter-focus-play", "speaker-icon", 'aria-label="播放 ب"'],
   "letter sound-choice exercise"
 );
 for (const hiddenAudioText of ["播放或查看读音", "真人音频：", "音频待录", "音频未生成时"]) {
@@ -4152,6 +5233,18 @@ includesAll(
   renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'repeat-loop'; state.currentPracticeItemId = 'practice-repeat-aa'"),
   ["跟读步骤", "看词形", "看提示", "轻声跟读", "letter-focus-play"],
   "practice repeat lesson"
+);
+const chineseRepeatAudioStatus = vm.runInContext(
+  `practiceGroups.find((group) => group.id === "repeat-loop").items.find((item) => item.id === "practice-repeat-aa").audioStatus`,
+  context
+);
+assert.ok(
+  app.innerHTML.includes(`${chineseRepeatAudioStatus}。`),
+  "Chinese repeat audio status should restore its original full-width punctuation"
+);
+assert.ok(
+  !app.innerHTML.includes(`${chineseRepeatAudioStatus}.`),
+  "Chinese repeat audio status should not use hard-coded English punctuation"
 );
 assert.ok(!app.innerHTML.includes('<div class="audio-strip">'), "practice repeat should put the listen button in the gradient card");
 for (const removedPhrase of ["我已跟读", "跟读不评分", "练习中心", "查看结果"]) {
@@ -5019,8 +6112,8 @@ for (const [index, card] of classificationCards.entries()) {
 assert.equal(new Set(classificationAudioLabels).size, 32, "classification audio controls should have 32 unique accessible names");
 assert.match(
   vm.runInContext("renderAudioButton({ audio: null, label: 'x' })", context),
-  /aria-label="播放发音"/,
-  "existing renderAudioButton callers should retain the default accessible name"
+  /aria-label="播放 x"/,
+  "existing renderAudioButton callers should identify the pronunciation target"
 );
 vm.runInContext(
   `

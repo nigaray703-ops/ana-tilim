@@ -15,6 +15,7 @@ const indexSource = fs.readFileSync(indexPath, "utf8");
 const unitOrderScriptPattern = /<script\b[^>]*\bsrc=["']\.\/unit-order\.js(?:\?[^"']*)?["'][^>]*><\/script>/g;
 const latinKeyboardScriptPattern = /<script\b[^>]*\bsrc=["']\.\/latin-keyboard\.js(?:\?[^"']*)?["'][^>]*><\/script>/g;
 const feedbackScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/feedback\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
+const sharedI18nScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/i18n\/(?:ui-messages|alphabet-en|combo-en|vocab-en|practice-en|reading-en|course-en|runtime)\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
 const latinWritingScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/course-data\/latin-writing-data\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
 const syllableDataScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/course-data\/syllable-data\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
 const afantiDataScriptPattern = /^[ \t]*<script\b[^>]*\bsrc=["']\.\/course-data\/afanti-data\.js(?:\?[^"']*)?["'][^>]*><\/script>[ \t]*(?:\r?\n|$)/gm;
@@ -135,10 +136,28 @@ normalizedIndex = indexWithoutFeedbackScripts.slice(0, appMatchBeforeFeedback.in
   + indexWithoutFeedbackScripts.slice(appMatchBeforeFeedback.index);
 indexUpdateMessages.push("Normalized index.html: feedback.js before app.js");
 
+const indexWithoutSharedI18nScripts = normalizedIndex.replace(sharedI18nScriptPattern, "");
+const appMatchBeforeSharedI18n = appScriptPattern.exec(indexWithoutSharedI18nScripts);
+if (!appMatchBeforeSharedI18n) {
+  throw new Error("Cannot update " + indexPath + ": app.js script tag not found after i18n normalization.");
+}
+const sharedI18nScripts = [
+  '<script src="./i18n/ui-messages.js?v=20260810-unit-resume"></script>',
+  '<script src="./i18n/alphabet-en.js?v=20260809-bilingual"></script>',
+  '<script src="./i18n/combo-en.js?v=20260809-bilingual"></script>',
+  '<script src="./i18n/vocab-en.js?v=20260809-bilingual"></script>',
+  '<script src="./i18n/practice-en.js?v=20260809-bilingual"></script>',
+  '<script src="./i18n/reading-en.js?v=20260809-bilingual"></script>',
+  '<script src="./i18n/course-en.js?v=20260809-bilingual"></script>',
+  '<script src="./i18n/runtime.js?v=20260810-unit-resume"></script>'
+].map((tag) => `${appMatchBeforeSharedI18n[1]}${tag}\n`).join("");
+normalizedIndex = `${indexWithoutSharedI18nScripts.slice(0, appMatchBeforeSharedI18n.index)}${sharedI18nScripts}${indexWithoutSharedI18nScripts.slice(appMatchBeforeSharedI18n.index)}`;
+indexUpdateMessages.push("Normalized index.html: shared i18n runtime before app.js");
+
 const sharedCacheReferences = [
   {
     pattern: /(\bhref=["']\.\/styles\.css)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260810-unit-maps$2",
+    replacement: "$1?v=20260810-unit-resume$2",
     label: "styles.css"
   },
   {
@@ -148,7 +167,7 @@ const sharedCacheReferences = [
   },
   {
     pattern: /(\bsrc=["']\.\/progress-transfer\.js)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260810-unit-maps$2",
+    replacement: "$1?v=20260810-unit-resume$2",
     label: "progress-transfer.js"
   },
   {
@@ -163,7 +182,7 @@ const sharedCacheReferences = [
   },
   {
     pattern: /(\bsrc=["']\.\/app\.js)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260810-unit-maps$2",
+    replacement: "$1?v=20260810-unit-resume$2",
     label: "app.js"
   }
 ];
