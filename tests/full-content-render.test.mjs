@@ -138,6 +138,7 @@ for (const unitId of [
   "letters",
   "latin-keyboard-writing",
   "combos",
+  "syllable-training",
   "basic-phrases",
   ...courseData.readingUnits.map((unit) => unit.id)
 ]) {
@@ -295,6 +296,68 @@ for (const group of courseData.comboGroups) {
   }
 }
 
+for (const [syllableItemIndex, item] of courseData.syllableTraining.twoLetterItems.entries()) {
+  renderState(
+    {
+      screen: "syllableWarmup",
+      selectedUnitId: "syllable-training",
+      syllableItemIndex,
+      syllableShowStandard: false
+    },
+    `syllable warmup parts ${item.id}`,
+    item.parts[0]
+  );
+  assert.ok(app.innerHTML.includes(item.parts[1]), `${item.id} should show both real source parts`);
+  assert.ok(!app.innerHTML.includes("data-syllable-standard"), `${item.id} should hide its standard before combine`);
+  assert.ok(!app.innerHTML.includes(item.audioPath), `${item.id} should hide its real audio before combine`);
+
+  renderState(
+    {
+      screen: "syllableWarmup",
+      selectedUnitId: "syllable-training",
+      syllableItemIndex,
+      syllableShowStandard: true
+    },
+    `syllable warmup revealed ${item.id}`,
+    item.standard
+  );
+  assert.ok(app.innerHTML.includes(item.audioPath), `${item.id} should reveal its existing combo audio mapping`);
+}
+
+for (const [ruleIndex, rule] of courseData.syllableTraining.rules.entries()) {
+  for (const [exerciseIndex, exercise] of rule.exercises.entries()) {
+    renderState(
+      {
+        screen: "syllableRules",
+        selectedUnitId: "syllable-training",
+        syllableRuleId: rule.id,
+        syllableAnswerId: "",
+        syllableAnswerSubmitted: false,
+        learningProgress: {
+          latinWriting: {},
+          letters: {},
+          combos: {},
+          syllableTraining: {
+            [rule.id]: { completedIds: rule.exercises.slice(0, exerciseIndex).map((item) => item.id) }
+          },
+          vocab: {},
+          practice: {},
+          reading: {}
+        }
+      },
+      `syllable rule ${ruleIndex + 1} exercise ${exercise.id}`,
+      exercise.prompt
+    );
+    assert.ok(app.innerHTML.includes(rule.title), `${exercise.id} should remain directly under its own rule card`);
+    assert.ok(app.innerHTML.includes(exercise.answer), `${exercise.id} should show its approved answer option`);
+    assert.ok(app.innerHTML.includes(exercise.distractor), `${exercise.id} should show its approved distractor`);
+    assert.ok(
+      !app.innerHTML.includes(courseData.syllableTraining.rules[ruleIndex + 1]?.title || "__no_next_rule__"),
+      `${exercise.id} should not expose a later locked rule`
+    );
+  }
+}
+
 for (const group of courseData.vocabGroups) {
   for (const item of group.items) {
     renderState(
@@ -327,6 +390,6 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
   }
 }
 
-assert.equal(renderCount, 668, "full UI audit should render every retained main screen, real 2/4/8 form state, lesson item, reading group, and practice item");
+assert.equal(renderCount, 705, "full UI audit should render every retained main screen, syllable warmup/rule state, real 2/4/8 form state, lesson item, reading group, and practice item");
 
 console.log(`full content render checks passed (${renderCount} states)`);

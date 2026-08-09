@@ -27,6 +27,7 @@ function snapshot(overrides = {}) {
       latinWriting: {},
       letters: {},
       combos: {},
+      syllableTraining: {},
       vocab: {},
       practice: {},
       reading: {}
@@ -37,6 +38,43 @@ function snapshot(overrides = {}) {
     preferences: {},
     ...overrides
   };
+}
+
+{
+  const merged = mergeSnapshots(
+    snapshot({
+      learningProgress: {
+        syllableTraining: {
+          "two-letter-warmup": { completedIds: ["warmup-ba", "warmup-pa"] },
+          "vowel-nucleus": { completedIds: ["vowel-nucleus-01"], completed: false }
+        }
+      }
+    }),
+    snapshot({
+      modifiedAt: "2026-07-28T01:00:00.000Z",
+      learningProgress: {
+        syllableTraining: {
+          "two-letter-warmup": { completedIds: ["warmup-pa", "warmup-ta"] },
+          "vowel-nucleus": { completedIds: ["vowel-nucleus-02"], completed: true }
+        }
+      }
+    })
+  );
+  assert.deepEqual(
+    [...merged.learningProgress.syllableTraining["two-letter-warmup"].completedIds],
+    ["warmup-ba", "warmup-pa", "warmup-ta"],
+    "cloud merge should retain unique source-backed warmup submissions"
+  );
+  assert.deepEqual(
+    [...merged.learningProgress.syllableTraining["vowel-nucleus"].completedIds],
+    ["vowel-nucleus-01", "vowel-nucleus-02"],
+    "cloud merge should union rule submissions instead of overwriting them"
+  );
+  assert.equal(
+    merged.learningProgress.syllableTraining["vowel-nucleus"].completed,
+    true,
+    "cloud merge should preserve syllable rule completion"
+  );
 }
 
 {

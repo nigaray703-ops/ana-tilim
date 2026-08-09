@@ -2,7 +2,7 @@
   "use strict";
 
   const SCHEMA_VERSION = 1;
-  const PROGRESS_SCOPES = ["latinWriting", "letters", "combos", "vocab", "practice", "reading"];
+  const PROGRESS_SCOPES = ["latinWriting", "letters", "combos", "syllableTraining", "vocab", "practice", "reading"];
 
   class UnsupportedCloudSchemaError extends Error {
     constructor(version) {

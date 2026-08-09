@@ -51,7 +51,7 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260809-scheherazade-font",
+  "./styles.css?v=20260809-syllable-ui",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
@@ -66,12 +66,12 @@ const expectedVersionedAssets = [
   "./latin-keyboard.js?v=20260809-latin-qwerty",
   "./sentence-morphemes.js?v=20260809-word-formation",
   "./sentence-glossary.js?v=20260809-word-formation",
-  "./progress-transfer.js?v=20260808-local-progress",
+  "./progress-transfer.js?v=20260809-syllable-progress",
   "./audio-controller.js?v=20260728-uly-transliteration",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
-  "./cloud-sync.js?v=20260729-password-auth",
-  "./app.js?v=20260809-responsive-dark-keyboard"
+  "./cloud-sync.js?v=20260809-syllable-progress",
+  "./app.js?v=20260809-syllable-ui"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -81,7 +81,7 @@ const versionedAppAssets = [
 assert.deepEqual(
   versionedAppAssets,
   expectedVersionedAssets,
-  "every prototype CSS, course-data, audio controller, and app asset should use the listening release cache version"
+  "every prototype CSS, course-data, audio controller, and app asset should use its reviewed release cache version"
 );
 assert.ok(styleSource.includes("--content-max-width: 1120px;"), "prototype should define a tablet-friendly content width");
 assert.ok(styleSource.includes("--nav-rail-width: 96px;"), "prototype should define a tablet side navigation width");
@@ -534,13 +534,14 @@ assert.deepEqual(globalUnits.map(({ id, title }) => [id, title]), [
   ["letters", "第一单元：认识字母"],
   ["latin-keyboard-writing", "第二单元：拉丁键盘与字母书写强化"],
   ["combos", "第三单元：基础组合"],
-  ["basic-phrases", "第四单元：日常用语与词汇"],
-  ["grammar-basics", "第五单元：语法入门"],
-  ["sentence-patterns", "第六单元：基础句型"],
-  ["dialogue-theater", "第七单元：对话小剧场"],
-  ["short-stories", "第八单元：小故事"],
-  ["uyghur-proverbs", "第九单元：维吾尔谚语"],
-  ["famous-quotes", "第十单元：名人名言"]
+  ["syllable-training", "第四单元：拼读与音节训练营"],
+  ["basic-phrases", "第五单元：日常用语与词汇"],
+  ["grammar-basics", "第六单元：语法入门"],
+  ["sentence-patterns", "第七单元：基础句型"],
+  ["dialogue-theater", "第八单元：对话小剧场"],
+  ["short-stories", "第九单元：小故事"],
+  ["uyghur-proverbs", "第十单元：维吾尔谚语"],
+  ["famous-quotes", "第十一单元：名人名言"]
 ]);
 
 function createConfiguredAppVm(hiddenUnitIds, { includeLatinKeyboard = true } = {}) {
@@ -665,22 +666,23 @@ assert.deepEqual(domesticUnits.map(({ id, title }) => [id, title]), [
   ["letters", "第一单元：认识字母"],
   ["latin-keyboard-writing", "第二单元：拉丁键盘与字母书写强化"],
   ["combos", "第三单元：基础组合"],
-  ["basic-phrases", "第四单元：日常用语与词汇"],
-  ["grammar-basics", "第五单元：语法入门"],
-  ["sentence-patterns", "第六单元：基础句型"],
-  ["dialogue-theater", "第七单元：对话小剧场"],
-  ["short-stories", "第八单元：小故事"],
-  ["uyghur-proverbs", "第九单元：维吾尔谚语"]
+  ["syllable-training", "第四单元：拼读与音节训练营"],
+  ["basic-phrases", "第五单元：日常用语与词汇"],
+  ["grammar-basics", "第六单元：语法入门"],
+  ["sentence-patterns", "第七单元：基础句型"],
+  ["dialogue-theater", "第八单元：对话小剧场"],
+  ["short-stories", "第九单元：小故事"],
+  ["uyghur-proverbs", "第十单元：维吾尔谚语"]
 ]);
 const domesticLearningPath = domesticApp.render("state.screen = 'learn'");
 assert.equal(
   (domesticLearningPath.match(/class="lesson-step"/g) || []).length,
-  9,
-  "domestic learning path should render only the nine visible course cards"
+  10,
+  "domestic learning path should render only the ten visible course cards"
 );
 assert.ok(!domesticLearningPath.includes("名人名言"), "domestic learning path should hide famous quotes");
 assert.ok(
-  domesticLearningPath.indexOf("第八单元：小故事") < domesticLearningPath.indexOf("第九单元：维吾尔谚语"),
+  domesticLearningPath.indexOf("第九单元：小故事") < domesticLearningPath.indexOf("第十单元：维吾尔谚语"),
   "domestic learning path should keep visible cards in edition order"
 );
 assert.deepEqual(
@@ -694,12 +696,13 @@ assert.deepEqual(
     ["第一单元", "认识字母"],
     ["第二单元", "拉丁键盘与字母书写强化"],
     ["第三单元", "基础组合"],
-    ["第四单元", "日常用语与词汇"],
-    ["第五单元", "语法入门"],
-    ["第六单元", "基础句型"],
-    ["第七单元", "对话小剧场"],
-    ["第八单元", "小故事"],
-    ["第九单元", "维吾尔谚语"]
+    ["第四单元", "拼读与音节训练营"],
+    ["第五单元", "日常用语与词汇"],
+    ["第六单元", "语法入门"],
+    ["第七单元", "基础句型"],
+    ["第八单元", "对话小剧场"],
+    ["第九单元", "小故事"],
+    ["第十单元", "维吾尔谚语"]
   ],
   "domestic progress summaries should include only visible units"
 );
@@ -726,17 +729,17 @@ assert.ok(
   "combo completion should render the visible combo ordinal"
 );
 assert.ok(
-  shiftedApp.render("state.screen = 'vocab'").includes("第三单元：日常用语与词汇"),
+  shiftedApp.render("state.screen = 'vocab'").includes("第四单元：日常用语与词汇"),
   "vocabulary lesson should render its visible title"
 );
 assert.ok(
-  shiftedApp.render("state.screen = 'vocabComplete'").includes("第三单元完成"),
+  shiftedApp.render("state.screen = 'vocabComplete'").includes("第四单元完成"),
   "vocabulary completion should render its visible ordinal"
 );
 assert.ok(
   shiftedApp.render(
     "state.screen = 'reading'; state.selectedReadingUnitId = 'grammar-basics'; state.selectedReadingGroupId = 'grammar-word-order'"
-  ).includes("第四单元：语法入门"),
+  ).includes("第五单元：语法入门"),
   "reading lesson should render its visible unit title"
 );
 
@@ -771,13 +774,14 @@ assert.deepEqual(
     ["第一单元", "认识字母"],
     ["第二单元", "拉丁键盘与字母书写强化"],
     ["第三单元", "基础组合"],
-    ["第四单元", "日常用语与词汇"],
-    ["第五单元", "语法入门"],
-    ["第六单元", "基础句型"],
-    ["第七单元", "对话小剧场"],
-    ["第八单元", "小故事"],
-    ["第九单元", "维吾尔谚语"],
-    ["第十单元", "名人名言"]
+    ["第四单元", "拼读与音节训练营"],
+    ["第五单元", "日常用语与词汇"],
+    ["第六单元", "语法入门"],
+    ["第七单元", "基础句型"],
+    ["第八单元", "对话小剧场"],
+    ["第九单元", "小故事"],
+    ["第十单元", "维吾尔谚语"],
+    ["第十一单元", "名人名言"]
   ]
 );
 
@@ -1186,7 +1190,7 @@ assert.equal(vm.runInContext("state.selectedGroupId", context), "dot-bone");
 assert.equal(vm.runInContext("state.currentLetterId", context), "be");
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress)", context)),
-  { latinWriting: {}, letters: {}, combos: {}, vocab: {}, practice: {}, reading: {} }
+  { latinWriting: {}, letters: {}, combos: {}, syllableTraining: {}, vocab: {}, practice: {}, reading: {} }
 );
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(state.mistakes)", context)),
@@ -1699,6 +1703,26 @@ const semanticInvalidCases = [
     /learningProgress\.combos 包含未知 ID: unknown-combo-group/
   ],
   [
+    "syllable progress key",
+    { learningProgress: { syllableTraining: { "unknown-syllable-section": { completed: true } } } },
+    /learningProgress\.syllableTraining 包含未知 ID: unknown-syllable-section/
+  ],
+  [
+    "syllable submitted item key",
+    { learningProgress: { syllableTraining: { "two-letter-warmup": { completedIds: ["warmup-unknown"] } } } },
+    /learningProgress\.syllableTraining\.two-letter-warmup\.completedIds 包含未知 ID: warmup-unknown/
+  ],
+  [
+    "premature syllable completion",
+    { learningProgress: { syllableTraining: { "vowel-nucleus": { completedIds: ["vowel-nucleus-01"], completed: true } } } },
+    /learningProgress\.syllableTraining\.vowel-nucleus 未提交全部题目，不能标记完成/
+  ],
+  [
+    "out-of-order syllable submission",
+    { learningProgress: { syllableTraining: { "vowel-nucleus": { completedIds: ["vowel-nucleus-02"] } } } },
+    /learningProgress\.syllableTraining\.vowel-nucleus\.completedIds 必须按课程顺序提交/
+  ],
+  [
     "vocabulary progress key",
     { learningProgress: { vocab: { "unknown-vocab-group": { completed: true } } } },
     /learningProgress\.vocab 包含未知 ID: unknown-vocab-group/
@@ -2097,8 +2121,10 @@ vm.runInContext(
       showLatin: true
     };
     state.learningProgress = {
+      latinWriting: {},
       letters: { "dot-bone": { completed: true } },
       combos: { "open-a": { completed: true } },
+      syllableTraining: { "two-letter-warmup": { completedIds: ["warmup-ba"] } },
       vocab: { greetings: { completed: true } },
       practice: { "listening-loop": { completed: true } },
       reading: { "sentence-this-that": { completed: true } }
@@ -2114,6 +2140,12 @@ vm.runInContext(
     state.selectedListening = "practice-listen-be";
     state.practiceAudioPlayed = true;
     state.keyboardValue = "ب";
+    state.syllableSectionId = "syllable-rules";
+    state.syllableItemIndex = 7;
+    state.syllableRuleId = "single-consonant-boundary";
+    state.syllableAnswerId = "distractor";
+    state.syllableShowStandard = true;
+    state.syllableAnswerSubmitted = true;
     state.practiceSpoken = true;
     state.currentLetterId = "pe";
     state.selectedGroupId = "tail-bowl";
@@ -2143,6 +2175,12 @@ const populatedLearningRecord = vm.runInContext(
     selectedListening: state.selectedListening,
     practiceAudioPlayed: state.practiceAudioPlayed,
     keyboardValue: state.keyboardValue,
+    syllableSectionId: state.syllableSectionId,
+    syllableItemIndex: state.syllableItemIndex,
+    syllableRuleId: state.syllableRuleId,
+    syllableAnswerId: state.syllableAnswerId,
+    syllableShowStandard: state.syllableShowStandard,
+    syllableAnswerSubmitted: state.syllableAnswerSubmitted,
     practiceSpoken: state.practiceSpoken,
     currentLetterId: state.currentLetterId,
     selectedGroupId: state.selectedGroupId,
@@ -2183,6 +2221,12 @@ assert.equal(
       selectedListening: state.selectedListening,
       practiceAudioPlayed: state.practiceAudioPlayed,
       keyboardValue: state.keyboardValue,
+      syllableSectionId: state.syllableSectionId,
+      syllableItemIndex: state.syllableItemIndex,
+      syllableRuleId: state.syllableRuleId,
+      syllableAnswerId: state.syllableAnswerId,
+      syllableShowStandard: state.syllableShowStandard,
+      syllableAnswerSubmitted: state.syllableAnswerSubmitted,
       practiceSpoken: state.practiceSpoken,
       currentLetterId: state.currentLetterId,
       selectedGroupId: state.selectedGroupId,
@@ -2216,6 +2260,7 @@ assert.equal(vm.runInContext("state.favorite", context), false);
 assert.equal(vm.runInContext("state.dailyActivity.completedIds.length", context), 0);
 assert.equal(vm.runInContext("Object.keys(state.learningProgress.letters).length", context), 0);
 assert.equal(vm.runInContext("Object.keys(state.learningProgress.combos).length", context), 0);
+assert.equal(vm.runInContext("Object.keys(state.learningProgress.syllableTraining).length", context), 0);
 assert.equal(vm.runInContext("Object.keys(state.learningProgress.vocab).length", context), 0);
 assert.equal(vm.runInContext("Object.keys(state.learningProgress.practice).length", context), 0);
 assert.equal(vm.runInContext("Object.keys(state.learningProgress.reading).length", context), 0);
@@ -2223,6 +2268,12 @@ assert.equal(vm.runInContext("state.selectedPicture", context), "");
 assert.equal(vm.runInContext("state.selectedListening", context), "");
 assert.equal(vm.runInContext("state.practiceAudioPlayed", context), false);
 assert.equal(vm.runInContext("state.keyboardValue", context), "");
+assert.equal(vm.runInContext("state.syllableSectionId", context), "two-letter-warmup");
+assert.equal(vm.runInContext("state.syllableItemIndex", context), 0);
+assert.equal(vm.runInContext("state.syllableRuleId", context), "vowel-nucleus");
+assert.equal(vm.runInContext("state.syllableAnswerId", context), "");
+assert.equal(vm.runInContext("state.syllableShowStandard", context), false);
+assert.equal(vm.runInContext("state.syllableAnswerSubmitted", context), false);
 assert.equal(vm.runInContext("state.practiceSpoken", context), false);
 assert.equal(vm.runInContext("state.currentLetterId", context), "be");
 assert.equal(vm.runInContext("state.selectedGroupId", context), "dot-bone");
@@ -2539,13 +2590,14 @@ includesAll(
   renderState("state.screen = 'learn'"),
   [
     "第二单元：拉丁键盘与字母书写强化",
-    "第四单元：日常用语与词汇",
-    "第五单元：语法入门",
-    "第六单元：基础句型",
-    "第七单元：对话小剧场",
-    "第八单元：小故事",
-    "第九单元：维吾尔谚语",
-    "第十单元：名人名言",
+    "第四单元：拼读与音节训练营",
+    "第五单元：日常用语与词汇",
+    "第六单元：语法入门",
+    "第七单元：基础句型",
+    "第八单元：对话小剧场",
+    "第九单元：小故事",
+    "第十单元：维吾尔谚语",
+    "第十一单元：名人名言",
     "问候、人称代词、称呼、数字、动物"
   ],
   "learning path with reading units"
@@ -2553,7 +2605,7 @@ includesAll(
 assertLearnerCopyClean("learning path");
 assert.ok(!app.innerHTML.includes("听说与书写强化"), "learning path should remove the old third practice unit");
 assert.ok(!app.innerHTML.includes("第三单元：字母连接规律"), "learning path should remove the separate connection unit");
-assert.equal((app.innerHTML.match(/class="lesson-step"/g) || []).length, 10, "learning path should show ten learning units");
+assert.equal((app.innerHTML.match(/class="lesson-step"/g) || []).length, 11, "learning path should show eleven learning units");
 assert.ok(!app.innerHTML.includes("基础词组与主题词"), "learning path should not show the removed vocabulary title");
 assert.ok(!app.innerHTML.includes("选择训练组、完成一个目标、查看本轮结果"), "learning unit cards should not show the full step explanation");
 assert.ok(!app.innerHTML.includes("完整字母目录"), "learning path should not duplicate the full alphabet table");
@@ -3059,7 +3111,7 @@ assert.equal(savedProgress().learningProgress.combos["open-a"].completed, true, 
 
 includesAll(
   renderState("state.screen = 'vocab'; state.selectedVocabGroupId = 'family'; state.currentVocabItemId = 'ana-family'"),
-  ["第四单元：日常用语与词汇", "本课词汇", "vocab-subgroup", "ئانا", 'class="latin-transliteration vocab-latin"', ">ana<", "妈妈、母亲", "点维语词播放；点右侧解释选择词"],
+  ["第五单元：日常用语与词汇", "本课词汇", "vocab-subgroup", "ئانا", 'class="latin-transliteration vocab-latin"', ">ana<", "妈妈、母亲", "点维语词播放；点右侧解释选择词"],
   "vocab lesson"
 );
 assertLearnerCopyClean("vocab lesson");
@@ -3316,6 +3368,115 @@ renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = '
 assert.ok(!app.innerHTML.includes("输入正确。本轮键盘练习完成。"), "practice random keyboard should not show correct-input feedback");
 assert.ok(!app.innerHTML.includes("对比正确写法"), "practice keyboard entry should not show writing comparison");
 assert.ok(!app.innerHTML.includes("完成后评价"), "practice keyboard entry should not show writing self-check");
+
+const visibleUnitIdsWithSyllableTraining = JSON.parse(
+  vm.runInContext("JSON.stringify(learningUnits.map((unit) => unit.id))", context)
+);
+assert.equal(visibleUnitIdsWithSyllableTraining.length, 11, "global edition should expose the new syllable unit atomically");
+assert.deepEqual(
+  visibleUnitIdsWithSyllableTraining.slice(0, 5),
+  ["letters", "latin-keyboard-writing", "combos", "syllable-training", "basic-phrases"],
+  "syllable training should sit after combinations and before daily vocabulary"
+);
+
+const combosBeforeSyllableTraining = JSON.parse(
+  vm.runInContext("JSON.stringify(state.learningProgress.combos)", context)
+);
+const syllableUnitHtml = renderState(
+  "state.screen = 'unit'; state.selectedUnitId = 'syllable-training'; state.syllableItemIndex = 0; state.syllableShowStandard = false"
+);
+assert.match(
+  syllableUnitHtml,
+  /data-action="go"[^>]*data-target="syllableWarmup"[^>]*>\s*进入当前学习\s*<\/button>/,
+  "the visible syllable unit should link to a real warmup screen"
+);
+clickDataset({ action: "go", target: "syllableWarmup" });
+assert.equal(vm.runInContext("state.screen", context), "syllableWarmup", "the syllable unit entry must not be dead");
+includesAll(app.innerHTML, ["两字母热身", "warmup-ba", "ب", "ا", "合起来读", "1 / 10"], "syllable warmup parts");
+assert.match(app.innerHTML, /data-syllable-part="0"[\s\S]*?data-syllable-part="1"/, "warmup should expose the two source parts in order");
+assert.doesNotMatch(app.innerHTML, /data-syllable-standard/, "warmup must hide the standard form before the learner combines it");
+assert.doesNotMatch(app.innerHTML, /data-action="play-audio"/, "warmup must hide audio before the combine action");
+
+clickDataset({ action: "combine-syllable-warmup" });
+includesAll(
+  app.innerHTML,
+  [
+    'data-syllable-standard="warmup-ba"',
+    "با",
+    "ba",
+    'data-audio-src="./assets/audio/human/combos/human_combo_ba.webm"',
+    "真人音频"
+  ],
+  "revealed syllable warmup"
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.syllableTraining['two-letter-warmup'])", context)),
+  { completedIds: ["warmup-ba"] },
+  "combining the first item should save only the source-backed warmup item"
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.combos)", context)),
+  combosBeforeSyllableTraining,
+  "syllable warmup progress must not mutate combination progress"
+);
+
+for (let index = 1; index < 10; index += 1) {
+  clickDataset({ action: "next-syllable-warmup" });
+  assert.equal(vm.runInContext("state.syllableItemIndex", context), index, `warmup should advance to item ${index + 1}`);
+  assert.doesNotMatch(app.innerHTML, /data-syllable-standard/, "each next warmup should start with the answer hidden");
+  clickDataset({ action: "combine-syllable-warmup" });
+}
+assert.equal(
+  vm.runInContext("state.learningProgress.syllableTraining['two-letter-warmup'].completed", context),
+  true,
+  "all ten revealed source items should complete the warmup"
+);
+assert.equal(
+  vm.runInContext("state.learningProgress.syllableTraining['two-letter-warmup'].completedIds.length", context),
+  10,
+  "warmup completion should retain all ten stable item IDs"
+);
+assert.match(
+  app.innerHTML,
+  /data-action="go"[^>]*data-target="syllableRules"[^>]*>\s*继续：音节划分策略\s*<\/button>/,
+  "the final warmup should link to the real rule screen"
+);
+
+clickDataset({ action: "go", target: "syllableRules" });
+assert.equal(vm.runInContext("state.screen", context), "syllableRules");
+includesAll(
+  app.innerHTML,
+  ["音节划分策略", "先找元音中心", "入门范围", "با 有几个候选音节中心？", "1 / 4", "1 / 4 条规则"],
+  "first syllable rule and its first exercise"
+);
+assert.ok(!app.innerHTML.includes("一个辅音时先尝试向后分"), "the next rule must remain locked until all four current exercises are submitted");
+assert.equal((app.innerHTML.match(/data-action="pick-syllable-rule-answer"/g) || []).length, 2, "each exercise should offer one approved answer and one distractor");
+
+clickDataset({ action: "pick-syllable-rule-answer", answerId: "distractor" });
+clickDataset({ action: "submit-syllable-rule-answer" });
+includesAll(app.innerHTML, ["再看一次规则", "这是帮助初学者找候选音节的方法", "继续下一题"], "wrong syllable answer feedback");
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.syllableTraining['vowel-nucleus'])", context)),
+  { completedIds: ["vowel-nucleus-01"] },
+  "a wrong submitted answer should count as submitted without falsely completing the rule"
+);
+clickDataset({ action: "next-syllable-rule-exercise" });
+assert.ok(app.innerHTML.includes("بە 有几个候选音节中心？"), "the learner should be able to continue after a wrong answer");
+
+for (let exerciseIndex = 1; exerciseIndex < 4; exerciseIndex += 1) {
+  clickDataset({ action: "pick-syllable-rule-answer", answerId: "answer" });
+  clickDataset({ action: "submit-syllable-rule-answer" });
+  if (exerciseIndex < 3) clickDataset({ action: "next-syllable-rule-exercise" });
+}
+assert.equal(
+  vm.runInContext("state.learningProgress.syllableTraining['vowel-nucleus'].completed", context),
+  true,
+  "the rule should complete after all four submissions regardless of one wrong answer"
+);
+includesAll(app.innerHTML, ["4 / 4", "下一条规则"], "completed first syllable rule");
+clickDataset({ action: "next-syllable-rule" });
+includesAll(app.innerHTML, ["一个辅音时先尝试向后分", "仅用于下列已核对例子", "1 / 4", "2 / 4 条规则"], "second syllable rule");
+assert.ok(!app.innerHTML.includes("辅音群内部逐词判断"), "the third rule must remain locked while the second rule is active");
 
 const latinUnitHtml = renderState(
   "state.screen = 'unit'; state.selectedUnitId = 'latin-keyboard-writing'; state.latinKeyboardValue = ''"
@@ -3846,6 +4007,21 @@ assert.match(
   styleSource,
   /\.phone-shell\s*\{[^}]*width:\s*100%;[^}]*overflow:\s*hidden;/s,
   "the app shell should prevent page-level horizontal scrolling"
+);
+assert.match(
+  styleSource,
+  /\.syllable-parts\s*\{[^}]*display:\s*flex;[^}]*justify-content:\s*center;[^}]*max-width:\s*100%;/s,
+  "two-letter parts should stay centered and contained on mobile"
+);
+assert.match(
+  styleSource,
+  /\.syllable-rule-options\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/s,
+  "rule answer choices should use a balanced two-column layout when space permits"
+);
+assert.match(
+  styleSource,
+  /@media \(max-width: 560px\)[\s\S]*?\.syllable-rule-options\s*\{[^}]*grid-template-columns:\s*1fr;/s,
+  "rule answer choices should stack on narrow phones"
 );
 assert.match(
   styleSource,
@@ -4508,7 +4684,7 @@ assert.equal(
 
 includesAll(
   renderState("state.screen = 'vocabComplete'"),
-  ["下一步建议", "复习主题词", "进入第五单元"],
+  ["下一步建议", "复习主题词", "进入第六单元"],
   "unit three vocabulary complete"
 );
 

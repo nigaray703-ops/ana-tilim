@@ -103,6 +103,32 @@ if (latinKeyboardScripts.length === 0) {
   indexUpdateMessages.push("Index already loads latin-keyboard.js");
 }
 
+const sharedCacheReferences = [
+  {
+    pattern: /(\bhref=["']\.\/styles\.css)(?:\?[^"']*)?(["'])/g,
+    replacement: "$1?v=20260809-syllable-ui$2",
+    label: "styles.css"
+  },
+  {
+    pattern: /(\bsrc=["']\.\/progress-transfer\.js)(?:\?[^"']*)?(["'])/g,
+    replacement: "$1?v=20260809-syllable-progress$2",
+    label: "progress-transfer.js"
+  },
+  {
+    pattern: /(\bsrc=["']\.\/app\.js)(?:\?[^"']*)?(["'])/g,
+    replacement: "$1?v=20260809-syllable-ui$2",
+    label: "app.js"
+  }
+];
+
+for (const { pattern, replacement, label } of sharedCacheReferences) {
+  const updatedIndex = normalizedIndex.replace(pattern, replacement);
+  if (updatedIndex !== normalizedIndex) {
+    normalizedIndex = updatedIndex;
+    indexUpdateMessages.push(`Normalized index.html cache token: ${label}`);
+  }
+}
+
 function preflightTargetPath(targetPath) {
   if (fs.existsSync(targetPath)) {
     fs.readFileSync(targetPath);

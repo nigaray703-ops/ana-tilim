@@ -116,6 +116,7 @@ const excludedBeforeSync = new Map(excludedFiles.map((relativePath) => [
 ]));
 const domesticIndexFixture = `<!doctype html>
 <html>
+  <head><link rel="stylesheet" href="./styles.css?v=old-syllable"></head>
   <body>
     <main data-domestic-marker="keep"></main>
     <script src="./course-data/alphabet-data.js?v=cn-alphabet"></script>
@@ -294,6 +295,7 @@ const duplicateUnitOrderTargetPath = path.join(os.tmpdir(), "ana-tilim-cn-core-s
 fs.mkdirSync(duplicateUnitOrderTargetPath, { recursive: true });
 fs.writeFileSync(path.join(duplicateUnitOrderTargetPath, "index.html"), `<!doctype html>
 <html>
+  <head><link rel="stylesheet" href="./styles.css?v=old-syllable"></head>
   <body>
     <main data-duplicate-domestic-marker="keep"></main>
     <script src="./course-data/alphabet-data.js?v=cn-alphabet"></script>
@@ -304,6 +306,7 @@ fs.writeFileSync(path.join(duplicateUnitOrderTargetPath, "index.html"), `<!docty
     <script src="./unit-order.js?v=old-before"></script>
     <script src="./latin-keyboard.js?v=old-before"></script>
     <script src="./domestic-duplicate-fixture.js?v=1"></script>
+    <script src="./progress-transfer.js?v=old-syllable"></script>
     <script src="./app.js?v=cn-app"></script>
     <script src="./course-data/latin-writing-data.js?v=old-after"></script>
     <script src="./course-data/syllable-data.js?v=old-after"></script>
@@ -353,6 +356,18 @@ assert.equal(
   normalizedDuplicateUnitOrderTags[0][0],
   '<script src="./unit-order.js?v=20260809-edition-unit-order"></script>',
   "duplicate normalization should use the standard unit-order tag"
+);
+assert.ok(
+  normalizedDuplicateIndex.includes('href="./styles.css?v=20260809-syllable-ui"'),
+  "sync should cache-bust the copied syllable UI styles"
+);
+assert.ok(
+  normalizedDuplicateIndex.includes('src="./progress-transfer.js?v=20260809-syllable-progress"'),
+  "sync should cache-bust the copied syllable progress validator"
+);
+assert.ok(
+  normalizedDuplicateIndex.includes('src="./app.js?v=20260809-syllable-ui"'),
+  "sync should cache-bust the copied syllable UI app"
 );
 assert.ok(
   normalizedDuplicateIndex.indexOf("./course-data/alphabet-data.js") < normalizedDuplicateIndex.indexOf("./course-data/latin-writing-data.js")
