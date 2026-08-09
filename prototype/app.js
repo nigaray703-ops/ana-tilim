@@ -7820,25 +7820,25 @@ function renderProfile() {
 
 function feedbackCategoryLabel(category) {
   return {
-    content: "课程内容",
-    audio: "音频",
-    display: "界面显示",
-    account: "账号与数据",
-    other: "其他"
-  }[category] || "其他";
+    content: t("feedback.categoryContent"),
+    audio: t("feedback.categoryAudio"),
+    display: t("feedback.categoryDisplay"),
+    account: t("feedback.categoryAccount"),
+    other: t("feedback.categoryOther")
+  }[category] || t("feedback.categoryOther");
 }
 
 function feedbackStatusLabel(status) {
   return {
-    new: "新反馈",
-    reviewed: "已查看",
-    resolved: "已解决"
-  }[status] || "新反馈";
+    new: t("feedback.statusNew"),
+    reviewed: t("feedback.statusReviewed"),
+    resolved: t("feedback.statusResolved")
+  }[status] || t("feedback.statusNew");
 }
 
 function renderFeedbackRecord(record) {
-  const createdAt = typeof record.created_at === "string" ? record.created_at.replace("T", " ").slice(0, 16) : "时间未提供";
-  const editionLabel = record.edition === "cn" ? "国内版" : "海外版";
+  const createdAt = typeof record.created_at === "string" ? record.created_at.replace("T", " ").slice(0, 16) : t("feedback.timeUnavailable");
+  const editionLabel = record.edition === "cn" ? t("feedback.editionCn") : t("feedback.editionGlobal");
   return `
     <article class="card feedback-record-card">
       <div class="section-row">
@@ -7849,8 +7849,8 @@ function renderFeedbackRecord(record) {
         <span class="step-state">${escapeHtml(createdAt)}</span>
       </div>
       <p class="feedback-record-message">${escapeHtml(record.message)}</p>
-      <p class="muted">联系方式：${escapeHtml(record.contact || "未提供")}</p>
-      <div class="feedback-status-actions" role="group" aria-label="反馈处理状态">
+      <p class="muted">${escapeHtml(t("feedback.contactLine", { contact: record.contact || t("feedback.notProvided") }))}</p>
+      <div class="feedback-status-actions" role="group" aria-label="${escapeHtml(t("feedback.statusGroup"))}">
         ${["new", "reviewed", "resolved"].map((status) => `
           <button
             class="setting-segment ${record.status === status ? "active" : ""}"
@@ -7875,11 +7875,11 @@ function renderFeedback() {
     state.feedbackAdminUserId === cloudAccountUserId()
   );
   const categoryOptions = [
-    ["content", "课程内容"],
-    ["audio", "音频"],
-    ["display", "界面显示"],
-    ["account", "账号与数据"],
-    ["other", "其他"]
+    ["content", t("feedback.categoryContent")],
+    ["audio", t("feedback.categoryAudio")],
+    ["display", t("feedback.categoryDisplay")],
+    ["account", t("feedback.categoryAccount")],
+    ["other", t("feedback.categoryOther")]
   ];
   const submitStatus = state.feedbackSubmitMessage
     ? `<p class="feedback-submit-status ${state.feedbackSubmitPhase}" role="status">${escapeHtml(state.feedbackSubmitMessage)}</p>`
@@ -7889,53 +7889,53 @@ function renderFeedback() {
     : `
       <article class="card feedback-admin-card">
         <div class="section-row">
-          <div><p class="caption">私密后台</p><h2 class="section-title">反馈记录</h2></div>
-          <span class="step-state">仅授权账号</span>
+          <div><p class="caption">${t("feedback.privateAdmin")}</p><h2 class="section-title">${t("feedback.records")}</h2></div>
+          <span class="step-state">${t("feedback.authorizedOnly")}</span>
         </div>
-        <p class="muted">系统会在服务器端核对当前账号；其他登录账号不能读取记录。</p>
+        <p class="muted">${t("feedback.adminDetail")}</p>
         <button class="secondary-button" data-action="load-feedback-records" type="button" ${state.feedbackAdminPhase === "loading" ? "disabled" : ""}>
-          ${state.feedbackAdminPhase === "loading" ? "正在核对权限…" : "查看反馈记录"}
+          ${state.feedbackAdminPhase === "loading" ? t("feedback.checkingAccess") : t("feedback.viewRecords")}
         </button>
-        ${state.feedbackAdminPhase === "denied" ? '<p class="feedback-submit-status error" role="status">当前账号没有查看权限。</p>' : ""}
-        ${state.feedbackAdminPhase === "error" ? '<p class="feedback-submit-status error" role="status">记录暂时无法读取，请稍后重试。</p>' : ""}
+        ${state.feedbackAdminPhase === "denied" ? `<p class="feedback-submit-status error" role="status">${t("feedback.accessDenied")}</p>` : ""}
+        ${state.feedbackAdminPhase === "error" ? `<p class="feedback-submit-status error" role="status">${t("feedback.recordsUnavailable")}</p>` : ""}
       </article>
       ${authorizedAdminView
-        ? `<section class="stack feedback-record-list" aria-label="私密反馈记录">
-            ${state.feedbackRecords.length ? state.feedbackRecords.map(renderFeedbackRecord).join("") : '<article class="card"><p class="muted">目前没有反馈记录。</p></article>'}
+        ? `<section class="stack feedback-record-list" aria-label="${escapeHtml(t("feedback.privateRecords"))}">
+            ${state.feedbackRecords.length ? state.feedbackRecords.map(renderFeedbackRecord).join("") : `<article class="card"><p class="muted">${t("feedback.noRecords")}</p></article>`}
           </section>`
         : ""}
     `;
 
   return screen(
     `
-      ${topBar("意见反馈", "有问题可以直接告诉我", "", '<button class="back-button" data-action="go" data-target="profile" type="button" aria-label="返回我的">←</button>')}
+      ${topBar(t("feedback.title"), t("feedback.subtitle"), "", `<button class="back-button" data-action="go" data-target="profile" type="button" aria-label="${escapeHtml(t("feedback.backAria"))}">←</button>`)}
       <section class="stack wide-gap feedback-layout">
         <article class="card feedback-form-card">
           <div>
-            <p class="caption">匿名也可以提交</p>
-            <h2 class="section-title">告诉我哪里需要修改</h2>
-            <p class="muted">允许匿名提交。反馈会私密保存，并通知负责人。暂不支持附件，请不要填写密码或其他敏感信息。</p>
+            <p class="caption">${t("feedback.caption")}</p>
+            <h2 class="section-title">${t("feedback.heading")}</h2>
+            <p class="muted">${t("feedback.description")}</p>
           </div>
           <div class="feedback-field-grid">
             <label class="feedback-field">
-              <span>反馈类型</span>
+              <span>${t("feedback.type")}</span>
               <select id="feedback-category">
                 ${categoryOptions.map(([value, label]) => `<option value="${value}" ${draft.category === value ? "selected" : ""}>${label}</option>`).join("")}
               </select>
             </label>
             <label class="feedback-field">
-              <span>反馈内容</span>
-              <textarea id="feedback-message" maxlength="2000" rows="7" placeholder="请说明在哪个页面、看到了什么问题，以及你希望怎样修改。">${escapeHtml(draft.message)}</textarea>
-              <small>10–2000 个字</small>
+              <span>${t("feedback.details")}</span>
+              <textarea id="feedback-message" maxlength="2000" rows="7" placeholder="${escapeHtml(t("feedback.detailsPlaceholder"))}">${escapeHtml(draft.message)}</textarea>
+              <small>${t("feedback.range")}</small>
             </label>
             <label class="feedback-field">
-              <span>可选联系方式</span>
-              <input id="feedback-contact" type="text" maxlength="120" value="${escapeHtml(draft.contact)}" placeholder="如需回复，可填写邮箱；也可以留空匿名提交" />
+              <span>${t("feedback.optionalContact")}</span>
+              <input id="feedback-contact" type="text" maxlength="120" value="${escapeHtml(draft.contact)}" placeholder="${escapeHtml(t("feedback.contactPlaceholder"))}" />
             </label>
           </div>
           ${submitStatus}
           <button class="primary-button" data-action="submit-feedback" type="button" ${state.feedbackSubmitPhase === "sending" ? "disabled" : ""}>
-            ${state.feedbackSubmitPhase === "sending" ? "正在提交…" : "提交反馈"}
+            ${state.feedbackSubmitPhase === "sending" ? t("feedback.submitting") : t("feedback.submit")}
           </button>
         </article>
         ${adminPanel}
@@ -8136,28 +8136,30 @@ document.addEventListener("click", (event) => {
       });
     } catch (error) {
       state.feedbackSubmitPhase = "error";
-      state.feedbackSubmitMessage = error?.message || "请检查反馈内容";
+      state.feedbackSubmitMessage = i18n.getLanguage() === "en"
+        ? t("feedback.checkContent")
+        : error?.message || t("feedback.checkContent");
       render({ persist: false });
       return;
     }
     state.feedbackDraft = normalizedDraft;
     state.feedbackSubmitPhase = "sending";
-    state.feedbackSubmitMessage = "正在私密提交…";
+    state.feedbackSubmitMessage = t("feedback.submittingPrivate");
     render({ persist: false });
     Promise.resolve()
       .then(() => {
-        if (!feedbackClient) throw new Error("反馈服务尚未连接");
+        if (!feedbackClient) throw new Error(t("feedback.serviceUnavailable"));
         return feedbackClient.submit(normalizedDraft);
       })
       .then(() => {
         state.feedbackDraft = { category: normalizedDraft.category, message: "", contact: "" };
         state.feedbackSubmitPhase = "success";
-        state.feedbackSubmitMessage = "反馈已收到，谢谢你帮助我们改进。";
+        state.feedbackSubmitMessage = t("feedback.received");
         render({ persist: false });
       })
       .catch((error) => {
         state.feedbackSubmitPhase = "error";
-        state.feedbackSubmitMessage = error?.message || "提交失败，请稍后重试";
+        state.feedbackSubmitMessage = error?.message || t("feedback.submitFailed");
         render({ persist: false });
       });
     return;
