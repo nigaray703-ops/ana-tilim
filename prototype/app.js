@@ -745,6 +745,7 @@ const state = {
   latinVowelComparisonIndex: 0,
   latinDictationIndex: 0,
   latinDictationRevealed: false,
+  letterWritingFormIndex: 0,
   latinWritingForm: 0,
   latinWritingLetterId: "aa",
   latinWritingGuideVisible: true,
@@ -2301,12 +2302,6 @@ function practiceKeyboardChoices(item) {
   return choices;
 }
 
-const writingCheckOptions = [
-  { id: "shape", label: "主体稳定" },
-  { id: "dots", label: "点位正确" },
-  { id: "spacing", label: "连接清楚" }
-];
-
 function renderWritingCoach({ value, parts, hint, mode = "letter" }) {
   const partText = parts && parts.length > 1 ? parts.join(" → ") : value;
   const startText = mode === "letter" ? "先看主体轮廓，再决定点的位置。" : `拆分描摹：${partText}`;
@@ -2317,13 +2312,13 @@ function renderWritingCoach({ value, parts, hint, mode = "letter" }) {
       <div class="lesson-point-list">
         <div class="lesson-point"><strong>起笔</strong><span>${startText}</span></div>
         <div class="lesson-point"><strong>方向</strong><span>从右往左写，先主体后点位，最后检查连接。</span></div>
-        <div class="lesson-point"><strong>自查</strong><span>${hint}</span></div>
+        <div class="lesson-point"><strong>提醒</strong><span>${hint}</span></div>
       </div>
     </article>
   `;
 }
 
-function renderWritingComparison({ value, parts, forms = [] }) {
+function renderWritingComparison({ value, parts, forms = [], selectedIndex = 0 }) {
   const comparisonItems = forms.length
     ? forms.map((form) => ({ label: form.label, value: form.value }))
     : [
@@ -2335,19 +2330,26 @@ function renderWritingComparison({ value, parts, forms = [] }) {
     <article class="card writing-comparison-card">
       <div class="section-row">
         <div>
-          <p class="caption">对比正确写法</p>
+          <p class="caption">选择一种写法临摹</p>
           <h2 class="section-title"><span class="uyghur">${displayStandaloneLetterGlyph(value)}</span></h2>
         </div>
         <span class="step-state">${comparisonItems.length} 项</span>
       </div>
-      <div class="writing-example-grid">
+      <div class="writing-form-selector" role="group" aria-label="选择要临摹的字母写法">
         ${comparisonItems
           .map(
-            (item) => `
-              <div class="writing-example">
-                <span>${item.label}</span>
-                <strong class="uyghur">${displayLetterFormGlyph(item.value)}</strong>
-              </div>
+            (item, index) => `
+              <button
+                class="writing-form-option ${index === selectedIndex ? "active" : ""}"
+                data-action="select-letter-writing-form"
+                data-letter-writing-form-option
+                data-form-index="${index}"
+                type="button"
+                aria-pressed="${index === selectedIndex}"
+              >
+                <span>${escapeHtml(item.label)}</span>
+                <strong class="uyghur">${escapeHtml(displayLetterFormGlyph(item.value))}</strong>
+              </button>
             `
           )
           .join("")}
@@ -2361,14 +2363,21 @@ function renderWritingCanvas(value, label = "手写板", options = {}) {
   const fallbackMessage = options.fallbackMessage || "";
   const guideVisible = typeof options.guideVisible === "boolean" ? options.guideVisible : state.showGuide;
   const latinWritingHooks = options.latinWritingHooks === true;
+  const letterWritingHooks = options.letterWritingHooks === true;
+  const guideGlyph = letterWritingHooks ? displayLetterFormGlyph(value) : displayStandaloneLetterGlyph(value);
 
   return `
     <div
       class="writing-pad ${guideVisible ? "" : "hide-guide"}"
       aria-label="${escapeHtml(label)}"
       ${latinWritingHooks ? "data-latin-writing-pad" : ""}
+      ${letterWritingHooks ? "data-letter-writing-pad" : ""}
     >
-      <span class="uyghur guide" ${latinWritingHooks ? "data-latin-writing-guide" : ""}>${escapeHtml(displayStandaloneLetterGlyph(value))}</span>
+      <span
+        class="uyghur guide"
+        ${latinWritingHooks ? "data-latin-writing-guide" : ""}
+        ${letterWritingHooks ? "data-letter-writing-guide" : ""}
+      >${escapeHtml(guideGlyph)}</span>
       <canvas
         class="writing-canvas"
         data-writing-canvas
@@ -2388,44 +2397,13 @@ function renderWritingCanvas(value, label = "手写板", options = {}) {
   `;
 }
 
-function renderWritingSelfCheck() {
-  const checkedCount = writingCheckOptions.filter((item) => state.writingChecks.includes(item.id)).length;
-
-  return `
-    <article class="card writing-self-check-card">
-      <div class="section-row">
-        <div>
-          <p class="caption">完成后评价</p>
-          <h2 class="section-title">自查完成 ${checkedCount} / ${writingCheckOptions.length}</h2>
-        </div>
-        <span class="step-state">${checkedCount === writingCheckOptions.length ? "完成" : "自查"}</span>
-      </div>
-      <div class="writing-check-grid">
-        ${writingCheckOptions
-          .map(
-            (item) => `
-              <button
-                class="writing-check ${state.writingChecks.includes(item.id) ? "active" : ""}"
-                data-action="toggle-writing-check"
-                data-id="${item.id}"
-                type="button"
-              >
-                ${item.label}
-              </button>
-            `
-          )
-          .join("")}
-      </div>
-    </article>
-  `;
-}
-
 function resetPracticeState() {
   state.selectedPicture = "";
   state.selectedListening = "";
   state.practiceAudioPlayed = false;
   state.keyboardValue = "";
   state.keyboardShift = false;
+  state.letterWritingFormIndex = 0;
   state.writingChecks = [];
 }
 
@@ -4392,7 +4370,7 @@ function renderGroupLesson() {
 
         <div class="letter-focus">
           ${renderAudioButton({ audio, label: letter.letter, className: "letter-focus-play" })}
-          <div>
+          <div class="letter-focus-copy">
             <div class="uyghur letter-big">${displayStandaloneLetterGlyph(letter.letter)}</div>
             <p class="caption">${letter.type}</p>
             ${renderLatinTransliteration(letter.latin, "letter-focus-latin")}
@@ -4456,6 +4434,9 @@ function renderGroupLesson() {
 
 function renderLetterWriting() {
   const letter = currentLetter();
+  const selectedFormIndex = Math.max(0, Math.min(state.letterWritingFormIndex, letter.forms.length - 1));
+  const selectedForm = letter.forms[selectedFormIndex] || letter.forms[0];
+  state.letterWritingFormIndex = selectedFormIndex;
 
   return screen(
     `
@@ -4470,7 +4451,10 @@ function renderLetterWriting() {
           <div class="section-row">
             <div>
               <p class="caption">目标字母</p>
-              <h2 class="section-title">描摹 <span class="uyghur">${displayStandaloneLetterGlyph(letter.letter)}</span></h2>
+              <h2 class="section-title">
+                描摹 <span data-letter-writing-target-label>${escapeHtml(selectedForm.label)}</span>
+                <span class="uyghur" data-letter-writing-target-glyph>${escapeHtml(displayLetterFormGlyph(selectedForm.value))}</span>
+              </h2>
             </div>
             <button class="ghost-button" data-action="toggle-guide" type="button">
               ${state.showGuide ? "隐藏参考" : "显示参考"}
@@ -4483,11 +4467,14 @@ function renderLetterWriting() {
           hint: letter.writingHint,
           mode: "letter"
         })}
-        ${renderWritingCanvas(letter.letter, "字母手写板")}
+        ${renderWritingCanvas(selectedForm.value, `${selectedForm.label} 字母手写板`, {
+          letterWritingHooks: true
+        })}
         ${renderWritingComparison({
           value: letter.letter,
           parts: [letter.letter],
-          forms: letter.forms
+          forms: letter.forms,
+          selectedIndex: selectedFormIndex
         })}
         <div class="tool-row">
           <button class="secondary-button" data-action="clear-canvas" type="button">清空画布</button>
@@ -4495,7 +4482,6 @@ function renderLetterWriting() {
             ${state.showGuide ? "隐藏参考" : "显示参考"}
           </button>
         </div>
-        ${renderWritingSelfCheck()}
         <div class="feedback">
           ${letter.writingHint}
         </div>
@@ -8289,21 +8275,38 @@ document.addEventListener("click", (event) => {
     return;
   }
 
-  if (action === "toggle-writing-check") {
-    const checkId = button.dataset.id;
-    if (state.writingChecks.includes(checkId)) {
-      state.writingChecks = state.writingChecks.filter((item) => item !== checkId);
-    } else {
-      state.writingChecks = [...state.writingChecks, checkId].slice(0, writingCheckOptions.length);
+  if (action === "select-letter-writing-form") {
+    const forms = currentLetter().forms;
+    const requestedIndex = Number.parseInt(button.dataset.formIndex || "0", 10);
+    const nextIndex = Number.isInteger(requestedIndex)
+      ? Math.max(0, Math.min(requestedIndex, forms.length - 1))
+      : 0;
+    const nextForm = forms[nextIndex] || forms[0];
+    state.letterWritingFormIndex = nextIndex;
+    const guide = document.querySelector("[data-letter-writing-guide]");
+    if (guide) {
+      guide.textContent = displayLetterFormGlyph(nextForm.value);
     }
-    if (
-      state.screen === "practiceSession" &&
-      currentPracticeGroup().mode === "write" &&
-      writingCheckOptions.every((item) => state.writingChecks.includes(item.id))
-    ) {
-      markProgress("practice", state.selectedPracticeGroupId, "write");
+    const targetLabel = document.querySelector("[data-letter-writing-target-label]");
+    const targetGlyph = document.querySelector("[data-letter-writing-target-glyph]");
+    if (targetLabel) {
+      targetLabel.textContent = nextForm.label;
     }
-    render();
+    if (targetGlyph) {
+      targetGlyph.textContent = displayLetterFormGlyph(nextForm.value);
+    }
+    document.querySelectorAll("[data-letter-writing-form-option]").forEach((option) => {
+      const selected = Number.parseInt(option.dataset.formIndex || "-1", 10) === nextIndex;
+      option.classList.toggle("active", selected);
+      option.setAttribute("aria-pressed", String(selected));
+    });
+    document.querySelectorAll("[data-writing-canvas]").forEach((canvas) => {
+      canvas.setAttribute("aria-label", `${nextForm.label} 字母手写板`);
+    });
+    const writingPad = document.querySelector("[data-letter-writing-pad]");
+    if (writingPad) {
+      writingPad.setAttribute("aria-label", `${nextForm.label} 字母手写板`);
+    }
     return;
   }
 

@@ -54,7 +54,7 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260810-quote-names",
+  "./styles.css?v=20260810-letter-writing",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
@@ -77,7 +77,7 @@ const expectedVersionedAssets = [
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260809-syllable-review",
-  "./app.js?v=20260810-quote-names"
+  "./app.js?v=20260810-letter-writing"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -91,6 +91,21 @@ assert.deepEqual(
 );
 assert.ok(styleSource.includes("--content-max-width: 1120px;"), "prototype should define a tablet-friendly content width");
 assert.ok(styleSource.includes("--nav-rail-width: 96px;"), "prototype should define a tablet side navigation width");
+assert.match(
+  styleSource,
+  /\.writing-form-selector\s*\{[^}]*display:\s*flex;[^}]*flex-wrap:\s*nowrap;[^}]*overflow-x:\s*auto;/s,
+  "letter writing forms should stay in one horizontally scrollable row"
+);
+assert.match(
+  styleSource,
+  /\.letter-focus-copy\s*\{[^}]*grid-template-rows:\s*minmax\(68px,\s*auto\)\s+auto\s+auto;/s,
+  "large letter, category, and ULY should occupy separate stable rows"
+);
+assert.match(
+  styleSource,
+  /\.form-example-shape strong\s*\{[^}]*min-height:\s*52px;[^}]*place-items:\s*center;/s,
+  "every real 2, 4, or 8 form glyph should stay vertically inside its example cell"
+);
 for (const phrase of [
   "prototype/course-data.js",
   "prototype/course-data/alphabet-data.js",
@@ -380,8 +395,13 @@ const latinWritingComparisonRegion = makeElement("latin-writing-comparison-regio
 latinWritingComparisonRegion.hidden = true;
 const latinWritingCanvasFallback = makeElement("latin-writing-canvas-fallback");
 latinWritingCanvasFallback.hidden = true;
+const letterWritingGuide = makeElement("letter-writing-guide");
+const letterWritingPad = makeElement("letter-writing-pad");
+const letterWritingTargetLabel = makeElement("letter-writing-target-label");
+const letterWritingTargetGlyph = makeElement("letter-writing-target-glyph");
 let latinWritingFormTabsForTest = [];
 let latinWritingCanvasOnlyForTest = [];
+let letterWritingFormOptionsForTest = [];
 let writingCanvasesForTest = [];
 let clickHandler = null;
 let keydownHandler = null;
@@ -457,12 +477,17 @@ const context = {
       if (selector === "[data-latin-writing-comparison-region]") return latinWritingComparisonRegion;
       if (selector === "[data-latin-writing-canvas]") return writingCanvasesForTest[0] || null;
       if (selector === "#latin-writing-canvas-fallback") return latinWritingCanvasFallback;
+      if (selector === "[data-letter-writing-guide]") return letterWritingGuide;
+      if (selector === "[data-letter-writing-pad]") return letterWritingPad;
+      if (selector === "[data-letter-writing-target-label]") return letterWritingTargetLabel;
+      if (selector === "[data-letter-writing-target-glyph]") return letterWritingTargetGlyph;
       return null;
     },
     querySelectorAll(selector) {
       if (selector === "[data-writing-canvas]") return writingCanvasesForTest;
       if (selector === "[data-latin-writing-form-tab]") return latinWritingFormTabsForTest;
       if (selector === "[data-latin-writing-canvas-only]") return latinWritingCanvasOnlyForTest;
+      if (selector === "[data-letter-writing-form-option]") return letterWritingFormOptionsForTest;
       return [];
     },
     addEventListener(eventName, handler) {
@@ -3762,11 +3787,67 @@ includesAll(app.innerHTML, ["ئا", "目标是 ئا", "你选了 ئە"], "dynami
 renderState("state.screen = 'letterWriting'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'");
 includesAll(
   app.innerHTML,
-  ["书写步骤", "writing-canvas", "清空画布", "起笔", "方向", "对比正确写法", "完成后评价", "点位正确"],
+  ["书写步骤", "writing-canvas", "清空画布", "起笔", "方向", "选择一种写法临摹", "data-letter-writing-guide", "data-letter-writing-form-option"],
   "letter writing coach"
 );
-clickDataset({ action: "toggle-writing-check", id: "dots" });
-includesAll(app.innerHTML, ["自查完成 1 / 3"], "letter writing self check");
+for (const removedSelfCheckCopy of ["完成后评价", "自查完成", "主体稳定", "点位正确", "连接清楚", "toggle-writing-check"]) {
+  assert.ok(!app.innerHTML.includes(removedSelfCheckCopy), `letter writing should remove ${removedSelfCheckCopy}`);
+}
+const allLetterWritingLayouts = vm.runInContext(
+  `allUnitOneLetters().map((letter) => {
+    const group = groupForLetter(letter.id);
+    state.selectedGroupId = group.id;
+    state.currentLetterId = letter.id;
+    state.letterWritingFormIndex = 0;
+    const html = renderLetterWriting();
+    return {
+      id: letter.id,
+      formCount: letter.forms.length,
+      optionCount: (html.match(/data-letter-writing-form-option/g) || []).length,
+      hasSelfCheck: /完成后评价|自查完成|主体稳定|点位正确|连接清楚/.test(html)
+    };
+  })`,
+  context
+);
+assert.equal(allLetterWritingLayouts.length, 32, "letter writing should cover all 32 letters");
+assert.deepEqual(
+  [...new Set(allLetterWritingLayouts.map((item) => item.formCount))].sort((a, b) => a - b),
+  [2, 4, 8],
+  "all 32 letters should retain their real 2, 4, or 8 form counts"
+);
+for (const layout of allLetterWritingLayouts) {
+  assert.equal(layout.optionCount, layout.formCount, `${layout.id} should render every real form as one selectable option`);
+  assert.equal(layout.hasSelfCheck, false, `${layout.id} should remove the old self-check block`);
+}
+
+renderState("state.screen = 'letterWriting'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'; state.letterWritingFormIndex = 0");
+const writingCanvasBeforeFormSwitch = makeWritingCanvas();
+writingCanvasesForTest = [writingCanvasBeforeFormSwitch];
+letterWritingFormOptionsForTest = vm.runInContext(
+  "currentLetter().forms.map((form, index) => Object.assign({ dataset: { formIndex: String(index) } }, { classList: null }))",
+  context
+).map((item, index) => {
+  const option = makeElement(`letter-writing-form-${index}`);
+  option.dataset.formIndex = item.dataset.formIndex;
+  return option;
+});
+const appWritesBeforeFormSwitch = appHtmlWriteCount;
+const canvasCallsBeforeFormSwitch = writingCanvasBeforeFormSwitch.calls.length;
+const expectedThirdFormGlyph = vm.runInContext("displayLetterFormGlyph(currentLetter().forms[2].value)", context);
+clickDataset({ action: "select-letter-writing-form", formIndex: "2" });
+assert.equal(vm.runInContext("state.letterWritingFormIndex", context), 2, "clicking a form should select that stable form index");
+assert.equal(letterWritingGuide.textContent, expectedThirdFormGlyph, "clicking a form should replace the faint tracing guide");
+assert.equal(letterWritingTargetLabel.textContent, vm.runInContext("currentLetter().forms[2].label", context), "target heading should name the newly selected form");
+assert.equal(letterWritingTargetGlyph.textContent, expectedThirdFormGlyph, "target heading should show the newly selected glyph");
+assert.equal(appHtmlWriteCount, appWritesBeforeFormSwitch, "form switching should update locally without replacing the page");
+assert.equal(writingCanvasesForTest[0], writingCanvasBeforeFormSwitch, "form switching should preserve the live Canvas node");
+assert.equal(writingCanvasBeforeFormSwitch.calls.length, canvasCallsBeforeFormSwitch, "form switching should preserve existing strokes");
+assert.equal(letterWritingFormOptionsForTest[2].getAttribute("aria-pressed"), "true", "selected form should expose its pressed state");
+assert.equal(letterWritingFormOptionsForTest[0].getAttribute("aria-pressed"), "false", "previous form should clear its pressed state");
+assert.equal(writingCanvasBeforeFormSwitch.getAttribute("aria-label"), `${vm.runInContext("currentLetter().forms[2].label", context)} 字母手写板`, "Canvas accessible name should follow the selected form");
+assert.equal(letterWritingPad.getAttribute("aria-label"), `${vm.runInContext("currentLetter().forms[2].label", context)} 字母手写板`, "writing pad accessible name should follow the selected form");
+writingCanvasesForTest = [];
+letterWritingFormOptionsForTest = [];
 clickDataset({ action: "go", target: "picture" });
 clickDataset({ action: "pick-picture", id: "be" });
 clickDataset({ action: "go", target: "listening" });

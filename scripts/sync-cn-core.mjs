@@ -125,7 +125,7 @@ if (latinKeyboardScripts.length === 0) {
 const sharedCacheReferences = [
   {
     pattern: /(\bhref=["']\.\/styles\.css)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260810-quote-names$2",
+    replacement: "$1?v=20260810-letter-writing$2",
     label: "styles.css"
   },
   {
@@ -145,7 +145,7 @@ const sharedCacheReferences = [
   },
   {
     pattern: /(\bsrc=["']\.\/app\.js)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260810-quote-names$2",
+    replacement: "$1?v=20260810-letter-writing$2",
     label: "app.js"
   }
 ];
