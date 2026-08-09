@@ -60,7 +60,10 @@ function aggregateReadingUnits(appConfig) {
           { id: "uyghur-proverbs", title: "维吾尔谚语" },
           { id: "famous-quotes", title: "名人名言" }
         ]
-      }
+      },
+      ANA_TILIM_AFANTI_DATA: { stories: [], unit: { id: "afanti-stories" } },
+      ANA_TILIM_AFANTI_ENGLISH: { byStoryId: {} },
+      ANA_TILIM_AFANTI_CONTENT: { publishableStories: () => [] }
     }
   };
   vm.createContext(context);
@@ -95,6 +98,8 @@ const expectedCoreFiles = [
   "course-data/vocab-data.js",
   "course-data/practice-data.js",
   "course-data/reading-data.js",
+  "course-data/afanti-data.js",
+  "afanti-content.js",
   "uyghur-keyboard.js",
   "latin-keyboard.js",
   "sentence-morphemes.js",
@@ -177,6 +182,8 @@ const alphabetDataScriptIndex = syncedDomesticIndex.indexOf("./course-data/alpha
 const latinWritingDataScriptIndex = syncedDomesticIndex.indexOf("./course-data/latin-writing-data.js");
 const comboDataScriptIndex = syncedDomesticIndex.indexOf("./course-data/combo-data.js");
 const syllableDataScriptIndex = syncedDomesticIndex.indexOf("./course-data/syllable-data.js");
+const afantiDataScriptIndex = syncedDomesticIndex.indexOf("./course-data/afanti-data.js");
+const afantiContentScriptIndex = syncedDomesticIndex.indexOf("./afanti-content.js");
 const courseDataScriptIndex = syncedDomesticIndex.indexOf("./course-data.js");
 const unitOrderScriptIndex = syncedDomesticIndex.indexOf("./unit-order.js");
 const latinKeyboardScriptIndex = syncedDomesticIndex.indexOf("./latin-keyboard.js");
@@ -186,7 +193,9 @@ assert.ok(
     && alphabetDataScriptIndex < latinWritingDataScriptIndex
     && latinWritingDataScriptIndex < comboDataScriptIndex
     && comboDataScriptIndex < syllableDataScriptIndex
-    && syllableDataScriptIndex < courseDataScriptIndex
+    && syllableDataScriptIndex < afantiDataScriptIndex
+    && afantiDataScriptIndex < afantiContentScriptIndex
+    && afantiContentScriptIndex < courseDataScriptIndex
     && courseDataScriptIndex >= 0
     && courseDataScriptIndex < unitOrderScriptIndex
     && unitOrderScriptIndex < appScriptIndex
@@ -204,6 +213,17 @@ assert.equal(
   1,
   "repeated sync should leave exactly one domestic syllable-data script"
 );
+assert.equal(
+  [...syncedDomesticIndex.matchAll(/<script\s+[^>]*src=["']\.\/course-data\/afanti-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)].length,
+  1,
+  "repeated sync should leave exactly one domestic shared Afanti data script"
+);
+assert.equal(
+  [...syncedDomesticIndex.matchAll(/<script\s+[^>]*src=["']\.\/afanti-content\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)].length,
+  1,
+  "repeated sync should leave exactly one domestic Afanti validator script"
+);
+assert.equal(syncedDomesticIndex.includes("afanti-english-data.js"), false, "domestic index must not load global-only Afanti English");
 assert.equal(
   [...syncedDomesticIndex.matchAll(/<script\s+[^>]*src=["']\.\/latin-keyboard\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)].length,
   1,
@@ -237,6 +257,9 @@ fs.writeFileSync(path.join(misplacedUnitOrderTargetPath, "index.html"), `<!docty
     <script src="./domestic-after-app.js?v=1"></script>
     <script src="./course-data/latin-writing-data.js?v=misplaced"></script>
     <script src="./course-data/syllable-data.js?v=misplaced"></script>
+    <script src="./course-data/afanti-data.js?v=misplaced"></script>
+    <script src="./course-data/afanti-english-data.js?v=misplaced"></script>
+    <script src="./afanti-content.js?v=misplaced"></script>
     <script src="./unit-order.js?v=misplaced"></script>
     <script src="./latin-keyboard.js?v=misplaced"></script>
   </body>
@@ -260,15 +283,26 @@ const normalizedMisplacedSyllableTags = [
 const normalizedMisplacedLatinKeyboardTags = [
   ...normalizedMisplacedIndex.matchAll(/<script\s+[^>]*src=["']\.\/latin-keyboard\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
 ];
+const normalizedMisplacedAfantiDataTags = [
+  ...normalizedMisplacedIndex.matchAll(/<script\s+[^>]*src=["']\.\/course-data\/afanti-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
+];
+const normalizedMisplacedAfantiContentTags = [
+  ...normalizedMisplacedIndex.matchAll(/<script\s+[^>]*src=["']\.\/afanti-content\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
+];
 assert.equal(normalizedMisplacedLatinWritingTags.length, 1, "sync should keep one normalized latin-writing-data tag");
 assert.equal(normalizedMisplacedSyllableTags.length, 1, "sync should keep one normalized syllable-data tag");
 assert.equal(normalizedMisplacedUnitOrderTags.length, 1, "sync should keep one normalized unit-order tag");
 assert.equal(normalizedMisplacedLatinKeyboardTags.length, 1, "sync should keep one normalized latin-keyboard tag");
+assert.equal(normalizedMisplacedAfantiDataTags.length, 1, "sync should keep one normalized shared Afanti data tag");
+assert.equal(normalizedMisplacedAfantiContentTags.length, 1, "sync should keep one normalized Afanti validator tag");
+assert.equal(normalizedMisplacedIndex.includes("afanti-english-data.js"), false, "sync should remove a misplaced global-only English tag from domestic index");
 assert.ok(
   normalizedMisplacedIndex.indexOf("./course-data/alphabet-data.js") < normalizedMisplacedIndex.indexOf("./course-data/latin-writing-data.js")
     && normalizedMisplacedIndex.indexOf("./course-data/latin-writing-data.js") < normalizedMisplacedIndex.indexOf("./course-data/combo-data.js")
     && normalizedMisplacedIndex.indexOf("./course-data/combo-data.js") < normalizedMisplacedIndex.indexOf("./course-data/syllable-data.js")
-    && normalizedMisplacedIndex.indexOf("./course-data/syllable-data.js") < normalizedMisplacedIndex.indexOf("./course-data.js")
+    && normalizedMisplacedIndex.indexOf("./course-data/syllable-data.js") < normalizedMisplacedIndex.indexOf("./course-data/afanti-data.js")
+    && normalizedMisplacedIndex.indexOf("./course-data/afanti-data.js") < normalizedMisplacedIndex.indexOf("./afanti-content.js")
+    && normalizedMisplacedIndex.indexOf("./afanti-content.js") < normalizedMisplacedIndex.indexOf("./course-data.js")
     && normalizedMisplacedIndex.indexOf("./course-data.js") < normalizedMisplacedIndex.indexOf("./unit-order.js")
     && normalizedMisplacedIndex.indexOf("./unit-order.js") < normalizedMisplacedIndex.indexOf("./app.js")
     && normalizedMisplacedIndex.indexOf("./latin-keyboard.js") < normalizedMisplacedIndex.indexOf("./app.js"),
@@ -302,6 +336,8 @@ fs.writeFileSync(path.join(duplicateUnitOrderTargetPath, "index.html"), `<!docty
     <script src="./course-data/latin-writing-data.js?v=old-before"></script>
     <script src="./course-data/combo-data.js?v=cn-combo"></script>
     <script src="./course-data/syllable-data.js?v=old-before"></script>
+    <script src="./course-data/afanti-data.js?v=old-before"></script>
+    <script src="./afanti-content.js?v=old-before"></script>
     <script src="./course-data.js?v=cn-course"></script>
     <script src="./unit-order.js?v=old-before"></script>
     <script src="./latin-keyboard.js?v=old-before"></script>
@@ -310,6 +346,9 @@ fs.writeFileSync(path.join(duplicateUnitOrderTargetPath, "index.html"), `<!docty
     <script src="./app.js?v=cn-app"></script>
     <script src="./course-data/latin-writing-data.js?v=old-after"></script>
     <script src="./course-data/syllable-data.js?v=old-after"></script>
+    <script src="./course-data/afanti-data.js?v=old-after"></script>
+    <script src="./course-data/afanti-english-data.js?v=old-after"></script>
+    <script src="./afanti-content.js?v=old-after"></script>
     <script src="./unit-order.js?v=old-after"></script>
     <script src="./latin-keyboard.js?v=old-after"></script>
   </body>
@@ -333,10 +372,19 @@ const normalizedDuplicateSyllableTags = [
 const normalizedDuplicateLatinKeyboardTags = [
   ...normalizedDuplicateIndex.matchAll(/<script\s+[^>]*src=["']\.\/latin-keyboard\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
 ];
+const normalizedDuplicateAfantiDataTags = [
+  ...normalizedDuplicateIndex.matchAll(/<script\s+[^>]*src=["']\.\/course-data\/afanti-data\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
+];
+const normalizedDuplicateAfantiContentTags = [
+  ...normalizedDuplicateIndex.matchAll(/<script\s+[^>]*src=["']\.\/afanti-content\.js(?:\?[^"']*)?["'][^>]*><\/script>/g)
+];
 assert.equal(normalizedDuplicateLatinWritingTags.length, 1, "sync should collapse duplicate latin-writing-data tags");
 assert.equal(normalizedDuplicateSyllableTags.length, 1, "sync should collapse duplicate syllable-data tags");
 assert.equal(normalizedDuplicateUnitOrderTags.length, 1, "sync should collapse duplicate unit-order tags");
 assert.equal(normalizedDuplicateLatinKeyboardTags.length, 1, "sync should collapse duplicate latin-keyboard tags");
+assert.equal(normalizedDuplicateAfantiDataTags.length, 1, "sync should collapse duplicate shared Afanti data tags");
+assert.equal(normalizedDuplicateAfantiContentTags.length, 1, "sync should collapse duplicate Afanti validator tags");
+assert.equal(normalizedDuplicateIndex.includes("afanti-english-data.js"), false, "duplicate normalization should remove global-only English from domestic index");
 assert.equal(
   normalizedDuplicateLatinWritingTags[0][0].trim(),
   '<script src="./course-data/latin-writing-data.js?v=20260809-latin-writing"></script>',
@@ -373,7 +421,9 @@ assert.ok(
   normalizedDuplicateIndex.indexOf("./course-data/alphabet-data.js") < normalizedDuplicateIndex.indexOf("./course-data/latin-writing-data.js")
     && normalizedDuplicateIndex.indexOf("./course-data/latin-writing-data.js") < normalizedDuplicateIndex.indexOf("./course-data/combo-data.js")
     && normalizedDuplicateIndex.indexOf("./course-data/combo-data.js") < normalizedDuplicateIndex.indexOf("./course-data/syllable-data.js")
-    && normalizedDuplicateIndex.indexOf("./course-data/syllable-data.js") < normalizedDuplicateIndex.indexOf("./course-data.js")
+    && normalizedDuplicateIndex.indexOf("./course-data/syllable-data.js") < normalizedDuplicateIndex.indexOf("./course-data/afanti-data.js")
+    && normalizedDuplicateIndex.indexOf("./course-data/afanti-data.js") < normalizedDuplicateIndex.indexOf("./afanti-content.js")
+    && normalizedDuplicateIndex.indexOf("./afanti-content.js") < normalizedDuplicateIndex.indexOf("./course-data.js")
     && normalizedDuplicateIndex.indexOf("./course-data.js") < normalizedDuplicateIndex.indexOf("./unit-order.js")
     && normalizedDuplicateIndex.indexOf("./unit-order.js") < normalizedDuplicateIndex.indexOf("./app.js")
     && normalizedDuplicateIndex.indexOf("./latin-keyboard.js") < normalizedDuplicateIndex.indexOf("./app.js"),

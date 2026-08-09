@@ -18,7 +18,10 @@ const courseDataScriptPaths = [
   "prototype/course-data/syllable-data.js",
   "prototype/course-data/vocab-data.js",
   "prototype/course-data/practice-data.js",
-  "prototype/course-data/reading-data.js"
+  "prototype/course-data/reading-data.js",
+  "prototype/course-data/afanti-data.js",
+  "prototype/course-data/afanti-english-data.js",
+  "prototype/afanti-content.js"
 ];
 assert.ok(fs.existsSync(courseDataAggregatorPath), "course data aggregator should exist");
 assert.ok(fs.existsSync(unitOrderPath), "edition-aware unit order module should exist");
@@ -61,7 +64,10 @@ const expectedVersionedAssets = [
   "./course-data/vocab-data.js?v=20260728-uly-transliteration",
   "./course-data/practice-data.js?v=20260728-learned-markers",
   "./course-data/reading-data.js?v=20260728-uly-transliteration",
-  "./course-data.js?v=20260728-uly-transliteration",
+  "./course-data/afanti-data.js?v=20260810-reviewed-afanti",
+  "./course-data/afanti-english-data.js?v=20260810-reviewed-afanti",
+  "./afanti-content.js?v=20260810-reviewed-afanti",
+  "./course-data.js?v=20260810-reviewed-afanti",
   "./uyghur-keyboard.js?v=20260809-phone-morphemes",
   "./latin-keyboard.js?v=20260809-latin-qwerty",
   "./sentence-morphemes.js?v=20260809-word-formation",
@@ -75,7 +81,7 @@ const expectedVersionedAssets = [
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
-    /(?:href|src)="(?<url>(?:\.\/(?:styles\.css|app-config\.js|uly-transliteration\.js|course-data\/[^"]+\.js|course-data\.js|uyghur-keyboard\.js|latin-keyboard\.js|sentence-morphemes\.js|sentence-glossary\.js|progress-transfer\.js|audio-controller\.js|cloud-config\.js|cloud-sync\.js|app\.js)[^"]*|https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2\.110\.8))"/g
+    /(?:href|src)="(?<url>(?:\.\/(?:styles\.css|app-config\.js|uly-transliteration\.js|course-data\/[^"]+\.js|course-data\.js|afanti-content\.js|uyghur-keyboard\.js|latin-keyboard\.js|sentence-morphemes\.js|sentence-glossary\.js|progress-transfer\.js|audio-controller\.js|cloud-config\.js|cloud-sync\.js|app\.js)[^"]*|https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2\.110\.8))"/g
   )
 ].map((match) => match.groups.url);
 assert.deepEqual(
@@ -113,7 +119,9 @@ for (const globalName of [
   "window.ANA_TILIM_COMBOS",
   "window.ANA_TILIM_VOCAB",
   "window.ANA_TILIM_PRACTICE",
-  "window.ANA_TILIM_READING"
+  "window.ANA_TILIM_READING",
+  "window.ANA_TILIM_AFANTI_DATA",
+  "window.ANA_TILIM_AFANTI_CONTENT"
 ]) {
   assert.ok(courseDataSource.includes(globalName), `course data aggregator should read ${globalName}`);
 }

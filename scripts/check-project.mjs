@@ -120,6 +120,21 @@ const checks = [
     args: ["--check", "prototype/course-data/reading-data.js"]
   },
   {
+    label: "syntax: shared Afanti data",
+    command: node,
+    args: ["--check", "prototype/course-data/afanti-data.js"]
+  },
+  {
+    label: "syntax: global Afanti English data",
+    command: node,
+    args: ["--check", "prototype/course-data/afanti-english-data.js"]
+  },
+  {
+    label: "syntax: Afanti content validator",
+    command: node,
+    args: ["--check", "prototype/afanti-content.js"]
+  },
+  {
     label: "test: ULY transliteration",
     command: node,
     args: ["tests/uly-transliteration.test.mjs"]
@@ -148,6 +163,11 @@ const checks = [
     label: "test: syllable training course data",
     command: node,
     args: ["tests/syllable-data.test.mjs"]
+  },
+  {
+    label: "test: reviewed Afanti content",
+    command: node,
+    args: ["tests/afanti-content.test.mjs"]
   },
   {
     label: "test: Latin keyboard",
