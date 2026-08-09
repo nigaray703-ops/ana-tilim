@@ -210,3 +210,24 @@ test("apply failure clears its preview and mutation restore focus only after the
   await buttonByText(document, "需要重录").click();
   assert.equal(document.activeElement.id, "target-alphabet%3Aaa");
 });
+
+test("upload, finalization, and recording failures restore focus after their final render", async () => {
+  const target = fixtureTarget("alphabet:aa");
+  const failed = { response: { ok: false, status: 400, async json() { return { error: { message: "失败" } }; } } };
+  const { context, document } = createHarness({
+    catalogTargets: [target],
+    routes: { "/api/takes/alphabet%3Aaa": failed, "/api/import/finalize": failed },
+    mediaDevices: { getUserMedia: async () => { throw new Error("denied"); } }
+  });
+  await context.recordingStudio.ready;
+  context.recordingStudio.model.pendingUpload = { stableId: target.stableId, blob: new context.Blob([Buffer.from("take")], { type: "audio/webm" }) };
+  await context.recordingStudio.uploadPending();
+  assert.equal(document.activeElement.id, "target-alphabet%3Aaa");
+  await context.recordingStudio.startRecording();
+  assert.equal(document.activeElement.id, "target-alphabet%3Aaa");
+  context.recordingStudio.model.imported.set(target.stableId, { id: "import-1", replacementSha256: "new", hasBackup: true });
+  context.recordingStudio.model.playedProduction.set(target.stableId, { importId: "import-1", replacementSha256: "new" });
+  await context.recordingStudio.refresh();
+  await buttonByText(document, "确认新版并删除这一条旧版备份").click();
+  assert.equal(document.activeElement.id, "target-alphabet%3Aaa");
+});
