@@ -128,7 +128,11 @@ for (const { manifest: audioManifest, manifestPath: audioManifestPath } of audio
     assert.ok(fs.existsSync(audioPath), `${item.file} should exist`);
     assert.ok(fs.statSync(audioPath).size > 4096, `${item.file} should contain playable audio data`);
     const audioBuffer = fs.readFileSync(audioPath);
-    validateWebmBuffer(audioBuffer);
+    try {
+      validateWebmBuffer(audioBuffer);
+    } catch (error) {
+      assert.fail(`${item.file}: ${error.message}`);
+    }
   }
 }
 function makeElement(id) {

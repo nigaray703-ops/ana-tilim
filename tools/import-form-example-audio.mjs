@@ -102,7 +102,11 @@ function main() {
   for (const sourceFile of expectedSourceFiles) {
     const sourcePath = path.join(sourceDirectory, sourceFile);
     const buffer = fs.readFileSync(sourcePath);
-    validateWebmBuffer(buffer);
+    try {
+      validateWebmBuffer(buffer);
+    } catch (error) {
+      assert.fail(`${sourceFile}: ${error.message}`);
+    }
   }
 
   if (checkOnly) {

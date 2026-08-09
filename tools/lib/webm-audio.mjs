@@ -31,8 +31,8 @@ export function readWebmDurationMilliseconds(buffer) {
 
 export function validateWebmBuffer(buffer, { minBytes = 4096 } = {}) {
   assert.ok(Buffer.isBuffer(buffer), "WebM input must be a Buffer");
-  assert.deepEqual([...buffer.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3], "WebM header is invalid");
   assert.ok(buffer.length > minBytes, `WebM should contain more than ${minBytes} bytes`);
+  assert.deepEqual([...buffer.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3], "WebM header is invalid");
 
   const durationMs = readWebmDurationMilliseconds(buffer);
   assert.ok(Number.isFinite(durationMs) && durationMs > 0, "WebM duration must be positive");
