@@ -54,7 +54,7 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260810-afanti-layout",
+  "./styles.css?v=20260810-quote-names",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
@@ -63,7 +63,7 @@ const expectedVersionedAssets = [
   "./course-data/syllable-data.js?v=20260809-plan3-final-content",
   "./course-data/vocab-data.js?v=20260728-uly-transliteration",
   "./course-data/practice-data.js?v=20260728-learned-markers",
-  "./course-data/reading-data.js?v=20260728-uly-transliteration",
+  "./course-data/reading-data.js?v=20260810-quote-names",
   "./course-data/afanti-data.js?v=20260810-afanti-layout",
   "./course-data/afanti-english-data.js?v=20260810-reviewed-afanti",
   "./afanti-content.js?v=20260810-reviewed-afanti",
@@ -77,7 +77,7 @@ const expectedVersionedAssets = [
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260809-syllable-review",
-  "./app.js?v=20260810-afanti-layout"
+  "./app.js?v=20260810-quote-names"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -3247,8 +3247,22 @@ includesAll(
   ["reading-topic-list", "马赫穆德·喀什噶里", "阿不都热依木·吾提库尔", "10 位", "3 条", "→"],
   "famous quote unit topic directory"
 );
-assert.ok(!app.innerHTML.includes("مەھمۇد قەشقىرى"), "famous quote directory should use Chinese names");
-assert.ok(!app.innerHTML.includes("ئابدۇرېھىم ئۆتكۈر"), "famous quote directory should use Chinese names");
+assert.match(
+  app.innerHTML,
+  /class="reading-topic-name-line"[^>]*>\s*<strong>马赫穆德·喀什噶里<\/strong>\s*<span class="reading-topic-uyghur-name"[^>]*lang="ug"[^>]*dir="rtl"[^>]*>مەھمۇد قەشقىرى<\/span>/,
+  "famous quote directory should show the Chinese and Uyghur names on one line"
+);
+assert.ok(app.innerHTML.includes("ئابدۇرېھىم ئۆتكۈر"), "all ten famous people should expose their Uyghur names");
+const quoteNameLineStyle = styleSource.match(/\.reading-topic-name-line\s*\{(?<body>[^}]*)\}/)?.groups?.body || "";
+const quoteUyghurNameStyle = styleSource.match(/\.reading-topic-uyghur-name\s*\{(?<body>[^}]*)\}/)?.groups?.body || "";
+assert.ok(
+  quoteNameLineStyle.includes("display: flex;") && quoteNameLineStyle.includes("white-space: nowrap;"),
+  "bilingual quote names should stay together on one row"
+);
+assert.ok(
+  quoteUyghurNameStyle.includes("font-size: 18px;") && quoteUyghurNameStyle.includes("font-weight: 600;"),
+  "Uyghur names should use a clear, readable size and weight"
+);
 includesAll(
   renderState("state.screen = 'unit'; state.selectedUnitId = 'uyghur-proverbs'"),
   ["reading-topic-list", "知识就是力量", "好话暖心", "10 个主题", "3 条", "→"],

@@ -437,6 +437,7 @@ const readingUnits = [
       {
         id: "quote-mahmud-kashgari",
         title: "马赫穆德·喀什噶里",
+        titleUyghur: "مەھمۇد قەشقىرى",
         intro: "11 世纪语言学家，《突厥语大词典》的作者，常被视为突厥语言文化的重要记录者。",
         items: [
           { id: "quote-mahmud-kashgari-line-1", value: "تىل بىر خەلقنى تونۇشنىڭ ئاچقۇچىدۇر.", meaning: "语言是了解一个民族的钥匙。", lesson: "学习母语，也是在认识自己的文化。", reviewStatus: "学习版译句，待来源审校" },
@@ -447,6 +448,7 @@ const readingUnits = [
       {
         id: "quote-yusuf-hajib",
         title: "玉素甫·哈斯·哈吉甫",
+        titleUyghur: "يۈسۈپ خاس ھاجىپ",
         intro: "11 世纪思想家、诗人，《福乐智慧》的作者，作品重视知识、品德和治理智慧。",
         items: [
           { id: "quote-yusuf-hajib-line-1", value: "بىلىم ئادەمنىڭ يولىنى يورۇتىدۇ.", meaning: "知识照亮人的道路。", lesson: "学习让人看清方向。", reviewStatus: "学习版译句，待来源审校" },
@@ -457,6 +459,7 @@ const readingUnits = [
       {
         id: "quote-ahmet-yukneki",
         title: "艾合买提·玉克乃克",
+        titleUyghur: "ئەھمەد يۈكنەكى",
         intro: "中世纪文学人物，《真理的入门》常与他的名字联系在一起，作品重视礼仪和道德。",
         items: [
           { id: "quote-ahmet-yukneki-line-1", value: "ئەدەب ئادەمنىڭ زىننىتىدۇر.", meaning: "礼貌是人的装饰。", lesson: "说话有礼，是语言学习的重要习惯。", reviewStatus: "学习版译句，待来源审校" },
@@ -467,6 +470,7 @@ const readingUnits = [
       {
         id: "quote-molla-musa",
         title: "毛拉·穆萨·赛拉米",
+        titleUyghur: "موللا مۇسا سايرامى",
         intro: "近代历史书写者，常被提到与新疆地方史、文化记录相关。",
         items: [
           { id: "quote-molla-musa-line-1", value: "تارىخنى بىلگەن ئادەم ئۆزىنى ياخشىراق تونۇيدۇ.", meaning: "懂得历史的人，更能认识自己。", lesson: "了解来处，才能看清自己。", reviewStatus: "学习版译句，待来源审校" },
@@ -477,6 +481,7 @@ const readingUnits = [
       {
         id: "quote-abdulkhaliq-uyghur",
         title: "阿不都哈力克·维吾尔",
+        titleUyghur: "ئابدۇخالىق ئۇيغۇر",
         intro: "20 世纪维吾尔诗人，作品常与觉醒、学习和青年精神联系在一起。",
         items: [
           { id: "quote-abdulkhaliq-uyghur-line-1", value: "ئويغانغان كۆڭۈل ئۆگىنىشتىن توختىمايدۇ.", meaning: "醒来的心不会停止学习。", lesson: "学习贵在一直向前。", reviewStatus: "学习版译句，待来源审校" },
@@ -487,6 +492,7 @@ const readingUnits = [
       {
         id: "quote-lutpulla-mutellip",
         title: "鲁特普拉·穆塔里甫",
+        titleUyghur: "لۇتپۇللا مۇتەللىپ",
         intro: "20 世纪维吾尔诗人，常被记住为年轻、有激情的文学人物。",
         items: [
           { id: "quote-lutpulla-mutellip-line-1", value: "ياشلىق ئۈمىد بىلەن گۈزەل.", meaning: "青春因希望而美丽。", lesson: "学习也需要希望。", reviewStatus: "学习版译句，待来源审校" },
@@ -497,6 +503,7 @@ const readingUnits = [
       {
         id: "quote-abdurehim-otkur",
         title: "阿不都热依木·吾提库尔",
+        titleUyghur: "ئابدۇرېھىم ئۆتكۈر",
         intro: "现代维吾尔作家、诗人，作品常与历史记忆、足迹和文化传承联系在一起。",
         items: [
           { id: "quote-abdurehim-otkur-line-1", value: "ئىز قالدۇرۇش ئۈچۈن قەدەم بېسىش كېرەك.", meaning: "想留下足迹，就要迈出脚步。", lesson: "每天练一点，也是在留下足迹。", reviewStatus: "学习版译句，待来源审校" },
@@ -507,6 +514,7 @@ const readingUnits = [
       {
         id: "quote-zunun-qadiri",
         title: "祖农·卡迪尔",
+        titleUyghur: "زۇنۇن قادىرى",
         intro: "现代维吾尔作家，作品常与小说、戏剧和日常生活叙事联系在一起。",
         items: [
           { id: "quote-zunun-qadiri-line-1", value: "ھېكايە ئادەمنىڭ كۆڭلىنى ئاچىدۇ.", meaning: "故事能打开人的心。", lesson: "故事能把词语放回生活。", reviewStatus: "学习版译句，待来源审校" },
@@ -517,6 +525,7 @@ const readingUnits = [
       {
         id: "quote-zordun-sabir",
         title: "祖尔东·萨比尔",
+        titleUyghur: "زوردۇن سابىر",
         intro: "现代维吾尔作家，常以小说和幽默、生活观察被读者记住。",
         items: [
           { id: "quote-zordun-sabir-line-1", value: "كۈلكە ھەقىقەتنى يۇمشاق ئېيتىدۇ.", meaning: "笑声能温和地说出真实。", lesson: "幽默也能表达认真。", reviewStatus: "学习版译句，待来源审校" },
@@ -527,6 +536,7 @@ const readingUnits = [
       {
         id: "quote-teyipjan-eliyev",
         title: "铁依甫江·艾力耶夫",
+        titleUyghur: "تېيىپجان ئېلىيېف",
         intro: "现代维吾尔诗人，常与诗歌、抒情和文学教育联系在一起。",
         items: [
           { id: "quote-teyipjan-eliyev-line-1", value: "شېئىر يۈرەكتىكى سۆزنى ئاڭلىتىدۇ.", meaning: "诗让心里的话被听见。", lesson: "诗歌适合先感受语气。", reviewStatus: "学习版译句，待来源审校" },
