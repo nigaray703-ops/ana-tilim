@@ -89,6 +89,12 @@ function buildFormExamples(course) {
   return [...byValue.values()].filter((item) => !reusableValues.has(item.value));
 }
 
+function addSourceIndex(index, category, id, value) {
+  assert.equal(typeof id, "string", `${category} source ID must be text`);
+  assert.ok(!index.has(id), `duplicate ${category} source ID: ${id}`);
+  index.set(id, value);
+}
+
 function sourceIndexes(course) {
   const indexes = {
     alphabet: new Map(),
@@ -98,19 +104,21 @@ function sourceIndexes(course) {
     "form-examples": new Map()
   };
 
-  for (const [id, letter] of Object.entries(course.letterDetails)) {
-    indexes.alphabet.set(id, { source: letter, groupId: null, value: letter.letter, latin: letter.latin, meaning: letter.type });
+  for (const item of course.alphabetAudioItems) {
+    const letter = course.letterDetails[item.letterId];
+    assert.ok(letter, `missing alphabet letter detail for ${item.letterId}`);
+    addSourceIndex(indexes.alphabet, "alphabet", item.letterId, { source: letter, groupId: null, value: letter.letter, latin: letter.latin, meaning: letter.type });
   }
   for (const group of course.comboGroups) {
-    for (const item of group.items) indexes.combos.set(item.id, { source: item, groupId: group.id, value: item.value, latin: item.latin, meaning: item.meaning || item.review });
+    for (const item of group.items) addSourceIndex(indexes.combos, "combos", item.id, { source: item, groupId: group.id, value: item.value, latin: item.latin, meaning: item.meaning || item.review });
   }
   for (const group of course.vocabGroups) {
-    for (const item of group.items) indexes.vocab.set(item.id, { source: item, groupId: group.id, value: item.value, latin: item.latin, meaning: item.meaning });
+    for (const item of group.items) addSourceIndex(indexes.vocab, "vocab", item.id, { source: item, groupId: group.id, value: item.value, latin: item.latin, meaning: item.meaning });
   }
   for (const unit of course.readingUnits) {
     for (const group of unit.groups) {
       for (const item of group.items) {
-        indexes.reading.set(item.id, {
+        addSourceIndex(indexes.reading, "reading", item.id, {
           source: item,
           unitId: unit.id,
           groupId: group.id,
@@ -123,7 +131,7 @@ function sourceIndexes(course) {
     }
   }
   for (const item of buildFormExamples(course)) {
-    indexes["form-examples"].set(item.id, { source: item, groupId: item.occurrences[0]?.letterId || null, value: item.value, latin: item.latin, meaning: item.meaning });
+    addSourceIndex(indexes["form-examples"], "form-examples", item.id, { source: item, groupId: item.occurrences[0]?.letterId || null, value: item.value, latin: item.latin, meaning: item.meaning });
   }
 
   return indexes;
@@ -138,6 +146,7 @@ function assertNoSymlinkComponents(root, candidate) {
   const relative = path.relative(root, candidate);
   assert.ok(isInside(root, candidate), "output path escapes human-audio root");
   let current = root;
+  assert.ok(!fs.lstatSync(current).isSymbolicLink(), "output path must not traverse a symbolic link");
   for (const segment of relative.split(path.sep)) {
     current = path.join(current, segment);
     if (!fs.existsSync(current)) break;
@@ -158,6 +167,8 @@ function resolveOutputPath({ projectRoot, category, item }) {
 
   assert.ok(isInside(audioRoot, absoluteOutputPath), "output path escapes human-audio root");
   assert.equal(absoluteOutputPath, expectedOutputPath, "manifest output path does not match its category and current file");
+  assert.ok(!fs.lstatSync(audioRoot).isSymbolicLink(), "human-audio root must not be a symbolic link");
+  assertNoSymlinkComponents(prototypeRoot, audioRoot);
   assertNoSymlinkComponents(audioRoot, absoluteOutputPath);
   assert.ok(isInside(fs.realpathSync(audioRoot), fs.realpathSync(path.dirname(absoluteOutputPath))), "output path escapes human-audio root after realpath resolution");
   return absoluteOutputPath;

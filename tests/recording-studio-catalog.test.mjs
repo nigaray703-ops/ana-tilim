@@ -8,11 +8,17 @@ import { buildRecordingCatalog } from "../tools/recording-studio/catalog.mjs";
 const projectRoot = path.resolve(import.meta.dirname, "..");
 const categories = ["alphabet", "combos", "vocab", "reading", "form-examples"];
 
-function createManifestFixture({ category, mutate }) {
+function createManifestFixture({ category, mutate, redirectedAudioRoot }) {
   const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ana-tilim-recording-catalog-"));
   const fixturePrototype = path.join(fixtureRoot, "prototype");
-  const fixtureAudioRoot = path.join(fixtureRoot, "prototype/assets/audio/human");
   fs.mkdirSync(fixturePrototype);
+
+  const fixtureAudioRoot = redirectedAudioRoot || path.join(fixturePrototype, "assets/audio/human");
+  if (redirectedAudioRoot) {
+    const fixtureAssetsRoot = path.join(fixturePrototype, "assets/audio");
+    fs.mkdirSync(fixtureAssetsRoot, { recursive: true });
+    fs.symlinkSync(redirectedAudioRoot, path.join(fixtureAssetsRoot, "human"));
+  }
 
   for (const file of ["uly-transliteration.js", "afanti-content.js", "course-data.js"]) {
     fs.symlinkSync(path.join(projectRoot, "prototype", file), path.join(fixturePrototype, file));
@@ -31,6 +37,23 @@ function createManifestFixture({ category, mutate }) {
   }
 
   return fixtureRoot;
+}
+
+function makeFixtureCourseDataMutable(fixtureRoot, mutationsByFile) {
+  const fixtureCourseData = path.join(fixtureRoot, "prototype/course-data");
+  fs.unlinkSync(fixtureCourseData);
+  fs.mkdirSync(fixtureCourseData);
+
+  for (const file of fs.readdirSync(path.join(projectRoot, "prototype/course-data"))) {
+    const source = path.join(projectRoot, "prototype/course-data", file);
+    const destination = path.join(fixtureCourseData, file);
+    const mutation = mutationsByFile[file];
+    if (!mutation) {
+      fs.symlinkSync(source, destination);
+      continue;
+    }
+    fs.writeFileSync(destination, `${fs.readFileSync(source, "utf8")}\n${mutation}\n`);
+  }
 }
 
 test("builds the immutable source-bound 527-target catalog", () => {
@@ -82,21 +105,59 @@ test("fails closed when a manifest ID has no exact course-data join", () => {
 
 test("binds a fixture manifest to the fixture course data rather than this checkout", () => {
   const fixtureRoot = createManifestFixture({ category: "vocab", mutate() {} });
-  const fixtureCourseData = path.join(fixtureRoot, "prototype/course-data");
-  fs.unlinkSync(fixtureCourseData);
-  fs.mkdirSync(fixtureCourseData);
-  for (const file of fs.readdirSync(path.join(projectRoot, "prototype/course-data"))) {
-    const source = path.join(projectRoot, "prototype/course-data", file);
-    const destination = path.join(fixtureCourseData, file);
-    if (file === "vocab-data.js") fs.copyFileSync(source, destination);
-    else fs.symlinkSync(source, destination);
-  }
-  const vocabDataPath = path.join(fixtureCourseData, "vocab-data.js");
-  const vocabData = fs.readFileSync(vocabDataPath, "utf8").replace('"ياخشىمۇسىز"', '"夹具词汇"');
-  assert.match(vocabData, /夹具词汇/);
-  fs.writeFileSync(vocabDataPath, vocabData);
+  makeFixtureCourseDataMutable(fixtureRoot, {
+    "vocab-data.js": 'window.ANA_TILIM_VOCAB.vocabGroups[0].items[0].value = "夹具词汇";'
+  });
 
   assert.throws(() => buildRecordingCatalog({ projectRoot: fixtureRoot }), /value drift/);
+});
+
+test("rejects a human-audio root symlink before building the catalog", () => {
+  const redirectedAudioRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ana-tilim-recording-audio-root-"));
+  const fixtureRoot = createManifestFixture({ category: "alphabet", mutate() {}, redirectedAudioRoot });
+
+  assert.throws(() => buildRecordingCatalog({ projectRoot: fixtureRoot }), /human-audio root must not be a symbolic link/);
+});
+
+test("rejects duplicate source IDs in every category before joining manifests", () => {
+  const duplicateCases = [
+    {
+      category: "alphabet",
+      file: "alphabet-data.js",
+      id: "be",
+      mutation: 'window.ANA_TILIM_ALPHABET.alphabetAudioItems.push({ ...window.ANA_TILIM_ALPHABET.alphabetAudioItems[0] });'
+    },
+    {
+      category: "combos",
+      file: "combo-data.js",
+      id: "ba",
+      mutation: 'window.ANA_TILIM_COMBOS.comboGroups[0].items.push({ ...window.ANA_TILIM_COMBOS.comboGroups[0].items[0] });'
+    },
+    {
+      category: "vocab",
+      file: "vocab-data.js",
+      id: "yaxshimusiz",
+      mutation: 'window.ANA_TILIM_VOCAB.vocabGroups[0].items.push({ ...window.ANA_TILIM_VOCAB.vocabGroups[0].items[0] });'
+    },
+    {
+      category: "reading",
+      file: "reading-data.js",
+      id: "grammar-word-order-1",
+      mutation: 'window.ANA_TILIM_READING.readingUnits[0].groups[0].items.push({ ...window.ANA_TILIM_READING.readingUnits[0].groups[0].items[0] });'
+    },
+    {
+      category: "form-examples",
+      file: "alphabet-data.js",
+      id: "form-example-bho5rp",
+      mutation: 'window.ANA_TILIM_ALPHABET.letterDetails.be.formExamples.push({ id: "be:fixture-one", label: "独立式", form: "ب", word: "test-6i05l5", latin: "fixture-one", meaning: "fixture one" }, { id: "be:fixture-two", label: "后连式", form: "بـ", word: "test-s4gpql", latin: "fixture-two", meaning: "fixture two" });'
+    }
+  ];
+
+  for (const { category, file, id, mutation } of duplicateCases) {
+    const fixtureRoot = createManifestFixture({ category: "alphabet", mutate() {} });
+    makeFixtureCourseDataMutable(fixtureRoot, { [file]: mutation });
+    assert.throws(() => buildRecordingCatalog({ projectRoot: fixtureRoot }), new RegExp(`duplicate ${category} source ID: ${id}`));
+  }
 });
 
 test("fails closed when a manifest value drifts from its course-data source", () => {
