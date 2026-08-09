@@ -630,6 +630,66 @@ assert.deepEqual(globalUnits.map(({ id, title }) => [id, title]), [
   ["famous-quotes", "第十一单元：名人名言"]
 ]);
 
+const learningProgressBeforeSyllableSummaryRegression = JSON.parse(
+  vm.runInContext("JSON.stringify(state.learningProgress)", context)
+);
+vm.runInContext("state.learningProgress.syllableTraining = {}", context);
+assert.deepEqual(
+  JSON.parse(
+    vm.runInContext(
+      "JSON.stringify(unitProgressSummaries().find((item) => item.label === '拼读与音节训练营'))",
+      context
+    )
+  ),
+  { unit: "第四单元", label: "拼读与音节训练营", completed: 0, total: 7 },
+  "legacy progress without a syllable scope should keep every published training stage incomplete"
+);
+vm.runInContext(
+  `state.learningProgress.syllableTraining = {
+    "two-letter-warmup": { completed: true },
+    "vowel-nucleus": { completed: true },
+    "connection-errors": { completed: true },
+    "unknown-stage": { completed: true }
+  }`,
+  context
+);
+assert.deepEqual(
+  JSON.parse(
+    vm.runInContext(
+      "JSON.stringify(unitProgressSummaries().find((item) => item.label === '拼读与音节训练营'))",
+      context
+    )
+  ),
+  { unit: "第四单元", label: "拼读与音节训练营", completed: 3, total: 7 },
+  "the training summary should count only the three published completed stages and ignore unknown progress"
+);
+vm.runInContext(
+  `state.learningProgress.syllableTraining = {
+    "two-letter-warmup": { completed: true },
+    "vowel-nucleus": { completed: true },
+    "single-consonant-boundary": { completed: true },
+    "two-consonant-boundary": { completed: true },
+    "suffix-boundary": { completed: true },
+    "connection-errors": { completed: true },
+    "sentence-reading": { completed: true }
+  }`,
+  context
+);
+assert.deepEqual(
+  JSON.parse(
+    vm.runInContext(
+      "JSON.stringify(unitProgressSummaries().find((item) => item.label === '拼读与音节训练营'))",
+      context
+    )
+  ),
+  { unit: "第四单元", label: "拼读与音节训练营", completed: 7, total: 7 },
+  "the published warmup, four rules, connection checks, and sentence reading should complete all seven stages"
+);
+vm.runInContext(
+  `state.learningProgress = ${JSON.stringify(learningProgressBeforeSyllableSummaryRegression)}`,
+  context
+);
+
 function createConfiguredAppVm(hiddenUnitIds, { includeLatinKeyboard = true } = {}) {
   const configuredApp = makeElement("configured-app");
   const configuredToast = makeElement("configured-toast");
@@ -4175,8 +4235,8 @@ assert.deepEqual(
 );
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(unitProgressSummaries().find((item) => item.label === '拼读与音节训练营'))", context)),
-  { unit: "第四单元", label: "拼读与音节训练营", completed: 6, total: 6 },
-  "the visible unit summary should include the completed connection-errors stage"
+  { unit: "第四单元", label: "拼读与音节训练营", completed: 6, total: 7 },
+  "the visible unit summary should retain the uncompleted published sentence-reading stage"
 );
 clickDataset({ action: "go", target: "syllableReview" });
 assert.equal(vm.runInContext("state.screen", context), "syllableReview", "the completed stage should open a real split review screen");
