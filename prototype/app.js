@@ -7555,7 +7555,7 @@ function renderProfileHero(progress, reviewCount) {
         <div class="profile-account">
           <p class="caption">${usingCloudProfile ? t("profile.account") : t("profile.localLearning")}</p>
           ${renderProfileNameControl(displayName)}
-          <p class="muted">${usingCloudProfile ? escapeHtml(accountEmail) : t("profile.guestDetail")}</p>
+          <p class="muted">${usingCloudProfile ? escapeHtml(accountEmail) : t(appConfig.cloudEnabled ? "profile.guestDetail" : "profile.localDetail")}</p>
         </div>
         <span class="step-state profile-status">${cloudStatusLabel()}</span>
       </div>
