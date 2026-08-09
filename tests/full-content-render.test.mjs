@@ -194,11 +194,20 @@ for (const story of courseData.afantiStories) {
   }
 }
 
-renderState(
-  { screen: "latinKeyboardIntro", selectedUnitId: "latin-keyboard-writing", latinKeyboardValue: "" },
-  "Latin QWERTY keyboard",
-  "qwerty"
-);
+for (const [latinKeyboardLessonIndex, lesson] of courseData.latinWriting.keyboardLessons.entries()) {
+  renderState(
+    { screen: "latinKeyboardIntro", selectedUnitId: "latin-keyboard-writing", latinKeyboardLessonIndex, latinKeyboardValue: "" },
+    `Latin QWERTY ${lesson.id} ready`,
+    lesson.value
+  );
+  assert.ok(app.innerHTML.includes(lesson.latin), `${lesson.id} should render its exact ULY target`);
+  assert.ok(app.innerHTML.includes(lesson.meaning), `${lesson.id} should render its meaning`);
+  renderState(
+    { screen: "latinKeyboardIntro", selectedUnitId: "latin-keyboard-writing", latinKeyboardLessonIndex, latinKeyboardValue: lesson.latin },
+    `Latin QWERTY ${lesson.id} complete`,
+    "输入正确"
+  );
+}
 renderState(
   { screen: "latinLetterClasses", selectedUnitId: "latin-keyboard-writing" },
   "Latin letter classification",
@@ -577,6 +586,6 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
   }
 }
 
-assert.equal(renderCount, 769, "full UI audit should render every retained main screen, six Afanti stories in each allowed language state, syllable warmup/rule/judgment/review/sentence state, real 2/4/8 form state, lesson item, reading group, and practice item");
+assert.equal(renderCount, 782, "full UI audit should render every retained main screen, all seven QWERTY lesson states, six Afanti stories in each allowed language state, syllable warmup/rule/judgment/review/sentence state, real 2/4/8 form state, lesson item, reading group, and practice item");
 
 console.log(`full content render checks passed (${renderCount} states)`);

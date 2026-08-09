@@ -393,7 +393,7 @@ assert.equal(
 assert.equal(normalizedDuplicateIndex.includes("afanti-english-data.js"), false, "duplicate normalization should remove global-only English from domestic index");
 assert.equal(
   normalizedDuplicateLatinWritingTags[0][0].trim(),
-  '<script src="./course-data/latin-writing-data.js?v=20260809-latin-writing"></script>',
+  '<script src="./course-data/latin-writing-data.js?v=20260810-qwerty-words"></script>',
   "duplicate normalization should use the standard latin-writing-data tag"
 );
 assert.equal(
@@ -412,7 +412,7 @@ assert.equal(
   "duplicate normalization should use the standard unit-order tag"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-letter-writing-2"'),
+  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-qwerty-words"'),
   "sync should cache-bust the copied quote-name UI styles"
 );
 assert.ok(
@@ -424,7 +424,7 @@ assert.ok(
   "sync should cache-bust the copied split syllable mistake validator"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-letter-writing-2"'),
+  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-qwerty-words"'),
   "sync should cache-bust the copied bilingual quote-name app"
 );
 assert.ok(
