@@ -301,6 +301,13 @@ const persistedScreenIds = new Set([
   "profile",
   "settings"
 ]);
+const liveCanvasScreenIds = new Set([
+  "letterWriting",
+  "latinDictation",
+  "latinWritingForms",
+  "comboWriting"
+]);
+const latinWritingTabNavigationKeys = new Set(["ArrowLeft", "ArrowRight", "Home", "End"]);
 const latinWritingStepIds = Object.freeze(["qwerty", "classification", "vowel-contrast", "dictation", "forms"]);
 const stableProgressIds = Object.freeze({
   latinWriting: new Set(latinWritingStepIds),
@@ -3983,11 +3990,13 @@ function updateLatinWritingFormView() {
   const referenceLabel = document.querySelector?.("[data-latin-writing-reference-label]");
   const formCount = document.querySelector?.("[data-latin-writing-form-count]");
   const canvas = document.querySelector?.("[data-latin-writing-canvas]");
+  const panel = document.querySelector?.("[data-latin-writing-panel]");
   if (referenceGlyph) referenceGlyph.textContent = form.value;
   if (guideGlyph) guideGlyph.textContent = form.value;
   if (referenceLabel) referenceLabel.textContent = form.label;
   if (formCount) formCount.textContent = `${index + 1} / ${forms.length}`;
   canvas?.setAttribute?.("aria-label", `${form.label} 手写板`);
+  panel?.setAttribute?.("aria-labelledby", `latin-writing-tab-${currentLatinWritingLetter().id}-${index}`);
 
   document.querySelectorAll?.("[data-latin-writing-form-tab]").forEach((tab, tabIndex) => {
     const selected = tabIndex === index;
@@ -4044,6 +4053,7 @@ function revealLatinWritingComparison() {
 
 function renderLatinWritingForms() {
   const { letter, forms, index, form } = currentLatinWritingForm();
+  const panelId = `latin-writing-panel-${letter.id}`;
 
   return screen(
     `
@@ -4067,13 +4077,16 @@ function renderLatinWritingForms() {
               .map(
                 (item, formIndex) => `
                   <button
+                    id="${escapeHtml(`latin-writing-tab-${letter.id}-${formIndex}`)}"
                     class="latin-writing-form-tab ${formIndex === index ? "active" : ""}"
                     data-action="select-latin-writing-form"
                     data-latin-writing-form-tab
                     data-form-index="${formIndex}"
                     role="tab"
                     aria-selected="${formIndex === index ? "true" : "false"}"
+                    aria-controls="${escapeHtml(panelId)}"
                     aria-label="${escapeHtml(`${item.label} ${item.value}`)}"
+                    tabindex="${formIndex === index ? "0" : "-1"}"
                     type="button"
                   >
                     <span>${escapeHtml(item.label)}</span>
@@ -4083,7 +4096,13 @@ function renderLatinWritingForms() {
               )
               .join("")}
           </div>
-          <div class="latin-writing-current-reference" role="tabpanel">
+          <div
+            class="latin-writing-current-reference"
+            id="${escapeHtml(panelId)}"
+            role="tabpanel"
+            aria-labelledby="${escapeHtml(`latin-writing-tab-${letter.id}-${index}`)}"
+            data-latin-writing-panel
+          >
             <span data-latin-writing-reference-label>${escapeHtml(form.label)}</span>
             <strong class="uyghur" data-latin-writing-reference-glyph>${escapeHtml(form.value)}</strong>
           </div>
@@ -5940,6 +5959,12 @@ function handleCloudStatus(nextStatus) {
     state.emailCodeSent = false;
     state.authEmail = "";
   }
+  const keepsLiveCanvas =
+    liveCanvasScreenIds.has(state.screen) ||
+    (state.screen === "practiceSession" && currentPracticeGroup().mode === "write");
+  if (!completedOAuthRedirect && !completedEmailVerification && keepsLiveCanvas) {
+    return;
+  }
   render();
 }
 
@@ -6798,6 +6823,28 @@ document.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (state.screen === "latinWritingForms") {
+    const tab = event.target?.closest?.("[data-latin-writing-form-tab]");
+    if (tab && latinWritingTabNavigationKeys.has(event.key) && !event.ctrlKey && !event.altKey && !event.metaKey) {
+      const { forms } = currentLatinWritingForm();
+      const lastIndex = Math.max(0, forms.length - 1);
+      const currentIndex = Math.max(0, Math.min(lastIndex, Number(tab.dataset.formIndex) || 0));
+      const nextIndex =
+        event.key === "Home"
+          ? 0
+          : event.key === "End"
+            ? lastIndex
+            : event.key === "ArrowLeft"
+              ? (currentIndex - 1 + forms.length) % forms.length
+              : (currentIndex + 1) % forms.length;
+      event.preventDefault();
+      state.latinWritingForm = nextIndex;
+      updateLatinWritingFormView();
+      document.querySelectorAll?.("[data-latin-writing-form-tab]")[nextIndex]?.focus?.();
+      return;
+    }
+  }
+
   if (state.screen === "latinKeyboardIntro") {
     if (event.target?.matches?.("textarea, select, [contenteditable='true'], input:not([readonly])")) return;
     const nextValue = latinKeyboard.applyKey(state.latinKeyboardValue, event);

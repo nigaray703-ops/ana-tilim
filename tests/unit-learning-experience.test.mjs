@@ -340,12 +340,23 @@ function makeWritingCanvas({ contextAvailable = true } = {}) {
 }
 
 const app = makeElement("app");
+let appHtmlValue = "";
+let appHtmlWriteCount = 0;
+Object.defineProperty(app, "innerHTML", {
+  configurable: true,
+  get() { return appHtmlValue; },
+  set(value) {
+    appHtmlValue = String(value);
+    appHtmlWriteCount += 1;
+  }
+});
 const toast = makeElement("toast");
 const latinDictationAnswerRegion = makeElement("latin-dictation-answer-region");
 latinDictationAnswerRegion.hidden = true;
 const latinDictationCanvasFallback = makeElement("latin-dictation-canvas-fallback");
 latinDictationCanvasFallback.hidden = true;
 const latinWritingReferenceGlyph = makeElement("latin-writing-reference-glyph");
+const latinWritingPanel = makeElement("latin-writing-panel");
 const latinWritingGuide = makeElement("latin-writing-guide");
 const latinWritingReferenceLabel = makeElement("latin-writing-reference-label");
 const latinWritingFormCount = makeElement("latin-writing-form-count");
@@ -401,6 +412,7 @@ const context = {
         return latinDictationCanvasFallback;
       }
       if (selector === "[data-latin-writing-reference-glyph]") return latinWritingReferenceGlyph;
+      if (selector === "[data-latin-writing-panel]") return latinWritingPanel;
       if (selector === "[data-latin-writing-guide]") return latinWritingGuide;
       if (selector === "[data-latin-writing-reference-label]") return latinWritingReferenceLabel;
       if (selector === "[data-latin-writing-form-count]") return latinWritingFormCount;
@@ -3876,6 +3888,17 @@ for (const letterId of realFormRepresentativeIds) {
   );
   assert.match(formsHtml, /role="tablist"/, `${letterId} forms should expose a tablist`);
   assert.match(formsHtml, /role="tab"[^>]*aria-selected="true"/, `${letterId} should expose one selected form tab`);
+  for (const [formIndex] of detail.forms.entries()) {
+    const tabTag = formsHtml.match(
+      new RegExp(`<button[^>]*id="latin-writing-tab-${letterId}-${formIndex}"[^>]*>`)
+    )?.[0] || "";
+    assert.ok(tabTag, `${letterId} form ${formIndex} should have a stable controlled tab ID`);
+    assert.match(tabTag, new RegExp(`aria-controls="latin-writing-panel-${letterId}"`));
+    assert.match(tabTag, new RegExp(`tabindex="${formIndex === 0 ? "0" : "-1"}"`));
+  }
+  const panelTag = formsHtml.match(/<div\s+class="latin-writing-current-reference"[^>]*>/)?.[0] || "";
+  assert.match(panelTag, new RegExp(`id="latin-writing-panel-${letterId}"`), `${letterId} should expose a controlled tabpanel ID`);
+  assert.match(panelTag, new RegExp(`aria-labelledby="latin-writing-tab-${letterId}-0"`), `${letterId} panel should name its selected tab`);
   assert.doesNotMatch(formsHtml, /data-audio|audio-button|data-action="play-audio"/i, `${letterId} forms should not add audio controls`);
   assert.doesNotMatch(formsHtml, /stroke-player|data-action="(?:play|pause|replay)-stroke|(?:播放|暂停|重播|逐笔)笔画/i);
 }
@@ -3938,9 +3961,14 @@ for (const transientField of [
 const oeWritingCanvas = makeWritingCanvas();
 oeWritingCanvas.dataset.writingFallbackId = "latin-writing-canvas-fallback";
 writingCanvasesForTest = [oeWritingCanvas];
+let focusedLatinWritingTabIndex = -1;
 latinWritingFormTabsForTest = oeDictationDetail.forms.map((_, formIndex) => {
   const tab = makeElement(`latin-writing-form-${formIndex}`);
   tab.dataset.formIndex = String(formIndex);
+  tab.closest = (selector) => selector === "[data-latin-writing-form-tab]" ? tab : null;
+  tab.focus = () => {
+    focusedLatinWritingTabIndex = formIndex;
+  };
   return tab;
 });
 const oeFormsHtml = renderState(
@@ -3956,6 +3984,46 @@ includesAll(
     'data-action="reveal-latin-writing-comparison"'
   ],
   "oe same-canvas form practice"
+);
+function pressLatinWritingTabKey(key, tabIndex) {
+  let prevented = 0;
+  keydownHandler({
+    key,
+    code: key,
+    shiftKey: false,
+    ctrlKey: false,
+    altKey: false,
+    metaKey: false,
+    target: latinWritingFormTabsForTest[tabIndex],
+    preventDefault() { prevented += 1; }
+  });
+  assert.equal(prevented, 1, `${key} should prevent default tab-container scrolling`);
+}
+const oeFormsHtmlBeforeKeyboardNavigation = app.innerHTML;
+const oeClearCallsBeforeKeyboardNavigation = oeWritingCanvas.calls.filter(([name]) => name === "clearRect").length;
+pressLatinWritingTabKey("ArrowRight", 0);
+assert.equal(vm.runInContext("state.latinWritingForm", context), 1, "ArrowRight should select the next real form");
+assert.equal(focusedLatinWritingTabIndex, 1, "ArrowRight should focus the newly selected real form tab");
+assert.equal(
+  latinWritingPanel.getAttribute("aria-labelledby"),
+  "latin-writing-tab-oe-1",
+  "keyboard selection should keep the tabpanel associated with the selected real form"
+);
+pressLatinWritingTabKey("End", 1);
+assert.equal(vm.runInContext("state.latinWritingForm", context), oeDictationDetail.forms.length - 1, "End should select the last real form");
+assert.equal(focusedLatinWritingTabIndex, oeDictationDetail.forms.length - 1, "End should focus the last real form tab");
+pressLatinWritingTabKey("ArrowRight", oeDictationDetail.forms.length - 1);
+assert.equal(vm.runInContext("state.latinWritingForm", context), 0, "ArrowRight should wrap from the final real form to the first");
+pressLatinWritingTabKey("ArrowLeft", 0);
+assert.equal(vm.runInContext("state.latinWritingForm", context), oeDictationDetail.forms.length - 1, "ArrowLeft should wrap from the first real form to the final form");
+pressLatinWritingTabKey("Home", oeDictationDetail.forms.length - 1);
+assert.equal(vm.runInContext("state.latinWritingForm", context), 0, "Home should select the first real form");
+assert.equal(focusedLatinWritingTabIndex, 0, "Home should focus the first real form tab");
+assert.equal(app.innerHTML, oeFormsHtmlBeforeKeyboardNavigation, "tab keyboard navigation must preserve the root and live Canvas");
+assert.equal(
+  oeWritingCanvas.calls.filter(([name]) => name === "clearRect").length,
+  oeClearCallsBeforeKeyboardNavigation,
+  "tab keyboard navigation must preserve learner strokes"
 );
 oeWritingCanvas.listeners.pointerdown({
   clientX: 10,
@@ -4090,6 +4158,82 @@ assert.deepEqual(
   { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 5, total: 5 },
   "revealing the forms comparison should complete the fifth stable step"
 );
+
+oeWritingCanvas.listeners.pointerdown({
+  clientX: 18,
+  clientY: 20,
+  pointerId: 4,
+  preventDefault() {}
+});
+oeWritingCanvas.listeners.pointermove({
+  clientX: 64,
+  clientY: 72,
+  pointerId: 4,
+  preventDefault() {}
+});
+oeWritingCanvas.listeners.pointerup({ pointerId: 4 });
+const formsCanvasIdentityBeforeCloudStatus = writingCanvasesForTest[0];
+const formsPointerHandlerBeforeCloudStatus = oeWritingCanvas.listeners.pointerdown;
+const formsCanvasCallsBeforeCloudStatus = oeWritingCanvas.calls.length;
+const formsHtmlBeforeCloudStatus = app.innerHTML;
+const formsAppWritesBeforeCloudStatus = appHtmlWriteCount;
+vm.runInContext("cloudStatus = { phase: 'signed-in', error: '' }", context);
+for (const phase of ["syncing", "synced"]) {
+  vm.runInContext(`handleCloudStatus({ phase: '${phase}', authEvent: '', error: '' })`, context);
+  assert.equal(vm.runInContext("cloudStatus.phase", context), phase, `${phase} should still update the internal cloud status`);
+}
+assert.equal(
+  appHtmlWriteCount,
+  formsAppWritesBeforeCloudStatus,
+  "status-only cloud updates must not replace the active Latin forms Canvas DOM"
+);
+assert.equal(app.innerHTML, formsHtmlBeforeCloudStatus, "status-only cloud updates should keep forms root HTML untouched");
+assert.equal(writingCanvasesForTest[0], formsCanvasIdentityBeforeCloudStatus, "status-only cloud updates should retain the same forms Canvas object");
+assert.equal(oeWritingCanvas.listeners.pointerdown, formsPointerHandlerBeforeCloudStatus, "status-only cloud updates should not rebind Canvas pointer handlers");
+assert.equal(oeWritingCanvas.calls.length, formsCanvasCallsBeforeCloudStatus, "status-only cloud updates should preserve existing form strokes");
+
+vm.runInContext("window.sessionStorage.setItem('ana-tilim-auth-redirect', '1'); state.screen = 'latinWritingForms'", context);
+const formsAppWritesBeforeForcedOauthRedirect = appHtmlWriteCount;
+vm.runInContext("handleCloudStatus({ phase: 'signed-in', authEvent: '', error: '' })", context);
+assert.equal(vm.runInContext("state.screen", context), "home", "a forced OAuth redirect should still leave the live Canvas screen");
+assert.equal(appHtmlWriteCount, formsAppWritesBeforeForcedOauthRedirect + 1, "a forced OAuth redirect should still render its home destination");
+
+renderState("state.screen = 'latinWritingForms'; state.latinWritingLetterId = 'oe'");
+vm.runInContext("cloudStatus = { phase: 'verifying-code', error: '' }", context);
+const formsAppWritesBeforeEmailVerification = appHtmlWriteCount;
+vm.runInContext("handleCloudStatus({ phase: 'signed-in', authEvent: 'SIGNED_IN', error: '' })", context);
+assert.equal(vm.runInContext("state.screen", context), "home", "completed email verification should still leave the live Canvas screen");
+assert.equal(appHtmlWriteCount, formsAppWritesBeforeEmailVerification + 1, "completed email verification should still render its home destination");
+
+const dictationStatusCanvas = makeWritingCanvas();
+writingCanvasesForTest = [dictationStatusCanvas];
+renderState(
+  `state.screen = 'latinDictation'; state.latinDictationIndex = ${oeDictationIndex}; state.latinDictationRevealed = false`
+);
+dictationStatusCanvas.listeners.pointerdown({
+  clientX: 22,
+  clientY: 26,
+  pointerId: 5,
+  preventDefault() {}
+});
+dictationStatusCanvas.listeners.pointermove({
+  clientX: 54,
+  clientY: 62,
+  pointerId: 5,
+  preventDefault() {}
+});
+dictationStatusCanvas.listeners.pointerup({ pointerId: 5 });
+const dictationAppWritesBeforeCloudStatus = appHtmlWriteCount;
+const dictationCanvasCallsBeforeCloudStatus = dictationStatusCanvas.calls.length;
+vm.runInContext("handleCloudStatus({ phase: 'syncing', authEvent: '', error: '' })", context);
+assert.equal(appHtmlWriteCount, dictationAppWritesBeforeCloudStatus, "Task 4 dictation Canvas should also survive status-only cloud updates");
+assert.equal(dictationStatusCanvas.calls.length, dictationCanvasCallsBeforeCloudStatus, "dictation strokes should survive status-only cloud updates");
+
+writingCanvasesForTest = [];
+renderState("state.screen = 'vocab'");
+const ordinaryScreenWritesBeforeCloudStatus = appHtmlWriteCount;
+vm.runInContext("handleCloudStatus({ phase: 'synced', authEvent: '', error: '' })", context);
+assert.equal(appHtmlWriteCount, ordinaryScreenWritesBeforeCloudStatus + 1, "ordinary screens should retain the existing cloud-status rerender behavior");
 
 const unavailableLatinWritingCanvas = makeWritingCanvas({ contextAvailable: false });
 unavailableLatinWritingCanvas.dataset.writingFallbackId = "latin-writing-canvas-fallback";
