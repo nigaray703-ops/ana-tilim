@@ -7,7 +7,8 @@
 请在 Ana Tilim 项目根目录运行：
 
 ```bash
-NODE='/Users/nigarayaskar/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node'
+NODE="$(command -v node)"
+test -n "$NODE" || { echo "请先安装或启用 Node.js 20+，然后重试。"; exit 1; }
 $NODE tools/start-recording-studio.mjs
 ```
 
@@ -32,6 +33,7 @@ $NODE tools/start-recording-studio.mjs
 4. 为同一个目标录制多条 take
 
    选择一个目标，开始录音并停止后保存。每次保存都会新增一条 take；不会覆盖原录音，也不会覆盖较早的 take。
+   如果上传失败，工作台会保留这条本地试听，并只允许重试上传同一条录音；请先重试成功后再选择其他目标或开始新的录音。刷新页面会清除仅存在浏览器内存中的未上传试听，已保存的 take 不受影响。
 
 5. 对比现有音频和 take
 

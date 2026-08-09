@@ -77,6 +77,13 @@ function assertNoLocalPath(value, forbidden) {
   if (value && typeof value === "object") Object.values(value).forEach((item) => assertNoLocalPath(item, forbidden));
 }
 
+function assertSafeJsonResponse(response, fixture) {
+  const value = json(response);
+  for (const forbidden of [fixture.projectRoot, fixture.workspaceRoot, os.tmpdir(), "file://", ".mjs:", "node:"]) {
+    assertNoLocalPath(value, forbidden);
+  }
+}
+
 async function startFixture(t) {
   const fixture = createFixture();
   const server = await createRecordingStudioServer({
@@ -158,8 +165,10 @@ test("streams raw takes safely and supports reviewed workspace and importer rout
   const tooLarge = Buffer.alloc(20 * 1024 * 1024 + 1, 0);
   const oversized = await request(fixture.server, { method: "POST", pathname: "/api/takes/alphabet:aa", headers: { "Content-Type": "audio/webm", "Content-Length": String(tooLarge.length) }, body: tooLarge });
   assert.equal(oversized.status, 413);
+  assertSafeJsonResponse(oversized, fixture);
   const invalid = await request(fixture.server, { method: "POST", pathname: "/api/takes/alphabet:aa", headers: { "Content-Type": "audio/webm" }, body: Buffer.from("not-webm") });
   assert.equal(invalid.status, 400);
+  assertSafeJsonResponse(invalid, fixture);
   const uploaded = await request(fixture.server, { method: "POST", pathname: "/api/takes/alphabet:aa", headers: { "Content-Type": "audio/webm" }, body: changedWebm() });
   assert.equal(uploaded.status, 201);
   const takeId = json(uploaded).take.id;
@@ -171,18 +180,24 @@ test("streams raw takes safely and supports reviewed workspace and importer rout
   assert.deepEqual(Buffer.from(takeAudio.text, "binary"), Buffer.from(takeAudio.text, "binary"));
   const status = await request(fixture.server, { method: "POST", pathname: "/api/targets/alphabet:aa/status", headers: { "Content-Type": "application/json" }, body: '{"status":"needs-rerecord"}' });
   assert.equal(status.status, 200);
+  assertSafeJsonResponse(status, fixture);
   const approve = await request(fixture.server, { method: "POST", pathname: "/api/targets/alphabet:aa/approve", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ takeId }) });
   assert.equal(approve.status, 200);
+  assertSafeJsonResponse(approve, fixture);
   const preview = await request(fixture.server, { method: "POST", pathname: "/api/import/preview", headers: { "Content-Type": "application/json" }, body: "{}" });
   assert.equal(preview.status, 200);
   assert.equal(json(preview).operations[0].sourcePath, undefined);
+  assertSafeJsonResponse(preview, fixture);
   const apply = await request(fixture.server, { method: "POST", pathname: "/api/import/apply", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ planId: json(preview).planId }) });
   assert.equal(apply.status, 200);
+  assertSafeJsonResponse(apply, fixture);
   const operation = json(apply).operations[0];
   const finalize = await request(fixture.server, { method: "POST", pathname: "/api/import/finalize", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ importId: json(apply).importId, stableId: "alphabet:aa" }) });
   assert.equal(finalize.status, 200);
+  assertSafeJsonResponse(finalize, fixture);
   const repeated = await request(fixture.server, { method: "POST", pathname: "/api/import/finalize", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ importId: json(apply).importId, stableId: "alphabet:aa" }) });
   assert.equal(repeated.status, 400);
+  assertSafeJsonResponse(repeated, fixture);
   assert.equal(operation.targetPath, undefined);
   assert.deepEqual(fs.readFileSync(fixture.currentPath), changedWebm());
 });

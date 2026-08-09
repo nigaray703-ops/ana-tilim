@@ -127,11 +127,18 @@ function publicCatalog(catalog) {
   };
 }
 
-function publicPlan(plan) {
+function publicPlan(plan, catalogById) {
   return {
     planId: plan.planId,
     createdAt: plan.createdAt,
-    operations: plan.operations.map(({ sourcePath, targetPath, ...operation }) => operation)
+    operations: plan.operations.map(({ sourcePath, targetPath, ...operation }) => {
+      const target = catalogById.get(operation.stableId);
+      return {
+        ...operation,
+        targetFilename: target.currentFile,
+        backupDescriptor: operation.targetExisted ? `backups/<本次导入批次>/${target.category}/${target.currentFile}` : null
+      };
+    })
   };
 }
 
@@ -143,6 +150,18 @@ function publicImport(result) {
     planId: result.planId,
     completedAt: result.completedAt,
     operations: result.operations.map(({ sourcePath, targetPath, backupPath, ...operation }) => operation)
+  };
+}
+
+function publicFinalization(result) {
+  return {
+    schemaVersion: result.schemaVersion,
+    importId: result.importId,
+    stableId: result.stableId,
+    finalizedAt: result.finalizedAt,
+    replacementSha256: result.replacementSha256,
+    backupSha256: result.backupSha256,
+    finalized: true
   };
 }
 
@@ -277,7 +296,7 @@ export async function createRecordingStudioServer({
     if (method === "POST" && segments.length === 3 && segments[1] === "import" && segments[2] === "preview") {
       const body = await readJson(request);
       assertExactKeys(body, []);
-      return jsonResponse(response, 200, publicPlan(controller.previewImport()));
+      return jsonResponse(response, 200, publicPlan(controller.previewImport(), catalogById));
     }
     if (method === "POST" && segments.length === 3 && segments[1] === "import" && segments[2] === "apply") {
       const body = await readJson(request);
@@ -290,7 +309,7 @@ export async function createRecordingStudioServer({
       assertExactKeys(body, ["importId", "stableId"]);
       if (typeof body.importId !== "string" || typeof body.stableId !== "string") fail(400, "INVALID_IMPORT", "导入确认参数无效。");
       requireTarget(body.stableId);
-      return jsonResponse(response, 200, controller.finalizeReplacement({ importId: body.importId, stableId: body.stableId }));
+      return jsonResponse(response, 200, publicFinalization(controller.finalizeReplacement({ importId: body.importId, stableId: body.stableId })));
     }
     if (["GET", "POST"].includes(method)) fail(404, "NOT_FOUND", "请求地址不存在。");
     fail(405, "METHOD_NOT_ALLOWED", "请求方法不允许。");

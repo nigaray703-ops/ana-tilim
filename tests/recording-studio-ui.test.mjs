@@ -78,6 +78,7 @@ function createHarness({ catalogTargets, state = fixtureState(catalogTargets), r
   const document = new FakeDocument();
   for (const [id, tag] of [["target-search", "input"], ["category-filter", "select"], ["status-filter", "select"], ["target-list", "div"], ["target-detail", "article"], ["import-panel", "section"], ["preview-import", "button"], ["import-plan", "div"], ["apply-import", "button"], ["studio-status", "div"], ["studio-alert", "div"], ["audit-summary", "p"]]) document.register(id, tag);
   const calls = [];
+  const windowListeners = new Map();
   const fetch = async (url, options = {}) => {
     calls.push({ url, options });
     const route = routes[url];
@@ -98,13 +99,14 @@ function createHarness({ catalogTargets, state = fixtureState(catalogTargets), r
     location: { reload() {} },
     setTimeout,
     clearTimeout,
-    addEventListener() {},
+    addEventListener(name, listener) { windowListeners.set(name, listener); },
     encodeURIComponent,
     console
   });
+  vm.runInContext("globalThis.MediaRecorder = MediaRecorder", context);
   const source = fs.readFileSync(appPath, "utf8");
   vm.runInContext(source, context, { filename: appPath });
-  return { document, calls, context };
+  return { document, calls, context, windowListeners };
 }
 
 function descendants(node, predicate, found = []) {
@@ -230,4 +232,175 @@ test("upload, finalization, and recording failures restore focus after their fin
   await context.recordingStudio.refresh();
   await buttonByText(document, "确认新版并删除这一条旧版备份").click();
   assert.equal(document.activeElement.id, "target-alphabet%3Aaa");
+});
+
+test("a failed take upload preserves its exact blob and immutable target until its retry succeeds", async () => {
+  const first = fixtureTarget("alphabet:aa");
+  const second = fixtureTarget("alphabet:be", { value: "ب" });
+  let attempts = 0;
+  let microphoneCalls = 0;
+  const { context, document, calls } = createHarness({
+    catalogTargets: [first, second],
+    routes: {
+      "/api/takes/alphabet%3Aaa": ({ options }) => {
+        attempts += 1;
+        return attempts === 1
+          ? { response: { ok: false, status: 400, async json() { return { error: { message: "网络失败" } }; } } }
+          : { take: { id: "take-a" }, received: options.body };
+      }
+    },
+    mediaDevices: { getUserMedia: async () => { microphoneCalls += 1; return { getTracks: () => [{ stop() {} }] }; } }
+  });
+  await context.recordingStudio.ready;
+  const blob = new context.Blob([Buffer.from("first-take")], { type: "audio/webm" });
+  context.recordingStudio.model.pendingUpload = { stableId: first.stableId, blob };
+  await context.recordingStudio.uploadPending();
+  await document.getElementById("target-alphabet%3Abe").click();
+  await context.recordingStudio.startRecording();
+  assert.equal(context.recordingStudio.model.selectedStableId, first.stableId);
+  assert.equal(context.recordingStudio.model.pendingUpload.blob, blob);
+  assert.equal(microphoneCalls, 0);
+  await context.recordingStudio.uploadPending();
+  const uploads = calls.filter((call) => call.url === "/api/takes/alphabet%3Aaa");
+  assert.equal(uploads.length, 2);
+  assert.equal(uploads[1].options.body, blob);
+  assert.equal(context.recordingStudio.model.pendingUpload, null);
+});
+
+test("import preview renders full hashes, exact safe destination, and text-hash verification", async () => {
+  const target = fixtureTarget("alphabet:aa", { currentFile: "human_letter_01_a.webm" });
+  const oldHash = "a".repeat(64);
+  const newHash = "b".repeat(64);
+  const { context, document } = createHarness({
+    catalogTargets: [target],
+    routes: {
+      "/api/import/preview": { planId: "plan-a", operations: [{ stableId: target.stableId, currentSha256: oldHash, replacementSha256: newHash, recordingTextHash: target.recordingTextHash, targetExisted: true, targetFilename: target.currentFile, backupDescriptor: "backups/<本次导入批次>/alphabet/human_letter_01_a.webm" }] }
+    }
+  });
+  await context.recordingStudio.ready;
+  await document.getElementById("preview-import").click();
+  const detail = document.getElementById("import-plan").children[0].textContent;
+  assert.match(detail, new RegExp(oldHash));
+  assert.match(detail, new RegExp(newHash));
+  assert.match(detail, /human_letter_01_a\.webm/);
+  assert.match(detail, /backups\/<本次导入批次>\/alphabet\/human_letter_01_a\.webm/);
+  assert.match(detail, /录音文本哈希已核对，无变更/);
+  assert.match(document.getElementById("apply-import").textContent, /1/);
+});
+
+test("a real recorder uploads audio/webm for its original target and always releases microphone tracks", async () => {
+  const first = fixtureTarget("alphabet:aa");
+  const second = fixtureTarget("alphabet:be", { value: "ب" });
+  let stopped = 0;
+  const { context, document, calls } = createHarness({
+    catalogTargets: [first, second],
+    mediaDevices: { getUserMedia: async () => ({ getTracks: () => [{ stop() { stopped += 1; } }] }) }
+  });
+  vm.runInContext(`globalThis.__recorders = []; globalThis.MediaRecorder = class {
+    static isTypeSupported(type) { return type === "audio/webm;codecs=opus"; }
+    constructor(stream, options) { this.stream = stream; this.options = options; this.state = "inactive"; this.listeners = new Map(); globalThis.__recorders.push(this); }
+    addEventListener(name, listener) { this.listeners.set(name, listener); }
+    start() { this.state = "recording"; }
+    stop() { this.state = "inactive"; return this.listeners.get("stop")?.(); }
+    emit(name, event) { return this.listeners.get(name)?.(event); }
+  }`, context);
+  await context.recordingStudio.ready;
+  await context.recordingStudio.startRecording();
+  assert.equal(context.__recorders.length, 1, document.getElementById("studio-status").textContent);
+  assert.equal(context.__recorders[0].options.mimeType, "audio/webm;codecs=opus");
+  await document.getElementById("target-alphabet%3Abe").click();
+  assert.equal(context.recordingStudio.model.selectedStableId, first.stableId);
+  await context.__recorders[0].emit("dataavailable", { data: new context.Blob([Buffer.from("audio")], { type: "audio/webm" }) });
+  await context.recordingStudio.stopRecording();
+  await context.__recorders[0].emit("stop");
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const upload = calls.find((call) => call.url === "/api/takes/alphabet%3Aaa");
+  assert.ok(upload, JSON.stringify(calls.map((call) => call.url)));
+  assert.equal(upload.options.headers["Content-Type"], "audio/webm");
+  assert.equal(upload.options.body.type, "audio/webm;codecs=opus");
+  assert.ok(stopped > 0);
+
+  await context.recordingStudio.startRecording();
+  await context.__recorders[1].emit("error");
+  await context.__recorders[1].emit("stop");
+  assert.equal(calls.filter((call) => call.url.startsWith("/api/takes/")).length, 1);
+  assert.ok(stopped > 1);
+});
+
+test("empty recording and beforeunload both release tracks without an upload", async () => {
+  const target = fixtureTarget("alphabet:aa");
+  let stopped = 0;
+  const { context, calls, windowListeners } = createHarness({ catalogTargets: [target], mediaDevices: { getUserMedia: async () => ({ getTracks: () => [{ stop() { stopped += 1; } }] }) } });
+  vm.runInContext(`globalThis.__recorders = []; globalThis.MediaRecorder = class {
+    static isTypeSupported(type) { return type === "audio/webm"; }
+    constructor(stream) { this.stream = stream; this.state = "inactive"; this.listeners = new Map(); globalThis.__recorders.push(this); }
+    addEventListener(name, listener) { this.listeners.set(name, listener); }
+    start() { this.state = "recording"; }
+    stop() { this.state = "inactive"; return this.listeners.get("stop")?.(); }
+    emit(name, event) { return this.listeners.get(name)?.(event); }
+  }`, context);
+  await context.recordingStudio.ready;
+  await context.recordingStudio.startRecording();
+  await context.__recorders[0].emit("stop");
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(calls.some((call) => call.url.startsWith("/api/takes/")), false);
+  assert.ok(stopped > 0);
+  await context.recordingStudio.startRecording();
+  windowListeners.get("beforeunload")();
+  assert.ok(stopped > 1);
+});
+
+test("busy duplicate actions make one request and a new target import never offers finalization", async () => {
+  const target = fixtureTarget("alphabet:aa");
+  let resolveStatus;
+  const pendingStatus = new Promise((resolve) => { resolveStatus = resolve; });
+  const { context, document, calls } = createHarness({
+    catalogTargets: [target],
+    routes: {
+      "/api/targets/alphabet%3Aaa/status": async () => { await pendingStatus; return { target: {} }; },
+      "/api/import/preview": { planId: "plan-a", operations: [{ stableId: target.stableId, currentSha256: "old", replacementSha256: "new", targetExisted: false, targetFilename: target.currentFile, recordingTextHash: target.recordingTextHash }] },
+      "/api/import/apply": { importId: "import-new", operations: [{ stableId: target.stableId, replacementSha256: "new", targetExisted: false }] }
+    }
+  });
+  await context.recordingStudio.ready;
+  const first = buttonByText(document, "需要重录").click();
+  const second = buttonByText(document, "需要重录").click();
+  resolveStatus();
+  await Promise.all([first, second]);
+  assert.equal(calls.filter((call) => call.url === "/api/targets/alphabet%3Aaa/status").length, 1);
+  await document.getElementById("preview-import").click();
+  await document.getElementById("apply-import").click();
+  const current = descendants(document.getElementById("target-detail"), (element) => element.tagName === "AUDIO")[0];
+  await current.trigger("playing");
+  assert.equal(buttonByText(document, "确认新版并删除这一条旧版备份"), null);
+});
+
+test("searches every target field, combines filters, and one-target audit mutations never import", async () => {
+  const targets = [
+    fixtureTarget("alphabet:stable-id", { value: "ئۇيغۇر", latin: "uly-key", meaning: "中文关键字", english: "english-key", initialStatus: "pending-review" }),
+    fixtureTarget("vocab:other", { category: "vocab", value: "别的", initialStatus: "needs-rerecord", takes: [{ id: "take-one", createdAt: "2026-08-10T00:00:00.000Z", durationMs: 1, size: 1 }] })
+  ];
+  const state = fixtureState(targets);
+  state.targets["vocab:other"].takes = [{ id: "take-one", createdAt: "2026-08-10T00:00:00.000Z", durationMs: 1, size: 1 }];
+  const { context, document, calls } = createHarness({ catalogTargets: targets, state });
+  await context.recordingStudio.ready;
+  for (const query of ["stable-id", "ئۇيغۇر", "uly-key", "中文关键字", "english-key"]) {
+    document.getElementById("target-search").value = query;
+    await document.getElementById("target-search").trigger("input");
+    assert.equal(document.getElementById("target-list").children.length, 1, query);
+  }
+  document.getElementById("target-search").value = "";
+  await document.getElementById("target-search").trigger("input");
+  document.getElementById("category-filter").value = "vocab";
+  await document.getElementById("category-filter").trigger("change");
+  document.getElementById("status-filter").value = "needs-rerecord";
+  await document.getElementById("status-filter").trigger("change");
+  assert.equal(document.getElementById("target-list").children.length, 1);
+  await document.getElementById("target-vocab%3Aother").click();
+  await buttonByText(document, "当前音频正确").click();
+  await buttonByText(document, "需要重录").click();
+  await buttonByText(document, "批准这条 take").click();
+  const endpoints = calls.filter((call) => call.url.startsWith("/api/targets/")).map((call) => call.url);
+  assert.deepEqual(endpoints, ["/api/targets/vocab%3Aother/approve-current", "/api/targets/vocab%3Aother/status", "/api/targets/vocab%3Aother/approve"]);
+  assert.equal(calls.some((call) => call.url.startsWith("/api/import/")), false);
 });
