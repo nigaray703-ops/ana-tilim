@@ -105,8 +105,7 @@ const expectedCoreFiles = [
   "sentence-morphemes.js",
   "sentence-glossary.js",
   "progress-transfer.js",
-  "audio-controller.js",
-  "assets/portraits/mahmud-kashgari-wax.jpg"
+  "audio-controller.js"
 ];
 const syncTargetPath = path.join(os.tmpdir(), "ana-tilim-cn-core-sync-test");
 const excludedFiles = ["app-config.js", "manifest.webmanifest", "assets/logo.png"];

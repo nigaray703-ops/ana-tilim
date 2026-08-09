@@ -3350,11 +3350,10 @@ includesAll(
 );
 includesAll(
   renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'famous-quotes'; state.selectedReadingGroupId = 'quote-mahmud-kashgari'"),
-  ["名人名言", "人物介绍", "11 世纪", "语言学家、词典编纂者", "《突厥语大词典》", "语言、词典与文化记忆", "蜡像资料图（非历史照片）", "摄影：باسم", "CC BY-SA 4.0", "reading-meaning", "语言是了解一个民族的钥匙。", "词典也能保存民族的记忆。", "学习语言，就是学习看世界的方法。"],
+  ["名人名言", "人物介绍", "11 世纪语言学家，《突厥语大词典》的作者", "reading-meaning", "语言是了解一个民族的钥匙。", "词典也能保存民族的记忆。", "学习语言，就是学习看世界的方法。"],
   "famous quote reading lesson"
 );
-assert.match(app.innerHTML, /class="reading-profile-portrait"[^>]*src="\.\/assets\/portraits\/mahmud-kashgari-wax\.jpg"[^>]*alt="马赫穆德·喀什噶里蜡像资料图"/);
-assert.match(app.innerHTML, /href="https:\/\/commons\.wikimedia\.org\/wiki\/File:Maḥmūd_al-Kāšġarī,_Wax\.jpg"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
+assert.doesNotMatch(app.innerHTML, /reading-profile-(?:facts|visual|portrait|placeholder)/, "quote pages should not show the removed portrait or fact grid");
 assertLearnerCopyClean("famous quote reading lesson");
 assert.ok(!app.innerHTML.includes("reading-lesson"), "famous quote reading lesson should not show the meaning/lesson section");
 const unifiedQuoteHtml = renderState(
@@ -3370,15 +3369,11 @@ assert.equal(
   "all three quote sentences should use the same reading sentence class"
 );
 assert.ok(!unifiedQuoteHtml.includes("clear-medial-mim"), "the quote lesson should not use a sentence-specific font override");
-const quoteWithoutPortraitHtml = renderState(
+const simpleQuoteIntroHtml = renderState(
   "state.screen = 'reading'; state.selectedReadingUnitId = 'famous-quotes'; state.selectedReadingGroupId = 'quote-yusuf-hajib'"
 );
-includesAll(
-  quoteWithoutPortraitHtml,
-  ["11 世纪", "思想家、诗人", "《福乐智慧》", "知识、品德与治理智慧", "暂无可靠肖像资料"],
-  "quote profile without a verified portrait"
-);
-assert.doesNotMatch(quoteWithoutPortraitHtml, /class="reading-profile-portrait"/, "a missing portrait should not invent an image");
+assert.ok(simpleQuoteIntroHtml.includes("11 世纪思想家、诗人，《福乐智慧》的作者"), "each quote page should retain its concise introduction");
+assert.doesNotMatch(simpleQuoteIntroHtml, /reading-profile-(?:facts|visual|portrait|placeholder)/, "all quote pages should use the same simple introduction layout");
 includesAll(
   renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'uyghur-proverbs'; state.selectedReadingGroupId = 'proverb-bilim-kuch'"),
   ["维吾尔谚语", "reading-meaning", "知识就是力量。", "学到的东西不会丢。", "不学的人，路会变窄。"],
