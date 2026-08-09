@@ -299,6 +299,7 @@ const persistedScreenIds = new Set([
   "syllableWarmup",
   "syllableRules",
   "syllableConnections",
+  "syllableSentences",
   "syllableReview",
   "vocab",
   "vocabRecognition",
@@ -327,7 +328,8 @@ const stableProgressIds = Object.freeze({
   syllableTraining: new Set([
     syllableTraining.sections[0].id,
     ...syllableTraining.rules.map((rule) => rule.id),
-    syllableTraining.sections[2].id
+    syllableTraining.sections[2].id,
+    syllableTraining.sections[3].id
   ]),
   vocab: new Set(vocabGroups.map((group) => group.id)),
   practice: new Set(practiceGroups.map((group) => group.id)),
@@ -504,6 +506,9 @@ function expectedSyllableCompletedIds(progressId) {
   if (progressId === syllableTraining.sections[2].id) {
     return syllableTraining.connectionItems.map((item) => item.id);
   }
+  if (progressId === syllableTraining.sections[3].id) {
+    return syllableTraining.sentences.map((item) => item.id);
+  }
   return (syllableTraining.rules.find((rule) => rule.id === progressId)?.exercises || []).map(
     (exercise) => exercise.id
   );
@@ -517,10 +522,17 @@ function syllableConnectionPrerequisitesComplete(learningProgress = state.learni
   );
 }
 
+function syllableSentencePrerequisitesComplete(learningProgress = state.learningProgress) {
+  return Boolean(
+    syllableConnectionPrerequisitesComplete(learningProgress) &&
+    learningProgress?.syllableTraining?.[syllableTraining.sections[2].id]?.completed === true
+  );
+}
+
 function reachableSyllableTrainingScreen(learningProgress = state.learningProgress) {
-  return learningProgress?.syllableTraining?.[syllableTraining.sections[0].id]?.completed === true
-    ? "syllableRules"
-    : "syllableWarmup";
+  if (syllableSentencePrerequisitesComplete(learningProgress)) return "syllableSentences";
+  if (syllableConnectionPrerequisitesComplete(learningProgress)) return "syllableConnections";
+  return learningProgress?.syllableTraining?.[syllableTraining.sections[0].id]?.completed === true ? "syllableRules" : "syllableWarmup";
 }
 
 function activeSyllableReviewBucket() {
@@ -624,6 +636,10 @@ const state = {
   syllableConnectionSubmitted: false,
   syllableConnectionMode: "lesson",
   syllableConnectionReviewItemId: "",
+  syllableSentenceIndex: 0,
+  syllableSentenceShowStandard: false,
+  syllableSentenceHelperViewed: false,
+  syllableSentenceAudioPlayed: false,
   practiceSpoken: false,
   emailAuthExpanded: false,
   emailCodeSent: false,
@@ -648,6 +664,21 @@ let lastAutoplayKey = "";
 let progressImportSelectionGeneration = 0;
 let cloudSync = null;
 let cloudStatus = { phase: "local", error: "" };
+const syllableSentenceAudioController = window.ANA_TILIM_AUDIO?.createAudioController({
+  onStarted: ({ contentKey }) => {
+    const sentenceId = contentKey?.replace("syllable-sentence:", "");
+    if (state.screen !== "syllableSentences" || currentSyllableSentence()?.id !== sentenceId) return;
+    state.syllableSentenceAudioPlayed = true;
+    state.syllableSentencePlaybackStatus = "真人整句音频播放中";
+    completeCurrentSyllableSentenceIfReady();
+    render();
+  },
+  onError: () => {
+    if (state.screen !== "syllableSentences") return;
+    state.syllableSentencePlaybackStatus = "音频未能启动，请重试";
+    render();
+  }
+});
 
 function localStorageSafe() {
   try {
@@ -857,6 +888,9 @@ function validateImportedProgressIds(saved) {
   if (saved.screen === "syllableConnections" && !syllableConnectionPrerequisitesComplete(saved.learningProgress)) {
     throw new Error("syllableConnections 必须先完成全部规则前置阶段");
   }
+  if (saved.screen === "syllableSentences" && !syllableSentencePrerequisitesComplete(saved.learningProgress)) {
+    throw new Error("syllableSentences 必须先完成连接与断开前置阶段");
+  }
   validateSyllableMistakeIds(saved.syllableMistakes);
 
   const importedMistakeIds = new Set(
@@ -922,7 +956,8 @@ function validateImportedProgressIds(saved) {
     const orderedStageIds = [
       syllableTraining.sections[0].id,
       ...syllableTraining.rules.map((rule) => rule.id),
-      syllableTraining.sections[2].id
+      syllableTraining.sections[2].id,
+      syllableTraining.sections[3].id
     ];
     for (let index = 1; index < orderedStageIds.length; index += 1) {
       const currentId = orderedStageIds[index];
@@ -2641,6 +2676,7 @@ function render({ persist = true } = {}) {
     syllableWarmup: renderSyllableWarmup,
     syllableRules: renderSyllableRules,
     syllableConnections: renderSyllableConnections,
+    syllableSentences: renderSyllableSentences,
     syllableReview: renderSyllableReview,
     vocab: renderVocabLesson,
     vocabRecognition: renderVocabRecognition,
@@ -3646,10 +3682,10 @@ function renderSyllableConnections() {
               ? isReview
                 ? '<button class="primary-button" data-action="next-syllable-connection-review" type="button">继续复习</button>'
                 : completed
-                  ? '<button class="primary-button" data-action="go" data-target="syllableReview" type="button">复习连接与断开错题</button>'
+                  ? '<div class="action-grid"><button class="secondary-button" data-action="go" data-target="syllableReview" type="button">复习连接与断开错题</button><button class="primary-button" data-action="go" data-target="syllableSentences" type="button">继续：短句拼读</button></div>'
                   : '<button class="primary-button" data-action="next-syllable-connection" type="button">继续下一题</button>'
               : completed && !isReview
-                ? '<button class="primary-button" data-action="go" data-target="syllableReview" type="button">复习连接与断开错题</button>'
+              ? '<div class="action-grid"><button class="secondary-button" data-action="go" data-target="syllableReview" type="button">复习连接与断开错题</button><button class="primary-button" data-action="go" data-target="syllableSentences" type="button">继续：短句拼读</button></div>'
                 : ""
           }
         </article>
@@ -3700,6 +3736,88 @@ function renderSyllableReview() {
       <section class="stack syllable-training-screen">
         ${renderSyllableReviewBucket("connection", "连接错误")}
         ${renderSyllableReviewBucket("break", "断开错误")}
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function completedSyllableSentenceIds() {
+  return completedSyllableItemIds(syllableTraining.sections[3].id);
+}
+
+function currentSyllableSentence() {
+  const completedIds = completedSyllableSentenceIds();
+  const firstIncompleteIndex = syllableTraining.sentences.findIndex((item) => !completedIds.includes(item.id));
+  const lastIndex = syllableTraining.sentences.length - 1;
+  const index = firstIncompleteIndex >= 0 ? firstIncompleteIndex : lastIndex;
+  state.syllableSentenceIndex = index;
+  return syllableTraining.sentences[index];
+}
+
+function syllableSentenceSource(sentence) {
+  const sourceAudio = readingAudioByItemId[sentence.sourceReadingItemId];
+  const sourceItem = readingUnits.flatMap((unit) => unit.groups.flatMap((group) => group.items)).find((item) => item.id === sentence.sourceReadingItemId);
+  if (!sourceAudio || !sourceItem || sourceItem.value !== sentence.standard || sourceAudio.outputPath !== sentence.audioPath) {
+    throw new Error(`Syllable sentence source mismatch: ${sentence.id}`);
+  }
+  return sourceAudio;
+}
+
+function completeCurrentSyllableSentenceIfReady() {
+  const sentence = currentSyllableSentence();
+  if (!state.syllableSentenceHelperViewed || !state.syllableSentenceShowStandard || !state.syllableSentenceAudioPlayed) return false;
+  submitSyllableItem(
+    syllableTraining.sections[3].id,
+    sentence.id,
+    syllableTraining.sentences.map((item) => item.id)
+  );
+  state.syllableSentenceShowStandard = false;
+  state.syllableSentenceHelperViewed = false;
+  state.syllableSentenceAudioPlayed = false;
+  return true;
+}
+
+function renderSyllableSentences() {
+  if (!syllableSentencePrerequisitesComplete()) {
+    const fallbackScreen = reachableSyllableTrainingScreen();
+    state.screen = fallbackScreen;
+    return fallbackScreen === "syllableConnections" ? renderSyllableConnections() : renderSyllableRules();
+  }
+  const sentence = currentSyllableSentence();
+  const audio = syllableSentenceSource(sentence);
+  const completedIds = completedSyllableSentenceIds();
+  const completed = completedIds.length === syllableTraining.sentences.length;
+  const nextUnitId = unitOrder.nextUnitId("syllable-training", learningUnits);
+  state.syllableSentenceHelperViewed = true;
+
+  return screen(
+    `
+      ${topBar("短句拼读", "先看辅助音节，再切换标准拼写并听真人整句", "", `<button class="back-button" data-action="go" data-target="syllableConnections" type="button" aria-label="返回">&larr;</button>`)}
+      <section class="stack syllable-training-screen" data-syllable-sentence-id="${escapeHtml(sentence.id)}">
+        ${renderItemProgress(`${Math.min(completedIds.length + 1, syllableTraining.sentences.length)} / ${syllableTraining.sentences.length}`, "短句阅读")}
+        <article class="card syllable-sentence-card">
+          <p class="caption">${escapeHtml(sentence.meaning)}</p>
+          ${
+            state.syllableSentenceShowStandard
+              ? `<div class="syllable-sentence-standard uyghur" data-syllable-standard-sentence="${escapeHtml(sentence.id)}" dir="rtl">${escapeHtml(sentence.standard)}</div>`
+              : `<div class="syllable-sentence-chips" dir="rtl" aria-label="按音节拆分的辅助读法">${sentence.syllables.map((part) => `<span class="uyghur syllable-sentence-chip" data-syllable-sentence-chip>${escapeHtml(part.text)}</span>`).join("")}</div>`
+          }
+          <div class="syllable-sentence-controls" dir="ltr">
+            <button class="secondary-button" data-action="show-standard-sentence" type="button">${state.syllableSentenceShowStandard ? "已查看标准拼写" : "查看标准拼写"}</button>
+            <button class="secondary-button" data-action="play-syllable-part" type="button" disabled aria-describedby="syllable-segment-unavailable">逐音节</button>
+            <button class="secondary-button" data-action="play-syllable-sentence" data-rate="0.75" type="button" aria-label="慢速播放整句，ULY ${escapeHtml(sentence.latin)}">慢速整句 0.75×</button>
+            <button class="primary-button" data-action="play-syllable-sentence" data-rate="1" type="button" aria-label="正常播放整句，ULY ${escapeHtml(sentence.latin)}">正常整句 1.0×</button>
+          </div>
+          <p class="caption" id="syllable-segment-unavailable">逐音节：待核听/暂不可用。当前只有已核对的真人整句音频。</p>
+          <p class="syllable-sentence-latin" dir="ltr">${escapeHtml(sentence.latin)}</p>
+          <p class="feedback" data-syllable-sentence-status role="status" tabindex="-1">${escapeHtml(state.syllableSentencePlaybackStatus || "请先查看两种文字层，再播放任一整句模式。")}</p>
+        </article>
+        ${
+          completed
+            ? `<button class="primary-button" data-action="open-unit" data-id="${escapeHtml(nextUnitId || "basic-phrases")}" type="button">继续：${escapeHtml(learningUnitTitle(nextUnitId || "basic-phrases"))}</button>`
+            : ""
+        }
       </section>
     `,
     "learn"
@@ -6519,7 +6637,13 @@ function playAudio(src, label, { autoplay = false } = {}) {
 }
 
 function goTo(target) {
+  if (state.screen === "syllableSentences" && target !== "syllableSentences") {
+    syllableSentenceAudioController?.stop();
+  }
   if (target === "syllableConnections" && !syllableConnectionScreenIsReachable()) {
+    target = reachableSyllableTrainingScreen();
+  }
+  if (target === "syllableSentences" && !syllableSentencePrerequisitesComplete()) {
     target = reachableSyllableTrainingScreen();
   }
   state.screen = target;
@@ -6725,6 +6849,43 @@ document.addEventListener("click", (event) => {
     state.syllableConnectionSubmitted = false;
     render();
     focusSyllableRuleElement("[data-syllable-connection-question]");
+    return;
+  }
+
+  if (action === "show-standard-sentence") {
+    if (!syllableSentencePrerequisitesComplete()) {
+      goTo("syllableSentences");
+      return;
+    }
+    state.syllableSentenceShowStandard = true;
+    completeCurrentSyllableSentenceIfReady();
+    render();
+    focusSyllableRuleElement("[data-syllable-sentence-status]");
+    return;
+  }
+
+  if (action === "play-syllable-sentence") {
+    if (!syllableSentencePrerequisitesComplete()) {
+      goTo("syllableSentences");
+      return;
+    }
+    const rate = Number(button.dataset.rate) === 0.75 ? 0.75 : 1;
+    const sentence = currentSyllableSentence();
+    const audio = syllableSentenceSource(sentence);
+    if (!syllableSentenceAudioController || !audio?.outputPath) {
+      state.syllableSentencePlaybackStatus = "当前浏览器不能启动真人音频";
+      render();
+      return;
+    }
+    syllableSentenceAudioController.stop();
+    syllableSentenceAudioController.setRate(rate);
+    state.syllableSentencePlaybackStatus = rate === 0.75 ? "正在启动慢速真人整句音频" : "正在启动正常真人整句音频";
+    syllableSentenceAudioController.play({
+      src: audio.outputPath,
+      label: sentence.standard,
+      contentKey: `syllable-sentence:${sentence.id}`
+    });
+    render();
     return;
   }
 
@@ -7223,6 +7384,18 @@ document.addEventListener("click", (event) => {
       state.syllableConnectionAnswerId = "";
       state.syllableConnectionSubmitted = false;
       state.syllableConnectionReviewItemId = "";
+    }
+    if (target === "syllableSentences") {
+      const firstIncompleteIndex = syllableTraining.sentences.findIndex(
+        (item) => !completedSyllableSentenceIds().includes(item.id)
+      );
+      state.syllableSectionId = syllableTraining.sections[3].id;
+      state.syllableSentenceIndex = firstIncompleteIndex >= 0 ? firstIncompleteIndex : syllableTraining.sentences.length - 1;
+      state.syllableSentenceShowStandard = false;
+      state.syllableSentenceHelperViewed = false;
+      state.syllableSentenceAudioPlayed = false;
+      state.syllableSentencePlaybackStatus = "";
+      syllableSentenceAudioController?.stop();
     }
     if (["picture", "listening", "keyboard", "letterOdd", "letterSound", "comboRecognition", "comboBuild", "comboWriting", "comboKeyboard", "vocabRecognition", "vocabKeyboard", "letterWriting"].includes(target)) {
       resetPracticeState();

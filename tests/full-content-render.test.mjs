@@ -449,6 +449,38 @@ for (const [label, syllableMistakes, expectedText] of [
   renderState({ screen: "syllableReview", syllableMistakes }, `syllable review ${label}`, expectedText);
 }
 
+const completedSyllableSentencePrerequisites = {
+  ...completedSyllableConnectionPrerequisites,
+  "connection-errors": {
+    completedIds: courseData.syllableTraining.connectionItems.map((item) => item.id),
+    completed: true
+  }
+};
+for (const [sentenceIndex, sentence] of courseData.syllableTraining.sentences.entries()) {
+  const completedIdsBefore = courseData.syllableTraining.sentences.slice(0, sentenceIndex).map((item) => item.id);
+  for (const syllableSentenceShowStandard of [false, true]) {
+    renderState(
+      {
+        screen: "syllableSentences",
+        selectedUnitId: "syllable-training",
+        syllableSentenceIndex: sentenceIndex,
+        syllableSentenceShowStandard,
+        syllableSentenceAudioPlayed: false,
+        learningProgress: {
+          latinWriting: {}, letters: {}, combos: {},
+          syllableTraining: {
+            ...completedSyllableSentencePrerequisites,
+            "sentence-reading": { completedIds: completedIdsBefore }
+          },
+          vocab: {}, practice: {}, reading: {}
+        }
+      },
+      `syllable sentence ${sentence.id} ${syllableSentenceShowStandard ? "standard" : "helper"}`,
+      syllableSentenceShowStandard ? sentence.standard : sentence.syllables[0].text
+    );
+  }
+}
+
 for (const group of courseData.vocabGroups) {
   for (const item of group.items) {
     renderState(
@@ -481,6 +513,6 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
   }
 }
 
-assert.equal(renderCount, 732, "full UI audit should render every retained main screen, syllable warmup/rule/judgment/review state, real 2/4/8 form state, lesson item, reading group, and practice item");
+assert.equal(renderCount, 744, "full UI audit should render every retained main screen, syllable warmup/rule/judgment/review/sentence state, real 2/4/8 form state, lesson item, reading group, and practice item");
 
 console.log(`full content render checks passed (${renderCount} states)`);

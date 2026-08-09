@@ -51,7 +51,7 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260809-syllable-ui",
+  "./styles.css?v=20260809-syllable-sentences",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
@@ -71,7 +71,7 @@ const expectedVersionedAssets = [
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260809-syllable-review",
-  "./app.js?v=20260809-syllable-review"
+  "./app.js?v=20260809-syllable-sentences"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -518,7 +518,17 @@ const context = {
 };
 
 context.globalThis = context;
+context.window.Audio = context.Audio;
+context.__testPlayedAudioSources = playedAudioSources;
 vm.createContext(context);
+vm.runInContext(
+  `window.Audio = function FakeAudioForVm(src) {
+    this.src = src;
+    this.pause = () => {};
+    this.play = () => { globalThis.__testPlayedAudioSources.push(src); return Promise.resolve(); };
+  };`,
+  context
+);
 vm.runInContext(fs.readFileSync("prototype/app-config.js", "utf8"), context, { filename: "prototype/app-config.js" });
 context.window.ANA_TILIM_APP_CONFIG = Object.freeze({
   ...context.window.ANA_TILIM_APP_CONFIG,
@@ -534,6 +544,7 @@ vm.runInContext(fs.readFileSync(latinKeyboardPath, "utf8"), context, { filename:
 vm.runInContext(fs.readFileSync("prototype/sentence-morphemes.js", "utf8"), context, { filename: "prototype/sentence-morphemes.js" });
 vm.runInContext(fs.readFileSync("prototype/sentence-glossary.js", "utf8"), context, { filename: "prototype/sentence-glossary.js" });
 vm.runInContext(fs.readFileSync("prototype/progress-transfer.js", "utf8"), context, { filename: "prototype/progress-transfer.js" });
+vm.runInContext(fs.readFileSync("prototype/audio-controller.js", "utf8"), context, { filename: "prototype/audio-controller.js" });
 vm.runInContext(fs.readFileSync("prototype/cloud-config.js", "utf8"), context, { filename: "prototype/cloud-config.js" });
 vm.runInContext(fs.readFileSync("prototype/cloud-sync.js", "utf8"), context, { filename: "prototype/cloud-sync.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
@@ -5506,5 +5517,64 @@ assert.ok(wordGlossStyle.includes("direction: rtl;"), "word glosses should begin
 assert.ok(wordGlossStyle.includes("justify-content: center;"), "word glosses should be centered");
 const morphemeGlossStyle = styleSource.match(/^\.morpheme-glosses\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
 assert.ok(morphemeGlossStyle.includes("direction: rtl;"), "morpheme breakdowns should run from right to left");
+
+const syllableTrainingData = context.window.ANA_TILIM_COURSE.syllableTraining;
+const sentenceReadingPrerequisite = {
+  "two-letter-warmup": { completedIds: syllableTrainingData.twoLetterItems.map((item) => item.id), completed: true },
+  ...Object.fromEntries(syllableTrainingData.rules.map((rule) => [
+    rule.id,
+    { completedIds: rule.exercises.map((item) => item.id), completed: true }
+  ])),
+  "connection-errors": { completedIds: syllableTrainingData.connectionItems.map((item) => item.id), completed: true }
+};
+const firstSyllableSentence = syllableTrainingData.sentences[0];
+vm.runInContext("state.syllableSentenceIndex = 5", context);
+assert.equal(
+  vm.runInContext("currentSyllableSentence().id", context),
+  firstSyllableSentence.id,
+  "sentence reading must resume the first incomplete sentence instead of honoring a stale later index"
+);
+const syllableSentenceHtml = renderState(`
+  state.screen = "syllableSentences";
+  state.selectedUnitId = "syllable-training";
+  state.learningProgress = { latinWriting: {}, letters: {}, combos: {}, syllableTraining: ${JSON.stringify(sentenceReadingPrerequisite)}, vocab: {}, practice: {}, reading: {} };
+  state.syllableSentenceIndex = 0;
+  state.syllableSentenceShowStandard = false;
+`);
+assert.match(syllableSentenceHtml, new RegExp(`data-syllable-sentence-id="${firstSyllableSentence.id}"`), "the first unlocked sentence should render its stable sentence ID");
+assert.match(syllableSentenceHtml, /data-action="show-standard-sentence"/, "sentence reading should let the learner view the exact standard layer");
+assert.equal((syllableSentenceHtml.match(/data-syllable-sentence-chip/g) || []).length, firstSyllableSentence.syllables.length, "the helper layer should keep one DOM chip per approved syllable");
+assert.match(syllableSentenceHtml, /data-action="play-syllable-part"[^>]*disabled/, "unlistened syllable segments must stay visibly disabled");
+assert.ok(syllableSentenceHtml.includes("待核听/暂不可用"), "disabled segments should explain that timing is unavailable");
+assert.ok(syllableSentenceHtml.includes('data-action="play-syllable-sentence" data-rate="0.75"'), "sentence reading should expose a 0.75 slow whole-sentence mode");
+assert.ok(syllableSentenceHtml.includes('data-action="play-syllable-sentence" data-rate="1"'), "sentence reading should expose a normal whole-sentence mode");
+assert.equal(
+  vm.runInContext(`syllableSentenceSource(syllableTraining.sentences[0]).outputPath`, context),
+  firstSyllableSentence.audioPath,
+  "the sentence must resolve to the existing reviewed reading audio path"
+);
+
+clickDataset({ action: "show-standard-sentence" });
+assert.match(app.innerHTML, new RegExp(`data-syllable-standard-sentence="${firstSyllableSentence.id}"[^>]*>${firstSyllableSentence.standard}<`), "the standard layer must copy the exact approved sentence without inserted separators");
+const sentenceAudioStartIndex = playedAudioSources.length;
+clickDataset({ action: "play-syllable-sentence", rate: "0.75" });
+await Promise.resolve();
+await Promise.resolve();
+assert.equal(
+  playedAudioSources[sentenceAudioStartIndex],
+  firstSyllableSentence.audioPath,
+  "slow sentence mode must start the exact reviewed human whole-sentence recording"
+);
+const persistedSentenceProgress = vm.runInContext("JSON.stringify({ screen: state.screen, helper: state.syllableSentenceHelperViewed, standard: state.syllableSentenceShowStandard, audio: state.syllableSentenceAudioPlayed, status: state.syllableSentencePlaybackStatus, progress: state.learningProgress.syllableTraining['sentence-reading'] || null })", context);
+assert.deepEqual(
+  JSON.parse(persistedSentenceProgress).progress?.completedIds,
+  [firstSyllableSentence.id],
+  `a sentence should complete only after the helper layer, exact standard layer, and a successful whole-sentence start: ${persistedSentenceProgress}`
+);
+assert.equal(
+  vm.runInContext("state.syllableSentenceIndex", context),
+  1,
+  "after completion, sentence reading should resume at the first unfinished stable sentence"
+);
 
 console.log("unit learning experience checks passed");
