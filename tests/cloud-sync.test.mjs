@@ -68,6 +68,29 @@ assert.deepEqual(
 {
   const merged = mergeSnapshots(
     snapshot({
+      learningProgress: {
+        latinWriting: { qwerty: { completed: true } }
+      }
+    }),
+    snapshot({
+      modifiedAt: "2026-07-28T01:00:00.000Z",
+      learningProgress: {
+        latinWriting: {
+          qwerty: { completedIds: ["keyboard-ana", "keyboard-kitab"] }
+        }
+      }
+    })
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(merged.learningProgress.latinWriting.qwerty)),
+    { completed: true },
+    "legacy QWERTY completion should dominate a partial lesson prefix without creating invalid merged progress"
+  );
+}
+
+{
+  const merged = mergeSnapshots(
+    snapshot({
       modifiedAt: "2026-07-28T04:00:00.000Z",
       syllableMistakes: { connection: [], break: [] }
     }),

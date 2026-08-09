@@ -18,6 +18,14 @@
     "listen",
     "completed"
   ]);
+  const LATIN_WRITING_PROGRESS_FIELDS = Object.freeze({
+    qwerty: new Set(["completed", "completedIds"]),
+    "uyghur-keyboard": new Set(["completed", "completedIds"]),
+    classification: new Set(["completed"]),
+    "vowel-contrast": new Set(["completed"]),
+    dictation: new Set(["completed"]),
+    forms: new Set(["completed"])
+  });
   const NAVIGATION_STRING_FIELDS = Object.freeze([
     "screen",
     "currentLetterId",
@@ -63,6 +71,10 @@
         const entryPath = `learningProgress.${scope}.${id}`;
         requirePlainObject(entry, entryPath);
         for (const [field, fieldValue] of Object.entries(entry)) {
+          const latinFields = scope === "latinWriting" ? LATIN_WRITING_PROGRESS_FIELDS[id] : null;
+          if (latinFields && !latinFields.has(field)) {
+            throw new Error(`${entryPath} 包含未知字段 ${field}`);
+          }
           if (PROGRESS_BOOLEAN_FIELDS.has(field)) {
             if (typeof fieldValue !== "boolean") {
               throw new Error(`${entryPath}.${field} 必须是布尔值`);

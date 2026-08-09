@@ -109,6 +109,49 @@
     );
   }
 
+  function mergeKeyboardProgressEntry(localValue, remoteValue, remoteIsNewer, allowLegacyCompletion) {
+    const local = isObject(localValue) ? localValue : {};
+    const remote = isObject(remoteValue) ? remoteValue : {};
+    const localIsLegacyComplete = allowLegacyCompletion && local.completed === true && !Array.isArray(local.completedIds);
+    const remoteIsLegacyComplete = allowLegacyCompletion && remote.completed === true && !Array.isArray(remote.completedIds);
+    if (localIsLegacyComplete || remoteIsLegacyComplete) {
+      return { completed: true };
+    }
+
+    const localIds = Array.isArray(local.completedIds) ? local.completedIds : [];
+    const remoteIds = Array.isArray(remote.completedIds) ? remote.completedIds : [];
+    const preferredIds = remoteIds.length > localIds.length
+      ? remoteIds
+      : localIds.length > remoteIds.length
+        ? localIds
+        : remoteIsNewer
+          ? remoteIds
+          : localIds;
+    const result = {};
+    if (preferredIds.length) result.completedIds = clone(preferredIds);
+    if (
+      Object.prototype.hasOwnProperty.call(local, "completed") ||
+      Object.prototype.hasOwnProperty.call(remote, "completed")
+    ) {
+      result.completed = Boolean(local.completed) || Boolean(remote.completed);
+    }
+    return result;
+  }
+
+  function mergeLatinWritingProgress(localValue, remoteValue, remoteIsNewer) {
+    const merged = mergeProgressObject(localValue, remoteValue, remoteIsNewer);
+    for (const progressId of ["qwerty", "uyghur-keyboard"]) {
+      if (!isObject(localValue?.[progressId]) && !isObject(remoteValue?.[progressId])) continue;
+      merged[progressId] = mergeKeyboardProgressEntry(
+        localValue?.[progressId],
+        remoteValue?.[progressId],
+        remoteIsNewer,
+        progressId === "qwerty"
+      );
+    }
+    return merged;
+  }
+
   function mistakeKey(item) {
     return [item.kind || "", item.targetId || "", item.pickedId || ""].join("|");
   }
@@ -154,11 +197,9 @@
     const learningProgress = {};
 
     for (const scope of PROGRESS_SCOPES) {
-      learningProgress[scope] = mergeProgressObject(
-        local.learningProgress[scope],
-        remote.learningProgress[scope],
-        remoteIsNewer
-      );
+      learningProgress[scope] = scope === "latinWriting"
+        ? mergeLatinWritingProgress(local.learningProgress[scope], remote.learningProgress[scope], remoteIsNewer)
+        : mergeProgressObject(local.learningProgress[scope], remote.learningProgress[scope], remoteIsNewer);
     }
 
     const preferencesUseRemote =

@@ -2272,6 +2272,42 @@ const semanticInvalidCases = [
     /learningProgress\.latinWriting 包含未知 ID: unknown-latin-step/
   ],
   [
+    "unknown Uyghur keyboard lesson",
+    { learningProgress: { latinWriting: { "uyghur-keyboard": { completedIds: ["uyghur-keyboard-unknown"] } } } },
+    /learningProgress\.latinWriting\.uyghur-keyboard\.completedIds 包含未知 ID: uyghur-keyboard-unknown/
+  ],
+  [
+    "duplicate Uyghur keyboard lesson",
+    { learningProgress: { latinWriting: { "uyghur-keyboard": { completedIds: ["uyghur-keyboard-ba", "uyghur-keyboard-ba"] } } } },
+    /learningProgress\.latinWriting\.uyghur-keyboard\.completedIds 不能包含重复 ID/
+  ],
+  [
+    "skipped Uyghur keyboard lesson",
+    { learningProgress: { latinWriting: { "uyghur-keyboard": { completedIds: ["uyghur-keyboard-be"] } } } },
+    /learningProgress\.latinWriting\.uyghur-keyboard\.completedIds 必须按课程顺序提交/
+  ],
+  [
+    "premature Uyghur keyboard completion",
+    { learningProgress: { latinWriting: { "uyghur-keyboard": { completedIds: ["uyghur-keyboard-ba"], completed: true } } } },
+    /learningProgress\.latinWriting\.uyghur-keyboard 未完成全部键盘练习，不能标记完成/
+  ],
+  [
+    "complete Uyghur keyboard prefix without completion",
+    {
+      learningProgress: {
+        latinWriting: {
+          "uyghur-keyboard": {
+            completedIds: [
+              "uyghur-keyboard-ba", "uyghur-keyboard-be", "uyghur-keyboard-ana", "uyghur-keyboard-kitab",
+              "uyghur-keyboard-mewe", "uyghur-keyboard-ana-til", "uyghur-keyboard-mother-language"
+            ]
+          }
+        }
+      }
+    },
+    /learningProgress\.latinWriting\.uyghur-keyboard 已完成全部键盘练习，必须标记完成/
+  ],
+  [
     "letter progress key",
     { learningProgress: { letters: { "unknown-letter-group": { completed: true } } } },
     /learningProgress\.letters 包含未知 ID: unknown-letter-group/
@@ -5122,8 +5158,8 @@ assert.ok(
 );
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(unitProgressSummaries().find((item) => item.label.includes('拉丁键盘与字母书写强化')))", context)),
-  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 4, total: 5 },
-  "revealed dictation should advance the five-step summary to four of five"
+  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 4, total: 6 },
+  "revealed dictation should retain four completed stages in the expanded six-stage summary"
 );
 
 const dictationDrawingCanvas = makeWritingCanvas();
@@ -5301,6 +5337,13 @@ assert.deepEqual(
 );
 const allStableLatinSteps = {
   qwerty: { completed: true },
+  "uyghur-keyboard": {
+    completedIds: [
+      "uyghur-keyboard-ba", "uyghur-keyboard-be", "uyghur-keyboard-ana", "uyghur-keyboard-kitab",
+      "uyghur-keyboard-mewe", "uyghur-keyboard-ana-til", "uyghur-keyboard-mother-language"
+    ],
+    completed: true
+  },
   classification: { completed: true },
   "vowel-contrast": { completed: true },
   dictation: { completed: true },
@@ -5308,8 +5351,8 @@ const allStableLatinSteps = {
 };
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(latinWritingStepIds)", context)),
-  ["qwerty", "classification", "vowel-contrast", "dictation", "forms"],
-  "the Latin writing unit should expose exactly five stable progress IDs in course order"
+  ["qwerty", "uyghur-keyboard", "classification", "vowel-contrast", "dictation", "forms"],
+  "the Latin writing unit should expose exactly six stable progress IDs in course order"
 );
 vm.runInContext(
   `globalThis.progressBeforeLegacyLatinRestore = JSON.stringify(state.learningProgress);
@@ -5357,12 +5400,12 @@ assert.doesNotThrow(
     })`,
     context
   ),
-  "backup and cloud semantic validation should accept all five planned stable Latin step IDs"
+  "backup and cloud semantic validation should accept all six planned stable Latin step IDs"
 );
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(unitProgressSummaries().find((item) => item.label.includes('拉丁键盘与字母书写强化')))", context)),
-  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 4, total: 5 },
-  "the course progress summary should include the completed dictation step and retain a five-step denominator"
+  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 4, total: 6 },
+  "the course progress summary should include dictation and the new Uyghur keyboard stage"
 );
 
 assert.equal(
@@ -5659,7 +5702,7 @@ includesAll(
 );
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(unitProgressSummaries().find((item) => item.label.includes('拉丁键盘与字母书写强化')))", context)),
-  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 5, total: 5 },
+  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 5, total: 6 },
   "revealing the forms comparison should complete the fifth stable step"
 );
 const completedLatinNextActions = vm.runInContext(

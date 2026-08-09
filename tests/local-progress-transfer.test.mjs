@@ -212,6 +212,11 @@ const malformedNestedCases = [
     { learningProgress: { syllableTraining: { "two-letter-warmup": { completedIds: ["warmup-ba", "warmup-ba"] } } } },
     /learningProgress\.syllableTraining\.two-letter-warmup\.completedIds 不能包含重复 ID/
   ],
+  [
+    "non-keyboard Latin stages must reject keyboard lesson IDs",
+    { learningProgress: { latinWriting: { classification: { completedIds: ["uyghur-keyboard-ba"] } } } },
+    /learningProgress\.latinWriting\.classification 包含未知字段 completedIds/
+  ],
   ["syllable mistakes must be an object", { syllableMistakes: [] }, /syllableMistakes 必须是对象/],
   [
     "syllable mistakes must contain both published buckets",

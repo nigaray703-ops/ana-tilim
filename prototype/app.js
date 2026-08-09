@@ -339,7 +339,14 @@ const liveCanvasScreenIds = new Set([
 ]);
 const latinWritingTabNavigationKeys = new Set(["ArrowLeft", "ArrowRight", "Home", "End"]);
 const syllableRuleAnswerNavigationKeys = new Set(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"]);
-const latinWritingStepIds = Object.freeze(["qwerty", "classification", "vowel-contrast", "dictation", "forms"]);
+const latinWritingStepIds = Object.freeze([
+  "qwerty",
+  "uyghur-keyboard",
+  "classification",
+  "vowel-contrast",
+  "dictation",
+  "forms"
+]);
 const stableProgressIds = Object.freeze({
   latinWriting: new Set(latinWritingStepIds),
   letters: new Set(alphabetGroups.map((group) => group.id)),
@@ -537,6 +544,16 @@ function expectedSyllableCompletedIds(progressId) {
   return (syllableTraining.rules.find((rule) => rule.id === progressId)?.exercises || []).map(
     (exercise) => exercise.id
   );
+}
+
+function expectedLatinKeyboardCompletedIds(progressId) {
+  if (progressId === "qwerty") {
+    return latinWriting.keyboardLessons.map((item) => item.id);
+  }
+  if (progressId === "uyghur-keyboard") {
+    return latinWriting.uyghurKeyboardLessons.map((item) => item.id);
+  }
+  return null;
 }
 
 function syllableStageComplete(progressId, learningProgress = state.learningProgress) {
@@ -1077,7 +1094,11 @@ function validateImportedProgressIds(saved) {
       }
       const completedIds = bucket[id].completedIds;
       if (completedIds) {
-        const expectedCompletedIds = scope === "syllableTraining" ? expectedSyllableCompletedIds(id) : null;
+        const expectedCompletedIds = scope === "syllableTraining"
+          ? expectedSyllableCompletedIds(id)
+          : scope === "latinWriting"
+            ? expectedLatinKeyboardCompletedIds(id)
+            : null;
         const allowedCompletedIds = expectedCompletedIds ? new Set(expectedCompletedIds) : null;
         const unknownItemId = completedIds.find((itemId) => !allowedCompletedIds?.has(itemId));
         if (!allowedCompletedIds || unknownItemId) {
@@ -1100,6 +1121,17 @@ function validateImportedProgressIds(saved) {
         const expectedSubmittedCount = expectedSyllableCompletedIds(id).length;
         if (Array.isArray(completedIds) && completedIds.length === expectedSubmittedCount && bucket[id].completed !== true) {
           throw new Error(`learningProgress.${scope}.${id} 已提交全部题目，必须标记完成`);
+        }
+      }
+      const expectedKeyboardIds = scope === "latinWriting" ? expectedLatinKeyboardCompletedIds(id) : null;
+      if (expectedKeyboardIds) {
+        const isLegacyQwertyCompletion = id === "qwerty" && bucket[id].completed === true && completedIds === undefined;
+        const isFullyComplete = Array.isArray(completedIds) && completedIds.length === expectedKeyboardIds.length;
+        if (!isLegacyQwertyCompletion && bucket[id].completed === true && !isFullyComplete) {
+          throw new Error(`learningProgress.${scope}.${id} 未完成全部键盘练习，不能标记完成`);
+        }
+        if (isFullyComplete && bucket[id].completed !== true) {
+          throw new Error(`learningProgress.${scope}.${id} 已完成全部键盘练习，必须标记完成`);
         }
       }
     }
