@@ -40,6 +40,11 @@ assert.deepEqual(
   [[60, 80], [70, 90], [80, 100], [90, 110], [100, 130], [120, 150]]
 );
 assert.deepEqual(JSON.parse(JSON.stringify(shared.stories.map((story) => story.actualWordCount))), [63, 70, 85, 93, 107, 145]);
+assert.deepEqual(
+  JSON.parse(JSON.stringify(shared.stories.map((story) => story.title.zh))),
+  ["先听完再判断", "公平的一碗水", "没有证据的话", "最珍贵的时间", "邻居们的一棵树", "聪明不是占便宜"],
+  "course chooser titles should match the product-owner approved six-story list"
+);
 assert.ok(shared.stories.every((story) => story.noAudio === true), "all six stories should explicitly opt out of audio");
 assert.ok(shared.stories.every((story) => story.uyghur?.paragraphs?.length > 0), "all six stories should include Uyghur paragraphs");
 assert.ok(shared.stories.every((story) => story.latin?.paragraphs?.length === story.uyghur.paragraphs.length), "ULY paragraphs should align with Uyghur");

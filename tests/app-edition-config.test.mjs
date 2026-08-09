@@ -384,6 +384,11 @@ assert.equal(normalizedDuplicateUnitOrderTags.length, 1, "sync should collapse d
 assert.equal(normalizedDuplicateLatinKeyboardTags.length, 1, "sync should collapse duplicate latin-keyboard tags");
 assert.equal(normalizedDuplicateAfantiDataTags.length, 1, "sync should collapse duplicate shared Afanti data tags");
 assert.equal(normalizedDuplicateAfantiContentTags.length, 1, "sync should collapse duplicate Afanti validator tags");
+assert.equal(
+  normalizedDuplicateAfantiDataTags[0][0],
+  '<script src="./course-data/afanti-data.js?v=20260810-afanti-layout"></script>',
+  "duplicate normalization should use the approved Afanti chooser-title cache tag"
+);
 assert.equal(normalizedDuplicateIndex.includes("afanti-english-data.js"), false, "duplicate normalization should remove global-only English from domestic index");
 assert.equal(
   normalizedDuplicateLatinWritingTags[0][0].trim(),
@@ -406,7 +411,7 @@ assert.equal(
   "duplicate normalization should use the standard unit-order tag"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-afanti-reading"'),
+  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-afanti-layout"'),
   "sync should cache-bust the copied syllable UI styles"
 );
 assert.ok(
@@ -414,7 +419,7 @@ assert.ok(
   "sync should cache-bust the copied split syllable mistake validator"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-afanti-reading"'),
+  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-afanti-layout"'),
   "sync should cache-bust the copied syllable review app"
 );
 assert.ok(

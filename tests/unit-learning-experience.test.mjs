@@ -54,7 +54,7 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260810-afanti-reading",
+  "./styles.css?v=20260810-afanti-layout",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
@@ -64,7 +64,7 @@ const expectedVersionedAssets = [
   "./course-data/vocab-data.js?v=20260728-uly-transliteration",
   "./course-data/practice-data.js?v=20260728-learned-markers",
   "./course-data/reading-data.js?v=20260728-uly-transliteration",
-  "./course-data/afanti-data.js?v=20260810-reviewed-afanti",
+  "./course-data/afanti-data.js?v=20260810-afanti-layout",
   "./course-data/afanti-english-data.js?v=20260810-reviewed-afanti",
   "./afanti-content.js?v=20260810-reviewed-afanti",
   "./course-data.js?v=20260810-reviewed-afanti",
@@ -77,7 +77,7 @@ const expectedVersionedAssets = [
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260809-syllable-review",
-  "./app.js?v=20260810-afanti-reading"
+  "./app.js?v=20260810-afanti-layout"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -192,6 +192,10 @@ assert.ok(tabletMedia.includes(".home-center"), "home screen should expand beyon
 assert.ok(
   /\.path-list\s*\{\s*grid-template-columns:\s*1fr;/s.test(tabletMedia),
   "tablet learning unit list should show one unit per row"
+);
+assert.ok(
+  /\.vocab-topic-list,\s*\.reading-topic-list\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);/s.test(tabletMedia),
+  "desktop unit topic choosers should stack every lesson as one full-width row"
 );
 assert.ok(
   /\.profile-layout\s*\{[^}]*grid-template-columns:\s*1fr;/s.test(tabletMedia),
@@ -1323,14 +1327,48 @@ function clickDataset(dataset) {
   });
 }
 
+renderState("state.screen = 'learn'");
+app.scrollTop = 420;
+clickDataset({ action: "open-unit", id: "afanti-stories" });
+assert.equal(app.scrollTop, 0, "opening a unit should start its new page at the top");
+app.scrollTop = 260;
+clickDataset({ action: "open-afanti-story", id: "listen-before-judge" });
+assert.equal(app.scrollTop, 0, "opening a story should start its reader at the top");
+clickDataset({ action: "go", target: "unit" });
+assert.equal(app.scrollTop, 260, "returning from a story should restore the unit chooser scroll position");
+clickDataset({ action: "go", target: "learn" });
+assert.equal(app.scrollTop, 420, "returning from a unit should restore the learning catalog scroll position");
+
+renderState("state.screen = 'letterWriting'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'");
+app.scrollTop = 190;
+clickDataset({ action: "go", target: "group" });
+clickDataset({ action: "open-group", id: "curved" });
+clickDataset({ action: "go", target: "letterWriting" });
+assert.equal(app.scrollTop, 0, "the same writing screen in a different letter group should start at the top");
+clickDataset({ action: "go", target: "group" });
+clickDataset({ action: "open-group", id: "dot-bone" });
+clickDataset({ action: "go", target: "letterWriting" });
+assert.equal(app.scrollTop, 190, "returning to the original letter group should restore only that group's writing position");
+
 const afantiUnitHtml = renderState("state.selectedUnitId = 'afanti-stories'; state.screen = 'unit'");
 assert.ok(afantiUnitHtml.includes("第十二单元：阿凡提小故事"), "global catalog should expose Afanti as unit twelve");
-assert.match(
-  afantiUnitHtml,
-  /data-action="go"[^>]*data-target="afantiStories"[^>]*>\s*进入当前学习\s*<\/button>/,
-  "the Afanti unit should have a real reading entry"
+assert.equal(
+  (afantiUnitHtml.match(/data-action="open-afanti-story"/g) || []).length,
+  6,
+  "the Afanti unit should borrow the short-story unit's simple six-row chooser"
 );
-clickDataset({ action: "go", target: "afantiStories" });
+for (const [title, wordCount] of [
+  ["先听完再判断", 63],
+  ["公平的一碗水", 70],
+  ["没有证据的话", 85],
+  ["最珍贵的时间", 93],
+  ["邻居们的一棵树", 107],
+  ["聪明不是占便宜", 145]
+]) {
+  assert.ok(afantiUnitHtml.includes(title), `the Afanti chooser should include ${title}`);
+  assert.ok(afantiUnitHtml.includes(`${wordCount} 词`), `the Afanti chooser should include ${wordCount} 词`);
+}
+clickDataset({ action: "open-afanti-story", id: "listen-before-judge" });
 assert.equal(vm.runInContext("state.screen", context), "afantiStories", "the real delegated entry should open Afanti reading");
 assert.ok(app.innerHTML.includes("ئاۋۋال ئاخىرىغىچە ئاڭلا"), "Afanti reading should show the Uyghur title by default");
 assert.ok(app.innerHTML.includes("بىر كۈنى، ئىككى بالا بازاردا تالاشتى"), "Afanti reading should show Uyghur paragraphs by default");
@@ -1349,6 +1387,11 @@ assert.equal(
   "all global language switches should start off"
 );
 assert.match(app.innerHTML, /class="uyghur afanti-uyghur"[^>]*lang="ug"[^>]*dir="rtl"/);
+assert.equal(
+  (app.innerHTML.match(/class="card afanti-paragraph-card"/g) || []).length,
+  3,
+  "the first Afanti story should use one focused reading card per paragraph"
+);
 assert.ok(!app.innerHTML.includes('data-action="play-audio"'), "Afanti reading must not render audio controls");
 
 clickDataset({ action: "toggle-afanti-language", language: "latin" });
@@ -1368,6 +1411,16 @@ clickDataset({ action: "select-afanti-story", id: "fair-bowl-water" });
 assert.equal(vm.runInContext("state.selectedAfantiStoryId", context), "fair-bowl-water");
 assert.ok(app.innerHTML.includes("بىر چىنە سۇدىكى ئادىللىق"), "selecting another approved story should render its Uyghur title");
 assert.ok(app.innerHTML.includes("On a hot day, Afanti and two children worked in a garden"), "enabled English should follow the selected story");
+assert.match(
+  app.innerHTML,
+  /data-action="select-afanti-story"[^>]*data-id="unverified-words"[^>]*>\s*下一篇/,
+  "the focused reader should provide a simple next-story action"
+);
+assert.match(
+  app.innerHTML,
+  /data-action="go"[^>]*data-target="unit"[^>]*>\s*返回故事列表/,
+  "the focused reader should return to the six-row story chooser"
+);
 assert.equal(
   vm.runInContext("Object.hasOwn(buildLocalProgressData(), 'afantiVisibleLanguages')", context),
   false,

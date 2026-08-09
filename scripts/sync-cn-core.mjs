@@ -68,7 +68,7 @@ if (!courseDataMatchAfterAfantiRemoval) {
 }
 const afantiIndent = courseDataMatchAfterAfantiRemoval[0].match(/^[ \t]*/)?.[0] || "";
 const standardAfantiScripts = [
-  '<script src="./course-data/afanti-data.js?v=20260810-reviewed-afanti"></script>',
+  '<script src="./course-data/afanti-data.js?v=20260810-afanti-layout"></script>',
   '<script src="./afanti-content.js?v=20260810-reviewed-afanti"></script>'
 ].map((tag) => `${afantiIndent}${tag}\n`).join("");
 normalizedIndex = `${indexWithoutAfantiScripts.slice(0, courseDataMatchAfterAfantiRemoval.index)}${standardAfantiScripts}${indexWithoutAfantiScripts.slice(courseDataMatchAfterAfantiRemoval.index)}`;
@@ -125,7 +125,7 @@ if (latinKeyboardScripts.length === 0) {
 const sharedCacheReferences = [
   {
     pattern: /(\bhref=["']\.\/styles\.css)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260810-afanti-reading$2",
+    replacement: "$1?v=20260810-afanti-layout$2",
     label: "styles.css"
   },
   {
@@ -140,7 +140,7 @@ const sharedCacheReferences = [
   },
   {
     pattern: /(\bsrc=["']\.\/app\.js)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260810-afanti-reading$2",
+    replacement: "$1?v=20260810-afanti-layout$2",
     label: "app.js"
   }
 ];

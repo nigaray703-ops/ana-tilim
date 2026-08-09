@@ -161,7 +161,7 @@ for (const story of courseData.afantiStories) {
     story.uyghur.paragraphs[0]
   );
   assert.equal(
-    (app.innerHTML.match(/class="afanti-paragraph"/g) || []).length,
+    (app.innerHTML.match(/class="card afanti-paragraph-card"/g) || []).length,
     story.uyghur.paragraphs.length,
     `${story.id} should render every approved Uyghur paragraph`
   );

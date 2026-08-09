@@ -785,6 +785,8 @@ hydrateLocalProgress();
 
 const app = document.querySelector("#app");
 const toast = document.querySelector("#toast");
+const viewScrollPositions = new Map();
+let renderedScrollViewKey = "";
 let toastTimer = null;
 let activeAudio = null;
 let lastAutoplayKey = "";
@@ -2857,14 +2859,63 @@ function render({ persist = true } = {}) {
   if (!screenRenderer) {
     state.screen = "home";
   }
+  const nextScrollViewKey = scrollViewKey();
+  const scrollViewChanged = Boolean(
+    renderedScrollViewKey && renderedScrollViewKey !== nextScrollViewKey
+  );
+  if (scrollViewChanged) {
+    viewScrollPositions.set(renderedScrollViewKey, app.scrollTop || 0);
+  }
   applyPreferencesToRoot();
   app.innerHTML = (screens[state.screen] || renderHome)();
+  renderedScrollViewKey = nextScrollViewKey;
+  if (scrollViewChanged) {
+    const restoredScrollTop = viewScrollPositions.get(nextScrollViewKey) || 0;
+    const restoreScrollPosition = () => {
+      if (scrollViewKey() === nextScrollViewKey) {
+        app.scrollTop = restoredScrollTop;
+      }
+    };
+    if (typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(restoreScrollPosition);
+    } else {
+      restoreScrollPosition();
+    }
+  }
   initializeFormExampleHighlights();
   initializeWritingCanvases();
   if (persist && !state.pendingProgressImport) {
     saveLocalProgress();
   }
   syncAudioAutoplay();
+}
+
+function scrollViewKey() {
+  let viewContext = "";
+  if (state.screen === "unit") {
+    viewContext = state.selectedUnitId;
+  } else if (state.screen === "group") {
+    viewContext = state.selectedGroupId;
+  } else if (
+    ["letter", "letterWriting", "picture", "listening", "letterOdd", "letterSound", "keyboard", "complete"].includes(
+      state.screen
+    )
+  ) {
+    viewContext = `${state.selectedGroupId}:${state.currentLetterId}`;
+  } else if (["combo", "comboRecognition", "comboBuild", "comboWriting", "comboKeyboard", "comboComplete"].includes(state.screen)) {
+    viewContext = `${state.selectedComboGroupId}:${state.currentComboItemId}`;
+  } else if (["vocab", "vocabRecognition", "vocabKeyboard", "vocabComplete"].includes(state.screen)) {
+    viewContext = `${state.selectedVocabGroupId}:${state.currentVocabItemId}`;
+  } else if (["practiceSession", "practiceComplete"].includes(state.screen)) {
+    viewContext = `${state.selectedPracticeGroupId}:${state.currentPracticeItemId}`;
+  } else if (state.screen === "reading") {
+    viewContext = `${state.selectedReadingUnitId}:${state.selectedReadingGroupId}`;
+  } else if (state.screen === "afantiStories") {
+    viewContext = state.selectedAfantiStoryId;
+  } else if (state.screen === "latinWritingForms") {
+    viewContext = state.latinWritingLetterId;
+  }
+  return `${state.screen}:${viewContext}`;
 }
 
 function screen(content, active = "home") {
@@ -3484,6 +3535,45 @@ function renderReadingUnitDetail(unit) {
   );
 }
 
+function renderAfantiUnitDetail(unit) {
+  return screen(
+    `
+      ${topBar(
+        unit.title,
+        unit.subtitle,
+        "",
+        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="返回">←</button>`
+      )}
+      <section class="stack">
+        <div class="reading-topic-list afanti-topic-list">
+          ${afantiStories
+            .map(
+              (story) => `
+                <button
+                  class="reading-topic-row afanti-topic-row"
+                  data-action="open-afanti-story"
+                  data-id="${escapeHtml(story.id)}"
+                  type="button"
+                  aria-label="进入${escapeHtml(story.title.zh)}"
+                >
+                  <span>
+                    <strong>${escapeHtml(story.title.zh)}</strong>
+                    <small><span lang="ug" dir="rtl">${escapeHtml(story.title.uyghur)}</span> · ${story.actualWordCount} 词</small>
+                  </span>
+                  <span class="topic-end">
+                    <span class="topic-arrow" aria-hidden="true">→</span>
+                  </span>
+                </button>
+              `
+            )
+            .join("")}
+        </div>
+      </section>
+    `,
+    "learn"
+  );
+}
+
 function renderUnitDetail() {
   const unit = currentUnit();
   const firstGroup = unit.groups?.[0];
@@ -3500,6 +3590,10 @@ function renderUnitDetail() {
 
   if (unit.kind === "reading") {
     return renderReadingUnitDetail(unit);
+  }
+
+  if (unit.kind === "afanti") {
+    return renderAfantiUnitDetail(unit);
   }
 
   return screen(
@@ -3585,10 +3679,10 @@ function renderAfantiParagraph(story, paragraph, index) {
     .join("");
 
   return `
-    <section class="afanti-paragraph" data-afanti-paragraph="${index + 1}">
+    <article class="card afanti-paragraph-card" data-afanti-paragraph="${index + 1}">
       <p class="uyghur afanti-uyghur" lang="ug" dir="rtl">${escapeHtml(paragraph)}</p>
       ${translations}
-    </section>
+    </article>
   `;
 }
 
@@ -3602,6 +3696,10 @@ function renderAfantiStories() {
     );
   }
 
+  const storyIndex = afantiStories.findIndex((item) => item.id === story.id);
+  const previousStory = storyIndex > 0 ? afantiStories[storyIndex - 1] : null;
+  const nextStory = storyIndex < afantiStories.length - 1 ? afantiStories[storyIndex + 1] : null;
+
   return screen(
     `
       ${topBar(
@@ -3611,32 +3709,29 @@ function renderAfantiStories() {
         `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回本单元">←</button>`
       )}
       <section class="afanti-reading-layout">
-        <nav class="afanti-story-list" aria-label="六篇阿凡提故事">
-          ${afantiStories
-            .map(
-              (item) => `
-                <button
-                  class="afanti-story-link${item.id === story.id ? " is-active" : ""}"
-                  data-action="select-afanti-story"
-                  data-id="${escapeHtml(item.id)}"
-                  type="button"
-                  aria-current="${item.id === story.id ? "page" : "false"}"
-                >
-                  <span>${item.sequence}</span>
-                  <b dir="rtl" lang="ug">${escapeHtml(item.title.uyghur)}</b>
-                </button>
-              `
-            )
+        ${state.afantiVisibleLanguages.zh === true ? `<p class="caption afanti-theme">${escapeHtml(story.primaryTheme)}</p>` : ""}
+        <div class="afanti-paragraphs">
+          ${story.uyghur.paragraphs
+            .map((paragraph, index) => renderAfantiParagraph(story, paragraph, index))
             .join("")}
-        </nav>
-        <article class="card afanti-story-card">
-          ${state.afantiVisibleLanguages.zh === true ? `<p class="caption">${escapeHtml(story.primaryTheme)}</p>` : ""}
-          <div class="afanti-paragraphs">
-            ${story.uyghur.paragraphs
-              .map((paragraph, index) => renderAfantiParagraph(story, paragraph, index))
-              .join("")}
-          </div>
-        </article>
+        </div>
+        <div class="afanti-story-actions">
+          <button
+            class="secondary-button"
+            data-action="select-afanti-story"
+            data-id="${escapeHtml(previousStory?.id || "")}"
+            type="button"
+            ${previousStory ? "" : "disabled"}
+          >上一篇</button>
+          <button class="secondary-button" data-action="go" data-target="unit" type="button">返回故事列表</button>
+          <button
+            class="primary-button"
+            data-action="select-afanti-story"
+            data-id="${escapeHtml(nextStory?.id || "")}"
+            type="button"
+            ${nextStory ? "" : "disabled"}
+          >下一篇</button>
+        </div>
       </section>
     `,
     "learn"
@@ -7143,6 +7238,15 @@ document.addEventListener("click", (event) => {
     if (state.screen !== "afantiStories" || !story) return;
     state.selectedAfantiStoryId = story.id;
     render();
+    return;
+  }
+
+  if (action === "open-afanti-story") {
+    const story = afantiStories.find((item) => item.id === button.dataset.id);
+    if (!story) return;
+    state.selectedUnitId = "afanti-stories";
+    state.selectedAfantiStoryId = story.id;
+    goTo("afantiStories");
     return;
   }
 
