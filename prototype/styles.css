@@ -772,68 +772,37 @@ button {
 
 .afanti-reading-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   min-width: 0;
-  overflow: hidden;
+  max-width: 820px;
+  margin: 0 auto;
 }
 
-.afanti-story-list {
-  display: flex;
-  gap: 8px;
-  min-width: 0;
-  padding-bottom: 4px;
-  overflow-x: auto;
-  scrollbar-width: thin;
+.afanti-topic-row small span {
+  display: inline;
+  font-size: 13px;
 }
 
-.afanti-story-link {
-  display: grid;
-  grid-template-columns: 24px minmax(130px, 1fr);
-  align-items: center;
-  flex: 0 0 auto;
-  gap: 8px;
-  min-height: 48px;
-  padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  color: var(--ink);
-  background: var(--paper);
-  font: inherit;
-  text-align: left;
-}
-
-.afanti-story-link span {
-  display: grid;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  color: var(--ink-soft);
-  background: rgba(22, 38, 87, 0.07);
-  place-items: center;
-}
-
-.afanti-story-link.is-active {
-  border-color: rgba(14, 155, 177, 0.42);
-  background: rgba(14, 155, 177, 0.09);
-}
-
-.afanti-story-card,
 .afanti-paragraphs,
-.afanti-paragraph {
+.afanti-paragraph-card {
   display: grid;
   gap: 10px;
   min-width: 0;
 }
 
-.afanti-paragraph {
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--line);
+.afanti-paragraph-card {
+  padding: clamp(16px, 3vw, 24px);
 }
 
-.afanti-paragraph:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
+.afanti-theme {
+  margin: 0;
+  padding: 0 4px;
+}
+
+.afanti-story-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .afanti-uyghur,
@@ -3838,6 +3807,10 @@ button {
     justify-content: flex-start;
   }
 
+  .afanti-story-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .lesson-step {
     grid-template-columns: 34px minmax(0, 1fr);
     min-height: 0;
@@ -3935,22 +3908,7 @@ button {
 
   .vocab-topic-list,
   .reading-topic-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .afanti-reading-layout {
-    grid-template-columns: minmax(180px, 230px) minmax(0, 1fr);
-    align-items: start;
-  }
-
-  .afanti-story-list {
-    display: grid;
-    overflow-x: visible;
-  }
-
-  .afanti-story-link {
-    grid-template-columns: 24px minmax(0, 1fr);
-    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .letter-library-grid {

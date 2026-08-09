@@ -14,7 +14,7 @@
     "title": {
       "uyghur": "ئاۋۋال ئاخىرىغىچە ئاڭلا",
       "latin": "Awwal axirighiche angla",
-      "zh": "先听到最后"
+      "zh": "先听完再判断"
     },
     "uyghur": {
       "paragraphs": [
@@ -124,7 +124,7 @@
     "title": {
       "uyghur": "بىر چىنە سۇدىكى ئادىللىق",
       "latin": "Bir chine sudiki adilliq",
-      "zh": "一碗水里的公平"
+      "zh": "公平的一碗水"
     },
     "uyghur": {
       "paragraphs": [
@@ -564,7 +564,7 @@
     "title": {
       "uyghur": "ئەقىل دېگەن باشقىدىن پايدا ئېلىش ئەمەس",
       "latin": "Eqil dëgen bashqidin payda ëlish emes",
-      "zh": "聪明不是占别人的便宜"
+      "zh": "聪明不是占便宜"
     },
     "uyghur": {
       "paragraphs": [
