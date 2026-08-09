@@ -358,6 +358,97 @@ for (const [ruleIndex, rule] of courseData.syllableTraining.rules.entries()) {
   }
 }
 
+const completedSyllableConnectionPrerequisites = {
+  "two-letter-warmup": {
+    completedIds: [
+      "warmup-ba", "warmup-pa", "warmup-ta", "warmup-na", "warmup-la",
+      "warmup-ma", "warmup-be-e", "warmup-pe-e", "warmup-te-e", "warmup-ne-e"
+    ],
+    completed: true
+  },
+  "vowel-nucleus": {
+    completedIds: ["vowel-nucleus-01", "vowel-nucleus-02", "vowel-nucleus-03", "vowel-nucleus-04"],
+    completed: true
+  },
+  "single-consonant-boundary": {
+    completedIds: [
+      "single-consonant-boundary-01", "single-consonant-boundary-02",
+      "single-consonant-boundary-03", "single-consonant-boundary-04"
+    ],
+    completed: true
+  },
+  "two-consonant-boundary": {
+    completedIds: [
+      "two-consonant-boundary-01", "two-consonant-boundary-02",
+      "two-consonant-boundary-03", "two-consonant-boundary-04"
+    ],
+    completed: true
+  },
+  "suffix-boundary": {
+    completedIds: ["suffix-boundary-01", "suffix-boundary-02", "suffix-boundary-03", "suffix-boundary-04"],
+    completed: true
+  }
+};
+
+for (const [itemIndex, item] of courseData.syllableTraining.connectionItems.entries()) {
+  const completedIdsBefore = courseData.syllableTraining.connectionItems
+    .slice(0, itemIndex)
+    .map((connectionItem) => connectionItem.id);
+  renderState(
+    {
+      screen: "syllableConnections",
+      selectedUnitId: "syllable-training",
+      syllableConnectionMode: "lesson",
+      syllableConnectionAnswerId: "",
+      syllableConnectionSubmitted: false,
+      learningProgress: {
+        latinWriting: {}, letters: {}, combos: {},
+        syllableTraining: {
+          ...completedSyllableConnectionPrerequisites,
+          "connection-errors": { completedIds: completedIdsBefore }
+        },
+        vocab: {}, practice: {}, reading: {}
+      }
+    },
+    `syllable textual judgment ${item.id}`,
+    item.statement
+  );
+  assert.ok(!app.innerHTML.includes("错误判断："), `${item.id} should not reveal the answer label`);
+  assert.ok(!app.innerHTML.includes(item.explanation), `${item.id} should hide its explanation before submit`);
+
+  const completedIdsAfter = [...completedIdsBefore, item.id];
+  renderState(
+    {
+      screen: "syllableConnections",
+      selectedUnitId: "syllable-training",
+      syllableConnectionMode: "lesson",
+      syllableConnectionAnswerId: item.expectedAnswer,
+      syllableConnectionSubmitted: true,
+      learningProgress: {
+        latinWriting: {}, letters: {}, combos: {},
+        syllableTraining: {
+          ...completedSyllableConnectionPrerequisites,
+          "connection-errors": {
+            completedIds: completedIdsAfter,
+            ...(itemIndex === courseData.syllableTraining.connectionItems.length - 1 ? { completed: true } : {})
+          }
+        },
+        vocab: {}, practice: {}, reading: {}
+      }
+    },
+    `submitted syllable textual judgment ${item.id}`,
+    item.explanation
+  );
+}
+
+for (const [label, syllableMistakes, expectedText] of [
+  ["connection mistakes", { connection: ["connection-01"], break: [] }, "1 道"],
+  ["break mistakes", { connection: [], break: ["break-01"] }, "1 道"],
+  ["empty split review", { connection: [], break: [] }, "连接错误已清空"]
+]) {
+  renderState({ screen: "syllableReview", syllableMistakes }, `syllable review ${label}`, expectedText);
+}
+
 for (const group of courseData.vocabGroups) {
   for (const item of group.items) {
     renderState(
@@ -390,6 +481,6 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
   }
 }
 
-assert.equal(renderCount, 705, "full UI audit should render every retained main screen, syllable warmup/rule state, real 2/4/8 form state, lesson item, reading group, and practice item");
+assert.equal(renderCount, 732, "full UI audit should render every retained main screen, syllable warmup/rule/judgment/review state, real 2/4/8 form state, lesson item, reading group, and practice item");
 
 console.log(`full content render checks passed (${renderCount} states)`);

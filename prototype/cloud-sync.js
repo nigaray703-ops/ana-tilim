@@ -31,6 +31,18 @@
     );
   }
 
+  function normalizeSyllableMistakes(value) {
+    const source = isObject(value) ? value : {};
+    return {
+      connection: Array.isArray(source.connection)
+        ? [...new Set(source.connection.filter((id) => typeof id === "string"))].slice(0, 24)
+        : [],
+      break: Array.isArray(source.break)
+        ? [...new Set(source.break.filter((id) => typeof id === "string"))].slice(0, 24)
+        : []
+    };
+  }
+
   function normalizeSnapshot(value) {
     if (!isObject(value)) {
       throw new TypeError("Cloud snapshot must be an object");
@@ -52,6 +64,7 @@
       favoriteUpdatedAt: validTimestamp(value.favoriteUpdatedAt, modifiedAt),
       learningProgress: normalizeProgress(value.learningProgress),
       mistakes: Array.isArray(value.mistakes) ? clone(value.mistakes.filter(isObject)) : [],
+      syllableMistakes: normalizeSyllableMistakes(value.syllableMistakes),
       favorite: Boolean(value.favorite),
       dailyActivity: {
         date: typeof dailyActivity.date === "string" ? dailyActivity.date : "",
@@ -162,6 +175,7 @@
       favoriteUpdatedAt: favoriteUsesRemote ? remote.favoriteUpdatedAt : local.favoriteUpdatedAt,
       learningProgress,
       mistakes: mergeMistakes(local.mistakes, remote.mistakes),
+      syllableMistakes: clone(remoteIsNewer ? remote.syllableMistakes : local.syllableMistakes),
       favorite: favoriteUsesRemote ? remote.favorite : local.favorite,
       dailyActivity: mergeDailyActivity(local.dailyActivity, remote.dailyActivity),
       preferences: clone(preferencesUseRemote ? remote.preferences : local.preferences)

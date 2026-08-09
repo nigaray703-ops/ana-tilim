@@ -33,11 +33,54 @@ function snapshot(overrides = {}) {
       reading: {}
     },
     mistakes: [],
+    syllableMistakes: { connection: [], break: [] },
     favorite: false,
     dailyActivity: { date: "2026-07-28", completedIds: [] },
     preferences: {},
     ...overrides
   };
+}
+
+assert.deepEqual(
+  JSON.parse(JSON.stringify(normalizeSnapshot({}).syllableMistakes ?? null)),
+  { connection: [], break: [] },
+  "legacy cloud snapshots should normalize missing syllable mistake buckets to empty arrays"
+);
+
+{
+  const merged = mergeSnapshots(
+    snapshot({
+      modifiedAt: "2026-07-28T02:00:00.000Z",
+      syllableMistakes: { connection: ["connection-01"], break: ["break-01"] }
+    }),
+    snapshot({
+      modifiedAt: "2026-07-28T03:00:00.000Z",
+      syllableMistakes: { connection: [], break: ["break-01", "break-02"] }
+    })
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(merged.syllableMistakes)),
+    { connection: [], break: ["break-01", "break-02"] },
+    "newer independent syllable mistake buckets should preserve a connection clear without clearing break review"
+  );
+}
+
+{
+  const merged = mergeSnapshots(
+    snapshot({
+      modifiedAt: "2026-07-28T04:00:00.000Z",
+      syllableMistakes: { connection: [], break: [] }
+    }),
+    snapshot({
+      modifiedAt: "2026-07-28T03:00:00.000Z",
+      syllableMistakes: { connection: ["connection-01"], break: ["break-01"] }
+    })
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(merged.syllableMistakes)),
+    { connection: [], break: [] },
+    "a newer local clear should override older remote syllable mistakes instead of reviving them"
+  );
 }
 
 {
@@ -706,7 +749,8 @@ function createSupabaseFake({ remoteRow = null, selectError = null } = {}) {
       "modifiedAt",
       "preferences",
       "preferencesUpdatedAt",
-      "schemaVersion"
+      "schemaVersion",
+      "syllableMistakes"
     ],
     "cloud payload should contain only approved learning fields"
   );

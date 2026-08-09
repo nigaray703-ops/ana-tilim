@@ -65,6 +65,35 @@ assert.ok(
   data.connectionItems.every((item) => item.distractor.startsWith("错误判断：")),
   "connection distractors should be statements rather than fabricated glyphs"
 );
+const expectedConnectionStatements = [
+  ["connection-01", "开头 ب 与后面的 ا 连接。", "statement-correct", "approved"],
+  ["connection-02", "م 与 ا 之间应断开。", "statement-incorrect", "approved"],
+  ["connection-03", "第一个 ن 与后面的 ا 连接。", "statement-correct", "approved"],
+  ["connection-04", "ت 与 ا 之间应断开。", "statement-incorrect", "approved"],
+  ["connection-05", "ب 与 ە 连接；ە 后不继续连接 ل。", "statement-correct", "approved"],
+  ["connection-06", "ك 与 ە 之间应断开。", "statement-incorrect", "approved"],
+  ["break-01", "د 后不继续连接后一个字母。", "statement-correct", "approved"],
+  ["break-02", "ر 或 ە 后应继续连接。", "statement-incorrect", "approved"],
+  ["break-03", "ى 后不继续连接最后的 ز。", "statement-correct", "approved"],
+  ["break-04", "ۋ 和 ە 后都无需重启后面的字母。", "statement-incorrect", "approved"],
+  ["break-05", "ۋ 后不继续连接后面的字母。", "statement-correct", "approved"],
+  ["break-06", "ۆ 后应继续连接 گ。", "statement-incorrect", "approved"]
+];
+assert.deepEqual(
+  JSON.parse(JSON.stringify(data.connectionItems.map((item) => [
+    item.id,
+    item.statement,
+    item.expectedAnswer,
+    item.statementReviewStatus
+  ]))),
+  expectedConnectionStatements,
+  "every textual judgment should lock an independently reviewed learner statement and answer"
+);
+for (const bucketName of ["connection", "break"]) {
+  const bucketItems = data.connectionItems.filter((item) => item.mistakeBucket === bucketName);
+  assert.equal(bucketItems.filter((item) => item.expectedAnswer === "statement-correct").length, 3);
+  assert.equal(bucketItems.filter((item) => item.expectedAnswer === "statement-incorrect").length, 3);
+}
 
 const expectedSentenceSources = [
   "sentence-who-what-1",
@@ -267,11 +296,52 @@ assert.throws(
 );
 
 const unsafePresentation = cloneData();
-unsafePresentation.connectionItems[0].distractor += "\u200d";
+unsafePresentation.connectionItems[0].statement += "\u200d";
 assert.throws(
   () => api.validateSyllableTraining(unsafePresentation),
   /unsafe.*character/i,
   "validator should reject hidden or presentation characters in textual judgments"
+);
+
+const invalidExpectedAnswer = cloneData();
+invalidExpectedAnswer.connectionItems[0].expectedAnswer = "always-false";
+assert.throws(
+  () => api.validateSyllableTraining(invalidExpectedAnswer),
+  /connection-01\.expectedAnswer is invalid/i,
+  "validator should reject an answer outside the reviewed two-option contract"
+);
+
+const driftedApprovedStatement = cloneData();
+driftedApprovedStatement.connectionItems[0].statement = "开头 ب 与后面的 ا 应断开。";
+assert.throws(
+  () => api.validateSyllableTraining(driftedApprovedStatement),
+  /connection-01 must match the published statement contract/i,
+  "validator should reject a plausible but unreviewed learner-facing statement"
+);
+
+const imbalancedExpectedAnswers = cloneData();
+imbalancedExpectedAnswers.connectionItems[0].expectedAnswer = "statement-incorrect";
+assert.throws(
+  () => api.validateSyllableTraining(imbalancedExpectedAnswers),
+  /connection items must keep three correct and three incorrect statements per bucket/i,
+  "validator should reject an answer flip that breaks the reviewed three-to-three bucket balance"
+);
+
+const balancedButFlippedExpectedAnswers = cloneData();
+balancedButFlippedExpectedAnswers.connectionItems[0].expectedAnswer = "statement-incorrect";
+balancedButFlippedExpectedAnswers.connectionItems[1].expectedAnswer = "statement-correct";
+assert.throws(
+  () => api.validateSyllableTraining(balancedButFlippedExpectedAnswers),
+  /connection-01 must match the published statement contract/i,
+  "validator should reject answer swaps even when the overall bucket balance still looks valid"
+);
+
+const unapprovedStatement = cloneData();
+unapprovedStatement.connectionItems[0].statementReviewStatus = "pending";
+assert.throws(
+  () => api.validateSyllableTraining(unapprovedStatement),
+  /connection-01\.statementReviewStatus must be approved/i,
+  "validator should reject a learner-facing statement that has not met the publication decision"
 );
 
 const unreviewedTimestamp = cloneData();

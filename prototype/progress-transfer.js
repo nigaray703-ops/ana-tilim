@@ -112,6 +112,35 @@
     });
   }
 
+  function validateSyllableMistakes(value) {
+    requirePlainObject(value, "syllableMistakes");
+    const bucketNames = ["connection", "break"];
+    for (const field of Object.keys(value)) {
+      if (!bucketNames.includes(field)) {
+        throw new Error(`syllableMistakes 包含未知字段 ${field}`);
+      }
+    }
+    if (!bucketNames.every((field) => Object.prototype.hasOwnProperty.call(value, field))) {
+      throw new Error("syllableMistakes 必须包含 connection 和 break");
+    }
+    for (const bucketName of bucketNames) {
+      const ids = value[bucketName];
+      if (!Array.isArray(ids)) {
+        throw new Error(`syllableMistakes.${bucketName} 必须是数组`);
+      }
+      if (ids.length > 24) {
+        throw new Error(`syllableMistakes.${bucketName} 最多保存 24 个 ID`);
+      }
+      ids.forEach((id, index) => requireString(id, `syllableMistakes.${bucketName}[${index}]`));
+      if (new Set(ids).size !== ids.length) {
+        throw new Error(`syllableMistakes.${bucketName} 不能包含重复 ID`);
+      }
+    }
+    if (value.connection.some((id) => value.break.includes(id))) {
+      throw new Error("syllableMistakes 的 ID 不能跨分类重复");
+    }
+  }
+
   function validateLocalProgressData(data) {
     NAVIGATION_STRING_FIELDS.forEach((field) => {
       if (data[field] !== undefined) requireString(data[field], field);
@@ -124,6 +153,7 @@
     }
     if (data.learningProgress !== undefined) validateLearningProgress(data.learningProgress);
     if (data.mistakes !== undefined) validateMistakes(data.mistakes);
+    if (data.syllableMistakes !== undefined) validateSyllableMistakes(data.syllableMistakes);
 
     if (data.writingChecks !== undefined) {
       if (!Array.isArray(data.writingChecks)) {
@@ -219,6 +249,7 @@
     VERSION,
     createExportPayload,
     parseImportPayload,
-    validateLearningProgress
+    validateLearningProgress,
+    validateSyllableMistakes
   });
 })();
