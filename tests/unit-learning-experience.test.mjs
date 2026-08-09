@@ -57,7 +57,7 @@ const expectedVersionedAssets = [
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
   "./course-data/latin-writing-data.js?v=20260809-latin-writing",
   "./course-data/combo-data.js?v=20260728-uly-transliteration",
-  "./course-data/syllable-data.js?v=20260809-syllable-training",
+  "./course-data/syllable-data.js?v=20260809-syllable-review",
   "./course-data/vocab-data.js?v=20260728-uly-transliteration",
   "./course-data/practice-data.js?v=20260728-learned-markers",
   "./course-data/reading-data.js?v=20260728-uly-transliteration",
@@ -66,12 +66,12 @@ const expectedVersionedAssets = [
   "./latin-keyboard.js?v=20260809-latin-qwerty",
   "./sentence-morphemes.js?v=20260809-word-formation",
   "./sentence-glossary.js?v=20260809-word-formation",
-  "./progress-transfer.js?v=20260809-syllable-progress",
+  "./progress-transfer.js?v=20260809-syllable-review",
   "./audio-controller.js?v=20260728-uly-transliteration",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
-  "./cloud-sync.js?v=20260809-syllable-progress",
-  "./app.js?v=20260809-syllable-ui"
+  "./cloud-sync.js?v=20260809-syllable-review",
+  "./app.js?v=20260809-syllable-review"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -412,8 +412,14 @@ const context = {
         [
           '[data-action="pick-syllable-rule-answer"][data-answer-id="answer"]',
           '[data-action="pick-syllable-rule-answer"][data-answer-id="distractor"]',
+          '[data-action="pick-syllable-connection-answer"][data-answer-id="statement-correct"]',
+          '[data-action="pick-syllable-connection-answer"][data-answer-id="statement-incorrect"]',
           "[data-syllable-feedback]",
-          "[data-syllable-question]"
+          "[data-syllable-question]",
+          "[data-syllable-connection-feedback]",
+          "[data-syllable-connection-question]",
+          '[data-syllable-review-bucket="connection"]',
+          '[data-syllable-review-bucket="break"]'
         ].includes(selector)
       ) {
         return {
@@ -531,6 +537,50 @@ vm.runInContext(fs.readFileSync("prototype/progress-transfer.js", "utf8"), conte
 vm.runInContext(fs.readFileSync("prototype/cloud-config.js", "utf8"), context, { filename: "prototype/cloud-config.js" });
 vm.runInContext(fs.readFileSync("prototype/cloud-sync.js", "utf8"), context, { filename: "prototype/cloud-sync.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
+
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(buildLocalProgressData().syllableMistakes ?? null)", context)),
+  { connection: [], break: [] },
+  "the real app should start with separate persisted connection and break mistake buckets"
+);
+const validSyllableMistakes = { connection: ["connection-01"], break: ["break-01"] };
+assert.equal(
+  vm.runInContext(`applyLocalProgressData(${JSON.stringify({ syllableMistakes: validSyllableMistakes })})`, context),
+  true,
+  "local hydration should accept approved syllable mistake IDs"
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.syllableMistakes)", context)),
+  validSyllableMistakes,
+  "local hydration should apply both syllable mistake buckets"
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(buildLocalProgressData().syllableMistakes)", context)),
+  validSyllableMistakes,
+  "local persistence should build both syllable mistake buckets"
+);
+vm.runInContext("applyLocalProgressData({})", context);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.syllableMistakes)", context)),
+  { connection: [], break: [] },
+  "legacy local progress without syllable mistakes should normalize to empty buckets"
+);
+const localStateBeforeInvalidSyllableMistakes = vm.runInContext("JSON.stringify(buildLocalProgressData())", context);
+for (const [label, syllableMistakes, expectedError] of [
+  ["unknown local syllable mistake ID", { connection: ["connection-99"], break: [] }, /syllableMistakes\.connection 包含未知 ID: connection-99/],
+  ["connection ID in break bucket", { connection: [], break: ["connection-01"] }, /syllableMistakes\.break 的 connection-01 属于 connection 分类/]
+]) {
+  assert.throws(
+    () => vm.runInContext(`applyLocalProgressData(${JSON.stringify({ syllableMistakes })})`, context),
+    expectedError,
+    label
+  );
+  assert.equal(
+    vm.runInContext("JSON.stringify(buildLocalProgressData())", context),
+    localStateBeforeInvalidSyllableMistakes,
+    `${label} should not partially mutate local state`
+  );
+}
 
 const currentRealExportText = vm.runInContext(
   "JSON.stringify(progressTransfer.createExportPayload(buildLocalProgressData(), { edition: appConfig.edition, brandName: appConfig.brandName }))",
@@ -874,7 +924,8 @@ assert.deepEqual(cloudSnapshotKeys, [
   "modifiedAt",
   "preferences",
   "preferencesUpdatedAt",
-  "schemaVersion"
+  "schemaVersion",
+  "syllableMistakes"
 ]);
 assert.equal(
   vm.runInContext("'screen' in buildCloudSnapshot() || 'authEmail' in buildCloudSnapshot()", context),
@@ -912,6 +963,11 @@ assert.equal(
   true
 );
 assert.equal(vm.runInContext("state.learningProgress.latinWriting.qwerty.completed", context), true);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.syllableMistakes)", context)),
+  { connection: [], break: [] },
+  "legacy cloud snapshots without syllable mistakes should apply empty compatible buckets"
+);
 
 const validCloudProgress = {
   latinWriting: { qwerty: { completed: true } },
@@ -927,10 +983,39 @@ const cloudSnapshotBase = {
   preferencesUpdatedAt: "2026-07-28T05:00:00.000Z",
   favoriteUpdatedAt: "2026-07-28T05:00:00.000Z",
   mistakes: [],
+  syllableMistakes: { connection: [], break: [] },
   favorite: false,
   dailyActivity: { date: "2026-07-28", completedIds: [] },
   preferences: {}
 };
+vm.runInContext(
+  `applyCloudSnapshot(${JSON.stringify({
+    ...cloudSnapshotBase,
+    learningProgress: validCloudProgress,
+    syllableMistakes: validSyllableMistakes
+  })})`,
+  context
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.syllableMistakes)", context)),
+  validSyllableMistakes,
+  "cloud apply should restore both validated syllable mistake buckets"
+);
+for (const [label, syllableMistakes, expectedError] of [
+  ["unknown cloud syllable mistake ID", { connection: ["connection-99"], break: [] }, /syllableMistakes\.connection 包含未知 ID: connection-99/],
+  ["cloud connection ID in break bucket", { connection: [], break: ["connection-01"] }, /syllableMistakes\.break 的 connection-01 属于 connection 分类/]
+]) {
+  assert.throws(
+    () => vm.runInContext(`applyCloudSnapshot(${JSON.stringify({ ...cloudSnapshotBase, learningProgress: validCloudProgress, syllableMistakes })})`, context),
+    expectedError,
+    label
+  );
+  assert.deepEqual(
+    JSON.parse(vm.runInContext("JSON.stringify(state.syllableMistakes)", context)),
+    validSyllableMistakes,
+    `${label} should not mutate the current syllable mistake buckets`
+  );
+}
 const cloudStateBeforeInvalidProgress = vm.runInContext("JSON.stringify(state.learningProgress)", context);
 for (const [label, learningProgress, expectedError] of [
   [
@@ -1164,6 +1249,7 @@ vm.runInContext(
     state.screen = "profile";
     state.learningProgress.letters["dot-bone"] = { completed: true };
     state.mistakes = [{ kind: "letter", targetId: "be" }];
+    state.syllableMistakes = { connection: ["connection-01"], break: ["break-01"] };
   `,
   context
 );
@@ -1173,6 +1259,11 @@ assert.equal(
   JSON.parse(storage["ana-tilim-guest-progress-backup"])
     .snapshot.learningProgress.letters["dot-bone"].completed,
   true
+);
+assert.deepEqual(
+  JSON.parse(storage["ana-tilim-guest-progress-backup"]).snapshot.syllableMistakes,
+  validSyllableMistakes,
+  "guest backup should preserve the two syllable mistake buckets"
 );
 
 storage["ana-tilim-guest-progress-backup"] = "previous-backup";
@@ -1210,6 +1301,11 @@ assert.deepEqual(
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(state.mistakes)", context)),
   []
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.syllableMistakes)", context)),
+  { connection: [], break: [] },
+  "new learner initialization should clear both syllable mistake buckets"
 );
 
 const collapsedWelcomeHtml = renderState("state.screen = 'welcome'; state.authPanelExpanded = false");
@@ -1712,6 +1808,23 @@ const completeSingleConsonantProgress = {
   ],
   completed: true
 };
+const completeTwoConsonantProgress = {
+  completedIds: [
+    "two-consonant-boundary-01",
+    "two-consonant-boundary-02",
+    "two-consonant-boundary-03",
+    "two-consonant-boundary-04"
+  ],
+  completed: true
+};
+const completeSuffixProgress = {
+  completedIds: ["suffix-boundary-01", "suffix-boundary-02", "suffix-boundary-03", "suffix-boundary-04"],
+  completed: true
+};
+const connectionStageIds = [
+  "connection-01", "connection-02", "connection-03", "connection-04", "connection-05", "connection-06",
+  "break-01", "break-02", "break-03", "break-04", "break-05", "break-06"
+];
 const completeRuleWithoutCompletion = {
   learningProgress: {
     syllableTraining: {
@@ -1855,6 +1968,47 @@ const semanticInvalidCases = [
       }
     },
     /learningProgress\.syllableTraining 必须先完成 two-consonant-boundary 才能记录 suffix-boundary/
+  ],
+  [
+    "connection progress before all rules complete",
+    {
+      learningProgress: {
+        syllableTraining: {
+          "two-letter-warmup": completeWarmupProgress,
+          "vowel-nucleus": completeVowelNucleusProgress,
+          "single-consonant-boundary": completeSingleConsonantProgress,
+          "two-consonant-boundary": completeTwoConsonantProgress,
+          "suffix-boundary": { completedIds: ["suffix-boundary-01"] },
+          "connection-errors": { completedIds: ["connection-01"] }
+        }
+      }
+    },
+    /learningProgress\.syllableTraining 必须先完成 suffix-boundary 才能记录 connection-errors/
+  ],
+  [
+    "out-of-order connection stage submission",
+    { learningProgress: { syllableTraining: { "connection-errors": { completedIds: ["connection-02"] } } } },
+    /learningProgress\.syllableTraining\.connection-errors\.completedIds 必须按课程顺序提交/
+  ],
+  [
+    "premature connection stage completion",
+    { learningProgress: { syllableTraining: { "connection-errors": { completedIds: ["connection-01"], completed: true } } } },
+    /learningProgress\.syllableTraining\.connection-errors 未提交全部题目，不能标记完成/
+  ],
+  [
+    "complete connection stage missing completion",
+    { learningProgress: { syllableTraining: { "connection-errors": { completedIds: connectionStageIds } } } },
+    /learningProgress\.syllableTraining\.connection-errors 已提交全部题目，必须标记完成/
+  ],
+  [
+    "unknown imported syllable mistake",
+    { syllableMistakes: { connection: ["connection-99"], break: [] } },
+    /syllableMistakes\.connection 包含未知 ID: connection-99/
+  ],
+  [
+    "imported connection mistake in break bucket",
+    { syllableMistakes: { connection: [], break: ["connection-01"] } },
+    /syllableMistakes\.break 的 connection-01 属于 connection 分类/
   ],
   [
     "vocabulary progress key",
@@ -2268,6 +2422,7 @@ vm.runInContext(
       completedIds: ["letters:dot-bone:viewed"]
     };
     state.mistakes = [{ key: "letter:be", targetId: "be" }];
+    state.syllableMistakes = { connection: ["connection-01"], break: ["break-01"] };
     state.writingChecks = ["shape"];
     state.favorite = true;
     state.selectedPicture = "be";
@@ -2280,6 +2435,10 @@ vm.runInContext(
     state.syllableAnswerId = "distractor";
     state.syllableShowStandard = true;
     state.syllableAnswerSubmitted = true;
+    state.syllableConnectionAnswerId = "statement-correct";
+    state.syllableConnectionSubmitted = true;
+    state.syllableConnectionMode = "review-break";
+    state.syllableConnectionReviewItemId = "break-01";
     state.practiceSpoken = true;
     state.currentLetterId = "pe";
     state.selectedGroupId = "tail-bowl";
@@ -2303,6 +2462,7 @@ const populatedLearningRecord = vm.runInContext(
     learningProgress: state.learningProgress,
     dailyActivity: state.dailyActivity,
     mistakes: state.mistakes,
+    syllableMistakes: state.syllableMistakes,
     writingChecks: state.writingChecks,
     favorite: state.favorite,
     selectedPicture: state.selectedPicture,
@@ -2315,6 +2475,10 @@ const populatedLearningRecord = vm.runInContext(
     syllableAnswerId: state.syllableAnswerId,
     syllableShowStandard: state.syllableShowStandard,
     syllableAnswerSubmitted: state.syllableAnswerSubmitted,
+    syllableConnectionAnswerId: state.syllableConnectionAnswerId,
+    syllableConnectionSubmitted: state.syllableConnectionSubmitted,
+    syllableConnectionMode: state.syllableConnectionMode,
+    syllableConnectionReviewItemId: state.syllableConnectionReviewItemId,
     practiceSpoken: state.practiceSpoken,
     currentLetterId: state.currentLetterId,
     selectedGroupId: state.selectedGroupId,
@@ -2349,6 +2513,7 @@ assert.equal(
       learningProgress: state.learningProgress,
       dailyActivity: state.dailyActivity,
       mistakes: state.mistakes,
+      syllableMistakes: state.syllableMistakes,
       writingChecks: state.writingChecks,
       favorite: state.favorite,
       selectedPicture: state.selectedPicture,
@@ -2361,6 +2526,10 @@ assert.equal(
       syllableAnswerId: state.syllableAnswerId,
       syllableShowStandard: state.syllableShowStandard,
       syllableAnswerSubmitted: state.syllableAnswerSubmitted,
+      syllableConnectionAnswerId: state.syllableConnectionAnswerId,
+      syllableConnectionSubmitted: state.syllableConnectionSubmitted,
+      syllableConnectionMode: state.syllableConnectionMode,
+      syllableConnectionReviewItemId: state.syllableConnectionReviewItemId,
       practiceSpoken: state.practiceSpoken,
       currentLetterId: state.currentLetterId,
       selectedGroupId: state.selectedGroupId,
@@ -2389,6 +2558,11 @@ assert.equal(toast.textContent, "清除失败，原记录已保留");
 clickDataset({ action: "request-clear-learning" });
 clickDataset({ action: "confirm-clear-learning" });
 assert.equal(vm.runInContext("state.mistakes.length", context), 0);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.syllableMistakes)", context)),
+  { connection: [], break: [] },
+  "successful clear should empty both syllable mistake buckets"
+);
 assert.equal(vm.runInContext("state.writingChecks.length", context), 0);
 assert.equal(vm.runInContext("state.favorite", context), false);
 assert.equal(vm.runInContext("state.dailyActivity.completedIds.length", context), 0);
@@ -2408,6 +2582,10 @@ assert.equal(vm.runInContext("state.syllableRuleId", context), "vowel-nucleus");
 assert.equal(vm.runInContext("state.syllableAnswerId", context), "");
 assert.equal(vm.runInContext("state.syllableShowStandard", context), false);
 assert.equal(vm.runInContext("state.syllableAnswerSubmitted", context), false);
+assert.equal(vm.runInContext("state.syllableConnectionAnswerId", context), "");
+assert.equal(vm.runInContext("state.syllableConnectionSubmitted", context), false);
+assert.equal(vm.runInContext("state.syllableConnectionMode", context), "lesson");
+assert.equal(vm.runInContext("state.syllableConnectionReviewItemId", context), "");
 assert.equal(vm.runInContext("state.practiceSpoken", context), false);
 assert.equal(vm.runInContext("state.currentLetterId", context), "be");
 assert.equal(vm.runInContext("state.selectedGroupId", context), "dot-bone");
@@ -3524,6 +3702,11 @@ assert.match(
   /data-action="go"[^>]*data-target="syllableWarmup"[^>]*>\s*进入当前学习\s*<\/button>/,
   "the visible syllable unit should link to a real warmup screen"
 );
+assert.match(
+  syllableUnitHtml,
+  /data-action="go"[^>]*data-target="syllableReview"[^>]*>\s*复习连接与断开错题\s*<\/button>/,
+  "the syllable unit detail should expose the real split mistake review entry"
+);
 clickDataset({ action: "go", target: "syllableWarmup" });
 assert.equal(vm.runInContext("state.screen", context), "syllableWarmup", "the syllable unit entry must not be dead");
 includesAll(app.innerHTML, ["两字母热身", "warmup-ba", "ب", "ا", "合起来读", "1 / 10"], "syllable warmup parts");
@@ -3661,6 +3844,369 @@ includesAll(app.innerHTML, ["4 / 4", "下一条规则"], "completed first syllab
 clickDataset({ action: "next-syllable-rule" });
 includesAll(app.innerHTML, ["一个辅音时先尝试向后分", "仅用于下列已核对例子", "1 / 4", "2 / 4 条规则"], "second syllable rule");
 assert.ok(!app.innerHTML.includes("辅音群内部逐词判断"), "the third rule must remain locked while the second rule is active");
+
+const completedSyllablePrerequisites = {
+  "two-letter-warmup": {
+    completedIds: [
+      "warmup-ba", "warmup-pa", "warmup-ta", "warmup-na", "warmup-la",
+      "warmup-ma", "warmup-be-e", "warmup-pe-e", "warmup-te-e", "warmup-ne-e"
+    ],
+    completed: true
+  },
+  "vowel-nucleus": {
+    completedIds: ["vowel-nucleus-01", "vowel-nucleus-02", "vowel-nucleus-03", "vowel-nucleus-04"],
+    completed: true
+  },
+  "single-consonant-boundary": {
+    completedIds: [
+      "single-consonant-boundary-01", "single-consonant-boundary-02",
+      "single-consonant-boundary-03", "single-consonant-boundary-04"
+    ],
+    completed: true
+  },
+  "two-consonant-boundary": {
+    completedIds: [
+      "two-consonant-boundary-01", "two-consonant-boundary-02",
+      "two-consonant-boundary-03", "two-consonant-boundary-04"
+    ],
+    completed: true
+  },
+  "suffix-boundary": {
+    completedIds: ["suffix-boundary-01", "suffix-boundary-02", "suffix-boundary-03", "suffix-boundary-04"],
+    completed: true
+  }
+};
+
+renderState(`
+  state.learningProgress = emptyLearningProgress();
+  state.syllableMistakes = { connection: [], break: [] };
+  state.screen = "syllableReview";
+  state.syllableConnectionMode = "lesson";
+  state.syllableConnectionAnswerId = "";
+  state.syllableConnectionSubmitted = false;
+`);
+assert.match(
+  app.innerHTML,
+  /data-action="go"[^>]*data-target="syllableWarmup"[^>]*aria-label="返回"/,
+  "an empty review screen should return a fresh learner to the reachable warmup instead of the locked lesson"
+);
+clickDataset({ action: "go", target: "syllableConnections" });
+assert.equal(
+  vm.runInContext("state.screen", context),
+  "syllableWarmup",
+  "the real lesson route should normalize a fresh learner to the reachable warmup"
+);
+assert.equal(
+  vm.runInContext("state.learningProgress.syllableTraining['connection-errors']", context),
+  undefined,
+  "a blocked lesson route must not create connection progress"
+);
+
+renderState(`
+  state.learningProgress = emptyLearningProgress();
+  state.syllableMistakes = { connection: [], break: [] };
+  state.screen = "syllableConnections";
+  state.syllableConnectionMode = "lesson";
+  state.syllableConnectionAnswerId = "statement-correct";
+  state.syllableConnectionSubmitted = false;
+`);
+assert.equal(
+  vm.runInContext("state.screen", context),
+  "syllableWarmup",
+  "the connection renderer should normalize an unreachable persisted lesson screen"
+);
+assert.ok(!app.innerHTML.includes("连读与断读专项"), "the render gate should not expose locked connection content");
+clickDataset({ action: "submit-syllable-connection-answer" });
+assert.equal(
+  vm.runInContext("state.screen", context),
+  "syllableWarmup",
+  "the submit handler should keep an unreachable lesson at the reachable prerequisite"
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.syllableMistakes)", context)),
+  { connection: [], break: [] },
+  "a blocked submit must not create a syllable mistake"
+);
+assert.equal(
+  vm.runInContext("state.learningProgress.syllableTraining['connection-errors']", context),
+  undefined,
+  "a blocked submit must not create progress that hydration would reject"
+);
+
+const completedRulesWithoutWarmup = JSON.parse(JSON.stringify(completedSyllablePrerequisites));
+delete completedRulesWithoutWarmup["two-letter-warmup"];
+renderState(`
+  state.learningProgress = emptyLearningProgress();
+  state.learningProgress.syllableTraining = ${JSON.stringify(completedRulesWithoutWarmup)};
+  state.syllableMistakes = { connection: [], break: [] };
+  state.screen = "syllableConnections";
+  state.syllableConnectionMode = "lesson";
+  state.syllableConnectionAnswerId = "";
+  state.syllableConnectionSubmitted = false;
+`);
+assert.equal(
+  vm.runInContext("state.screen", context),
+  "syllableWarmup",
+  "the lesson gate should require the complete warmup-to-rules prefix, not isolated rule flags"
+);
+
+const unreachableConnectionSave = JSON.parse(
+  vm.runInContext(
+    `JSON.stringify({ ...buildLocalProgressData(), screen: "syllableConnections", learningProgress: emptyLearningProgress() })`,
+    context
+  )
+);
+assert.throws(
+  () => vm.runInContext(`validateImportedProgressIds(${JSON.stringify(unreachableConnectionSave)})`, context),
+  /syllableConnections.*前置阶段/u,
+  "import validation should reject a lesson screen without all rule prerequisites"
+);
+assert.throws(
+  () => vm.runInContext(`applyLocalProgressData(${JSON.stringify(unreachableConnectionSave)})`, context),
+  /syllableConnections.*前置阶段/u,
+  "direct hydration should reject the same unreachable lesson screen"
+);
+assert.throws(
+  () => vm.runInContext('applyLocalProgressData({ screen: "syllableConnections" })', context),
+  /syllableConnections.*前置阶段/u,
+  "direct hydration should also reject an unreachable lesson screen when legacy data omits learningProgress"
+);
+
+renderState(`
+  state.learningProgress = emptyLearningProgress();
+  state.syllableMistakes = { connection: ["connection-01"], break: [] };
+  state.screen = "syllableReview";
+  state.syllableConnectionMode = "lesson";
+  state.syllableConnectionReviewItemId = "";
+`);
+clickDataset({ action: "review-syllable-mistakes", mistakeBucket: "connection" });
+assert.equal(vm.runInContext("state.screen", context), "syllableConnections", "a real saved mistake should remain reviewable without lesson prerequisites");
+assert.equal(vm.runInContext("state.syllableConnectionMode", context), "review-connection");
+assert.ok(app.innerHTML.includes("错题复习 · 连接判断"), "the independent review mode should render its real approved item");
+assert.equal(
+  vm.runInContext("buildLocalProgressData().screen", context),
+  "syllableReview",
+  "saving an independent review item should persist the hydratable review index rather than a locked lesson route"
+);
+
+renderState(`
+  state.screen = "syllableRules";
+  state.syllableRuleId = "suffix-boundary";
+  state.syllableAnswerId = "";
+  state.syllableAnswerSubmitted = false;
+  state.learningProgress = emptyLearningProgress();
+  state.learningProgress.syllableTraining = ${JSON.stringify(completedSyllablePrerequisites)};
+`);
+assert.match(
+  app.innerHTML,
+  /data-action="go"[^>]*data-target="syllableConnections"[^>]*>\s*继续：连读与断读专项\s*<\/button>/,
+  "finishing all four rule cards should continue to the real connection and break training"
+);
+clickDataset({ action: "go", target: "syllableConnections" });
+assert.equal(vm.runInContext("state.screen", context), "syllableConnections", "the connection stage target should be a real screen");
+includesAll(
+  app.innerHTML,
+  ["连读与断读专项", "بال", "开头 ب 与后面的 ا 连接。", "1 / 12"],
+  "first approved textual connection judgment"
+);
+assert.ok(!app.innerHTML.includes("错误判断："), "the learner-facing statement must not reveal that the approved candidate is wrong");
+assert.ok(
+  !app.innerHTML.includes("开头 ب 与后面的 ا 连接；ا 后不继续连接 ل。"),
+  "a connection explanation must stay hidden until the learner answers"
+);
+const genericMistakesBeforeSyllableJudgments = vm.runInContext("JSON.stringify(state.mistakes)", context);
+focusedSyllableSelector = "";
+clickDataset({ action: "pick-syllable-connection-answer", answerId: "statement-correct" });
+assert.equal(
+  vm.runInContext("state.syllableConnectionAnswerId", context),
+  "statement-correct",
+  "the real connection judgment option should select through delegated click handling"
+);
+assert.equal(
+  focusedSyllableSelector,
+  '[data-action="pick-syllable-connection-answer"][data-answer-id="statement-correct"]',
+  "a connection option click should restore focus after rerender"
+);
+let syllableConnectionArrowPrevented = false;
+keydownHandler({
+  key: "ArrowDown",
+  ctrlKey: false,
+  altKey: false,
+  metaKey: false,
+  target: {
+    closest(selector) {
+      assert.equal(selector, '[data-action="pick-syllable-connection-answer"]');
+      return { dataset: { answerId: "statement-correct" } };
+    }
+  },
+  preventDefault() {
+    syllableConnectionArrowPrevented = true;
+  }
+});
+assert.equal(syllableConnectionArrowPrevented, true, "arrow navigation between connection answers should prevent page scrolling");
+assert.equal(vm.runInContext("state.syllableConnectionAnswerId", context), "statement-incorrect");
+assert.equal(
+  focusedSyllableSelector,
+  '[data-action="pick-syllable-connection-answer"][data-answer-id="statement-incorrect"]',
+  "connection keyboard navigation should focus the newly selected option"
+);
+assert.ok(
+  !app.innerHTML.includes("开头 ب 与后面的 ا 连接；ا 后不继续连接 ل。"),
+  "selecting without submitting must not reveal the approved explanation"
+);
+clickDataset({ action: "submit-syllable-connection-answer" });
+includesAll(
+  app.innerHTML,
+  ["回答错误", "开头 ب 与后面的 ا 连接；ا 后不继续连接 ل。", "继续下一题"],
+  "submitted wrong connection judgment feedback"
+);
+includesAll(
+  app.innerHTML,
+  ['data-syllable-connection-question', 'tabindex="-1"', 'aria-labelledby="syllable-connection-statement-connection-01"', 'data-syllable-connection-feedback'],
+  "connection question and feedback should expose programmatic focus targets"
+);
+assert.equal(focusedSyllableSelector, "[data-syllable-connection-feedback]", "submitting a connection answer should focus its feedback");
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.syllableMistakes)", context)),
+  { connection: ["connection-01"], break: [] },
+  "a wrong connection judgment should enter only the connection mistake bucket"
+);
+assert.equal(
+  vm.runInContext("JSON.stringify(state.mistakes)", context),
+  genericMistakesBeforeSyllableJudgments,
+  "syllable judgments must not write into generic mistakes"
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.syllableTraining['connection-errors'])", context)),
+  { completedIds: ["connection-01"] },
+  "the first submitted judgment should write only the connection stage progress"
+);
+
+const wrongSyllableJudgmentIndexes = new Set([1, 6]);
+for (let itemIndex = 1; itemIndex < 12; itemIndex += 1) {
+  clickDataset({ action: "next-syllable-connection" });
+  if (itemIndex === 1) {
+    assert.equal(focusedSyllableSelector, "[data-syllable-connection-question]", "Continue should focus the next connection question");
+  }
+  const expectedItem = JSON.parse(
+    vm.runInContext(`JSON.stringify(syllableTraining.connectionItems[${itemIndex}])`, context)
+  );
+  includesAll(
+    app.innerHTML,
+    [expectedItem.standard, expectedItem.statement, `${itemIndex + 1} / 12`],
+    `connection judgment ${expectedItem.id}`
+  );
+  assert.ok(!app.innerHTML.includes("错误判断："), `${expectedItem.id} should present a neutral statement without the answer label`);
+  assert.ok(!app.innerHTML.includes(expectedItem.explanation), `${expectedItem.id} should hide its explanation before answer`);
+  const selectedAnswer = wrongSyllableJudgmentIndexes.has(itemIndex)
+    ? expectedItem.expectedAnswer === "statement-correct"
+      ? "statement-incorrect"
+      : "statement-correct"
+    : expectedItem.expectedAnswer;
+  clickDataset({
+    action: "pick-syllable-connection-answer",
+    answerId: selectedAnswer
+  });
+  clickDataset({ action: "submit-syllable-connection-answer" });
+  assert.ok(
+    app.innerHTML.includes(wrongSyllableJudgmentIndexes.has(itemIndex) ? "回答错误" : "回答正确"),
+    `${expectedItem.id} should grade against its reviewed expected answer`
+  );
+  assert.ok(app.innerHTML.includes(expectedItem.explanation), `${expectedItem.id} should reveal its explanation only after submit`);
+}
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.syllableMistakes)", context)),
+  { connection: ["connection-01", "connection-02"], break: ["break-01"] },
+  "wrong connection and break judgments should stay in independent stable-ID buckets"
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.syllableTraining['connection-errors'])", context)),
+  {
+    completedIds: [
+      "connection-01", "connection-02", "connection-03", "connection-04", "connection-05", "connection-06",
+      "break-01", "break-02", "break-03", "break-04", "break-05", "break-06"
+    ],
+    completed: true
+  },
+  "all twelve submitted judgments should complete the connection-errors stage regardless of wrong answers"
+);
+includesAll(app.innerHTML, ["12 / 12", "复习连接与断开错题"], "completed connection and break stage");
+assert.equal(vm.runInContext("saveLocalProgress()", context), true, "split syllable mistakes should save locally");
+assert.deepEqual(
+  savedProgress().syllableMistakes,
+  { connection: ["connection-01", "connection-02"], break: ["break-01"] },
+  "local saved progress should retain both syllable mistake buckets"
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(buildCloudSnapshot().syllableMistakes)", context)),
+  { connection: ["connection-01", "connection-02"], break: ["break-01"] },
+  "cloud snapshot should retain both syllable mistake buckets"
+);
+assert.doesNotThrow(
+  () => vm.runInContext(`applyLocalProgressData(${JSON.stringify(savedProgress())})`, context),
+  "the just-saved complete syllable record should pass direct local hydration validation"
+);
+vm.runInContext("state.syllableMistakes = { connection: [], break: [] }; hydrateLocalProgress()", context);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.syllableMistakes)", context)),
+  { connection: ["connection-01", "connection-02"], break: ["break-01"] },
+  "hydrating the saved local record should restore both syllable mistake buckets"
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(unitProgressSummaries().find((item) => item.label === '拼读与音节训练营'))", context)),
+  { unit: "第四单元", label: "拼读与音节训练营", completed: 6, total: 6 },
+  "the visible unit summary should include the completed connection-errors stage"
+);
+clickDataset({ action: "go", target: "syllableReview" });
+assert.equal(vm.runInContext("state.screen", context), "syllableReview", "the completed stage should open a real split review screen");
+includesAll(
+  app.innerHTML,
+  ["连接与断开错题复习", "连接错误", "2 道", "断开错误", "1 道", 'data-mistake-bucket="connection"', 'data-mistake-bucket="break"'],
+  "separate connection and break review counts"
+);
+focusedSyllableSelector = "";
+clickDataset({ action: "review-syllable-mistakes", mistakeBucket: "connection" });
+assert.equal(vm.runInContext("state.screen", context), "syllableConnections", "connection review should reuse the real textual judgment screen");
+assert.equal(vm.runInContext("state.syllableConnectionMode", context), "review-connection");
+assert.equal(focusedSyllableSelector, "[data-syllable-connection-question]", "opening a split review bucket should focus its question");
+includesAll(app.innerHTML, ["错题复习 · 连接判断", "بال", "开头 ب 与后面的 ا 连接。"], "first connection mistake retry");
+assert.ok(!app.innerHTML.includes("开头 ب 与后面的 ا 连接；ا 后不继续连接 ل。"), "retry should also hide explanation before answer");
+clickDataset({ action: "pick-syllable-connection-answer", answerId: "statement-correct" });
+clickDataset({ action: "submit-syllable-connection-answer" });
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.syllableMistakes)", context)),
+  { connection: ["connection-02"], break: ["break-01"] },
+  "a correct retry should remove only that connection ID and leave the break bucket unchanged"
+);
+clickDataset({ action: "next-syllable-connection-review" });
+includesAll(app.innerHTML, ["مان", "م 与 ا 之间应断开。"], "next connection mistake retry");
+clickDataset({ action: "pick-syllable-connection-answer", answerId: "statement-correct" });
+clickDataset({ action: "submit-syllable-connection-answer" });
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.syllableMistakes)", context)),
+  { connection: ["connection-02"], break: ["break-01"] },
+  "a repeated wrong retry should not duplicate the connection ID or touch the break bucket"
+);
+clickDataset({ action: "go", target: "syllableReview" });
+focusedSyllableSelector = "";
+clickDataset({ action: "clear-syllable-mistakes", mistakeBucket: "connection" });
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.syllableMistakes)", context)),
+  { connection: [], break: ["break-01"] },
+  "clearing connection review should not clear break review"
+);
+assert.equal(focusedSyllableSelector, '[data-syllable-review-bucket="connection"]', "clearing connection mistakes should focus that bucket's empty state");
+includesAll(app.innerHTML, ["连接错误已清空", "断开错误", "1 道"], "connection empty state with break mistakes retained");
+assert.ok(!app.innerHTML.includes('data-action="review-syllable-mistakes" data-mistake-bucket="connection"'), "an empty connection bucket should not render a dead review entry");
+focusedSyllableSelector = "";
+clickDataset({ action: "clear-syllable-mistakes", mistakeBucket: "break" });
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.syllableMistakes)", context)),
+  { connection: [], break: [] },
+  "clearing break review should leave both buckets empty after connection is already empty"
+);
+assert.equal(focusedSyllableSelector, '[data-syllable-review-bucket="break"]', "clearing break mistakes should focus that bucket's empty state");
+includesAll(app.innerHTML, ["连接错误已清空", "断开错误已清空"], "fully empty split review state");
 
 const latinUnitHtml = renderState(
   "state.screen = 'unit'; state.selectedUnitId = 'latin-keyboard-writing'; state.latinKeyboardValue = ''"

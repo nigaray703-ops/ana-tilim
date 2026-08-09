@@ -344,7 +344,7 @@ assert.equal(
 );
 assert.equal(
   normalizedDuplicateSyllableTags[0][0].trim(),
-  '<script src="./course-data/syllable-data.js?v=20260809-syllable-training"></script>',
+  '<script src="./course-data/syllable-data.js?v=20260809-syllable-review"></script>',
   "duplicate normalization should use the standard syllable-data tag"
 );
 assert.equal(
@@ -362,12 +362,12 @@ assert.ok(
   "sync should cache-bust the copied syllable UI styles"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./progress-transfer.js?v=20260809-syllable-progress"'),
-  "sync should cache-bust the copied syllable progress validator"
+  normalizedDuplicateIndex.includes('src="./progress-transfer.js?v=20260809-syllable-review"'),
+  "sync should cache-bust the copied split syllable mistake validator"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./app.js?v=20260809-syllable-ui"'),
-  "sync should cache-bust the copied syllable UI app"
+  normalizedDuplicateIndex.includes('src="./app.js?v=20260809-syllable-review"'),
+  "sync should cache-bust the copied syllable review app"
 );
 assert.ok(
   normalizedDuplicateIndex.indexOf("./course-data/alphabet-data.js") < normalizedDuplicateIndex.indexOf("./course-data/latin-writing-data.js")

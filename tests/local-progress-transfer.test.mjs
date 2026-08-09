@@ -128,6 +128,10 @@ const currentProgressData = {
       createdAt: "2026-08-09T00:00:00.000Z"
     }
   ],
+  syllableMistakes: {
+    connection: ["connection-01"],
+    break: ["break-01"]
+  },
   writingChecks: ["shape", "dots", "spacing"],
   localProfile: { displayName: "学习者 <一>", avatarDataUrl: "" },
   preferences: { audioAutoplay: false, dailyGoal: 10, learningReminder: false, showLatin: true },
@@ -207,6 +211,37 @@ const malformedNestedCases = [
     "syllable submitted IDs must be unique",
     { learningProgress: { syllableTraining: { "two-letter-warmup": { completedIds: ["warmup-ba", "warmup-ba"] } } } },
     /learningProgress\.syllableTraining\.two-letter-warmup\.completedIds 不能包含重复 ID/
+  ],
+  ["syllable mistakes must be an object", { syllableMistakes: [] }, /syllableMistakes 必须是对象/],
+  [
+    "syllable mistakes must contain both published buckets",
+    { syllableMistakes: { connection: [] } },
+    /syllableMistakes 必须包含 connection 和 break/
+  ],
+  [
+    "syllable mistakes must reject unknown buckets",
+    { syllableMistakes: { connection: [], break: [], future: [] } },
+    /syllableMistakes 包含未知字段 future/
+  ],
+  [
+    "syllable mistake IDs must be unique within a bucket",
+    { syllableMistakes: { connection: ["connection-01", "connection-01"], break: [] } },
+    /syllableMistakes\.connection 不能包含重复 ID/
+  ],
+  [
+    "one syllable mistake ID cannot enter both buckets",
+    { syllableMistakes: { connection: ["connection-01"], break: ["connection-01"] } },
+    /syllableMistakes 的 ID 不能跨分类重复/
+  ],
+  [
+    "syllable mistake IDs must be strings",
+    { syllableMistakes: { connection: [42], break: [] } },
+    /syllableMistakes\.connection\[0\] 必须是字符串/
+  ],
+  [
+    "a syllable mistake bucket cannot exceed twenty-four IDs",
+    { syllableMistakes: { connection: Array.from({ length: 25 }, (_, index) => `connection-${index + 1}`), break: [] } },
+    /syllableMistakes\.connection 最多保存 24 个 ID/
   ],
   ["mistakes must be an array", { mistakes: {} }, /mistakes 必须是数组/],
   [

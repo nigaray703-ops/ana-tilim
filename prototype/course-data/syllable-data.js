@@ -101,26 +101,29 @@
   }));
 
   const connectionItems = [
-    ["connection-01", "bal", "بال", "connection", "错误判断：ب 与 ا 之间应断开。", "开头 ب 与后面的 ا 连接；ا 后不继续连接 ل。"],
-    ["connection-02", "man", "مان", "connection", "错误判断：م 与 ا 之间应断开。", "开头 م 与后面的 ا 连接；ا 后不继续连接 ن。"],
-    ["connection-03", "nan", "نان", "connection", "错误判断：第一个 ن 与 ا 之间应断开。", "开头 ن 与 ا 连接；ا 后面的 ن 重新开始。"],
-    ["connection-04", "tal", "تال", "connection", "错误判断：ت 与 ا 之间应断开。", "ت 与 ا 连接；ا 后面的 ل 重新开始。"],
-    ["connection-05", "bel", "بەل", "connection", "错误判断：ب 与 ە 之间应断开。", "ب 与 ە 连接，但 ە 后不继续连接 ل。"],
-    ["connection-06", "kel", "كەل", "connection", "错误判断：ك 与 ە 之间应断开。", "ك 与 ە 连接，但 ە 后面的 ل 重新开始。"],
-    ["break-01", "dada-connection", "دادا", "break", "错误判断：د 和 ا 后都应继续连接后一个字母。", "د 和 ا 后不继续连接，所以中间会自然断开。"],
-    ["break-02", "reng-connection", "رەڭ", "break", "错误判断：ر 或 ە 后应继续连接。", "ر 后不继续连接，ە 后也不继续连接，ڭ 重新开始。"],
-    ["break-03", "qiz-connection", "قىز", "break", "错误判断：ى 后应继续连接 ز。", "ق 接 ى，而 ى 后不继续连接，最后的 ز 重新开始。"],
-    ["break-04", "weten-connection", "ۋەتەن", "break", "错误判断：ۋ 和 ە 后都无需重启后面的字母。", "ۋ、ە 会使后面的字母重新开始。"],
-    ["break-05", "mewe-connection", "مېۋە", "break", "错误判断：ې 和 ۋ 后都可继续连接。", "م 接 ې 后断开；ۋ 后也不继续连接。"],
-    ["break-06", "toge-connection", "تۆگە", "break", "错误判断：ۆ 后应继续连接 گ。", "ت 接 ۆ，ۆ 后断开，再从 گ 开始。"]
-  ].map(([id, sourceComboId, standard, mistakeBucket, distractor, explanation]) => ({
+    ["connection-01", "bal", "بال", "connection", "错误判断：ب 与 ا 之间应断开。", "开头 ب 与后面的 ا 连接；ا 后不继续连接 ل。", "开头 ب 与后面的 ا 连接。", "statement-correct"],
+    ["connection-02", "man", "مان", "connection", "错误判断：م 与 ا 之间应断开。", "开头 م 与后面的 ا 连接；ا 后不继续连接 ن。", "م 与 ا 之间应断开。", "statement-incorrect"],
+    ["connection-03", "nan", "نان", "connection", "错误判断：第一个 ن 与 ا 之间应断开。", "开头 ن 与 ا 连接；ا 后面的 ن 重新开始。", "第一个 ن 与后面的 ا 连接。", "statement-correct"],
+    ["connection-04", "tal", "تال", "connection", "错误判断：ت 与 ا 之间应断开。", "ت 与 ا 连接；ا 后面的 ل 重新开始。", "ت 与 ا 之间应断开。", "statement-incorrect"],
+    ["connection-05", "bel", "بەل", "connection", "错误判断：ب 与 ە 之间应断开。", "ب 与 ە 连接，但 ە 后不继续连接 ل。", "ب 与 ە 连接；ە 后不继续连接 ل。", "statement-correct"],
+    ["connection-06", "kel", "كەل", "connection", "错误判断：ك 与 ە 之间应断开。", "ك 与 ە 连接，但 ە 后面的 ل 重新开始。", "ك 与 ە 之间应断开。", "statement-incorrect"],
+    ["break-01", "dada-connection", "دادا", "break", "错误判断：د 和 ا 后都应继续连接后一个字母。", "د 和 ا 后不继续连接，所以中间会自然断开。", "د 后不继续连接后一个字母。", "statement-correct"],
+    ["break-02", "reng-connection", "رەڭ", "break", "错误判断：ر 或 ە 后应继续连接。", "ر 后不继续连接，ە 后也不继续连接，ڭ 重新开始。", "ر 或 ە 后应继续连接。", "statement-incorrect"],
+    ["break-03", "qiz-connection", "قىز", "break", "错误判断：ى 后应继续连接 ز。", "ق 接 ى，而 ى 后不继续连接，最后的 ز 重新开始。", "ى 后不继续连接最后的 ز。", "statement-correct"],
+    ["break-04", "weten-connection", "ۋەتەن", "break", "错误判断：ۋ 和 ە 后都无需重启后面的字母。", "ۋ、ە 会使后面的字母重新开始。", "ۋ 和 ە 后都无需重启后面的字母。", "statement-incorrect"],
+    ["break-05", "mewe-connection", "مېۋە", "break", "错误判断：ې 和 ۋ 后都可继续连接。", "م 接 ې 后断开；ۋ 后也不继续连接。", "ۋ 后不继续连接后面的字母。", "statement-correct"],
+    ["break-06", "toge-connection", "تۆگە", "break", "错误判断：ۆ 后应继续连接 گ。", "ت 接 ۆ，ۆ 后断开，再从 گ 开始。", "ۆ 后应继续连接 گ。", "statement-incorrect"]
+  ].map(([id, sourceComboId, standard, mistakeBucket, distractor, explanation, statement, expectedAnswer]) => ({
     id,
     sourceComboId,
     standard,
     interaction: "statement-judgment",
     mistakeBucket,
     distractor,
+    statement,
+    expectedAnswer,
     explanation,
+    statementReviewStatus: "approved",
     reviewStatus: "approved"
   }));
 
@@ -180,6 +183,20 @@
   const EXPECTED_CONNECTION_SOURCE_IDS = [
     "bal", "man", "nan", "tal", "bel", "kel",
     "dada-connection", "reng-connection", "qiz-connection", "weten-connection", "mewe-connection", "toge-connection"
+  ];
+  const EXPECTED_CONNECTION_STATEMENT_CONTRACT = [
+    ["connection-01", "开头 ب 与后面的 ا 连接。", "statement-correct", "approved"],
+    ["connection-02", "م 与 ا 之间应断开。", "statement-incorrect", "approved"],
+    ["connection-03", "第一个 ن 与后面的 ا 连接。", "statement-correct", "approved"],
+    ["connection-04", "ت 与 ا 之间应断开。", "statement-incorrect", "approved"],
+    ["connection-05", "ب 与 ە 连接；ە 后不继续连接 ل。", "statement-correct", "approved"],
+    ["connection-06", "ك 与 ە 之间应断开。", "statement-incorrect", "approved"],
+    ["break-01", "د 后不继续连接后一个字母。", "statement-correct", "approved"],
+    ["break-02", "ر 或 ە 后应继续连接。", "statement-incorrect", "approved"],
+    ["break-03", "ى 后不继续连接最后的 ز。", "statement-correct", "approved"],
+    ["break-04", "ۋ 和 ە 后都无需重启后面的字母。", "statement-incorrect", "approved"],
+    ["break-05", "ۋ 后不继续连接后面的字母。", "statement-correct", "approved"],
+    ["break-06", "ۆ 后应继续连接 گ。", "statement-incorrect", "approved"]
   ];
   const EXPECTED_CRITERIA = ["逻辑通顺", "维吾尔文字与现有标准来源一致", "整句音频与稳定内容 ID 一致"];
   const UNSAFE_TEXT = /[\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufb50-\ufdff\ufe70-\ufeff]/u;
@@ -300,15 +317,38 @@
     });
     value.connectionItems.forEach((item, index) => {
       takeId(item, `connectionItems[${index}]`);
-      assertExactFields(item, ["id", "sourceComboId", "standard", "interaction", "mistakeBucket", "distractor", "explanation", "reviewStatus"], item.id);
+      assertExactFields(item, ["id", "sourceComboId", "standard", "interaction", "mistakeBucket", "distractor", "statement", "expectedAnswer", "explanation", "statementReviewStatus", "reviewStatus"], item.id);
       if (!new Set(["connection", "break"]).has(item.mistakeBucket)) throw new TypeError(`${item.id}.mistakeBucket is invalid`);
       if (item.interaction !== "statement-judgment") throw new TypeError(`${item.id}.interaction is invalid`);
-      for (const field of ["sourceComboId", "standard", "distractor", "explanation"]) assertText(item[field], `${item.id}.${field}`);
+      for (const field of ["sourceComboId", "standard", "distractor", "statement", "explanation"]) assertText(item[field], `${item.id}.${field}`);
+      if (!new Set(["statement-correct", "statement-incorrect"]).has(item.expectedAnswer)) throw new TypeError(`${item.id}.expectedAnswer is invalid`);
+      if (item.statementReviewStatus !== "approved") throw new TypeError(`${item.id}.statementReviewStatus must be approved`);
       if (item.reviewStatus !== "approved") throw new TypeError(`${item.id}.reviewStatus must be approved`);
     });
     if (value.connectionItems.filter((item) => item.mistakeBucket === "connection").length !== 6 || value.connectionItems.filter((item) => item.mistakeBucket === "break").length !== 6) {
       throw new TypeError("connection items must keep six connection and six break judgments");
     }
+    for (const bucketName of ["connection", "break"]) {
+      const bucketItems = value.connectionItems.filter((item) => item.mistakeBucket === bucketName);
+      if (
+        bucketItems.filter((item) => item.expectedAnswer === "statement-correct").length !== 3 ||
+        bucketItems.filter((item) => item.expectedAnswer === "statement-incorrect").length !== 3
+      ) {
+        throw new TypeError("connection items must keep three correct and three incorrect statements per bucket");
+      }
+    }
+    value.connectionItems.forEach((item, index) => {
+      const [expectedId, expectedStatement, expectedAnswer, expectedStatus] =
+        EXPECTED_CONNECTION_STATEMENT_CONTRACT[index] || [];
+      if (
+        item.id !== expectedId ||
+        item.statement !== expectedStatement ||
+        item.expectedAnswer !== expectedAnswer ||
+        item.statementReviewStatus !== expectedStatus
+      ) {
+        throw new TypeError(`${item.id} must match the published statement contract`);
+      }
+    });
 
     value.sentences.forEach((sentence, sentenceIndex) => {
       takeId(sentence, `sentences[${sentenceIndex}]`);

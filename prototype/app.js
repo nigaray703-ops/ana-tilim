@@ -298,6 +298,8 @@ const persistedScreenIds = new Set([
   "comboComplete",
   "syllableWarmup",
   "syllableRules",
+  "syllableConnections",
+  "syllableReview",
   "vocab",
   "vocabRecognition",
   "vocabKeyboard",
@@ -322,7 +324,11 @@ const stableProgressIds = Object.freeze({
   latinWriting: new Set(latinWritingStepIds),
   letters: new Set(alphabetGroups.map((group) => group.id)),
   combos: new Set(comboGroups.map((group) => group.id)),
-  syllableTraining: new Set([syllableTraining.sections[0].id, ...syllableTraining.rules.map((rule) => rule.id)]),
+  syllableTraining: new Set([
+    syllableTraining.sections[0].id,
+    ...syllableTraining.rules.map((rule) => rule.id),
+    syllableTraining.sections[2].id
+  ]),
   vocab: new Set(vocabGroups.map((group) => group.id)),
   practice: new Set(practiceGroups.map((group) => group.id)),
   reading: new Set(readingUnits.flatMap((unit) => unit.groups.map((group) => group.id)))
@@ -347,6 +353,14 @@ const stableMistakeTargetIds = Object.freeze({
   combo: stableNavigationIds.currentComboItemId,
   vocab: stableNavigationIds.currentVocabItemId,
   practice: stableNavigationIds.currentPracticeItemId
+});
+const stableSyllableMistakeIds = Object.freeze({
+  connection: new Set(
+    syllableTraining.connectionItems.filter((item) => item.mistakeBucket === "connection").map((item) => item.id)
+  ),
+  break: new Set(
+    syllableTraining.connectionItems.filter((item) => item.mistakeBucket === "break").map((item) => item.id)
+  )
 });
 const stableWritingCheckIds = new Set(["shape", "dots", "spacing"]);
 const dailyActivitySteps = Object.freeze({
@@ -392,10 +406,10 @@ const unitExperience = {
     reviewTarget: "combo"
   },
   "syllable-training": {
-    recommended: "先把真实两字母组合拼起来，再逐条练习入门音节划分策略。",
-    steps: ["两字母热身", "先找元音中心", "判断辅音边界", "区分构词与音节边界"],
-    reviewLabel: "复习两字母热身",
-    reviewTarget: "syllableWarmup"
+    recommended: "先把真实两字母组合拼起来，再逐条练习入门音节划分策略，最后完成连接与断开判断。",
+    steps: ["两字母热身", "先找元音中心", "判断辅音边界", "区分构词与音节边界", "连接与断开判断", "分桶复习错题"],
+    reviewLabel: "复习连接与断开错题",
+    reviewTarget: "syllableReview"
   },
   "basic-phrases": {
     recommended: "按主题小课学日常用语和词汇，一行一行看词形。",
@@ -460,6 +474,80 @@ function normalizePreferences(value) {
   };
 }
 
+function normalizeSyllableMistakes(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  return {
+    connection: Array.isArray(source.connection) ? [...source.connection].slice(0, 24) : [],
+    break: Array.isArray(source.break) ? [...source.break].slice(0, 24) : []
+  };
+}
+
+function validateSyllableMistakeIds(value) {
+  if (value === undefined) return;
+  progressTransfer.validateSyllableMistakes(value);
+  for (const bucketName of ["connection", "break"]) {
+    const otherBucketName = bucketName === "connection" ? "break" : "connection";
+    for (const id of value[bucketName]) {
+      if (stableSyllableMistakeIds[bucketName].has(id)) continue;
+      if (stableSyllableMistakeIds[otherBucketName].has(id)) {
+        throw new Error(`syllableMistakes.${bucketName} 的 ${id} 属于 ${otherBucketName} 分类`);
+      }
+      throw new Error(`syllableMistakes.${bucketName} 包含未知 ID: ${id}`);
+    }
+  }
+}
+
+function expectedSyllableCompletedIds(progressId) {
+  if (progressId === syllableTraining.sections[0].id) {
+    return syllableTraining.twoLetterItems.map((item) => item.id);
+  }
+  if (progressId === syllableTraining.sections[2].id) {
+    return syllableTraining.connectionItems.map((item) => item.id);
+  }
+  return (syllableTraining.rules.find((rule) => rule.id === progressId)?.exercises || []).map(
+    (exercise) => exercise.id
+  );
+}
+
+function syllableConnectionPrerequisitesComplete(learningProgress = state.learningProgress) {
+  const syllableProgress = learningProgress?.syllableTraining;
+  return Boolean(
+    syllableProgress?.[syllableTraining.sections[0].id]?.completed === true &&
+    syllableTraining.rules.every((rule) => syllableProgress?.[rule.id]?.completed === true)
+  );
+}
+
+function reachableSyllableTrainingScreen(learningProgress = state.learningProgress) {
+  return learningProgress?.syllableTraining?.[syllableTraining.sections[0].id]?.completed === true
+    ? "syllableRules"
+    : "syllableWarmup";
+}
+
+function activeSyllableReviewBucket() {
+  if (state.syllableConnectionMode === "review-connection") return "connection";
+  if (state.syllableConnectionMode === "review-break") return "break";
+  return "";
+}
+
+function activeSyllableReviewItemId() {
+  const bucketName = activeSyllableReviewBucket();
+  if (!bucketName) return "";
+  return state.syllableConnectionReviewItemId || state.syllableMistakes[bucketName]?.[0] || "";
+}
+
+function syllableConnectionScreenIsReachable() {
+  if (state.syllableConnectionMode === "lesson") {
+    return syllableConnectionPrerequisitesComplete();
+  }
+  const bucketName = activeSyllableReviewBucket();
+  const itemId = activeSyllableReviewItemId();
+  return Boolean(
+    bucketName &&
+    stableSyllableMistakeIds[bucketName].has(itemId) &&
+    (state.syllableMistakes[bucketName]?.includes(itemId) || state.syllableConnectionSubmitted)
+  );
+}
+
 function localDayKey(date = new Date()) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -493,6 +581,7 @@ function createDefaultLocalProgressState(timestamp = new Date().toISOString()) {
     favorite: false,
     learningProgress: emptyLearningProgress(),
     mistakes: [],
+    syllableMistakes: { connection: [], break: [] },
     writingChecks: [],
     localProfile: {
       displayName: "",
@@ -531,6 +620,10 @@ const state = {
   syllableAnswerId: "",
   syllableShowStandard: false,
   syllableAnswerSubmitted: false,
+  syllableConnectionAnswerId: "",
+  syllableConnectionSubmitted: false,
+  syllableConnectionMode: "lesson",
+  syllableConnectionReviewItemId: "",
   practiceSpoken: false,
   emailAuthExpanded: false,
   emailCodeSent: false,
@@ -600,10 +693,11 @@ function applyLocalProgressData(saved) {
 
   if (saved.learningProgress && typeof saved.learningProgress === "object") {
     progressTransfer.validateLearningProgress(saved.learningProgress);
-    validateImportedProgressIds({ learningProgress: saved.learningProgress });
   }
+  validateImportedProgressIds(saved);
 
   state.preferences = normalizePreferences(saved.preferences);
+  state.syllableMistakes = normalizeSyllableMistakes(saved.syllableMistakes);
 
   if (
     saved.dailyActivity &&
@@ -722,7 +816,12 @@ function saveLocalProgress() {
 
 function buildLocalProgressData() {
   return Object.fromEntries(
-    localProgressFieldNames.map((field) => [field, state[field]])
+    localProgressFieldNames.map((field) => [
+      field,
+      field === "screen" && state.screen === "syllableConnections" && state.syllableConnectionMode !== "lesson"
+        ? "syllableReview"
+        : state[field]
+    ])
   );
 }
 
@@ -755,6 +854,10 @@ function validateImportedProgressIds(saved) {
   if (saved.screen !== undefined && !persistedScreenIds.has(saved.screen)) {
     throw new Error(`学习数据包含未知页面 ID: ${saved.screen}`);
   }
+  if (saved.screen === "syllableConnections" && !syllableConnectionPrerequisitesComplete(saved.learningProgress)) {
+    throw new Error("syllableConnections 必须先完成全部规则前置阶段");
+  }
+  validateSyllableMistakeIds(saved.syllableMistakes);
 
   const importedMistakeIds = new Set(
     (saved.mistakes || []).map((mistake) => `mistake-${mistake.key}`)
@@ -786,12 +889,7 @@ function validateImportedProgressIds(saved) {
       }
       const completedIds = bucket[id].completedIds;
       if (completedIds) {
-        const expectedCompletedIds =
-          scope === "syllableTraining" && id === syllableTraining.sections[0].id
-            ? syllableTraining.twoLetterItems.map((item) => item.id)
-            : scope === "syllableTraining"
-              ? (syllableTraining.rules.find((rule) => rule.id === id)?.exercises || []).map((exercise) => exercise.id)
-              : null;
+        const expectedCompletedIds = scope === "syllableTraining" ? expectedSyllableCompletedIds(id) : null;
         const allowedCompletedIds = expectedCompletedIds ? new Set(expectedCompletedIds) : null;
         const unknownItemId = completedIds.find((itemId) => !allowedCompletedIds?.has(itemId));
         if (!allowedCompletedIds || unknownItemId) {
@@ -805,19 +903,13 @@ function validateImportedProgressIds(saved) {
         }
       }
       if (scope === "syllableTraining" && bucket[id].completed === true) {
-        const expectedSubmittedCount =
-          id === syllableTraining.sections[0].id
-            ? syllableTraining.twoLetterItems.length
-            : syllableTraining.rules.find((rule) => rule.id === id)?.exercises.length;
+        const expectedSubmittedCount = expectedSyllableCompletedIds(id).length;
         if (!Array.isArray(completedIds) || completedIds.length !== expectedSubmittedCount) {
           throw new Error(`learningProgress.${scope}.${id} 未提交全部题目，不能标记完成`);
         }
       }
       if (scope === "syllableTraining") {
-        const expectedSubmittedCount =
-          id === syllableTraining.sections[0].id
-            ? syllableTraining.twoLetterItems.length
-            : syllableTraining.rules.find((rule) => rule.id === id)?.exercises.length;
+        const expectedSubmittedCount = expectedSyllableCompletedIds(id).length;
         if (Array.isArray(completedIds) && completedIds.length === expectedSubmittedCount && bucket[id].completed !== true) {
           throw new Error(`learningProgress.${scope}.${id} 已提交全部题目，必须标记完成`);
         }
@@ -827,7 +919,11 @@ function validateImportedProgressIds(saved) {
 
   const syllableProgress = saved.learningProgress?.syllableTraining;
   if (syllableProgress && typeof syllableProgress === "object") {
-    const orderedStageIds = [syllableTraining.sections[0].id, ...syllableTraining.rules.map((rule) => rule.id)];
+    const orderedStageIds = [
+      syllableTraining.sections[0].id,
+      ...syllableTraining.rules.map((rule) => rule.id),
+      syllableTraining.sections[2].id
+    ];
     for (let index = 1; index < orderedStageIds.length; index += 1) {
       const currentId = orderedStageIds[index];
       const previousId = orderedStageIds[index - 1];
@@ -940,6 +1036,7 @@ function buildCloudSnapshot() {
     favoriteUpdatedAt: state.favoriteUpdatedAt,
     learningProgress: state.learningProgress,
     mistakes: state.mistakes,
+    syllableMistakes: state.syllableMistakes,
     favorite: state.favorite,
     dailyActivity: state.dailyActivity,
     preferences: state.preferences
@@ -993,7 +1090,7 @@ function initializeNewLearnerProgress() {
 function validateCloudProgressSnapshot(snapshot) {
   const learningProgress = snapshot?.learningProgress || {};
   progressTransfer.validateLearningProgress(learningProgress);
-  validateImportedProgressIds({ learningProgress });
+  validateImportedProgressIds({ learningProgress, syllableMistakes: snapshot?.syllableMistakes });
 }
 
 function applyCloudSnapshot(snapshot) {
@@ -1001,6 +1098,7 @@ function applyCloudSnapshot(snapshot) {
   const normalized = window.ANA_TILIM_CLOUD.normalizeSnapshot(snapshot);
   state.learningProgress = normalized.learningProgress;
   state.mistakes = normalized.mistakes;
+  state.syllableMistakes = normalizeSyllableMistakes(normalized.syllableMistakes);
   state.favorite = normalized.favorite;
   state.dailyActivity = normalized.dailyActivity;
   state.preferences = normalizePreferences(normalized.preferences);
@@ -1028,6 +1126,7 @@ function learningRecordSnapshot() {
       learningProgress: state.learningProgress,
       dailyActivity: state.dailyActivity,
       mistakes: state.mistakes,
+      syllableMistakes: state.syllableMistakes,
       writingChecks: state.writingChecks,
       favorite: state.favorite,
       selectedPicture: state.selectedPicture,
@@ -1041,6 +1140,10 @@ function learningRecordSnapshot() {
       syllableAnswerId: state.syllableAnswerId,
       syllableShowStandard: state.syllableShowStandard,
       syllableAnswerSubmitted: state.syllableAnswerSubmitted,
+      syllableConnectionAnswerId: state.syllableConnectionAnswerId,
+      syllableConnectionSubmitted: state.syllableConnectionSubmitted,
+      syllableConnectionMode: state.syllableConnectionMode,
+      syllableConnectionReviewItemId: state.syllableConnectionReviewItemId,
       practiceSpoken: state.practiceSpoken,
       currentLetterId: state.currentLetterId,
       selectedGroupId: state.selectedGroupId,
@@ -1065,6 +1168,7 @@ function clearLearningRecords() {
   state.learningProgress = emptyLearningProgress();
   state.dailyActivity = { date: localDayKey(), completedIds: [] };
   state.mistakes = [];
+  state.syllableMistakes = { connection: [], break: [] };
   state.writingChecks = [];
   state.favorite = false;
   state.selectedPicture = "";
@@ -1078,6 +1182,10 @@ function clearLearningRecords() {
   state.syllableAnswerId = "";
   state.syllableShowStandard = false;
   state.syllableAnswerSubmitted = false;
+  state.syllableConnectionAnswerId = "";
+  state.syllableConnectionSubmitted = false;
+  state.syllableConnectionMode = "lesson";
+  state.syllableConnectionReviewItemId = "";
   state.practiceSpoken = false;
   state.currentLetterId = "be";
   state.selectedGroupId = "dot-bone";
@@ -1626,7 +1734,11 @@ function unitProgressSummaries() {
       completed = countCompletedForIds("combos", basicComboIds);
       total = basicComboIds.length;
     } else if (unit.id === "syllable-training") {
-      const syllableProgressIds = [syllableTraining.sections[0].id, ...syllableTraining.rules.map((rule) => rule.id)];
+      const syllableProgressIds = [
+        syllableTraining.sections[0].id,
+        ...syllableTraining.rules.map((rule) => rule.id),
+        syllableTraining.sections[2].id
+      ];
       completed = countCompletedForIds("syllableTraining", syllableProgressIds);
       total = syllableProgressIds.length;
     } else if (unit.id === "basic-phrases") {
@@ -2528,6 +2640,8 @@ function render({ persist = true } = {}) {
     comboComplete: renderComboComplete,
     syllableWarmup: renderSyllableWarmup,
     syllableRules: renderSyllableRules,
+    syllableConnections: renderSyllableConnections,
+    syllableReview: renderSyllableReview,
     vocab: renderVocabLesson,
     vocabRecognition: renderVocabRecognition,
     vocabKeyboard: renderVocabKeyboard,
@@ -3420,13 +3534,172 @@ function renderSyllableRules() {
                 <div class="feedback good" role="status"><strong>${submittedCount} / ${rule.exercises.length}</strong><p>本条规则的题目已全部提交。</p></div>
                 ${
                   isLastRule
-                    ? renderUnitNextActions("syllable-training")
+                    ? '<button class="primary-button" data-action="go" data-target="syllableConnections" type="button">继续：连读与断读专项</button>'
                     : '<button class="primary-button" data-action="next-syllable-rule" type="button">下一条规则</button>'
                 }
               `
               : ""
           }
         </article>
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function completedSyllableConnectionIds() {
+  return completedSyllableItemIds(syllableTraining.sections[2].id);
+}
+
+function currentSyllableConnectionItem() {
+  if (state.syllableConnectionMode !== "lesson") {
+    const reviewBucket = state.syllableConnectionMode === "review-break" ? "break" : "connection";
+    const reviewItemId = state.syllableConnectionReviewItemId || state.syllableMistakes[reviewBucket][0];
+    return (
+      syllableTraining.connectionItems.find((item) => item.id === reviewItemId) ||
+      syllableTraining.connectionItems.find((item) => item.mistakeBucket === reviewBucket)
+    );
+  }
+  const completedIds = completedSyllableConnectionIds();
+  const currentIndex = state.syllableConnectionSubmitted
+    ? Math.max(0, completedIds.length - 1)
+    : Math.min(completedIds.length, syllableTraining.connectionItems.length - 1);
+  return syllableTraining.connectionItems[currentIndex];
+}
+
+function updateSyllableMistake(item, isCorrect) {
+  const bucketName = item.mistakeBucket;
+  const currentIds = state.syllableMistakes[bucketName];
+  const nextIds = isCorrect
+    ? currentIds.filter((id) => id !== item.id)
+    : currentIds.includes(item.id)
+      ? currentIds
+      : [...currentIds, item.id].slice(-24);
+  if (nextIds.length !== currentIds.length || nextIds.some((id, index) => id !== currentIds[index])) {
+    state.syllableMistakes = { ...state.syllableMistakes, [bucketName]: nextIds };
+    markCloudDirty("learning");
+  }
+}
+
+function learnerSyllableConnectionStatement(item) {
+  return item.statement;
+}
+
+function renderSyllableConnections() {
+  if (!syllableConnectionScreenIsReachable()) {
+    const fallbackScreen = reachableSyllableTrainingScreen();
+    state.screen = fallbackScreen;
+    return fallbackScreen === "syllableWarmup" ? renderSyllableWarmup() : renderSyllableRules();
+  }
+  const item = currentSyllableConnectionItem();
+  const completedIds = completedSyllableConnectionIds();
+  const completed = completedIds.length === syllableTraining.connectionItems.length;
+  const displayedNumber = state.syllableConnectionSubmitted
+    ? Math.max(1, completedIds.length)
+    : Math.min(completedIds.length + 1, syllableTraining.connectionItems.length);
+  const bucketLabel = item.mistakeBucket === "connection" ? "连接判断" : "断开判断";
+  const isReview = state.syllableConnectionMode !== "lesson";
+  const submittedIsCorrect = state.syllableConnectionAnswerId === item.expectedAnswer;
+
+  return screen(
+    `
+      ${topBar(
+        "连读与断读专项",
+        "阅读文字判断，不使用伪造字形",
+        "",
+        `<button class="back-button" data-action="go" data-target="${isReview ? "syllableReview" : "syllableRules"}" type="button" aria-label="返回">&larr;</button>`
+      )}
+      <section class="stack syllable-training-screen" data-syllable-connection-id="${escapeHtml(item.id)}">
+        ${renderItemProgress(isReview ? `错题复习 · ${bucketLabel}` : `${displayedNumber} / ${syllableTraining.connectionItems.length}`, bucketLabel)}
+        <article
+          class="card syllable-connection-card"
+          data-syllable-connection-question
+          tabindex="-1"
+          aria-labelledby="syllable-connection-statement-${escapeHtml(item.id)}"
+        >
+          <p class="caption">${bucketLabel}</p>
+          <h2 class="section-title uyghur" dir="rtl">${escapeHtml(item.standard)}</h2>
+          <p class="syllable-connection-statement" id="syllable-connection-statement-${escapeHtml(item.id)}">${escapeHtml(learnerSyllableConnectionStatement(item))}</p>
+          ${
+            (!completed || isReview) && !state.syllableConnectionSubmitted
+              ? `
+                <div class="syllable-rule-options" aria-label="判断这个说法">
+                  <button class="option-button ${state.syllableConnectionAnswerId === "statement-correct" ? "selected" : ""}" data-action="pick-syllable-connection-answer" data-answer-id="statement-correct" type="button" aria-pressed="${state.syllableConnectionAnswerId === "statement-correct"}">这个判断正确</button>
+                  <button class="option-button ${state.syllableConnectionAnswerId === "statement-incorrect" ? "selected" : ""}" data-action="pick-syllable-connection-answer" data-answer-id="statement-incorrect" type="button" aria-pressed="${state.syllableConnectionAnswerId === "statement-incorrect"}">这个判断错误</button>
+                </div>
+                <button class="primary-button" data-action="submit-syllable-connection-answer" type="button" ${state.syllableConnectionAnswerId ? "" : "disabled"}>提交判断</button>
+              `
+              : ""
+          }
+          ${
+            state.syllableConnectionSubmitted
+              ? `
+                <div class="feedback ${submittedIsCorrect ? "good" : "bad"}" data-syllable-connection-feedback role="status" tabindex="-1">
+                  <strong>${submittedIsCorrect ? "回答正确" : "回答错误"}</strong>
+                  <p>${escapeHtml(item.explanation)}</p>
+                </div>
+              `
+              : ""
+          }
+          ${
+            state.syllableConnectionSubmitted
+              ? isReview
+                ? '<button class="primary-button" data-action="next-syllable-connection-review" type="button">继续复习</button>'
+                : completed
+                  ? '<button class="primary-button" data-action="go" data-target="syllableReview" type="button">复习连接与断开错题</button>'
+                  : '<button class="primary-button" data-action="next-syllable-connection" type="button">继续下一题</button>'
+              : completed && !isReview
+                ? '<button class="primary-button" data-action="go" data-target="syllableReview" type="button">复习连接与断开错题</button>'
+                : ""
+          }
+        </article>
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function renderSyllableReviewBucket(bucketName, label) {
+  const ids = state.syllableMistakes[bucketName];
+  const emptyLabel = `${label}已清空`;
+  return `
+    <article class="card syllable-review-card" data-syllable-review-bucket="${bucketName}" tabindex="-1">
+      <div class="section-row">
+        <div>
+          <p class="caption">专项错题</p>
+          <h2 class="section-title">${label}</h2>
+        </div>
+        <span class="step-state">${ids.length} 道</span>
+      </div>
+      ${
+        ids.length
+          ? `
+            <div class="action-grid">
+              <button class="primary-button" data-action="review-syllable-mistakes" data-mistake-bucket="${bucketName}" type="button">进入复习</button>
+              <button class="secondary-button" data-action="clear-syllable-mistakes" data-mistake-bucket="${bucketName}" type="button">清空本类</button>
+            </div>
+          `
+          : `<p class="feedback good">${emptyLabel}</p>`
+      }
+    </article>
+  `;
+}
+
+function renderSyllableReview() {
+  const backTarget = syllableConnectionPrerequisitesComplete()
+    ? "syllableConnections"
+    : reachableSyllableTrainingScreen();
+  return screen(
+    `
+      ${topBar(
+        "连接与断开错题复习",
+        "两类错题分别保存、分别处理",
+        "",
+        `<button class="back-button" data-action="go" data-target="${backTarget}" type="button" aria-label="返回">&larr;</button>`
+      )}
+      <section class="stack syllable-training-screen">
+        ${renderSyllableReviewBucket("connection", "连接错误")}
+        ${renderSyllableReviewBucket("break", "断开错误")}
       </section>
     `,
     "learn"
@@ -6246,6 +6519,9 @@ function playAudio(src, label, { autoplay = false } = {}) {
 }
 
 function goTo(target) {
+  if (target === "syllableConnections" && !syllableConnectionScreenIsReachable()) {
+    target = reachableSyllableTrainingScreen();
+  }
   state.screen = target;
   render();
 }
@@ -6398,6 +6674,98 @@ document.addEventListener("click", (event) => {
     state.syllableAnswerSubmitted = false;
     render();
     focusSyllableRuleElement("[data-syllable-question]");
+    return;
+  }
+
+  if (action === "pick-syllable-connection-answer") {
+    if (
+      !["statement-correct", "statement-incorrect"].includes(button.dataset.answerId) ||
+      state.syllableConnectionSubmitted
+    ) return;
+    state.syllableConnectionAnswerId = button.dataset.answerId;
+    render();
+    focusSyllableRuleElement(
+      `[data-action="pick-syllable-connection-answer"][data-answer-id="${state.syllableConnectionAnswerId}"]`
+    );
+    return;
+  }
+
+  if (action === "submit-syllable-connection-answer") {
+    if (!syllableConnectionScreenIsReachable()) {
+      goTo("syllableConnections");
+      return;
+    }
+    if (
+      !["statement-correct", "statement-incorrect"].includes(state.syllableConnectionAnswerId) ||
+      state.syllableConnectionSubmitted
+    ) return;
+    const item = currentSyllableConnectionItem();
+    const isCorrect = state.syllableConnectionAnswerId === item.expectedAnswer;
+    updateSyllableMistake(item, isCorrect);
+    if (state.syllableConnectionMode === "lesson") {
+      submitSyllableItem(
+        syllableTraining.sections[2].id,
+        item.id,
+        syllableTraining.connectionItems.map((connectionItem) => connectionItem.id)
+      );
+    }
+    state.syllableConnectionSubmitted = true;
+    render();
+    focusSyllableRuleElement("[data-syllable-connection-feedback]");
+    return;
+  }
+
+  if (action === "next-syllable-connection") {
+    if (
+      state.syllableConnectionMode !== "lesson" ||
+      !state.syllableConnectionSubmitted ||
+      completedSyllableConnectionIds().length >= syllableTraining.connectionItems.length
+    ) return;
+    state.syllableConnectionAnswerId = "";
+    state.syllableConnectionSubmitted = false;
+    render();
+    focusSyllableRuleElement("[data-syllable-connection-question]");
+    return;
+  }
+
+  if (action === "review-syllable-mistakes") {
+    const bucketName = button.dataset.mistakeBucket;
+    if (!["connection", "break"].includes(bucketName) || state.syllableMistakes[bucketName].length === 0) return;
+    state.syllableConnectionMode = `review-${bucketName}`;
+    state.syllableConnectionReviewItemId = state.syllableMistakes[bucketName][0];
+    state.syllableConnectionAnswerId = "";
+    state.syllableConnectionSubmitted = false;
+    goTo("syllableConnections");
+    focusSyllableRuleElement("[data-syllable-connection-question]");
+    return;
+  }
+
+  if (action === "next-syllable-connection-review") {
+    if (state.syllableConnectionMode === "lesson" || !state.syllableConnectionSubmitted) return;
+    const bucketName = state.syllableConnectionMode === "review-break" ? "break" : "connection";
+    const nextItemId = state.syllableMistakes[bucketName][0] || "";
+    state.syllableConnectionAnswerId = "";
+    state.syllableConnectionSubmitted = false;
+    state.syllableConnectionReviewItemId = nextItemId;
+    if (!nextItemId) {
+      goTo("syllableReview");
+      focusSyllableRuleElement(`[data-syllable-review-bucket="${bucketName}"]`);
+      return;
+    }
+    render();
+    focusSyllableRuleElement("[data-syllable-connection-question]");
+    return;
+  }
+
+  if (action === "clear-syllable-mistakes") {
+    const bucketName = button.dataset.mistakeBucket;
+    if (!["connection", "break"].includes(bucketName)) return;
+    if (state.syllableMistakes[bucketName].length > 0) {
+      state.syllableMistakes = { ...state.syllableMistakes, [bucketName]: [] };
+      markCloudDirty("learning");
+    }
+    render();
+    focusSyllableRuleElement(`[data-syllable-review-bucket="${bucketName}"]`);
     return;
   }
 
@@ -6849,6 +7217,13 @@ document.addEventListener("click", (event) => {
       state.syllableAnswerId = "";
       state.syllableAnswerSubmitted = false;
     }
+    if (target === "syllableConnections") {
+      state.syllableSectionId = syllableTraining.sections[2].id;
+      state.syllableConnectionMode = "lesson";
+      state.syllableConnectionAnswerId = "";
+      state.syllableConnectionSubmitted = false;
+      state.syllableConnectionReviewItemId = "";
+    }
     if (["picture", "listening", "keyboard", "letterOdd", "letterSound", "comboRecognition", "comboBuild", "comboWriting", "comboKeyboard", "vocabRecognition", "vocabKeyboard", "letterWriting"].includes(target)) {
       resetPracticeState();
     }
@@ -7254,6 +7629,36 @@ document.addEventListener("keydown", (event) => {
       render();
       focusSyllableRuleElement(
         `[data-action="pick-syllable-rule-answer"][data-answer-id="${state.syllableAnswerId}"]`
+      );
+      return;
+    }
+  }
+
+  if (state.screen === "syllableConnections") {
+    const option = event.target?.closest?.('[data-action="pick-syllable-connection-answer"]');
+    if (
+      option &&
+      syllableRuleAnswerNavigationKeys.has(event.key) &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      !event.metaKey &&
+      !state.syllableConnectionSubmitted
+    ) {
+      const answerIds = ["statement-correct", "statement-incorrect"];
+      const currentIndex = Math.max(0, answerIds.indexOf(option.dataset.answerId));
+      const nextIndex =
+        event.key === "Home"
+          ? 0
+          : event.key === "End"
+            ? answerIds.length - 1
+            : ["ArrowLeft", "ArrowUp"].includes(event.key)
+              ? (currentIndex - 1 + answerIds.length) % answerIds.length
+              : (currentIndex + 1) % answerIds.length;
+      event.preventDefault();
+      state.syllableConnectionAnswerId = answerIds[nextIndex];
+      render();
+      focusSyllableRuleElement(
+        `[data-action="pick-syllable-connection-answer"][data-answer-id="${state.syllableConnectionAnswerId}"]`
       );
       return;
     }
