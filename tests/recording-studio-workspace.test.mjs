@@ -1,0 +1,242 @@
+import assert from "node:assert/strict";
+import crypto from "node:crypto";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import test from "node:test";
+import { createRecordingWorkspace } from "../tools/recording-studio/workspace.mjs";
+import { buildRecordingCatalog } from "../tools/recording-studio/catalog.mjs";
+
+const projectRoot = path.resolve(import.meta.dirname, "..");
+const catalog = buildRecordingCatalog({ projectRoot });
+const validWebm = fs.readFileSync(catalog.targets.find((target) => target.stableId === "alphabet:aa").absoluteOutputPath);
+
+function createOptions({ catalogOverride = catalog, fsApi } = {}) {
+  return {
+    projectRoot,
+    workspaceRoot: fs.mkdtempSync(path.join(os.tmpdir(), "ana-tilim-recording-workspace-")),
+    catalog: catalogOverride,
+    ...(fsApi ? { fsApi } : {})
+  };
+}
+
+function recordingTextHash(target) {
+  return crypto.createHash("sha256").update(JSON.stringify({
+    value: target.value,
+    latin: target.latin,
+    meaning: target.meaning,
+    english: target.english
+  })).digest("hex");
+}
+
+test("creates the exact review baseline from the catalog and persists it", () => {
+  const options = createOptions();
+  const workspace = createRecordingWorkspace(options);
+  const state = workspace.loadState();
+
+  assert.equal(state.schemaVersion, 1);
+  assert.equal(Object.keys(state.targets).length, 527);
+  assert.equal(Object.values(state.targets).filter((target) => target.status === "pending-review").length, 525);
+  assert.equal(Object.values(state.targets).filter((target) => target.status === "needs-rerecord").length, 2);
+  assert.equal(state.targets["alphabet:zhe"].status, "needs-rerecord");
+  assert.equal(state.targets["vocab:korushkunche"].status, "needs-rerecord");
+  workspace.markCurrentApproved({ stableId: "alphabet:aa" });
+  const afterRestart = createRecordingWorkspace(options).loadState().targets;
+  assert.equal(afterRestart["alphabet:aa"].status, "approved-current");
+  assert.equal(afterRestart["alphabet:zhe"].status, "needs-rerecord");
+});
+
+test("stores immutable validated takes and an approved take survives restart", () => {
+  const options = createOptions();
+  const workspace = createRecordingWorkspace(options);
+  const first = workspace.saveTake({ stableId: "alphabet:aa", buffer: validWebm, createdAt: "2026-08-10T01:00:00.000Z" });
+  const second = workspace.saveTake({ stableId: "alphabet:aa", buffer: validWebm, createdAt: "2026-08-10T01:01:00.000Z" });
+
+  assert.notEqual(first.id, second.id);
+  assert.equal(workspace.loadState().targets["alphabet:aa"].takes.length, 2);
+  assert.ok(fs.existsSync(path.join(options.workspaceRoot, second.relativePath)));
+  workspace.approveTake({ stableId: "alphabet:aa", takeId: second.id });
+
+  const afterRestart = createRecordingWorkspace(options).loadState().targets["alphabet:aa"];
+  assert.equal(afterRestart.status, "approved-take");
+  assert.equal(afterRestart.approvedTakeId, second.id);
+  assert.throws(() => workspace.approveTake({ stableId: "alphabet:aa", takeId: "take-from-another-target" }), /does not belong/);
+  assert.throws(() => workspace.getTakePath({ stableId: "alphabet:be", takeId: second.id }), /does not belong/);
+  assert.throws(() => workspace.saveTake({ stableId: "alphabet:unknown", buffer: validWebm }), /unknown recording target/);
+});
+
+test("validates WebM before creating any workspace file", () => {
+  const options = createOptions();
+  const neverCreatedRoot = path.join(options.workspaceRoot, "new-workspace");
+  const workspace = createRecordingWorkspace({ ...options, workspaceRoot: neverCreatedRoot });
+
+  assert.throws(() => workspace.saveTake({ stableId: "alphabet:aa", buffer: Buffer.from("not-webm") }), /4096 bytes/);
+  assert.equal(fs.existsSync(neverCreatedRoot), false);
+});
+
+test("rejects a non-canonical take timestamp before creating state or audio", () => {
+  const options = createOptions();
+  const neverCreatedRoot = path.join(options.workspaceRoot, "invalid-timestamp-workspace");
+  const workspace = createRecordingWorkspace({ ...options, workspaceRoot: neverCreatedRoot });
+
+  assert.throws(
+    () => workspace.saveTake({ stableId: "alphabet:aa", buffer: validWebm, createdAt: "2026-08-10 01:00:00Z" }),
+    /ISO timestamp/
+  );
+  assert.equal(fs.existsSync(neverCreatedRoot), false);
+});
+
+test("only an explicitly selected playable current recording can be approved", () => {
+  const options = createOptions();
+  const workspace = createRecordingWorkspace(options);
+
+  assert.throws(() => workspace.markCurrentApproved({ stableId: "alphabet:unknown" }), /unknown recording target/);
+  workspace.markCurrentApproved({ stableId: "alphabet:aa" });
+  const target = workspace.loadState().targets["alphabet:aa"];
+  assert.equal(target.status, "approved-current");
+  assert.equal(target.approvedTakeId, null);
+
+  const unplayableCatalog = {
+    ...catalog,
+    targets: catalog.targets.map((item) => item.stableId === "alphabet:aa" ? { ...item, playable: false } : item)
+  };
+  const unplayableWorkspace = createRecordingWorkspace(createOptions({ catalogOverride: unplayableCatalog }));
+  assert.throws(() => unplayableWorkspace.markCurrentApproved({ stableId: "alphabet:aa" }), /playable current audio/);
+});
+
+test("rejects a current audio path that gains a symbolic-link ancestor after catalog creation", () => {
+  const options = createOptions();
+  const fixtureProjectRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ana-tilim-recording-current-symlink-"));
+  const audioRoot = path.join(fixtureProjectRoot, "prototype/assets/audio/human");
+  const outsideDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "ana-tilim-recording-outside-audio-"));
+  const filename = "human_letter_01_b.webm";
+  fs.mkdirSync(audioRoot, { recursive: true });
+  fs.writeFileSync(path.join(outsideDirectory, filename), validWebm);
+  fs.symlinkSync(outsideDirectory, path.join(audioRoot, "alphabet"));
+  const redirectedCatalog = {
+    ...catalog,
+    targets: catalog.targets.map((item) => item.stableId === "alphabet:aa" ? {
+      ...item,
+      absoluteOutputPath: path.join(audioRoot, "alphabet", filename)
+    } : item)
+  };
+  const workspace = createRecordingWorkspace({ ...options, projectRoot: fixtureProjectRoot, catalog: redirectedCatalog });
+
+  assert.throws(() => workspace.markCurrentApproved({ stableId: "alphabet:aa" }), /current audio.*symbolic link/);
+});
+
+test("rejects malformed state without overwriting it", () => {
+  const options = createOptions();
+  const statePath = path.join(options.workspaceRoot, "state.json");
+  const malformed = "{not valid JSON";
+  fs.writeFileSync(statePath, malformed);
+
+  assert.throws(() => createRecordingWorkspace(options).loadState(), /malformed recording workspace state/);
+  assert.equal(fs.readFileSync(statePath, "utf8"), malformed);
+});
+
+test("keeps stale state visible but rejects every current mutation", () => {
+  const options = createOptions();
+  const workspace = createRecordingWorkspace(options);
+  workspace.markCurrentApproved({ stableId: "alphabet:aa" });
+  const changedCatalog = {
+    ...catalog,
+    targets: catalog.targets.map((item) => item.stableId === "alphabet:aa" ? { ...item, value: `${item.value}（变更）`, recordingTextHash: "" } : item)
+  };
+  const changedTarget = changedCatalog.targets.find((item) => item.stableId === "alphabet:aa");
+  changedTarget.recordingTextHash = recordingTextHash(changedTarget);
+  const staleWorkspace = createRecordingWorkspace({ ...options, catalog: changedCatalog });
+
+  assert.equal(staleWorkspace.loadState().targets["alphabet:aa"].status, "approved-current");
+  assert.throws(() => staleWorkspace.saveTake({ stableId: "alphabet:aa", buffer: validWebm }), /stale recording text/);
+  assert.throws(() => staleWorkspace.approveTake({ stableId: "alphabet:aa", takeId: "anything" }), /stale recording text/);
+  assert.throws(() => staleWorkspace.markCurrentApproved({ stableId: "alphabet:aa" }), /stale recording text/);
+  assert.throws(() => staleWorkspace.setTargetStatus({ stableId: "alphabet:aa", status: "needs-rerecord" }), /stale recording text/);
+});
+
+test("uses strict review transitions without silently downgrading an approval", () => {
+  const options = createOptions();
+  const workspace = createRecordingWorkspace(options);
+  const take = workspace.saveTake({ stableId: "alphabet:aa", buffer: validWebm });
+  workspace.approveTake({ stableId: "alphabet:aa", takeId: take.id });
+  workspace.saveTake({ stableId: "alphabet:aa", buffer: validWebm });
+
+  assert.equal(workspace.loadState().targets["alphabet:aa"].status, "approved-take");
+  assert.throws(() => workspace.setTargetStatus({ stableId: "alphabet:aa", status: "approved-take" }), /unsupported recording status/);
+  assert.throws(() => workspace.setTargetStatus({ stableId: "alphabet:aa", status: "pending" }), /invalid recording status transition/);
+  workspace.setTargetStatus({ stableId: "alphabet:aa", status: "needs-rerecord" });
+  const afterExplicitRerecord = workspace.loadState().targets["alphabet:aa"];
+  assert.equal(afterExplicitRerecord.status, "needs-rerecord");
+  assert.equal(afterExplicitRerecord.approvedTakeId, null);
+});
+
+test("refuses a take whose validated bytes were replaced after saving", () => {
+  const options = createOptions();
+  const workspace = createRecordingWorkspace(options);
+  const take = workspace.saveTake({ stableId: "alphabet:aa", buffer: validWebm });
+  const takePath = path.join(options.workspaceRoot, take.relativePath);
+  fs.writeFileSync(takePath, Buffer.concat([validWebm, Buffer.from([0]) ]));
+
+  assert.throws(() => workspace.getTakePath({ stableId: "alphabet:aa", takeId: take.id }), /take metadata does not match/);
+});
+
+test("refuses a same-length take mutation even when WebM metadata still parses", () => {
+  const options = createOptions();
+  const workspace = createRecordingWorkspace(options);
+  const take = workspace.saveTake({ stableId: "alphabet:aa", buffer: validWebm });
+  const takePath = path.join(options.workspaceRoot, take.relativePath);
+  const mutated = Buffer.from(validWebm);
+  mutated[mutated.length - 1] ^= 1;
+  fs.writeFileSync(takePath, mutated);
+
+  assert.throws(() => workspace.getTakePath({ stableId: "alphabet:aa", takeId: take.id }), /take content hash does not match/);
+});
+
+test("a failed atomic rename preserves the exact previous state bytes", () => {
+  const options = createOptions();
+  const workspace = createRecordingWorkspace(options);
+  workspace.loadState();
+  const statePath = path.join(options.workspaceRoot, "state.json");
+  const before = fs.readFileSync(statePath);
+  const failingFs = Object.assign(Object.create(fs), {
+    renameSync() {
+      throw new Error("injected state rename failure");
+    }
+  });
+  const failingWorkspace = createRecordingWorkspace({ ...options, fsApi: failingFs });
+
+  assert.throws(() => failingWorkspace.setTargetStatus({ stableId: "alphabet:aa", status: "needs-rerecord" }), /injected state rename failure/);
+  assert.deepEqual(fs.readFileSync(statePath), before);
+});
+
+test("recovers a failed atomic state temporary file on a later normal mutation", () => {
+  const options = createOptions();
+  const workspace = createRecordingWorkspace(options);
+  workspace.loadState();
+  const statePath = path.join(options.workspaceRoot, "state.json");
+  const failingFs = Object.assign(Object.create(fs), {
+    renameSync(source, destination) {
+      if (destination === statePath) throw new Error("injected state rename failure");
+      return fs.renameSync(source, destination);
+    }
+  });
+  assert.throws(
+    () => createRecordingWorkspace({ ...options, fsApi: failingFs }).setTargetStatus({ stableId: "alphabet:aa", status: "needs-rerecord" }),
+    /injected state rename failure/
+  );
+  assert.ok(fs.existsSync(path.join(options.workspaceRoot, "state.json.tmp")));
+
+  createRecordingWorkspace(options).setTargetStatus({ stableId: "alphabet:aa", status: "needs-rerecord" });
+  assert.equal(createRecordingWorkspace(options).loadState().targets["alphabet:aa"].status, "needs-rerecord");
+  assert.equal(fs.existsSync(path.join(options.workspaceRoot, "state.json.tmp")), false);
+  assert.ok(fs.readdirSync(options.workspaceRoot).some((file) => /^state\.json\.abandoned-[A-Za-z0-9-]+\.tmp$/.test(file)));
+});
+
+test("refuses a symbolic-link workspace root before reading or writing state", () => {
+  const options = createOptions();
+  const realRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ana-tilim-recording-real-root-"));
+  const symlinkRoot = path.join(options.workspaceRoot, "linked-workspace");
+  fs.symlinkSync(realRoot, symlinkRoot);
+
+  assert.throws(() => createRecordingWorkspace({ ...options, workspaceRoot: symlinkRoot }).loadState(), /workspace root must not be a symbolic link/);
+});

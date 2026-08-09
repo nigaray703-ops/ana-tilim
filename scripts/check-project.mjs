@@ -291,6 +291,11 @@ const checks = [
     args: ["tests/recording-studio-catalog.test.mjs"]
   },
   {
+    label: "test: recording studio workspace",
+    command: node,
+    args: ["tests/recording-studio-workspace.test.mjs"]
+  },
+  {
     label: "test: brand assets",
     command: node,
     args: ["tests/brand-assets.test.mjs"]
