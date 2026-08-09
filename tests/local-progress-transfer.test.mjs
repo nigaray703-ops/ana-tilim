@@ -13,7 +13,11 @@ const api = context.window.ANA_TILIM_PROGRESS_TRANSFER;
 const sample = {
   screen: "home",
   learningProgress: {
-    latinWriting: { qwerty: { completed: true } },
+    latinWriting: {
+      qwerty: { completed: true },
+      "vowel-contrast": { completedIds: ["a-e", "o-u"] },
+      dictation: { completedIds: ["aa", "ae", "o", "u", "oe"] }
+    },
     letters: { "dot-bone": { completed: true } }
   },
   preferences: { showLatin: true }

@@ -22,8 +22,8 @@
     qwerty: new Set(["completed", "completedIds"]),
     "uyghur-keyboard": new Set(["completed", "completedIds"]),
     classification: new Set(["completed"]),
-    "vowel-contrast": new Set(["completed"]),
-    dictation: new Set(["completed"]),
+    "vowel-contrast": new Set(["completed", "completedIds"]),
+    dictation: new Set(["completed", "completedIds"]),
     forms: new Set(["completed"])
   });
   const NAVIGATION_STRING_FIELDS = Object.freeze([

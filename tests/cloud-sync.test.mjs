@@ -69,6 +69,38 @@ assert.deepEqual(
   const merged = mergeSnapshots(
     snapshot({
       learningProgress: {
+        latinWriting: {
+          "vowel-contrast": { completedIds: ["a-e"] },
+          dictation: { completedIds: ["aa", "ae"] }
+        }
+      }
+    }),
+    snapshot({
+      modifiedAt: "2026-07-28T01:00:00.000Z",
+      learningProgress: {
+        latinWriting: {
+          "vowel-contrast": { completedIds: ["a-e", "o-u", "oe-ue"] },
+          dictation: { completedIds: ["aa", "ae", "o", "u", "oe"] }
+        }
+      }
+    })
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(merged.learningProgress.latinWriting["vowel-contrast"])),
+    { completedIds: ["a-e", "o-u", "oe-ue"] },
+    "cloud merge should keep the longer ordered vowel-comparison resume prefix"
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(merged.learningProgress.latinWriting.dictation)),
+    { completedIds: ["aa", "ae", "o", "u", "oe"] },
+    "cloud merge should keep the longer ordered dictation resume prefix"
+  );
+}
+
+{
+  const merged = mergeSnapshots(
+    snapshot({
+      learningProgress: {
         latinWriting: { qwerty: { completed: true } }
       }
     }),

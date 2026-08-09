@@ -140,13 +140,13 @@
 
   function mergeLatinWritingProgress(localValue, remoteValue, remoteIsNewer) {
     const merged = mergeProgressObject(localValue, remoteValue, remoteIsNewer);
-    for (const progressId of ["qwerty", "uyghur-keyboard"]) {
+    for (const progressId of ["qwerty", "uyghur-keyboard", "vowel-contrast", "dictation"]) {
       if (!isObject(localValue?.[progressId]) && !isObject(remoteValue?.[progressId])) continue;
       merged[progressId] = mergeKeyboardProgressEntry(
         localValue?.[progressId],
         remoteValue?.[progressId],
         remoteIsNewer,
-        progressId === "qwerty"
+        ["qwerty", "vowel-contrast", "dictation"].includes(progressId)
       );
     }
     return merged;

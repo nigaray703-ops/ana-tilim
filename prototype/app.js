@@ -547,14 +547,48 @@ function expectedSyllableCompletedIds(progressId) {
   );
 }
 
-function expectedLatinKeyboardCompletedIds(progressId) {
+function expectedLatinWritingCompletedIds(progressId) {
   if (progressId === "qwerty") {
     return latinWriting.keyboardLessons.map((item) => item.id);
   }
   if (progressId === "uyghur-keyboard") {
     return latinWriting.uyghurKeyboardLessons.map((item) => item.id);
   }
+  if (progressId === "vowel-contrast") {
+    return latinWriting.vowelComparisons.map((item) => item.id);
+  }
+  if (progressId === "dictation") {
+    return [...latinWriting.vowelLetterIds, ...latinWriting.consonantLetterIds];
+  }
   return null;
+}
+
+function completedLatinWritingItemIds(progressId) {
+  const entry = state.learningProgress.latinWriting?.[progressId];
+  const expectedIds = expectedLatinWritingCompletedIds(progressId) || [];
+  if (Array.isArray(entry?.completedIds)) return entry.completedIds;
+  return entry?.completed === true ? expectedIds : [];
+}
+
+function firstIncompleteLatinWritingIndex(progressId) {
+  const expectedIds = expectedLatinWritingCompletedIds(progressId) || [];
+  const completedIds = completedLatinWritingItemIds(progressId);
+  const nextIndex = expectedIds.findIndex((id) => !completedIds.includes(id));
+  return nextIndex >= 0 ? nextIndex : Math.max(0, expectedIds.length - 1);
+}
+
+function submitLatinWritingItem(progressId, itemId) {
+  const expectedIds = expectedLatinWritingCompletedIds(progressId) || [];
+  const progress = ensureProgress("latinWriting", progressId);
+  if (progress.completed === true && !Array.isArray(progress.completedIds)) return;
+  const completedIds = Array.isArray(progress.completedIds) ? progress.completedIds : [];
+  if (expectedIds[completedIds.length] !== itemId || completedIds.includes(itemId)) return;
+  progress.completedIds = [...completedIds, itemId];
+  markCloudDirty("learning");
+  if (progress.completedIds.length === expectedIds.length) {
+    progress.completed = true;
+    recordDailyActivity(`latinWriting:${progressId}:completed`);
+  }
 }
 
 function syllableStageComplete(progressId, learningProgress = state.learningProgress) {
@@ -1100,7 +1134,7 @@ function validateImportedProgressIds(saved) {
         const expectedCompletedIds = scope === "syllableTraining"
           ? expectedSyllableCompletedIds(id)
           : scope === "latinWriting"
-            ? expectedLatinKeyboardCompletedIds(id)
+            ? expectedLatinWritingCompletedIds(id)
             : null;
         const allowedCompletedIds = expectedCompletedIds ? new Set(expectedCompletedIds) : null;
         const unknownItemId = completedIds.find((itemId) => !allowedCompletedIds?.has(itemId));
@@ -1126,15 +1160,17 @@ function validateImportedProgressIds(saved) {
           throw new Error(`learningProgress.${scope}.${id} 已提交全部题目，必须标记完成`);
         }
       }
-      const expectedKeyboardIds = scope === "latinWriting" ? expectedLatinKeyboardCompletedIds(id) : null;
-      if (expectedKeyboardIds) {
-        const isLegacyQwertyCompletion = id === "qwerty" && bucket[id].completed === true && completedIds === undefined;
-        const isFullyComplete = Array.isArray(completedIds) && completedIds.length === expectedKeyboardIds.length;
-        if (!isLegacyQwertyCompletion && bucket[id].completed === true && !isFullyComplete) {
-          throw new Error(`learningProgress.${scope}.${id} 未完成全部键盘练习，不能标记完成`);
+      const expectedLatinIds = scope === "latinWriting" ? expectedLatinWritingCompletedIds(id) : null;
+      if (expectedLatinIds) {
+        const allowsLegacyCompletion = ["qwerty", "vowel-contrast", "dictation"].includes(id);
+        const isLegacyCompletion = allowsLegacyCompletion && bucket[id].completed === true && completedIds === undefined;
+        const isFullyComplete = Array.isArray(completedIds) && completedIds.length === expectedLatinIds.length;
+        const progressKind = ["qwerty", "uyghur-keyboard"].includes(id) ? "键盘练习" : "练习";
+        if (!isLegacyCompletion && bucket[id].completed === true && !isFullyComplete) {
+          throw new Error(`learningProgress.${scope}.${id} 未完成全部${progressKind}，不能标记完成`);
         }
         if (isFullyComplete && bucket[id].completed !== true) {
-          throw new Error(`learningProgress.${scope}.${id} 已完成全部键盘练习，必须标记完成`);
+          throw new Error(`learningProgress.${scope}.${id} 已完成全部${progressKind}，必须标记完成`);
         }
       }
     }
@@ -2409,6 +2445,13 @@ function renderWritingComparison({ value, parts, forms = [], selectedIndex = 0 }
   `;
 }
 
+function activeLetterWritingDetail() {
+  if (state.screen === "practiceSession" && currentPracticeGroup().mode === "write") {
+    return letterDetails[currentPracticeItem()?.letterId] || currentLetter();
+  }
+  return currentLetter();
+}
+
 function renderWritingCanvas(value, label = "手写板", options = {}) {
   const fallbackId = options.fallbackId || "";
   const fallbackMessage = options.fallbackMessage || "";
@@ -3616,8 +3659,225 @@ function renderAfantiUnitDetail(unit) {
   );
 }
 
+function renderUnitLearningMapCard({
+  unitId,
+  target,
+  title,
+  description,
+  progressText,
+  complete = false,
+  locked = false,
+  lockText = "",
+  recommended = false,
+  extra = ""
+}) {
+  return `
+    <article
+      class="card unit-learning-map-card${complete ? " is-complete" : ""}${recommended ? " is-recommended" : ""}${locked ? " is-locked" : ""}"
+      data-unit-map-target="${escapeHtml(target)}"
+      data-unit-map-locked="${locked}"
+    >
+      <div class="unit-learning-map-copy">
+        <div class="section-row">
+          <div>
+            <p class="caption">${recommended ? "推荐继续" : complete ? "已完成 · 可复习" : locked ? "尚未解锁" : "可直接进入"}</p>
+            <h2 class="section-title">${escapeHtml(title)}</h2>
+          </div>
+          <span class="step-state">${escapeHtml(progressText)}</span>
+        </div>
+        <p class="muted">${escapeHtml(locked ? lockText : description)}</p>
+      </div>
+      <div class="unit-learning-map-actions">
+        <button
+          class="${recommended ? "primary-button" : "secondary-button"}"
+          data-action="open-unit-stage"
+          data-unit-id="${escapeHtml(unitId)}"
+          data-target="${escapeHtml(target)}"
+          type="button"
+          ${locked ? "disabled" : ""}
+        >${complete ? "再次学习" : recommended ? "继续学习" : "进入学习"}</button>
+        ${extra}
+      </div>
+    </article>
+  `;
+}
+
+function completedLatinKeyboardLessonIds() {
+  const entry = state.learningProgress.latinWriting?.qwerty;
+  if (Array.isArray(entry?.completedIds)) return entry.completedIds;
+  return entry?.completed === true ? latinWriting.keyboardLessons.map((item) => item.id) : [];
+}
+
+function latinKeyboardResumeIndex() {
+  const completedIds = completedLatinKeyboardLessonIds();
+  const nextIndex = latinWriting.keyboardLessons.findIndex((item) => !completedIds.includes(item.id));
+  return nextIndex >= 0 ? nextIndex : latinWriting.keyboardLessons.length - 1;
+}
+
+function syllableWarmupResumeIndex() {
+  const completedIds = completedSyllableItemIds(syllableTraining.sections[0].id);
+  const nextIndex = syllableTraining.twoLetterItems.findIndex((item) => !completedIds.includes(item.id));
+  return nextIndex >= 0 ? nextIndex : syllableTraining.twoLetterItems.length - 1;
+}
+
+function renderLatinWritingUnitMap(unit) {
+  const qwertyIds = completedLatinKeyboardLessonIds();
+  const uyghurIds = completedUyghurKeyboardLessonIds();
+  const classificationComplete = Boolean(state.learningProgress.latinWriting?.classification?.completed);
+  const contrastComplete = Boolean(state.learningProgress.latinWriting?.["vowel-contrast"]?.completed);
+  const dictationComplete = Boolean(state.learningProgress.latinWriting?.dictation?.completed);
+  const formsComplete = Boolean(state.learningProgress.latinWriting?.forms?.completed);
+  const dictationIds = completedLatinWritingItemIds("dictation");
+  const cards = [
+    {
+      target: "latinKeyboardIntro",
+      title: "拉丁键盘",
+      description: "从常用词到词组和短句，练习普通 QWERTY 与 ULY 输入。",
+      progressText: `${qwertyIds.length} / ${latinWriting.keyboardLessons.length}`,
+      complete: qwertyIds.length === latinWriting.keyboardLessons.length
+    },
+    {
+      target: "uyghurKeyboardWords",
+      title: "维吾尔语键盘",
+      description: "可切换屏幕键盘和实体键盘，从两字母组合练到完整短句。",
+      progressText: `${uyghurIds.length} / ${latinWriting.uyghurKeyboardLessons.length}`,
+      complete: uyghurIds.length === latinWriting.uyghurKeyboardLessons.length
+    },
+    {
+      target: "latinLetterClasses",
+      title: "元辅音分类",
+      description: "整理 8 个元音和 24 个辅音，再完成四组容易混淆的元音对比。",
+      progressText: `${Number(classificationComplete) + Number(contrastComplete)} / 2`,
+      complete: classificationComplete && contrastComplete
+    },
+    {
+      target: "latinDictation",
+      title: "ULY 默写",
+      description: "根据 ULY 提示默写维吾尔字母，并切换真实字母形式进行临摹。",
+      progressText: `${dictationIds.length} / ${latinDictationLetterIds.length} 个字母${formsComplete ? " · 形式已练" : ""}`,
+      complete: dictationComplete && formsComplete
+    }
+  ];
+  const recommendedIndex = Math.max(0, cards.findIndex((card) => !card.complete));
+
+  return screen(
+    `
+      ${topBar(
+        unit.title,
+        unit.subtitle,
+        "",
+        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="返回学习单元">←</button>`
+      )}
+      <section class="stack unit-learning-map" aria-label="第二单元学习地图">
+        ${cards.map((card, index) => renderUnitLearningMapCard({
+          ...card,
+          unitId: unit.id,
+          recommended: index === recommendedIndex
+        })).join("")}
+      </section>
+    `,
+    "learn"
+  );
+}
+
+function syllableMapStageProgress(progressId) {
+  const expectedIds = expectedSyllableCompletedIds(progressId);
+  const completedIds = state.learningProgress.syllableTraining?.[progressId]?.completedIds;
+  return {
+    completed: syllableStageComplete(progressId),
+    count: Array.isArray(completedIds) ? completedIds.length : 0,
+    total: expectedIds.length
+  };
+}
+
+function syllableUnitStageIsUnlocked(target) {
+  if (target === "syllableWarmup") return true;
+  if (target === "syllableRules") return syllableRulesPrerequisitesComplete();
+  if (target === "syllableConnections") return syllableConnectionPrerequisitesComplete();
+  if (target === "syllableSentences") return syllableSentencePrerequisitesComplete();
+  return false;
+}
+
+function renderSyllableTrainingUnitMap(unit) {
+  const warmupId = syllableTraining.sections[0].id;
+  const connectionId = syllableTraining.sections[2].id;
+  const sentenceId = syllableTraining.sections[3].id;
+  const warmup = syllableMapStageProgress(warmupId);
+  const ruleCount = syllableTraining.rules.filter((rule) => syllableStageComplete(rule.id)).length;
+  const rulesComplete = ruleCount === syllableTraining.rules.length;
+  const connections = syllableMapStageProgress(connectionId);
+  const sentences = syllableMapStageProgress(sentenceId);
+  const reachableTarget = reachableSyllableTrainingScreen();
+  const reviewCount = state.syllableMistakes.connection.length + state.syllableMistakes.break.length;
+  const cards = [
+    {
+      target: "syllableWarmup",
+      title: "两字母热身",
+      description: "把 10 组真实两字母组合先拆开看，再合起来读。",
+      progressText: `${warmup.count} / ${warmup.total}`,
+      complete: warmup.completed,
+      locked: false
+    },
+    {
+      target: "syllableRules",
+      title: "音节划分规则",
+      description: "逐条学习 4 个入门策略，并完成每条规则的 4 道判断。",
+      progressText: `${ruleCount} / ${syllableTraining.rules.length}`,
+      complete: rulesComplete,
+      locked: !syllableRulesPrerequisitesComplete(),
+      lockText: "完成两字母热身后解锁"
+    },
+    {
+      target: "syllableConnections",
+      title: "连接与断开",
+      description: "完成 12 道连接与断开判断，错题分别保存并可专项复习。",
+      progressText: `${connections.count} / ${connections.total}`,
+      complete: connections.completed,
+      locked: !syllableConnectionPrerequisitesComplete(),
+      lockText: "完成 4 条音节划分规则后解锁",
+      extra: !connections.completed && reviewCount === 0
+        ? ""
+        : `<button class="ghost-button" data-action="go" data-target="syllableReview" type="button">${reviewCount ? `复习 ${reviewCount} 道错题` : "查看错题复习"}</button>`
+    },
+    {
+      target: "syllableSentences",
+      title: "短句分音节朗读",
+      description: "用已有真人整句音频完成 6 句逐步变难的分音节朗读。",
+      progressText: `${sentences.count} / ${sentences.total}`,
+      complete: sentences.completed,
+      locked: !syllableSentencePrerequisitesComplete(),
+      lockText: "完成连接与断开判断后解锁"
+    }
+  ];
+
+  return screen(
+    `
+      ${topBar(
+        unit.title,
+        unit.subtitle,
+        "",
+        `<button class="back-button" data-action="go" data-target="learn" type="button" aria-label="返回学习单元">←</button>`
+      )}
+      <section class="stack unit-learning-map" aria-label="第四单元学习地图">
+        ${cards.map((card) => renderUnitLearningMapCard({
+          ...card,
+          unitId: unit.id,
+          recommended: !card.locked && card.target === reachableTarget
+        })).join("")}
+      </section>
+    `,
+    "learn"
+  );
+}
+
 function renderUnitDetail() {
   const unit = currentUnit();
+  if (unit.id === "latin-keyboard-writing") {
+    return renderLatinWritingUnitMap(unit);
+  }
+  if (unit.id === "syllable-training") {
+    return renderSyllableTrainingUnitMap(unit);
+  }
   const firstGroup = unit.groups?.[0];
   const primaryButton =
     unit.actionTarget === "letter" && firstGroup
@@ -3921,7 +4181,7 @@ function renderSyllableRules() {
         "音节划分策略",
         "每条规则紧接着练 4 题",
         "",
-        `<button class="back-button" data-action="go" data-target="syllableWarmup" type="button" aria-label="返回">&larr;</button>`
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回本单元">&larr;</button>`
       )}
       <section class="stack syllable-training-screen" data-syllable-rule-id="${escapeHtml(rule.id)}">
         ${
@@ -4078,7 +4338,7 @@ function renderSyllableConnections() {
         "连读与断读专项",
         "阅读文字判断，不使用伪造字形",
         "",
-        `<button class="back-button" data-action="go" data-target="${isReview ? "syllableReview" : "syllableRules"}" type="button" aria-label="返回">&larr;</button>`
+        `<button class="back-button" data-action="go" data-target="${isReview ? "syllableReview" : "unit"}" type="button" aria-label="${isReview ? "返回错题复习" : "返回本单元"}">&larr;</button>`
       )}
       <section class="stack syllable-training-screen" data-syllable-connection-id="${escapeHtml(item.id)}">
         ${renderItemProgress(isReview ? `错题复习 · ${bucketLabel}` : `${displayedNumber} / ${syllableTraining.connectionItems.length}`, bucketLabel)}
@@ -4291,7 +4551,7 @@ function renderSyllableSentences() {
 
   return screen(
     `
-      ${topBar("短句拼读", "先看辅助音节，再切换标准拼写并听真人整句", "", `<button class="back-button" data-action="go" data-target="syllableConnections" type="button" aria-label="返回">&larr;</button>`)}
+      ${topBar("短句拼读", "先看辅助音节，再切换标准拼写并听真人整句", "", `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回本单元">&larr;</button>`)}
       <section class="stack syllable-training-screen" data-syllable-sentence-id="${escapeHtml(sentence.id)}">
         ${renderItemProgress(`${Math.min(completedIds.length + 1, syllableTraining.sentences.length)} / ${syllableTraining.sentences.length}`, "短句阅读")}
         <article class="card syllable-sentence-card">
@@ -5118,7 +5378,7 @@ function renderLatinLetterClasses() {
         "元音和辅音",
         learningUnitTitle("latin-keyboard-writing"),
         "",
-        `<button class="back-button" data-action="go" data-target="latinKeyboardIntro" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回本单元">←</button>`
       )}
       <section class="stack latin-letter-classes">
         <section class="latin-letter-class-section" data-letter-section="vowel" aria-labelledby="latin-vowels-title">
@@ -5166,7 +5426,7 @@ function renderLatinVowelCompare() {
         "元音辨认",
         learningUnitTitle("latin-keyboard-writing"),
         "",
-        `<button class="back-button" data-action="go" data-target="latinLetterClasses" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回本单元">←</button>`
       )}
       <section class="stack latin-vowel-compare" data-comparison-id="${escapeHtml(comparison.id)}">
         ${renderItemProgress(`${comparisonIndex + 1} / ${comparisonCount}`, "每次只比较一组元音")}
@@ -5255,7 +5515,7 @@ function renderLatinDictationAnswer(letter) {
 function revealLatinDictationAnswer() {
   const letter = currentLatinDictationLetter();
   state.latinDictationRevealed = true;
-  markProgress("latinWriting", "dictation", "completed");
+  submitLatinWritingItem("dictation", letter.id);
 
   const answerRegion = document.querySelector?.("[data-latin-dictation-answer-region]");
   if (answerRegion) {
@@ -5289,7 +5549,7 @@ function renderLatinDictation() {
         "ULY 提示默写",
         learningUnitTitle("latin-keyboard-writing"),
         "",
-        `<button class="back-button" data-action="go" data-target="latinVowelCompare" type="button" aria-label="返回">←</button>`
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回本单元">←</button>`
       )}
       <section
         class="stack latin-dictation"
@@ -5323,7 +5583,7 @@ function renderLatinDictation() {
         </article>
         <div class="action-grid latin-dictation-navigation">
           <button class="secondary-button" data-action="go" data-target="unit" type="button">返回本单元</button>
-          <button class="primary-button" data-action="next-latin-dictation" type="button">下一题</button>
+          <button class="primary-button" data-action="next-latin-dictation" type="button">${state.learningProgress.latinWriting?.dictation?.completed === true ? "完成并返回本单元" : "下一题"}</button>
         </div>
       </section>
     `,
@@ -5437,7 +5697,7 @@ function renderLatinWritingForms() {
         "字母形式书写参考",
         learningUnitTitle("latin-keyboard-writing"),
         "",
-        `<button class="back-button" data-action="go" data-target="latinDictation" type="button" aria-label="返回默写题">←</button>`
+        `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="返回本单元">←</button>`
       )}
       <section class="stack latin-writing-forms" data-latin-writing-forms data-letter-id="${escapeHtml(letter.id)}">
         <article class="card latin-writing-reference-card">
@@ -6618,17 +6878,32 @@ function renderPracticeModeCard(group, item) {
   }
 
   if (group.mode === "write") {
+    const letter = letterDetails[item.letterId];
+    const forms = Array.isArray(letter?.forms) && letter.forms.length ? letter.forms : [];
+    const selectedFormIndex = Math.max(0, Math.min(state.letterWritingFormIndex, forms.length - 1));
+    const selectedForm = forms[selectedFormIndex] || { label: "独立式", value: item.value };
+    state.letterWritingFormIndex = selectedFormIndex;
     return `
       <article class="card practice-mode-card">
         <div class="section-row">
-          <p class="caption">手写板</p>
+          <div>
+            <p class="caption">手写板 · 当前临摹 ${escapeHtml(selectedForm.label)}</p>
+            <strong class="uyghur practice-writing-target-glyph" data-practice-writing-target-glyph>${escapeHtml(displayLetterFormGlyph(selectedForm.value))}</strong>
+            <span class="caption" data-letter-writing-target-label>${escapeHtml(selectedForm.label)}</span>
+          </div>
           <button class="ghost-button" data-action="clear-canvas" type="button">清空画布</button>
         </div>
-        ${renderWritingCanvas(item.value, "字母练习手写板")}
+        ${renderWritingCanvas(selectedForm.value, `${selectedForm.label} 字母手写板`, { letterWritingHooks: true })}
         <button class="ghost-button" data-action="toggle-guide" type="button">
           ${state.showGuide ? "隐藏参考" : "显示参考"}
         </button>
       </article>
+      ${renderWritingComparison({
+        value: item.value,
+        parts: item.parts,
+        forms,
+        selectedIndex: selectedFormIndex
+      })}
       ${renderWritingCoach({
         value: item.value,
         parts: item.parts,
@@ -7525,8 +7800,19 @@ function updateLatinKeyboardValue(nextValue) {
   state.latinKeyboardValue = nextValue;
   const lessonIndex = Math.max(0, Math.min(latinWriting.keyboardLessons.length - 1, state.latinKeyboardLessonIndex));
   const lesson = latinWriting.keyboardLessons[lessonIndex];
-  if (lessonIndex === latinWriting.keyboardLessons.length - 1 && state.latinKeyboardValue === lesson.latin) {
-    markProgress("latinWriting", "qwerty", "completed");
+  if (state.latinKeyboardValue === lesson.latin) {
+    const progress = ensureProgress("latinWriting", "qwerty");
+    if (!(progress.completed === true && !Array.isArray(progress.completedIds))) {
+      const completedIds = Array.isArray(progress.completedIds) ? progress.completedIds : [];
+      const expectedIds = latinWriting.keyboardLessons.map((item) => item.id);
+      if (expectedIds[completedIds.length] === lesson.id && !completedIds.includes(lesson.id)) {
+        progress.completedIds = [...completedIds, lesson.id];
+      }
+      if (progress.completedIds?.length === expectedIds.length) {
+        progress.completed = true;
+        recordDailyActivity("latinWriting:qwerty:completed");
+      }
+    }
   }
 }
 
@@ -7907,7 +8193,7 @@ document.addEventListener("click", (event) => {
 
   if (action === "complete-latin-classification") {
     markProgress("latinWriting", "classification", "completed");
-    state.latinVowelComparisonIndex = 0;
+    state.latinVowelComparisonIndex = firstIncompleteLatinWritingIndex("vowel-contrast");
     goTo("latinVowelCompare");
     return;
   }
@@ -7915,6 +8201,9 @@ document.addEventListener("click", (event) => {
   if (action === "navigate-latin-vowel-comparison") {
     const direction = button.dataset.direction === "previous" ? -1 : 1;
     const lastIndex = latinWriting.vowelComparisons.length - 1;
+    if (direction > 0) {
+      submitLatinWritingItem("vowel-contrast", latinWriting.vowelComparisons[state.latinVowelComparisonIndex]?.id);
+    }
     state.latinVowelComparisonIndex = Math.max(0, Math.min(lastIndex, state.latinVowelComparisonIndex + direction));
     render();
     return;
@@ -7923,8 +8212,12 @@ document.addEventListener("click", (event) => {
   if (action === "complete-latin-vowel-comparison") {
     const lastIndex = latinWriting.vowelComparisons.length - 1;
     if (state.latinVowelComparisonIndex === lastIndex) {
-      markProgress("latinWriting", "vowel-contrast", "completed");
-      state.latinDictationIndex = 0;
+      submitLatinWritingItem("vowel-contrast", latinWriting.vowelComparisons[lastIndex].id);
+      if (state.learningProgress.latinWriting?.["vowel-contrast"]?.completed !== true) {
+        render();
+        return;
+      }
+      state.latinDictationIndex = firstIncompleteLatinWritingIndex("dictation");
       state.latinDictationRevealed = false;
       state.latinWritingForm = 0;
       goTo("latinDictation");
@@ -7975,7 +8268,11 @@ document.addEventListener("click", (event) => {
 
   if (action === "next-latin-dictation") {
     clearWritingCanvases();
-    state.latinDictationIndex = (state.latinDictationIndex + 1) % latinDictationLetterIds.length;
+    if (state.learningProgress.latinWriting?.dictation?.completed === true) {
+      goTo("unit");
+      return;
+    }
+    state.latinDictationIndex = firstIncompleteLatinWritingIndex("dictation");
     state.latinDictationRevealed = false;
     state.latinWritingForm = 0;
     render();
@@ -8376,11 +8673,11 @@ document.addEventListener("click", (event) => {
     }
     if (target === "latinKeyboardIntro") {
       state.latinKeyboardValue = "";
-      state.latinKeyboardLessonIndex = 0;
+      state.latinKeyboardLessonIndex = latinKeyboardResumeIndex();
     }
     if (target === "syllableWarmup") {
       state.syllableSectionId = syllableTraining.sections[0].id;
-      state.syllableItemIndex = 0;
+      state.syllableItemIndex = syllableWarmupResumeIndex();
       state.syllableShowStandard = false;
     }
     if (target === "syllableRules") {
@@ -8426,6 +8723,66 @@ document.addEventListener("click", (event) => {
       state.selectedReadingGroupId = unit.groups[0]?.id || state.selectedReadingGroupId;
     }
     goTo("unit");
+    return;
+  }
+
+  if (action === "open-unit-stage") {
+    const unitId = button.dataset.unitId;
+    const target = button.dataset.target;
+    const latinTargets = new Set(["latinKeyboardIntro", "uyghurKeyboardWords", "latinLetterClasses", "latinDictation"]);
+    const syllableTargets = new Set(["syllableWarmup", "syllableRules", "syllableConnections", "syllableSentences"]);
+    if (unitId === "latin-keyboard-writing" && latinTargets.has(target)) {
+      state.selectedUnitId = unitId;
+      let resolvedTarget = target;
+      if (target === "latinKeyboardIntro") {
+        state.latinKeyboardLessonIndex = latinKeyboardResumeIndex();
+        state.latinKeyboardValue = "";
+      } else if (target === "uyghurKeyboardWords") {
+        state.uyghurKeyboardValue = "";
+        state.keyboardShift = false;
+      } else if (target === "latinLetterClasses" && state.learningProgress.latinWriting?.classification?.completed === true) {
+        state.latinVowelComparisonIndex = firstIncompleteLatinWritingIndex("vowel-contrast");
+        resolvedTarget = "latinVowelCompare";
+      } else if (target === "latinDictation") {
+        state.latinDictationIndex = firstIncompleteLatinWritingIndex("dictation");
+        state.latinDictationRevealed = false;
+      }
+      goTo(resolvedTarget);
+      return;
+    }
+    if (unitId === "syllable-training" && syllableTargets.has(target)) {
+      state.selectedUnitId = unitId;
+      if (!syllableUnitStageIsUnlocked(target)) {
+        render({ persist: false });
+        return;
+      }
+      if (target === "syllableWarmup") {
+        state.syllableSectionId = syllableTraining.sections[0].id;
+        state.syllableItemIndex = syllableWarmupResumeIndex();
+        state.syllableShowStandard = false;
+      } else if (target === "syllableRules") {
+        state.syllableSectionId = syllableTraining.sections[1].id;
+        state.syllableRuleId = firstReachableSyllableRuleId();
+        resetSyllableRuleInteraction();
+      } else if (target === "syllableConnections") {
+        state.syllableSectionId = syllableTraining.sections[2].id;
+        state.syllableConnectionMode = "lesson";
+        state.syllableConnectionAnswerId = "";
+        state.syllableConnectionSubmitted = false;
+      } else if (target === "syllableSentences") {
+        const firstIncompleteIndex = syllableTraining.sentences.findIndex(
+          (item) => !completedSyllableSentenceIds().includes(item.id)
+        );
+        state.syllableSectionId = syllableTraining.sections[3].id;
+        state.syllableSentenceIndex = firstIncompleteIndex >= 0 ? firstIncompleteIndex : syllableTraining.sentences.length - 1;
+        state.syllableSentenceShowStandard = false;
+        state.syllableSentenceHelperViewed = false;
+        state.syllableSentenceAudioPlayed = false;
+        state.syllableSentencePlaybackStatus = "";
+        syllableSentenceAudioController?.stop();
+      }
+      goTo(target);
+    }
     return;
   }
 
@@ -8751,7 +9108,7 @@ document.addEventListener("click", (event) => {
   }
 
   if (action === "select-letter-writing-form") {
-    const forms = currentLetter().forms;
+    const forms = activeLetterWritingDetail().forms;
     const requestedIndex = Number.parseInt(button.dataset.formIndex || "0", 10);
     const nextIndex = Number.isInteger(requestedIndex)
       ? Math.max(0, Math.min(requestedIndex, forms.length - 1))
@@ -8765,6 +9122,10 @@ document.addEventListener("click", (event) => {
     const targetLabel = document.querySelector("[data-letter-writing-target-label]");
     if (targetLabel) {
       targetLabel.textContent = nextForm.label;
+    }
+    const practiceTargetGlyph = document.querySelector("[data-practice-writing-target-glyph]");
+    if (practiceTargetGlyph) {
+      practiceTargetGlyph.textContent = displayLetterFormGlyph(nextForm.value);
     }
     document.querySelectorAll("[data-letter-writing-form-option]").forEach((option) => {
       const selected = Number.parseInt(option.dataset.formIndex || "-1", 10) === nextIndex;

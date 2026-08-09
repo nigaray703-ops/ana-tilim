@@ -4159,17 +4159,22 @@ for (const removedPhrase of ["我已跟读", "跟读不评分", "练习中心", 
 }
 
 includesAll(
-  renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'writing-loop'; state.currentPracticeItemId = 'practice-write-be'; state.keyboardValue = ''"),
-  ["手写板", "writing-canvas", "清空画布"],
+  renderState("state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'writing-loop'; state.currentPracticeItemId = 'practice-write-ee'; state.letterWritingFormIndex = 0; state.keyboardValue = ''"),
+  ["手写板", "writing-canvas", "清空画布", "选择一种写法临摹", "8 项"],
   "practice writing canvas"
 );
+assert.equal((app.innerHTML.match(/data-letter-writing-form-option/g) || []).length, 8, "the alphabet-library writing pad should expose every real form for the current letter");
 assert.ok(!app.innerHTML.includes("practice-target-card"), "practice writing entry should remove the duplicate target card");
 assert.ok(!app.innerHTML.includes('data-action="play-audio"'), "practice writing entry should remove the duplicate audio strip");
 assert.ok(!app.innerHTML.includes("播放：b"), "practice writing entry should not show the duplicate audio title");
 assert.ok(!app.innerHTML.includes("写完后可以清空重写"), "practice writing entry should remove the extra completion hint");
 assert.ok(!app.innerHTML.includes("键盘步骤"), "practice writing entry should not show keyboard steps");
-assert.ok(!app.innerHTML.includes("对比正确写法"), "practice writing entry should remove the duplicate comparison card");
+assert.ok(!app.innerHTML.includes("对比正确写法"), "practice writing entry should use the interactive tracing selector instead of the old static comparison heading");
 assert.ok(!app.innerHTML.includes("完成后评价"), "practice writing entry should remove the duplicate self-check card");
+const practiceWritingExpectedLastGlyph = vm.runInContext("displayLetterFormGlyph(letterDetails.ee.forms[7].value)", context);
+clickDataset({ action: "select-letter-writing-form", formIndex: "7" });
+assert.equal(vm.runInContext("state.letterWritingFormIndex", context), 7, "the alphabet-library writing pad should switch to the selected real form");
+assert.equal(letterWritingGuide.textContent, practiceWritingExpectedLastGlyph, "the practice tracing guide should follow the selected real form");
 clickDataset({ action: "go", target: "practiceComplete" });
 assert.equal(savedProgress().learningProgress.practice["writing-loop"].completed, true, "practice writing should complete from the result action");
 
@@ -4207,28 +4212,35 @@ const combosBeforeSyllableTraining = JSON.parse(
   vm.runInContext("JSON.stringify(state.learningProgress.combos)", context)
 );
 const syllableUnitHtml = renderState(
-  "state.screen = 'unit'; state.selectedUnitId = 'syllable-training'; state.syllableItemIndex = 0; state.syllableShowStandard = false"
+  "state.screen = 'unit'; state.selectedUnitId = 'syllable-training'; state.learningProgress.syllableTraining = {}; state.syllableItemIndex = 0; state.syllableShowStandard = false"
 );
-assert.match(
+assert.equal((syllableUnitHtml.match(/data-unit-map-target=/g) || []).length, 4, "the fourth unit should render exactly four vertically ordered learning cards");
+assert.doesNotMatch(syllableUnitHtml, /进入当前学习/, "the fourth unit should open directly as a learning map");
+includesAll(
   syllableUnitHtml,
-  /data-action="go"[^>]*data-target="syllableWarmup"[^>]*>\s*进入当前学习\s*<\/button>/,
-  "the visible syllable unit should link to a real warmup screen"
+  ["两字母热身", "音节划分规则", "连接与断开", "短句分音节朗读", "完成两字母热身后解锁"],
+  "fourth-unit learning map"
 );
-assert.match(
-  syllableUnitHtml,
-  /data-action="go"[^>]*data-target="syllableReview"[^>]*>\s*复习连接与断开错题\s*<\/button>/,
-  "the syllable unit detail should expose the real split mistake review entry"
+assert.equal((syllableUnitHtml.match(/data-unit-map-locked="true"/g) || []).length, 3, "fresh learners should see three locked later stages");
+const lockedSyllableProgressBefore = vm.runInContext("JSON.stringify(state.learningProgress.syllableTraining)", context);
+clickDataset({ action: "open-unit-stage", unitId: "syllable-training", target: "syllableRules" });
+assert.equal(vm.runInContext("state.screen", context), "unit", "a locked fourth-unit stage should stay on the learning map");
+assert.equal(
+  vm.runInContext("JSON.stringify(state.learningProgress.syllableTraining)", context),
+  lockedSyllableProgressBefore,
+  "a locked fourth-unit stage must not mutate learner progress"
 );
-clickDataset({ action: "go", target: "syllableReview" });
-assert.equal(vm.runInContext("state.screen", context), "syllableReview", "the unit detail review entry should open the review screen");
-assert.match(
-  app.innerHTML,
-  /data-action="go"[^>]*data-target="unit"[^>]*aria-label="返回"/,
-  "review opened from the fourth-unit detail should return to that unit detail"
-);
+vm.runInContext(`
+  state.learningProgress.syllableTraining['two-letter-warmup'] = {
+    completedIds: syllableTraining.twoLetterItems.slice(0, 3).map((item) => item.id)
+  };
+  render();
+`, context);
+clickDataset({ action: "open-unit-stage", unitId: "syllable-training", target: "syllableWarmup" });
+assert.equal(vm.runInContext("state.syllableItemIndex", context), 3, "re-entering a partial warmup should resume the first unfinished combination");
 clickDataset({ action: "go", target: "unit" });
-assert.equal(vm.runInContext("state.screen", context), "unit", "the fourth-unit review back button should restore the unit detail");
-clickDataset({ action: "go", target: "syllableWarmup" });
+vm.runInContext("state.learningProgress.syllableTraining = {}; render()", context);
+clickDataset({ action: "open-unit-stage", unitId: "syllable-training", target: "syllableWarmup" });
 assert.equal(vm.runInContext("state.screen", context), "syllableWarmup", "the syllable unit entry must not be dead");
 includesAll(app.innerHTML, ["两字母热身", "warmup-ba", "ب", "ا", "合起来读", "1 / 10"], "syllable warmup parts");
 assert.match(app.innerHTML, /data-target="unit"[^>]*aria-label="返回"/, "the warmup back button should return to the fourth-unit detail");
@@ -4283,7 +4295,7 @@ assert.match(
 
 clickDataset({ action: "go", target: "syllableRules" });
 assert.equal(vm.runInContext("state.screen", context), "syllableRules");
-assert.match(app.innerHTML, /data-target="syllableWarmup"[^>]*aria-label="返回"/, "the rule back button should return to the warmup stage");
+assert.match(app.innerHTML, /data-target="unit"[^>]*aria-label="返回本单元"/, "the rule back button should return to the fourth-unit map");
 includesAll(
   app.innerHTML,
   ["音节划分策略", "先找元音中心", "入门范围", "با 有几个候选音节中心？", "1 / 4", "1 / 4 条规则"],
@@ -4528,7 +4540,7 @@ assert.match(
 );
 clickDataset({ action: "go", target: "syllableConnections" });
 assert.equal(vm.runInContext("state.screen", context), "syllableConnections", "the connection stage target should be a real screen");
-assert.match(app.innerHTML, /data-target="syllableRules"[^>]*aria-label="返回"/, "the lesson connection back button should return to the rule stage");
+assert.match(app.innerHTML, /data-target="unit"[^>]*aria-label="返回本单元"/, "the lesson connection back button should return to the fourth-unit map");
 includesAll(
   app.innerHTML,
   ["连读与断读专项", "بال", "开头 ب 与后面的 ا 连接。", "1 / 12"],
@@ -4694,7 +4706,7 @@ focusedSyllableSelector = "";
 clickDataset({ action: "review-syllable-mistakes", mistakeBucket: "connection" });
 assert.equal(vm.runInContext("state.screen", context), "syllableConnections", "connection review should reuse the real textual judgment screen");
 assert.equal(vm.runInContext("state.syllableConnectionMode", context), "review-connection");
-assert.match(app.innerHTML, /data-target="syllableReview"[^>]*aria-label="返回"/, "a mistake retry should return to the split review screen");
+assert.match(app.innerHTML, /data-target="syllableReview"[^>]*aria-label="返回错题复习"/, "a mistake retry should return to the split review screen");
 assert.equal(focusedSyllableSelector, "[data-syllable-connection-question]", "opening a split review bucket should focus its question");
 includesAll(app.innerHTML, ["错题复习 · 连接判断", "بال", "开头 ب 与后面的 ا 连接。"], "first connection mistake retry");
 assert.ok(!app.innerHTML.includes("开头 ب 与后面的 ا 连接；ا 后不继续连接 ل。"), "retry should also hide explanation before answer");
@@ -4759,18 +4771,41 @@ assert.ok(!app.innerHTML.includes("断开错误已清空"), "a fresh empty state
 const latinUnitHtml = renderState(
   "state.screen = 'unit'; state.selectedUnitId = 'latin-keyboard-writing'; state.latinKeyboardValue = ''"
 );
-assert.match(
-  latinUnitHtml,
-  /data-action="go"[^>]*data-target="latinKeyboardIntro"[^>]*>\s*进入当前学习\s*<\/button>/,
-  "the visible Latin writing unit should link to its implemented keyboard screen"
+assert.equal((latinUnitHtml.match(/data-unit-map-target=/g) || []).length, 4, "the second unit should render exactly four vertically ordered learning cards");
+assert.doesNotMatch(latinUnitHtml, /进入当前学习/, "the second unit should open directly as a learning map");
+assert.deepEqual(
+  [...latinUnitHtml.matchAll(/data-unit-map-target="([^"]+)"/g)].map((match) => match[1]),
+  ["latinKeyboardIntro", "uyghurKeyboardWords", "latinLetterClasses", "latinDictation"],
+  "the four independent second-unit cards should keep the approved order and real targets"
 );
-clickDataset({ action: "go", target: "latinKeyboardIntro" });
+includesAll(latinUnitHtml, ["拉丁键盘", "维吾尔语键盘", "元辅音分类", "ULY 默写"], "second-unit learning map");
+vm.runInContext(`
+  state.learningProgress.latinWriting = {
+    classification: { completed: true },
+    'vowel-contrast': { completedIds: latinWriting.vowelComparisons.slice(0, 2).map((item) => item.id) },
+    dictation: { completedIds: [...latinWriting.vowelLetterIds, ...latinWriting.consonantLetterIds].slice(0, 5) }
+  };
+  render();
+`, context);
+clickDataset({ action: "open-unit-stage", unitId: "latin-keyboard-writing", target: "latinLetterClasses" });
+assert.equal(vm.runInContext("state.screen", context), "latinVowelCompare", "the classification card should resume an unfinished vowel comparison");
+assert.equal(vm.runInContext("state.latinVowelComparisonIndex", context), 2, "vowel comparison should resume its first unfinished pair");
+clickDataset({ action: "go", target: "unit" });
+clickDataset({ action: "open-unit-stage", unitId: "latin-keyboard-writing", target: "latinDictation" });
+assert.equal(vm.runInContext("state.latinDictationIndex", context), 5, "ULY dictation should resume its first unfinished letter");
+clickDataset({ action: "go", target: "unit" });
+vm.runInContext("state.learningProgress.latinWriting = {}; render()", context);
+app.scrollTop = 230;
+clickDataset({ action: "open-unit-stage", unitId: "latin-keyboard-writing", target: "latinKeyboardIntro" });
 assert.equal(vm.runInContext("state.screen", context), "latinKeyboardIntro", "the Task 1 unit entry should no longer be dead");
 includesAll(
   app.innerHTML,
   ["QWERTY 词语训练", "第 1 / 7 关", "ئانا", "妈妈", "ana", "词语", 'aria-label="普通拉丁 QWERTY 键盘"', 'dir="ltr"', "Backspace", "Space", "ë", "ö", "ü"],
   "word-based Latin QWERTY screen"
 );
+clickDataset({ action: "go", target: "unit" });
+assert.equal(app.scrollTop, 230, "returning from a second-unit child should restore the learning-map scroll position");
+clickDataset({ action: "open-unit-stage", unitId: "latin-keyboard-writing", target: "latinKeyboardIntro" });
 assert.equal((app.innerHTML.match(/class="latin-keyboard-row"/g) || []).length, 3, "Latin keyboard should render three QWERTY rows");
 assert.equal((app.innerHTML.match(/data-action="latin-key"/g) || []).length, 26, "Latin keyboard should render all 26 ordinary letters");
 assert.match(app.innerHTML, /class="uyghur latin-keyboard-word"[^>]*>ئانا</, "the keyboard lesson should pair ULY with its Uyghur word");
@@ -4813,8 +4848,19 @@ for (const [targetIndex, target] of remainingLatinKeyboardTargets.entries()) {
 }
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.latinWriting.qwerty)", context)),
-  { completed: true },
-  "finishing the exact final sentence should persist one completion flag and no fabricated score"
+  {
+    completedIds: [
+      "keyboard-ana",
+      "keyboard-kitab",
+      "keyboard-mewe",
+      "keyboard-kok",
+      "keyboard-uzum",
+      "keyboard-ana-til",
+      "keyboard-mother-language"
+    ],
+    completed: true
+  },
+  "finishing the exact final sentence should persist seven ordered lesson IDs and no fabricated score"
 );
 includesAll(app.innerHTML, ["7 关全部完成", "返回本单元", "回到首页"], "word-based Latin QWERTY success");
 assert.match(
@@ -5090,7 +5136,7 @@ clickDataset({ action: "navigate-latin-vowel-comparison", direction: "next" });
 assert.equal(vm.runInContext("state.latinVowelComparisonIndex", context), 1, "next should advance one pair");
 clickDataset({ action: "navigate-latin-vowel-comparison", direction: "previous" });
 assert.equal(vm.runInContext("state.latinVowelComparisonIndex", context), 0, "previous should move back one pair");
-vm.runInContext("state.latinVowelComparisonIndex = 3; state.preferences.showLatin = true; render()", context);
+vm.runInContext("state.learningProgress.latinWriting['vowel-contrast'] = { completedIds: ['a-e', 'o-u', 'oe-ue'] }; state.latinVowelComparisonIndex = 3; state.preferences.showLatin = true; render()", context);
 clickDataset({ action: "navigate-latin-vowel-comparison", direction: "next" });
 assert.equal(vm.runInContext("state.latinVowelComparisonIndex", context), 3, "next should stay stable at the final pair");
 assert.match(app.innerHTML, /data-action="complete-latin-vowel-comparison"/, "the final pair should expose one completion action");
@@ -5100,8 +5146,8 @@ for (const deadTarget of ["latinWritingForms", "dictation", "forms"]) {
 clickDataset({ action: "complete-latin-vowel-comparison" });
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.latinWriting['vowel-contrast'])", context)),
-  { completed: true },
-  "vowel contrast completion should persist only its completed boolean"
+  { completedIds: ["a-e", "o-u", "oe-ue", "ee-ii"], completed: true },
+  "vowel contrast completion should persist the four ordered pairs for resume"
 );
 assert.equal(vm.runInContext("state.screen", context), "latinDictation", "vowel comparison completion should enter the real dictation screen");
 const oeDictationIndex = vm.runInContext(
@@ -5110,7 +5156,7 @@ const oeDictationIndex = vm.runInContext(
 );
 const oeDictationDetail = context.window.ANA_TILIM_COURSE.letterDetails.oe;
 const hiddenOeDictationHtml = renderState(
-  `state.screen = 'latinDictation'; state.latinDictationIndex = ${oeDictationIndex}; state.latinDictationRevealed = false; state.latinWritingForm = 0`
+  `state.screen = 'latinDictation'; state.learningProgress.latinWriting.dictation = { completedIds: [...latinWriting.vowelLetterIds, ...latinWriting.consonantLetterIds].slice(0, ${oeDictationIndex}) }; state.latinDictationIndex = ${oeDictationIndex}; state.latinDictationRevealed = false; state.latinWritingForm = 0`
 );
 const hiddenOeDictationExercise = hiddenOeDictationHtml.match(
   /<section\s+class="stack latin-dictation"[^>]*data-latin-dictation-exercise[^>]*>(?<body>[\s\S]*?)<\/section>/
@@ -5175,8 +5221,8 @@ assert.deepEqual(
 assert.equal(progressStorageWriteCount, progressWritesBeforeDictationReveal + 1, "reveal should persist its one completion update immediately");
 assert.deepEqual(
   savedProgress().learningProgress.latinWriting.dictation,
-  { completed: true },
-  "dictation completion should be saved even while the polite announcement is queued"
+  { completedIds: ["aa", "ae", "o", "u", "oe"] },
+  "dictation resume progress should be saved even while the polite announcement is queued"
 );
 assert.match(hiddenOeAnswerRegionTag, /\shidden(?:\s|>)/, "the unrevealed live answer region should start hidden");
 assert.match(hiddenOeAnswerRegionTag, /aria-live="polite"/, "the real reveal click should announce the inserted answer politely");
@@ -5207,8 +5253,8 @@ assert.equal(
 assert.doesNotMatch(latinDictationAnswerRegion.innerHTML, /data-target="latinWritingForms"|stroke|accuracy|准确率|得分|分数/i);
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.latinWriting.dictation)", context)),
-  { completed: true },
-  "revealing the self-check should persist only one completion flag"
+  { completedIds: ["aa", "ae", "o", "u", "oe"] },
+  "revealing the self-check should persist the ordered letter prefix without a fabricated score"
 );
 const dictationLocalSnapshot = JSON.parse(vm.runInContext("JSON.stringify(buildLocalProgressData())", context));
 const dictationCloudSnapshot = JSON.parse(vm.runInContext("JSON.stringify(buildCloudSnapshot())", context));
@@ -5230,8 +5276,8 @@ assert.ok(
 );
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(unitProgressSummaries().find((item) => item.label.includes('拉丁键盘与字母书写强化')))", context)),
-  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 5, total: 6 },
-  "revealed dictation should retain five completed stages after the Uyghur keyboard course"
+  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 4, total: 6 },
+  "partial dictation should not pretend the fifth stable stage is complete"
 );
 
 const dictationDrawingCanvas = makeWritingCanvas();
@@ -5476,8 +5522,8 @@ assert.doesNotThrow(
 );
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(unitProgressSummaries().find((item) => item.label.includes('拉丁键盘与字母书写强化')))", context)),
-  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 5, total: 6 },
-  "the course progress summary should include dictation and the new Uyghur keyboard stage"
+  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 4, total: 6 },
+  "the course progress summary should keep partial dictation separate from the completed keyboard stages"
 );
 
 assert.equal(
@@ -5774,9 +5820,10 @@ includesAll(
 );
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(unitProgressSummaries().find((item) => item.label.includes('拉丁键盘与字母书写强化')))", context)),
-  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 6, total: 6 },
-  "revealing the forms comparison should complete the fifth stable step"
+  { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 5, total: 6 },
+  "revealing the forms comparison should complete forms without falsely completing partial dictation"
 );
+vm.runInContext("state.learningProgress.latinWriting.dictation = { completedIds: [...latinWriting.vowelLetterIds, ...latinWriting.consonantLetterIds], completed: true }", context);
 const completedLatinNextActions = vm.runInContext(
   "renderUnitNextActions('latin-keyboard-writing')",
   context
@@ -6212,7 +6259,7 @@ const syllableSentenceHtml = renderState(`
   state.syllableSentenceShowStandard = false;
 `);
 assert.match(syllableSentenceHtml, new RegExp(`data-syllable-sentence-id="${firstSyllableSentence.id}"`), "the first unlocked sentence should render its stable sentence ID");
-assert.match(syllableSentenceHtml, /data-target="syllableConnections"[^>]*aria-label="返回"/, "the sentence back button should return to connection training");
+assert.match(syllableSentenceHtml, /data-target="unit"[^>]*aria-label="返回本单元"/, "the sentence back button should return to the fourth-unit map");
 assert.match(syllableSentenceHtml, /data-action="show-standard-sentence"/, "sentence reading should let the learner view the exact standard layer");
 assert.equal((syllableSentenceHtml.match(/data-syllable-sentence-chip/g) || []).length, firstSyllableSentence.syllables.length, "the helper layer should keep one DOM chip per approved syllable");
 assert.match(syllableSentenceHtml, /data-action="play-syllable-part"[^>]*disabled/, "unlistened syllable segments must stay visibly disabled");
