@@ -306,6 +306,11 @@ const checks = [
     args: ["tests/recording-studio-server.test.mjs"]
   },
   {
+    label: "test: recording studio launcher",
+    command: node,
+    args: ["tests/start-recording-studio.test.mjs"]
+  },
+  {
     label: "test: recording studio interface",
     command: node,
     args: ["tests/recording-studio-ui.test.mjs"]
