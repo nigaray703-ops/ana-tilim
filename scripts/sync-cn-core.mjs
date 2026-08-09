@@ -40,7 +40,7 @@ if (alphabetDataScriptMatch.index > courseDataScriptMatch.index) {
   throw new Error(`Cannot update ${indexPath}: alphabet-data.js must load before course-data.js.`);
 }
 
-const standardLatinWritingScript = '<script src="./course-data/latin-writing-data.js?v=20260810-qwerty-words"></script>';
+const standardLatinWritingScript = '<script src="./course-data/latin-writing-data.js?v=20260810-unit-maps"></script>';
 const latinWritingInsertionIndex = alphabetDataScriptMatch.index + alphabetDataScriptMatch[0].length;
 let normalizedIndex = `${indexWithoutLatinWritingScripts.slice(0, latinWritingInsertionIndex)}\n${alphabetDataScriptMatch[1]}${standardLatinWritingScript}${indexWithoutLatinWritingScripts.slice(latinWritingInsertionIndex)}`;
 const indexUpdateMessages = ["Normalized index.html: latin-writing-data.js after alphabet-data.js"];
@@ -138,7 +138,7 @@ indexUpdateMessages.push("Normalized index.html: feedback.js before app.js");
 const sharedCacheReferences = [
   {
     pattern: /(\bhref=["']\.\/styles\.css)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260810-feedback$2",
+    replacement: "$1?v=20260810-unit-maps$2",
     label: "styles.css"
   },
   {
@@ -148,8 +148,13 @@ const sharedCacheReferences = [
   },
   {
     pattern: /(\bsrc=["']\.\/progress-transfer\.js)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260809-syllable-review$2",
+    replacement: "$1?v=20260810-unit-maps$2",
     label: "progress-transfer.js"
+  },
+  {
+    pattern: /(\bsrc=["']\.\/cloud-sync\.js)(?:\?[^"']*)?(["'])/g,
+    replacement: "$1?v=20260810-unit-maps$2",
+    label: "cloud-sync.js"
   },
   {
     pattern: /(\bsrc=["']\.\/course-data\.js)(?:\?[^"']*)?(["'])/g,
@@ -158,7 +163,7 @@ const sharedCacheReferences = [
   },
   {
     pattern: /(\bsrc=["']\.\/app\.js)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260810-feedback$2",
+    replacement: "$1?v=20260810-unit-maps$2",
     label: "app.js"
   }
 ];

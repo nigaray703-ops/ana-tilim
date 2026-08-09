@@ -56,11 +56,11 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260810-feedback",
+  "./styles.css?v=20260810-unit-maps",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260728-uly-transliteration",
-  "./course-data/latin-writing-data.js?v=20260810-qwerty-words",
+  "./course-data/latin-writing-data.js?v=20260810-unit-maps",
   "./course-data/combo-data.js?v=20260728-uly-transliteration",
   "./course-data/syllable-data.js?v=20260809-plan3-final-content",
   "./course-data/vocab-data.js?v=20260728-uly-transliteration",
@@ -74,13 +74,13 @@ const expectedVersionedAssets = [
   "./latin-keyboard.js?v=20260809-latin-qwerty",
   "./sentence-morphemes.js?v=20260809-word-formation",
   "./sentence-glossary.js?v=20260809-word-formation",
-  "./progress-transfer.js?v=20260809-syllable-review",
+  "./progress-transfer.js?v=20260810-unit-maps",
   "./audio-controller.js?v=20260728-uly-transliteration",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
-  "./cloud-sync.js?v=20260809-syllable-review",
+  "./cloud-sync.js?v=20260810-unit-maps",
   "./feedback.js?v=20260810-feedback",
-  "./app.js?v=20260810-feedback"
+  "./app.js?v=20260810-unit-maps"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
