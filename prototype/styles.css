@@ -1226,12 +1226,18 @@ button {
 
 .letter-focus-copy {
   display: grid;
-  grid-template-rows: minmax(96px, auto) auto auto;
+  grid-template-rows: minmax(124px, auto) auto auto;
   place-items: center;
-  gap: 8px;
+  gap: 12px;
   min-width: 0;
-  min-height: 152px;
+  min-height: 194px;
   padding: 8px 0;
+}
+
+.letter-focus .letter-big {
+  min-height: 124px;
+  padding-block: 14px 18px;
+  line-height: 1.35;
 }
 
 .letter-focus .caption {
