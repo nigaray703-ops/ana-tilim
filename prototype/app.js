@@ -1777,7 +1777,8 @@ function unitProgressSummaries() {
       const syllableProgressIds = [
         syllableTraining.sections[0].id,
         ...syllableTraining.rules.map((rule) => rule.id),
-        syllableTraining.sections[2].id
+        syllableTraining.sections[2].id,
+        syllableTraining.sections[3].id
       ];
       completed = countCompletedForIds("syllableTraining", syllableProgressIds);
       total = syllableProgressIds.length;
