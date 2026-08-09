@@ -3827,6 +3827,26 @@ assert.match(
 );
 assert.match(
   styleSource,
+  /\.latin-keyboard\s*\{[^}]*width:\s*100%;[^}]*overflow:\s*hidden;[^}]*direction:\s*ltr;/s,
+  "the literal QWERTY keyboard should contain its rows and retain LTR direction on RTL-capable pages"
+);
+assert.match(
+  styleSource,
+  /\.latin-keyboard \.key-button\s*\{[^}]*flex:\s*1 1 0;[^}]*min-width:\s*0;/s,
+  "ordinary and explicit extended Latin keys should be allowed to shrink inside the mobile viewport"
+);
+assert.match(
+  styleSource,
+  /\.writing-canvas\s*\{[^}]*inset:\s*0;[^}]*width:\s*100%;[^}]*height:\s*100%;/s,
+  "live writing canvases should stay contained by their writing pads instead of covering controls"
+);
+assert.match(
+  styleSource,
+  /\.phone-shell\s*\{[^}]*width:\s*100%;[^}]*overflow:\s*hidden;/s,
+  "the app shell should prevent page-level horizontal scrolling"
+);
+assert.match(
+  styleSource,
   /@media \(max-width: 560px\)[\s\S]*?\.latin-writing-controls\s*\{[^}]*grid-template-columns:\s*1fr;/s,
   "forms controls should stack on narrow phones"
 );
@@ -3842,6 +3862,46 @@ const allStableLatinSteps = {
   dictation: { completed: true },
   forms: { completed: true }
 };
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(latinWritingStepIds)", context)),
+  ["qwerty", "classification", "vowel-contrast", "dictation", "forms"],
+  "the Latin writing unit should expose exactly five stable progress IDs in course order"
+);
+vm.runInContext(
+  `globalThis.progressBeforeLegacyLatinRestore = JSON.stringify(state.learningProgress);
+   applyLocalProgressData({
+     learningProgress: {
+       letters: { "dot-bone": { completed: true } },
+       combos: { "open-a": { completed: true } },
+       vocab: { greetings: { completed: true } },
+       practice: { "writing-loop": { completed: true } },
+       reading: { "dialogue-greeting": { completed: true } }
+     }
+   });`,
+  context
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.latinWriting)", context)),
+  {},
+  "legacy progress without latinWriting should normalize to an empty Latin scope"
+);
+for (const [scope, id] of [
+  ["letters", "dot-bone"],
+  ["combos", "open-a"],
+  ["vocab", "greetings"],
+  ["practice", "writing-loop"],
+  ["reading", "dialogue-greeting"]
+]) {
+  assert.equal(
+    vm.runInContext(`state.learningProgress[${JSON.stringify(scope)}][${JSON.stringify(id)}].completed`, context),
+    true,
+    `legacy normalization should preserve the existing ${scope} scope`
+  );
+}
+vm.runInContext(
+  "state.learningProgress = JSON.parse(globalThis.progressBeforeLegacyLatinRestore)",
+  context
+);
 assert.doesNotThrow(
   () => vm.runInContext(
     `validateImportedProgressIds({
@@ -4158,6 +4218,15 @@ assert.deepEqual(
   { unit: "第二单元", label: "拉丁键盘与字母书写强化", completed: 5, total: 5 },
   "revealing the forms comparison should complete the fifth stable step"
 );
+const completedLatinNextActions = vm.runInContext(
+  "renderUnitNextActions('latin-keyboard-writing')",
+  context
+);
+assert.match(
+  completedLatinNextActions,
+  /data-action="open-unit"[^>]*data-id="combos"[^>]*>[^<]*进入第三单元/,
+  "a completed Latin writing unit should route to the edition-aware next unit, combos"
+);
 
 oeWritingCanvas.listeners.pointerdown({
   clientX: 18,
@@ -4228,6 +4297,61 @@ const dictationCanvasCallsBeforeCloudStatus = dictationStatusCanvas.calls.length
 vm.runInContext("handleCloudStatus({ phase: 'syncing', authEvent: '', error: '' })", context);
 assert.equal(appHtmlWriteCount, dictationAppWritesBeforeCloudStatus, "Task 4 dictation Canvas should also survive status-only cloud updates");
 assert.equal(dictationStatusCanvas.calls.length, dictationCanvasCallsBeforeCloudStatus, "dictation strokes should survive status-only cloud updates");
+
+const liveCanvasStatusMatrix = [
+  {
+    label: "letterWriting",
+    setup: "state.screen = 'letterWriting'; state.selectedGroupId = 'dot-bone'; state.currentLetterId = 'be'"
+  },
+  {
+    label: "latinDictation",
+    setup: `state.screen = 'latinDictation'; state.latinDictationIndex = ${oeDictationIndex}; state.latinDictationRevealed = false`
+  },
+  {
+    label: "latinWritingForms",
+    setup: "state.screen = 'latinWritingForms'; state.latinWritingLetterId = 'oe'; state.latinWritingForm = 0; state.latinWritingGuideVisible = true; state.latinWritingComparisonRevealed = false"
+  },
+  {
+    label: "comboWriting",
+    setup: "state.screen = 'comboWriting'; state.selectedComboGroupId = 'open-a'; state.currentComboItemId = 'ba'"
+  },
+  {
+    label: "write-mode practiceSession",
+    setup: "state.screen = 'practiceSession'; state.selectedPracticeGroupId = 'writing-loop'; state.currentPracticeItemId = 'practice-write-be'"
+  }
+];
+for (const [matrixIndex, entry] of liveCanvasStatusMatrix.entries()) {
+  const canvas = makeWritingCanvas();
+  writingCanvasesForTest = [canvas];
+  renderState(entry.setup);
+  assert.equal(typeof canvas.listeners.pointerdown, "function", `${entry.label} should bind the shared Canvas pointer pipeline`);
+  canvas.listeners.pointerdown({
+    clientX: 12 + matrixIndex,
+    clientY: 16 + matrixIndex,
+    pointerId: 20 + matrixIndex,
+    preventDefault() {}
+  });
+  canvas.listeners.pointermove({
+    clientX: 48 + matrixIndex,
+    clientY: 58 + matrixIndex,
+    pointerId: 20 + matrixIndex,
+    preventDefault() {}
+  });
+  canvas.listeners.pointerup({ pointerId: 20 + matrixIndex });
+
+  const rootHtmlBeforeStatus = app.innerHTML;
+  const rootWritesBeforeStatus = appHtmlWriteCount;
+  const pointerHandlerBeforeStatus = canvas.listeners.pointerdown;
+  const canvasCallsBeforeStatus = canvas.calls.length;
+  for (const phase of ["syncing", "synced"]) {
+    vm.runInContext(`handleCloudStatus({ phase: ${JSON.stringify(phase)}, authEvent: '', error: '' })`, context);
+  }
+  assert.equal(appHtmlWriteCount, rootWritesBeforeStatus, `${entry.label} status-only updates should not rerender its root`);
+  assert.equal(app.innerHTML, rootHtmlBeforeStatus, `${entry.label} status-only updates should preserve its root HTML`);
+  assert.equal(writingCanvasesForTest[0], canvas, `${entry.label} status-only updates should retain the same Canvas object`);
+  assert.equal(canvas.listeners.pointerdown, pointerHandlerBeforeStatus, `${entry.label} status-only updates should retain pointer handlers`);
+  assert.equal(canvas.calls.length, canvasCallsBeforeStatus, `${entry.label} status-only updates should preserve learner strokes`);
+}
 
 writingCanvasesForTest = [];
 renderState("state.screen = 'vocab'");
