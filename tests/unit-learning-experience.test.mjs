@@ -520,12 +520,22 @@ const context = {
 context.globalThis = context;
 context.window.Audio = context.Audio;
 context.__testPlayedAudioSources = playedAudioSources;
+context.__testSentenceAudioInstances = [];
 vm.createContext(context);
 vm.runInContext(
   `window.Audio = function FakeAudioForVm(src) {
     this.src = src;
-    this.pause = () => {};
-    this.play = () => { globalThis.__testPlayedAudioSources.push(src); return Promise.resolve(); };
+    this.playbackRate = 1;
+    this.pauseCount = 0;
+    this.pause = () => { this.pauseCount += 1; };
+    this.play = () => {
+      globalThis.__testPlayedAudioSources.push(src);
+      globalThis.__testSentenceAudioInstances.push(this);
+      return new Promise((resolve, reject) => {
+        this.resolvePlayback = resolve;
+        this.rejectPlayback = reject;
+      });
+    };
   };`,
   context
 );
@@ -5518,6 +5528,29 @@ assert.ok(wordGlossStyle.includes("justify-content: center;"), "word glosses sho
 const morphemeGlossStyle = styleSource.match(/^\.morpheme-glosses\s*\{(?<body>[^}]*)\}/ms)?.groups?.body || "";
 assert.ok(morphemeGlossStyle.includes("direction: rtl;"), "morpheme breakdowns should run from right to left");
 
+const freshSentenceFallbackHtml = renderState(`
+  state.screen = "syllableSentences";
+  state.selectedUnitId = "syllable-training";
+  state.learningProgress = { latinWriting: {}, letters: {}, combos: {}, syllableTraining: {}, vocab: {}, practice: {}, reading: {} };
+`);
+assert.equal(
+  vm.runInContext("state.screen", context),
+  "syllableWarmup",
+  "a fresh sentence route must resolve to the first reachable syllable-training screen"
+);
+assert.match(
+  freshSentenceFallbackHtml,
+  /两字母热身/,
+  "a fresh sentence route must render the matching warmup content, not the rules screen"
+);
+const freshSentenceProgressBeforeAction = vm.runInContext("JSON.stringify(state.learningProgress)", context);
+clickDataset({ action: "show-standard-sentence" });
+assert.equal(
+  vm.runInContext("JSON.stringify(state.learningProgress)", context),
+  freshSentenceProgressBeforeAction,
+  "an unreachable sentence action must route to its prerequisite without writing progress"
+);
+
 const syllableTrainingData = context.window.ANA_TILIM_COURSE.syllableTraining;
 const sentenceReadingPrerequisite = {
   "two-letter-warmup": { completedIds: syllableTrainingData.twoLetterItems.map((item) => item.id), completed: true },
@@ -5528,6 +5561,13 @@ const sentenceReadingPrerequisite = {
   "connection-errors": { completedIds: syllableTrainingData.connectionItems.map((item) => item.id), completed: true }
 };
 const firstSyllableSentence = syllableTrainingData.sentences[0];
+function renderedStandardSentenceText(sentenceId) {
+  const markerIndex = app.innerHTML.indexOf(`data-syllable-standard-sentence="${sentenceId}"`);
+  assert.notEqual(markerIndex, -1, `${sentenceId} standard layer should be present`);
+  const textStart = app.innerHTML.indexOf(">", markerIndex) + 1;
+  const textEnd = app.innerHTML.indexOf("</div>", textStart);
+  return app.innerHTML.slice(textStart, textEnd);
+}
 vm.runInContext("state.syllableSentenceIndex = 5", context);
 assert.equal(
   vm.runInContext("currentSyllableSentence().id", context),
@@ -5555,9 +5595,11 @@ assert.equal(
 );
 
 clickDataset({ action: "show-standard-sentence" });
-assert.match(app.innerHTML, new RegExp(`data-syllable-standard-sentence="${firstSyllableSentence.id}"[^>]*>${firstSyllableSentence.standard}<`), "the standard layer must copy the exact approved sentence without inserted separators");
+assert.equal(renderedStandardSentenceText(firstSyllableSentence.id), firstSyllableSentence.standard, "the standard layer must copy the exact approved sentence without inserted separators");
 const sentenceAudioStartIndex = playedAudioSources.length;
 clickDataset({ action: "play-syllable-sentence", rate: "0.75" });
+const sentenceAudioInstance = vm.runInContext("__testSentenceAudioInstances.at(-1)", context);
+sentenceAudioInstance.resolvePlayback();
 await Promise.resolve();
 await Promise.resolve();
 assert.equal(
@@ -5565,16 +5607,272 @@ assert.equal(
   firstSyllableSentence.audioPath,
   "slow sentence mode must start the exact reviewed human whole-sentence recording"
 );
-const persistedSentenceProgress = vm.runInContext("JSON.stringify({ screen: state.screen, helper: state.syllableSentenceHelperViewed, standard: state.syllableSentenceShowStandard, audio: state.syllableSentenceAudioPlayed, status: state.syllableSentencePlaybackStatus, progress: state.learningProgress.syllableTraining['sentence-reading'] || null })", context);
-assert.deepEqual(
-  JSON.parse(persistedSentenceProgress).progress?.completedIds,
-  [firstSyllableSentence.id],
-  `a sentence should complete only after the helper layer, exact standard layer, and a successful whole-sentence start: ${persistedSentenceProgress}`
-);
 assert.equal(
-  vm.runInContext("state.syllableSentenceIndex", context),
-  1,
-  "after completion, sentence reading should resume at the first unfinished stable sentence"
+  vm.runInContext("currentSyllableSentence().id", context),
+  firstSyllableSentence.id,
+  "a successful audio start must keep the visible sentence stable until the learner explicitly continues"
 );
+assert.equal(sentenceAudioInstance.playbackRate, 0.75, "slow sentence mode must set the real controller audio rate to 0.75");
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(syllableSentenceAudioController.snapshot())", context)),
+  { rate: 0.75, loop: false, contentKey: `syllable-sentence:${firstSyllableSentence.id}`, playing: true },
+  "a successful slow start must retain the current stable sentence content key"
+);
+assert.equal(sentenceAudioInstance.pauseCount, 0, "the active sentence must not be paused before explicit continue");
+assert.match(app.innerHTML, /data-action="continue-syllable-sentence"[^>]*>继续下一句</, "only the three completed requirements should reveal an explicit continue action");
+vm.runInContext("handleCloudStatus({ phase: 'syncing', authEvent: '', error: '' })", context);
+assert.match(app.innerHTML, /data-action="continue-syllable-sentence"/, "a cloud-status-only render must preserve the current sentence readiness");
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify({ helper: state.syllableSentenceHelperViewed, standard: state.syllableSentenceShowStandard, audio: state.syllableSentenceAudioPlayed })", context)),
+  { helper: true, standard: true, audio: true },
+  "a status-only render must not erase helper, standard, or successful audio evidence"
+);
+clickDataset({ action: "continue-syllable-sentence" });
+assert.equal(sentenceAudioInstance.pauseCount, 1, "explicit continue must stop the active whole-sentence audio exactly once");
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.syllableTraining['sentence-reading'].completedIds)", context)),
+  [firstSyllableSentence.id],
+  "continue, rather than onStarted, must submit the stable sentence"
+);
+assert.equal(vm.runInContext("currentSyllableSentence().id", context), syllableTrainingData.sentences[1].id, "continue must reveal the next stable sentence");
+
+clickDataset({ action: "show-standard-sentence" });
+clickDataset({ action: "play-syllable-sentence", rate: "1" });
+const rejectedSentenceAudio = vm.runInContext("__testSentenceAudioInstances.at(-1)", context);
+assert.equal(rejectedSentenceAudio.playbackRate, 1, "normal sentence mode must set the real controller audio rate to 1");
+rejectedSentenceAudio.rejectPlayback(new Error("autoplay blocked"));
+await Promise.resolve();
+await Promise.resolve();
+assert.match(app.innerHTML, /音频未能启动，请重试/, "a rejected real Audio play must show retry feedback");
+assert.doesNotMatch(app.innerHTML, /data-action="continue-syllable-sentence"/, "a failed real Audio play must not unlock continue");
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.syllableTraining['sentence-reading'].completedIds)", context)),
+  [firstSyllableSentence.id],
+  "a failed real Audio play must not submit a sentence"
+);
+clickDataset({ action: "play-syllable-sentence", rate: "1" });
+const staleSentenceAudio = vm.runInContext("__testSentenceAudioInstances.at(-1)", context);
+clickDataset({ action: "play-syllable-sentence", rate: "0.75" });
+const currentSentenceAudio = vm.runInContext("__testSentenceAudioInstances.at(-1)", context);
+assert.equal(staleSentenceAudio.pauseCount, 1, "starting a replacement mode must stop the prior pending sentence audio");
+staleSentenceAudio.resolvePlayback();
+await Promise.resolve();
+await Promise.resolve();
+assert.doesNotMatch(app.innerHTML, /data-action="continue-syllable-sentence"/, "a stale late start callback must not unlock the current sentence");
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(syllableSentenceAudioController.snapshot())", context)),
+  { rate: 0.75, loop: false, contentKey: `syllable-sentence:${syllableTrainingData.sentences[1].id}`, playing: true },
+  "a stale late callback must leave the replacement sentence content key active"
+);
+currentSentenceAudio.resolvePlayback();
+await Promise.resolve();
+await Promise.resolve();
+assert.match(app.innerHTML, /data-action="continue-syllable-sentence"/, "a successful retry must unlock continue without changing sentence");
+clickDataset({ action: "continue-syllable-sentence" });
+assert.equal(currentSentenceAudio.pauseCount, 1, "continue must stop the replacement active audio before advancing");
+
+renderState(`
+  state.screen = "syllableSentences";
+  state.selectedUnitId = "syllable-training";
+  state.learningProgress = { latinWriting: {}, letters: {}, combos: {}, syllableTraining: ${JSON.stringify(sentenceReadingPrerequisite)}, vocab: {}, practice: {}, reading: {} };
+  state.syllableSentenceIndex = 0;
+  state.syllableSentenceShowStandard = false;
+  state.syllableSentenceAudioPlayed = false;
+  state.syllableSentencePlaybackStatus = "";
+  state.dailyActivity = { date: localDayKey(), completedIds: [] };
+`);
+assert.doesNotMatch(appSource, /playSegment/, "sentence reading must never call an unavailable segment API");
+for (const [index, sentence] of syllableTrainingData.sentences.entries()) {
+  const helperHtml = app.innerHTML;
+  const chipTexts = Array.from(helperHtml.matchAll(/data-syllable-sentence-chip>([^<]*)<\/span>/g), (match) => match[1]);
+  assert.deepEqual(chipTexts, Array.from(sentence.syllables, (part) => part.text), `${sentence.id} helper chips must preserve approved text and DOM order`);
+  assert.match(helperHtml, /class="syllable-sentence-chips" dir="rtl"/, `${sentence.id} helper chips must be RTL`);
+  assert.match(helperHtml, /class="syllable-sentence-controls" dir="ltr"/, `${sentence.id} controls must be LTR`);
+  assert.match(helperHtml, /class="syllable-sentence-latin" dir="ltr"/, `${sentence.id} ULY must be LTR`);
+  assert.doesNotMatch(helperHtml, /data-action="continue-syllable-sentence"/, `${sentence.id} must not continue before standard and audio requirements`);
+  clickDataset({ action: "show-standard-sentence" });
+  assert.equal(renderedStandardSentenceText(sentence.id), sentence.standard, `${sentence.id} standard layer must be exact and contain no inserted separator spans`);
+  assert.doesNotMatch(app.innerHTML, /data-action="continue-syllable-sentence"/, `${sentence.id} must not continue before successful audio`);
+  clickDataset({ action: "play-syllable-sentence", rate: index % 2 ? "1" : "0.75" });
+  const loopSentenceAudio = vm.runInContext("__testSentenceAudioInstances.at(-1)", context);
+  assert.equal(loopSentenceAudio.src, sentence.audioPath, `${sentence.id} must play its exact reviewed reading audio path`);
+  assert.equal(loopSentenceAudio.playbackRate, index % 2 ? 1 : 0.75, `${sentence.id} must apply its selected whole-sentence rate`);
+  loopSentenceAudio.resolvePlayback();
+  await Promise.resolve();
+  await Promise.resolve();
+  assert.match(app.innerHTML, /data-action="continue-syllable-sentence"/, `${sentence.id} successful whole-sentence audio must unlock continue`);
+  assert.equal(vm.runInContext("currentSyllableSentence().id", context), sentence.id, `${sentence.id} must remain visible until its explicit continue`);
+  clickDataset({ action: "continue-syllable-sentence" });
+  assert.equal(loopSentenceAudio.pauseCount, 1, `${sentence.id} continue must stop active audio`);
+  const loopProgress = JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.syllableTraining['sentence-reading'])", context));
+  assert.deepEqual(loopProgress.completedIds, Array.from(syllableTrainingData.sentences).slice(0, index + 1).map((item) => item.id), `${sentence.id} must append ordered sentence progress only on continue`);
+  assert.equal(loopProgress.completed === true, index === syllableTrainingData.sentences.length - 1, `${sentence.id} may set completed only after the final sentence`);
+}
+assert.match(app.innerHTML, /data-action="open-unit" data-id="basic-phrases"/, "finishing all six sentences must expose the existing basic-phrases CTA");
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.dailyActivity.completedIds)", context)),
+  ["syllableTraining:sentence-reading:completed"],
+  "the final sentence stage must extend the existing daily completed-stage ID convention"
+);
+clickDataset({ action: "open-unit", id: "basic-phrases" });
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify({ screen: state.screen, unit: state.selectedUnitId })", context)),
+  { screen: "unit", unit: "basic-phrases" },
+  "the final sentence CTA must use the existing unit route"
+);
+
+renderState(`
+  state.screen = "syllableSentences";
+  state.selectedUnitId = "syllable-training";
+  state.learningProgress = { latinWriting: {}, letters: {}, combos: {}, syllableTraining: ${JSON.stringify(sentenceReadingPrerequisite)}, vocab: {}, practice: {}, reading: {} };
+  state.syllableSentenceShowStandard = false;
+  state.syllableSentenceAudioPlayed = false;
+  state.syllableSentencePlaybackStatus = "";
+`);
+clickDataset({ action: "show-standard-sentence" });
+clickDataset({ action: "play-syllable-sentence", rate: "0.75" });
+const cloudAdvanceAudio = vm.runInContext("__testSentenceAudioInstances.at(-1)", context);
+cloudAdvanceAudio.resolvePlayback();
+await Promise.resolve();
+await Promise.resolve();
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(syllableSentenceAudioController.snapshot())", context)),
+  { rate: 0.75, loop: false, contentKey: `syllable-sentence:${firstSyllableSentence.id}`, playing: true },
+  "a cloud merge race starts with the first sentence actively playing"
+);
+const cloudSentencePrefixProgress = {
+  latinWriting: {}, letters: {}, combos: {},
+  syllableTraining: { ...sentenceReadingPrerequisite, "sentence-reading": { completedIds: [firstSyllableSentence.id] } },
+  vocab: {}, practice: {}, reading: {}
+};
+vm.runInContext(`applyCloudSnapshot(${JSON.stringify({ ...cloudSnapshotBase, learningProgress: cloudSentencePrefixProgress })}); handleCloudStatus({ phase: "synced", authEvent: "", error: "" });`, context);
+assert.equal(vm.runInContext("currentSyllableSentence().id", context), syllableTrainingData.sentences[1].id, "a legal remote sentence prefix must move the rendered sentence to the next stable ID");
+assert.equal(cloudAdvanceAudio.pauseCount, 1, "a cloud merge that changes the active sentence must stop its prior audio before render");
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify({ standard: state.syllableSentenceShowStandard, audio: state.syllableSentenceAudioPlayed, status: state.syllableSentencePlaybackStatus })", context)),
+  { standard: false, audio: false, status: "" },
+  "a cloud-driven sentence change must reset the prior sentence transient evidence"
+);
+
+renderState(`
+  state.screen = "syllableSentences";
+  state.selectedUnitId = "syllable-training";
+  state.learningProgress = { latinWriting: {}, letters: {}, combos: {}, syllableTraining: ${JSON.stringify(sentenceReadingPrerequisite)}, vocab: {}, practice: {}, reading: {} };
+  state.syllableSentenceShowStandard = false;
+  state.syllableSentenceAudioPlayed = false;
+  state.syllableSentencePlaybackStatus = "";
+`);
+clickDataset({ action: "show-standard-sentence" });
+clickDataset({ action: "play-syllable-sentence", rate: "1" });
+const cloudSameSentenceAudio = vm.runInContext("__testSentenceAudioInstances.at(-1)", context);
+cloudSameSentenceAudio.resolvePlayback();
+await Promise.resolve();
+await Promise.resolve();
+vm.runInContext(`applyCloudSnapshot(${JSON.stringify({ ...cloudSnapshotBase, learningProgress: { latinWriting: {}, letters: {}, combos: {}, syllableTraining: sentenceReadingPrerequisite, vocab: {}, practice: {}, reading: {} } })}); handleCloudStatus({ phase: "synced", authEvent: "", error: "" });`, context);
+assert.equal(cloudSameSentenceAudio.pauseCount, 0, "a cloud merge that keeps the same sentence must not interrupt active audio");
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify({ helper: state.syllableSentenceHelperViewed, standard: state.syllableSentenceShowStandard, audio: state.syllableSentenceAudioPlayed })", context)),
+  { helper: true, standard: true, audio: true },
+  "a same-sentence cloud render must preserve helper, standard, and successful audio evidence"
+);
+
+renderState(`
+  state.screen = "syllableSentences";
+  state.selectedUnitId = "syllable-training";
+  state.learningProgress = { latinWriting: {}, letters: {}, combos: {}, syllableTraining: ${JSON.stringify(sentenceReadingPrerequisite)}, vocab: {}, practice: {}, reading: {} };
+  state.syllableSentenceShowStandard = false;
+  state.syllableSentenceAudioPlayed = false;
+  state.syllableSentencePlaybackStatus = "";
+`);
+clickDataset({ action: "show-standard-sentence" });
+clickDataset({ action: "play-syllable-sentence", rate: "1" });
+const localAdvanceAudio = vm.runInContext("__testSentenceAudioInstances.at(-1)", context);
+localAdvanceAudio.resolvePlayback();
+await Promise.resolve();
+await Promise.resolve();
+assert.equal(
+  vm.runInContext(`applyLocalProgressData(${JSON.stringify({ screen: "syllableSentences", learningProgress: cloudSentencePrefixProgress })})`, context),
+  true,
+  "a valid local/import-style sentence prefix should apply"
+);
+assert.equal(localAdvanceAudio.pauseCount, 1, "a local/import-style sentence change must also stop its prior active audio");
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify({ standard: state.syllableSentenceShowStandard, audio: state.syllableSentenceAudioPlayed, status: state.syllableSentencePlaybackStatus })", context)),
+  { standard: false, audio: false, status: "" },
+  "a local/import-style sentence change must reset transient evidence before its next render"
+);
+
+renderState(`
+  state.screen = "syllableSentences";
+  state.selectedUnitId = "syllable-training";
+  state.learningProgress = { latinWriting: {}, letters: {}, combos: {}, syllableTraining: ${JSON.stringify(sentenceReadingPrerequisite)}, vocab: {}, practice: {}, reading: {} };
+  state.syllableSentenceShowStandard = false;
+  state.syllableSentenceAudioPlayed = false;
+  state.syllableSentencePlaybackStatus = "";
+`);
+clickDataset({ action: "show-standard-sentence" });
+clickDataset({ action: "play-syllable-sentence", rate: "1" });
+const confirmedImportAudio = vm.runInContext("__testSentenceAudioInstances.at(-1)", context);
+confirmedImportAudio.resolvePlayback();
+await Promise.resolve();
+await Promise.resolve();
+vm.runInContext(`state.pendingProgressImport = { data: ${JSON.stringify({ screen: "syllableSentences", learningProgress: cloudSentencePrefixProgress })} }; confirmLocalProgressImport();`, context);
+assert.equal(confirmedImportAudio.pauseCount, 1, "confirming an import from sentence reading must stop the prior active audio before leaving the screen");
+assert.equal(vm.runInContext("state.screen", context), "profile", "a confirmed import retains its existing profile destination");
+
+renderState(`
+  state.screen = "syllableSentences";
+  state.selectedUnitId = "syllable-training";
+  state.learningProgress = { latinWriting: {}, letters: {}, combos: {}, syllableTraining: ${JSON.stringify(sentenceReadingPrerequisite)}, vocab: {}, practice: {}, reading: {} };
+  state.syllableSentenceShowStandard = false;
+  state.syllableSentenceAudioPlayed = false;
+  state.syllableSentencePlaybackStatus = "";
+`);
+clickDataset({ action: "show-standard-sentence" });
+clickDataset({ action: "play-syllable-sentence", rate: "0.75" });
+const cloudUnreachableAudio = vm.runInContext("__testSentenceAudioInstances.at(-1)", context);
+cloudUnreachableAudio.resolvePlayback();
+await Promise.resolve();
+await Promise.resolve();
+vm.runInContext(`applyCloudSnapshot(${JSON.stringify({ ...cloudSnapshotBase, learningProgress: { latinWriting: {}, letters: {}, combos: {}, syllableTraining: {}, vocab: {}, practice: {}, reading: {} } })}); handleCloudStatus({ phase: "synced", authEvent: "", error: "" });`, context);
+assert.equal(cloudUnreachableAudio.pauseCount, 1, "a cloud merge that makes the sentence screen unreachable must stop active audio");
+assert.equal(vm.runInContext("state.screen", context), "syllableWarmup", "an unreachable cloud sentence screen must render its prerequisite fallback");
+
+const legacySentenceStageProgress = {
+  latinWriting: {}, letters: {}, combos: {}, syllableTraining: sentenceReadingPrerequisite, vocab: {}, practice: {}, reading: {}
+};
+assert.doesNotThrow(
+  () => vm.runInContext(`validateImportedProgressIds(${JSON.stringify({ learningProgress: legacySentenceStageProgress })})`, context),
+  "legacy progress without the new sentence-reading stage must remain compatible"
+);
+const invalidSentenceScreenProgress = { latinWriting: {}, letters: {}, combos: {}, syllableTraining: {}, vocab: {}, practice: {}, reading: {} };
+const stateBeforeInvalidSentenceScreen = vm.runInContext("JSON.stringify(buildLocalProgressData())", context);
+assert.throws(
+  () => vm.runInContext(`applyLocalProgressData(${JSON.stringify({ screen: "syllableSentences", learningProgress: invalidSentenceScreenProgress })})`, context),
+  /syllableSentences 必须先完成连接与断开前置阶段/,
+  "local progress must reject an unreachable sentence-reading screen"
+);
+assert.equal(vm.runInContext("JSON.stringify(buildLocalProgressData())", context), stateBeforeInvalidSentenceScreen, "invalid local sentence routes must not partially mutate progress");
+const invalidSentenceImport = JSON.parse(vm.runInContext("JSON.stringify(progressTransfer.createExportPayload(buildLocalProgressData(), { edition: appConfig.edition, brandName: appConfig.brandName }))", context));
+invalidSentenceImport.data.screen = "syllableSentences";
+invalidSentenceImport.data.learningProgress = invalidSentenceScreenProgress;
+const pendingImportBeforeInvalidSentence = vm.runInContext("state.pendingProgressImport", context);
+assert.throws(
+  () => vm.runInContext(`importLocalProgressText(${JSON.stringify(JSON.stringify(invalidSentenceImport))})`, context),
+  /syllableSentences 必须先完成连接与断开前置阶段/,
+  "import must reject an unreachable sentence-reading screen"
+);
+assert.equal(vm.runInContext("state.pendingProgressImport", context), pendingImportBeforeInvalidSentence, "invalid sentence import must not stage a pending mutation");
+const cloudProgressBeforeInvalidSentenceScreen = vm.runInContext("JSON.stringify(state.learningProgress)", context);
+const invalidSentenceCloudProgress = {
+  ...invalidSentenceScreenProgress,
+  syllableTraining: { "sentence-reading": { completedIds: [firstSyllableSentence.id] } }
+};
+assert.throws(
+  () => vm.runInContext(`applyCloudSnapshot(${JSON.stringify({ ...cloudSnapshotBase, learningProgress: invalidSentenceCloudProgress })})`, context),
+  /必须先完成 connection-errors 才能记录 sentence-reading/,
+  "cloud validation must reject sentence progress ahead of its required connection stage"
+);
+assert.equal(vm.runInContext("JSON.stringify(state.learningProgress)", context), cloudProgressBeforeInvalidSentenceScreen, "invalid sentence cloud payload must not mutate progress before rejection");
 
 console.log("unit learning experience checks passed");
