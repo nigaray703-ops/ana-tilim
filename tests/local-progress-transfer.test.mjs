@@ -99,7 +99,13 @@ const currentProgressData = {
     letters: { "dot-bone": { viewed: true, completed: true } },
     combos: {},
     syllableTraining: {
-      "two-letter-warmup": { completedIds: ["warmup-ba", "warmup-pa"] },
+      "two-letter-warmup": {
+        completedIds: [
+          "warmup-ba", "warmup-pa", "warmup-ta", "warmup-na", "warmup-la",
+          "warmup-ma", "warmup-be-e", "warmup-pe-e", "warmup-te-e", "warmup-ne-e"
+        ],
+        completed: true
+      },
       "vowel-nucleus": { completedIds: ["vowel-nucleus-01"], completed: false }
     },
     vocab: {},

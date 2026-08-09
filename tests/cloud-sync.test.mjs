@@ -45,8 +45,7 @@ function snapshot(overrides = {}) {
     snapshot({
       learningProgress: {
         syllableTraining: {
-          "two-letter-warmup": { completedIds: ["warmup-ba", "warmup-pa"] },
-          "vowel-nucleus": { completedIds: ["vowel-nucleus-01"], completed: false }
+          "two-letter-warmup": { completedIds: ["warmup-ba", "warmup-pa", "warmup-ta"] }
         }
       }
     }),
@@ -54,8 +53,7 @@ function snapshot(overrides = {}) {
       modifiedAt: "2026-07-28T01:00:00.000Z",
       learningProgress: {
         syllableTraining: {
-          "two-letter-warmup": { completedIds: ["warmup-pa", "warmup-ta"] },
-          "vowel-nucleus": { completedIds: ["vowel-nucleus-02"], completed: true }
+          "two-letter-warmup": { completedIds: ["warmup-ba", "warmup-pa"] }
         }
       }
     })
@@ -65,10 +63,47 @@ function snapshot(overrides = {}) {
     ["warmup-ba", "warmup-pa", "warmup-ta"],
     "cloud merge should retain unique source-backed warmup submissions"
   );
+}
+
+{
+  const completedWarmup = {
+    completedIds: [
+      "warmup-ba", "warmup-pa", "warmup-ta", "warmup-na", "warmup-la",
+      "warmup-ma", "warmup-be-e", "warmup-pe-e", "warmup-te-e", "warmup-ne-e"
+    ],
+    completed: true
+  };
+  const merged = mergeSnapshots(
+    snapshot({
+      learningProgress: {
+        syllableTraining: {
+          "two-letter-warmup": completedWarmup,
+          "vowel-nucleus": {
+            completedIds: [
+              "vowel-nucleus-01", "vowel-nucleus-02", "vowel-nucleus-03", "vowel-nucleus-04"
+            ],
+            completed: true
+          }
+        }
+      }
+    }),
+    snapshot({
+      modifiedAt: "2026-07-28T01:00:00.000Z",
+      learningProgress: {
+        syllableTraining: {
+          "two-letter-warmup": completedWarmup,
+          "vowel-nucleus": {
+            completedIds: ["vowel-nucleus-01", "vowel-nucleus-02"],
+            completed: false
+          }
+        }
+      }
+    })
+  );
   assert.deepEqual(
     [...merged.learningProgress.syllableTraining["vowel-nucleus"].completedIds],
-    ["vowel-nucleus-01", "vowel-nucleus-02"],
-    "cloud merge should union rule submissions instead of overwriting them"
+    ["vowel-nucleus-01", "vowel-nucleus-02", "vowel-nucleus-03", "vowel-nucleus-04"],
+    "cloud merge should retain the older device's valid longer rule prefix instead of overwriting it"
   );
   assert.equal(
     merged.learningProgress.syllableTraining["vowel-nucleus"].completed,

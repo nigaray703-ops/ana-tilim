@@ -316,6 +316,7 @@ const liveCanvasScreenIds = new Set([
   "comboWriting"
 ]);
 const latinWritingTabNavigationKeys = new Set(["ArrowLeft", "ArrowRight", "Home", "End"]);
+const syllableRuleAnswerNavigationKeys = new Set(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"]);
 const latinWritingStepIds = Object.freeze(["qwerty", "classification", "vowel-contrast", "dictation", "forms"]);
 const stableProgressIds = Object.freeze({
   latinWriting: new Set(latinWritingStepIds),
@@ -597,6 +598,11 @@ function applyLocalProgressData(saved) {
     return false;
   }
 
+  if (saved.learningProgress && typeof saved.learningProgress === "object") {
+    progressTransfer.validateLearningProgress(saved.learningProgress);
+    validateImportedProgressIds({ learningProgress: saved.learningProgress });
+  }
+
   state.preferences = normalizePreferences(saved.preferences);
 
   if (
@@ -806,6 +812,33 @@ function validateImportedProgressIds(saved) {
         if (!Array.isArray(completedIds) || completedIds.length !== expectedSubmittedCount) {
           throw new Error(`learningProgress.${scope}.${id} 未提交全部题目，不能标记完成`);
         }
+      }
+      if (scope === "syllableTraining") {
+        const expectedSubmittedCount =
+          id === syllableTraining.sections[0].id
+            ? syllableTraining.twoLetterItems.length
+            : syllableTraining.rules.find((rule) => rule.id === id)?.exercises.length;
+        if (Array.isArray(completedIds) && completedIds.length === expectedSubmittedCount && bucket[id].completed !== true) {
+          throw new Error(`learningProgress.${scope}.${id} 已提交全部题目，必须标记完成`);
+        }
+      }
+    }
+  }
+
+  const syllableProgress = saved.learningProgress?.syllableTraining;
+  if (syllableProgress && typeof syllableProgress === "object") {
+    const orderedStageIds = [syllableTraining.sections[0].id, ...syllableTraining.rules.map((rule) => rule.id)];
+    for (let index = 1; index < orderedStageIds.length; index += 1) {
+      const currentId = orderedStageIds[index];
+      const previousId = orderedStageIds[index - 1];
+      const currentEntry = syllableProgress[currentId];
+      const hasCurrentProgress =
+        currentEntry &&
+        Object.values(currentEntry).some(
+          (value) => value === true || (Array.isArray(value) && value.length > 0)
+        );
+      if (hasCurrentProgress && syllableProgress[previousId]?.completed !== true) {
+        throw new Error(`learningProgress.syllableTraining 必须先完成 ${previousId} 才能记录 ${currentId}`);
       }
     }
   }
@@ -3283,7 +3316,19 @@ function currentSyllableRule() {
 
 function syllableRuleExercise(rule) {
   const submittedIds = completedSyllableItemIds(rule.id);
-  return rule.exercises[Math.min(submittedIds.length, rule.exercises.length - 1)];
+  const currentIndex = state.syllableAnswerSubmitted
+    ? Math.max(0, submittedIds.length - 1)
+    : submittedIds.length;
+  return rule.exercises[Math.min(currentIndex, rule.exercises.length - 1)];
+}
+
+function focusSyllableRuleElement(selector) {
+  const focusElement = () => document.querySelector?.(selector)?.focus?.();
+  if (typeof window.requestAnimationFrame === "function") {
+    window.requestAnimationFrame(focusElement);
+  } else {
+    focusElement();
+  }
 }
 
 function renderSyllableRules() {
@@ -3295,6 +3340,9 @@ function renderSyllableRules() {
   const ruleComplete = submittedCount === rule.exercises.length;
   const isLastRule = ruleIndex === syllableTraining.rules.length - 1;
   const selectedAnswer = state.syllableAnswerId;
+  const displayedExerciseNumber = state.syllableAnswerSubmitted
+    ? Math.max(1, submittedCount)
+    : Math.min(submittedCount + 1, rule.exercises.length);
 
   return screen(
     `
@@ -3312,14 +3360,20 @@ function renderSyllableRules() {
           <p>${escapeHtml(rule.explanation)}</p>
           <p class="syllable-rule-scope">${escapeHtml(rule.scope)}</p>
         </article>
-        <article class="card syllable-exercise-card" data-syllable-exercise-id="${escapeHtml(exercise.id)}">
+        <article
+          class="card syllable-exercise-card"
+          data-syllable-exercise-id="${escapeHtml(exercise.id)}"
+          data-syllable-question
+          tabindex="-1"
+          aria-labelledby="syllable-exercise-prompt-${escapeHtml(exercise.id)}"
+        >
           <div class="section-row">
             <div>
               <p class="caption">当前规则练习</p>
-              <h2 class="section-title">${Math.min(submittedCount + 1, rule.exercises.length)} / ${rule.exercises.length}</h2>
+              <h2 class="section-title">${displayedExerciseNumber} / ${rule.exercises.length}</h2>
             </div>
           </div>
-          <p class="syllable-exercise-prompt">${escapeHtml(exercise.prompt)}</p>
+          <p class="syllable-exercise-prompt" id="syllable-exercise-prompt-${escapeHtml(exercise.id)}">${escapeHtml(exercise.prompt)}</p>
           ${
             !ruleComplete && !state.syllableAnswerSubmitted
               ? `
@@ -3348,7 +3402,7 @@ function renderSyllableRules() {
           ${
             state.syllableAnswerSubmitted
               ? `
-                <div class="feedback ${selectedAnswer === "answer" ? "good" : "bad"}" role="status">
+                <div class="feedback ${selectedAnswer === "answer" ? "good" : "bad"}" data-syllable-feedback role="status" tabindex="-1">
                   <strong>${selectedAnswer === "answer" ? "判断正确" : "再看一次规则"}</strong>
                   <p>${escapeHtml(rule.explanation)}</p>
                 </div>
@@ -6307,6 +6361,9 @@ document.addEventListener("click", (event) => {
     if (!["answer", "distractor"].includes(button.dataset.answerId) || state.syllableAnswerSubmitted) return;
     state.syllableAnswerId = button.dataset.answerId;
     render();
+    focusSyllableRuleElement(
+      `[data-action="pick-syllable-rule-answer"][data-answer-id="${state.syllableAnswerId}"]`
+    );
     return;
   }
 
@@ -6317,6 +6374,7 @@ document.addEventListener("click", (event) => {
     submitSyllableItem(rule.id, exercise.id, rule.exercises.map((item) => item.id));
     state.syllableAnswerSubmitted = true;
     render();
+    focusSyllableRuleElement("[data-syllable-feedback]");
     return;
   }
 
@@ -6325,6 +6383,7 @@ document.addEventListener("click", (event) => {
     state.syllableAnswerId = "";
     state.syllableAnswerSubmitted = false;
     render();
+    focusSyllableRuleElement("[data-syllable-question]");
     return;
   }
 
@@ -6338,6 +6397,7 @@ document.addEventListener("click", (event) => {
     state.syllableAnswerId = "";
     state.syllableAnswerSubmitted = false;
     render();
+    focusSyllableRuleElement("[data-syllable-question]");
     return;
   }
 
@@ -7169,6 +7229,36 @@ document.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (state.screen === "syllableRules") {
+    const option = event.target?.closest?.('[data-action="pick-syllable-rule-answer"]');
+    if (
+      option &&
+      syllableRuleAnswerNavigationKeys.has(event.key) &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      !event.metaKey &&
+      !state.syllableAnswerSubmitted
+    ) {
+      const answerIds = ["answer", "distractor"];
+      const currentIndex = Math.max(0, answerIds.indexOf(option.dataset.answerId));
+      const nextIndex =
+        event.key === "Home"
+          ? 0
+          : event.key === "End"
+            ? answerIds.length - 1
+            : ["ArrowLeft", "ArrowUp"].includes(event.key)
+              ? (currentIndex - 1 + answerIds.length) % answerIds.length
+              : (currentIndex + 1) % answerIds.length;
+      event.preventDefault();
+      state.syllableAnswerId = answerIds[nextIndex];
+      render();
+      focusSyllableRuleElement(
+        `[data-action="pick-syllable-rule-answer"][data-answer-id="${state.syllableAnswerId}"]`
+      );
+      return;
+    }
+  }
+
   if (state.screen === "latinWritingForms") {
     const tab = event.target?.closest?.("[data-latin-writing-form-tab]");
     if (tab && latinWritingTabNavigationKeys.has(event.key) && !event.ctrlKey && !event.altKey && !event.metaKey) {

@@ -384,6 +384,7 @@ let audioPlayShouldReject = false;
 let profileDisplayNameValue = "";
 let profileDisplayNameFocused = false;
 let authPanelToggleFocused = false;
+let focusedSyllableSelector = "";
 const context = {
   console,
   document: {
@@ -404,6 +405,20 @@ const context = {
           },
           focus() {
             profileDisplayNameFocused = true;
+          }
+        };
+      }
+      if (
+        [
+          '[data-action="pick-syllable-rule-answer"][data-answer-id="answer"]',
+          '[data-action="pick-syllable-rule-answer"][data-answer-id="distractor"]',
+          "[data-syllable-feedback]",
+          "[data-syllable-question]"
+        ].includes(selector)
+      ) {
+        return {
+          focus() {
+            focusedSyllableSelector = selector;
           }
         };
       }
@@ -1674,6 +1689,61 @@ function importProgressDirect(text) {
 const validPendingBeforeSemanticFailures = importProgressDirect(globalImportText);
 const pendingBytesBeforeSemanticFailures = JSON.stringify(validPendingBeforeSemanticFailures);
 const runtimeBytesBeforeSemanticFailures = vm.runInContext("JSON.stringify(buildLocalProgressData())", context);
+const completeVowelNucleusIds = [
+  "vowel-nucleus-01",
+  "vowel-nucleus-02",
+  "vowel-nucleus-03",
+  "vowel-nucleus-04"
+];
+const completeWarmupProgress = {
+  completedIds: [
+    "warmup-ba", "warmup-pa", "warmup-ta", "warmup-na", "warmup-la",
+    "warmup-ma", "warmup-be-e", "warmup-pe-e", "warmup-te-e", "warmup-ne-e"
+  ],
+  completed: true
+};
+const completeVowelNucleusProgress = { completedIds: completeVowelNucleusIds, completed: true };
+const completeSingleConsonantProgress = {
+  completedIds: [
+    "single-consonant-boundary-01",
+    "single-consonant-boundary-02",
+    "single-consonant-boundary-03",
+    "single-consonant-boundary-04"
+  ],
+  completed: true
+};
+const completeRuleWithoutCompletion = {
+  learningProgress: {
+    syllableTraining: {
+      "vowel-nucleus": { completedIds: completeVowelNucleusIds }
+    }
+  }
+};
+assert.throws(
+  () => vm.runInContext(`applyLocalProgressData(${JSON.stringify(completeRuleWithoutCompletion)})`, context),
+  /learningProgress\.syllableTraining\.vowel-nucleus 已提交全部题目，必须标记完成/,
+  "local hydration must reject four submitted rule IDs without its completion flag"
+);
+assert.equal(
+  vm.runInContext("JSON.stringify(buildLocalProgressData())", context),
+  runtimeBytesBeforeSemanticFailures,
+  "rejected local syllable progress must not partially mutate runtime data"
+);
+assert.throws(
+  () => vm.runInContext(`validateCloudProgressSnapshot(${JSON.stringify(completeRuleWithoutCompletion)})`, context),
+  /learningProgress\.syllableTraining\.vowel-nucleus 已提交全部题目，必须标记完成/,
+  "cloud validation must reject four submitted rule IDs without its completion flag"
+);
+for (const [boundaryName, expression] of [
+  ["local hydration", `applyLocalProgressData(${JSON.stringify({ learningProgress: { syllableTraining: { "vowel-nucleus": { completedIds: completeVowelNucleusIds, completed: false } } } })})`],
+  ["cloud validation", `validateCloudProgressSnapshot(${JSON.stringify({ learningProgress: { syllableTraining: { "vowel-nucleus": { completedIds: completeVowelNucleusIds, completed: false } } } })})`]
+]) {
+  assert.throws(
+    () => vm.runInContext(expression, context),
+    /learningProgress\.syllableTraining\.vowel-nucleus 已提交全部题目，必须标记完成/,
+    `${boundaryName} must reject four submitted rule IDs with an explicit false completion flag`
+  );
+}
 const semanticInvalidCases = [
   ["screen", { screen: "unknown-screen" }, /未知页面 ID: unknown-screen/],
   ["current letter", { currentLetterId: "unknown-letter" }, /未知 currentLetterId: unknown-letter/],
@@ -1718,9 +1788,73 @@ const semanticInvalidCases = [
     /learningProgress\.syllableTraining\.vowel-nucleus 未提交全部题目，不能标记完成/
   ],
   [
+    "complete syllable submissions missing completion",
+    { learningProgress: { syllableTraining: { "vowel-nucleus": { completedIds: completeVowelNucleusIds } } } },
+    /learningProgress\.syllableTraining\.vowel-nucleus 已提交全部题目，必须标记完成/
+  ],
+  [
+    "complete syllable submissions with false completion",
+    { learningProgress: { syllableTraining: { "vowel-nucleus": { completedIds: completeVowelNucleusIds, completed: false } } } },
+    /learningProgress\.syllableTraining\.vowel-nucleus 已提交全部题目，必须标记完成/
+  ],
+  [
     "out-of-order syllable submission",
     { learningProgress: { syllableTraining: { "vowel-nucleus": { completedIds: ["vowel-nucleus-02"] } } } },
     /learningProgress\.syllableTraining\.vowel-nucleus\.completedIds 必须按课程顺序提交/
+  ],
+  [
+    "rule progress before warmup completion",
+    {
+      learningProgress: {
+        syllableTraining: {
+          "two-letter-warmup": { completedIds: ["warmup-ba"] },
+          "vowel-nucleus": { completedIds: ["vowel-nucleus-01"] }
+        }
+      }
+    },
+    /learningProgress\.syllableTraining 必须先完成 two-letter-warmup 才能记录 vowel-nucleus/
+  ],
+  [
+    "rule two progress before rule one completion",
+    {
+      learningProgress: {
+        syllableTraining: {
+          "two-letter-warmup": completeWarmupProgress,
+          "vowel-nucleus": { completedIds: ["vowel-nucleus-01"] },
+          "single-consonant-boundary": { completedIds: ["single-consonant-boundary-01"] }
+        }
+      }
+    },
+    /learningProgress\.syllableTraining 必须先完成 vowel-nucleus 才能记录 single-consonant-boundary/
+  ],
+  [
+    "rule three progress before rule two completion",
+    {
+      learningProgress: {
+        syllableTraining: {
+          "two-letter-warmup": completeWarmupProgress,
+          "vowel-nucleus": completeVowelNucleusProgress,
+          "single-consonant-boundary": { completedIds: ["single-consonant-boundary-01"] },
+          "two-consonant-boundary": { completedIds: ["two-consonant-boundary-01"] }
+        }
+      }
+    },
+    /learningProgress\.syllableTraining 必须先完成 single-consonant-boundary 才能记录 two-consonant-boundary/
+  ],
+  [
+    "rule four progress before rule three completion",
+    {
+      learningProgress: {
+        syllableTraining: {
+          "two-letter-warmup": completeWarmupProgress,
+          "vowel-nucleus": completeVowelNucleusProgress,
+          "single-consonant-boundary": completeSingleConsonantProgress,
+          "two-consonant-boundary": { completedIds: ["two-consonant-boundary-01"] },
+          "suffix-boundary": { completedIds: ["suffix-boundary-01"] }
+        }
+      }
+    },
+    /learningProgress\.syllableTraining 必须先完成 two-consonant-boundary 才能记录 suffix-boundary/
   ],
   [
     "vocabulary progress key",
@@ -3452,9 +3586,58 @@ includesAll(
 assert.ok(!app.innerHTML.includes("一个辅音时先尝试向后分"), "the next rule must remain locked until all four current exercises are submitted");
 assert.equal((app.innerHTML.match(/data-action="pick-syllable-rule-answer"/g) || []).length, 2, "each exercise should offer one approved answer and one distractor");
 
-clickDataset({ action: "pick-syllable-rule-answer", answerId: "distractor" });
+focusedSyllableSelector = "";
+clickDataset({ action: "pick-syllable-rule-answer", answerId: "answer" });
+assert.equal(
+  focusedSyllableSelector,
+  '[data-action="pick-syllable-rule-answer"][data-answer-id="answer"]',
+  "selecting a rule answer should restore focus to the selected option after render"
+);
+let syllableArrowPrevented = false;
+keydownHandler({
+  key: "ArrowDown",
+  ctrlKey: false,
+  altKey: false,
+  metaKey: false,
+  target: {
+    closest(selector) {
+      assert.equal(selector, '[data-action="pick-syllable-rule-answer"]');
+      return { dataset: { answerId: "answer" } };
+    }
+  },
+  preventDefault() {
+    syllableArrowPrevented = true;
+  }
+});
+assert.equal(syllableArrowPrevented, true, "arrow navigation between rule answers should prevent page scrolling");
+assert.equal(vm.runInContext("state.syllableAnswerId", context), "distractor", "ArrowDown should move to the next rule answer");
+assert.equal(
+  focusedSyllableSelector,
+  '[data-action="pick-syllable-rule-answer"][data-answer-id="distractor"]',
+  "keyboard answer navigation should restore focus to the new option"
+);
 clickDataset({ action: "submit-syllable-rule-answer" });
 includesAll(app.innerHTML, ["再看一次规则", "这是帮助初学者找候选音节的方法", "继续下一题"], "wrong syllable answer feedback");
+includesAll(
+  app.innerHTML,
+  ['data-syllable-question', 'tabindex="-1"', 'aria-labelledby="syllable-exercise-prompt-vowel-nucleus-01"', 'data-syllable-feedback'],
+  "focusable syllable question and feedback regions"
+);
+assert.equal(focusedSyllableSelector, "[data-syllable-feedback]", "submitting a rule answer should focus its feedback");
+includesAll(
+  app.innerHTML,
+  ['data-syllable-exercise-id="vowel-nucleus-01"', "با 有几个候选音节中心？", "1 / 4"],
+  "submitted first syllable exercise feedback"
+);
+assert.match(
+  app.innerHTML,
+  /data-syllable-exercise-id="vowel-nucleus-01"[\s\S]*?<h2 class="section-title">1 \/ 4<\/h2>/,
+  "submitted exercise one should keep its own 1 / 4 counter before Continue"
+);
+assert.ok(
+  !app.innerHTML.includes("بە 有几个候选音节中心？"),
+  "submitting exercise one must not replace its prompt with exercise two before Continue"
+);
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.syllableTraining['vowel-nucleus'])", context)),
   { completedIds: ["vowel-nucleus-01"] },
@@ -3462,6 +3645,7 @@ assert.deepEqual(
 );
 clickDataset({ action: "next-syllable-rule-exercise" });
 assert.ok(app.innerHTML.includes("بە 有几个候选音节中心？"), "the learner should be able to continue after a wrong answer");
+assert.equal(focusedSyllableSelector, "[data-syllable-question]", "continuing should focus the next question region");
 
 for (let exerciseIndex = 1; exerciseIndex < 4; exerciseIndex += 1) {
   clickDataset({ action: "pick-syllable-rule-answer", answerId: "answer" });
