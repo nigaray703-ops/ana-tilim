@@ -98,8 +98,13 @@ assert.match(
 );
 assert.match(
   styleSource,
-  /\.letter-focus-copy\s*\{[^}]*grid-template-rows:\s*minmax\(96px,\s*auto\)\s+auto\s+auto;/s,
+  /\.letter-focus-copy\s*\{[^}]*grid-template-rows:\s*minmax\(124px,\s*auto\)\s+auto\s+auto;[^}]*gap:\s*12px;/s,
   "large letter, category, and ULY should occupy separate stable rows"
+);
+assert.match(
+  styleSource,
+  /\.letter-focus \.letter-big\s*\{[^}]*min-height:\s*124px;[^}]*padding-block:\s*14px 18px;[^}]*line-height:\s*1\.35;/s,
+  "every large Uyghur letter should keep enough ink clearance from the Chinese type and ULY rows"
 );
 assert.match(
   styleSource,
