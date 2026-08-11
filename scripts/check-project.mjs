@@ -321,6 +321,11 @@ const checks = [
     args: ["tests/webm-audio.test.mjs"]
   },
   {
+    label: "test: perceived audio loudness",
+    command: node,
+    args: ["--test", "tests/audio-loudness.test.mjs"]
+  },
+  {
     label: "test: recording studio catalog",
     command: node,
     args: ["tests/recording-studio-catalog.test.mjs"]
