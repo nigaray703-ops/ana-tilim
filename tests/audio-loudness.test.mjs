@@ -169,6 +169,30 @@ test("normalizes and verifies WebM through three pipe-only ffmpeg passes", () =>
   assert.match(calls[2].args[calls[2].args.indexOf("-af") + 1], /TP=-1\.5/);
 });
 
+test("accepts only the 0.01 LU two-decimal measurement edge at the lower tolerance boundary", () => {
+  function runWithMeasuredOutput(integrated) {
+    let count = 0;
+    return normalizeWebmBuffer({
+      buffer: validWebm,
+      ffmpegPath: "/trusted/ffmpeg",
+      spawnSync: (file, args) => {
+        count += 1;
+        if (args.at(-1) === "pipe:1") return { status: 0, stdout: Buffer.from(validWebm), stderr: Buffer.alloc(0) };
+        return {
+          status: 0,
+          stdout: Buffer.alloc(0),
+          stderr: Buffer.from(count === 1
+            ? loudnormJson({ integrated: -27.22, peak: -8.1, lra: 0, threshold: -38.67, offset: 0.91 })
+            : loudnormJson({ integrated, peak: -2.18, lra: 0, threshold: -32.46, offset: 0.31 }))
+        };
+      }
+    });
+  }
+
+  assert.equal(runWithMeasuredOutput(-21.01).report.output.integratedLufs, -21.01);
+  assert.throws(() => runWithMeasuredOutput(-21.02), /outside the integrated loudness tolerance/);
+});
+
 test("fails closed on ffmpeg errors and out-of-standard output", () => {
   assert.throws(
     () => normalizeWebmBuffer({

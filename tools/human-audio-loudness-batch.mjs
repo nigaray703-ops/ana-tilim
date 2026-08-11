@@ -4,7 +4,11 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { LOUDNESS_STANDARD, normalizeWebmBuffer } from "./lib/audio-loudness.mjs";
+import {
+  LOUDNESS_STANDARD,
+  isIntegratedLoudnessWithinTolerance,
+  normalizeWebmBuffer
+} from "./lib/audio-loudness.mjs";
 import { validateWebmBuffer } from "./lib/webm-audio.mjs";
 import { buildRecordingCatalog } from "./recording-studio/catalog.mjs";
 
@@ -356,7 +360,7 @@ export function createHumanAudioLoudnessBatch({
       assertFiniteMeasurement(operation.loudness.input, `input loudness ${operation.relativePath}`);
       assertFiniteMeasurement(operation.loudness.output, `output loudness ${operation.relativePath}`);
       assert.ok(
-        Math.abs(operation.loudness.output.integratedLufs - LOUDNESS_STANDARD.integratedLufs) <= LOUDNESS_STANDARD.integratedToleranceLu,
+        isIntegratedLoudnessWithinTolerance(operation.loudness.output.integratedLufs),
         `staged audio loudness is outside tolerance for ${operation.relativePath}`
       );
       assert.ok(

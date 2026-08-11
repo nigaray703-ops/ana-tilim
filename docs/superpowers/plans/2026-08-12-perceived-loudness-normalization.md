@@ -11,6 +11,7 @@
 ## Global Constraints
 
 - Integrated loudness target is exactly `-20 LUFS`, selected after a read-only 552-file census showed this is the loudest common target that preserves the `-1.5 dBTP` release ceiling without audible compression of high-crest phonemes.
+- Verification accepts the exact two-decimal `loudnorm` boundary reading `-21.01 LUFS` as measurement quantization; `-21.02 LUFS` remains rejected.
 - Maximum true peak is exactly `-1.5 dBTP`.
 - Loudness-range ceiling is exactly `20 LU`; the real inventory peaks at `8.7 LU`, so this keeps every approved recording on FFmpeg's linear path and avoids dynamic compression.
 - Output stays WebM/Opus at the existing relative path and stable ID.

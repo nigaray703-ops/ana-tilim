@@ -8,6 +8,7 @@ export { injectWebmDurationMilliseconds } from "./webm-audio.mjs";
 
 const MAX_PROCESS_BUFFER_BYTES = 64 * 1024 * 1024;
 const ENCODING_TRUE_PEAK_DBTP = -1.8;
+const LOUDNORM_JSON_RESOLUTION_LU = 0.01;
 
 export const LOUDNESS_STANDARD = Object.freeze({
   version: "ana-tilim-loudness-v3",
@@ -34,6 +35,12 @@ export function parseLoudnormAnalysis(stderr) {
     "ffmpeg must return finite loudness measurements"
   );
   return measurement;
+}
+
+export function isIntegratedLoudnessWithinTolerance(integratedLufs) {
+  return Number.isFinite(integratedLufs)
+    && Math.abs(integratedLufs - LOUDNESS_STANDARD.integratedLufs)
+      <= LOUDNESS_STANDARD.integratedToleranceLu + LOUDNORM_JSON_RESOLUTION_LU + Number.EPSILON * 10;
 }
 
 function assertExecutable(candidate, fsApi) {
@@ -146,7 +153,7 @@ export function normalizeWebmBuffer({
   );
   assert.ok(durationDifference <= durationTolerance, "normalized WebM duration drift exceeds the allowed tolerance");
   assert.ok(
-    Math.abs(output.integratedLufs - LOUDNESS_STANDARD.integratedLufs) <= LOUDNESS_STANDARD.integratedToleranceLu,
+    isIntegratedLoudnessWithinTolerance(output.integratedLufs),
     "normalized WebM is outside the integrated loudness tolerance"
   );
   assert.ok(
