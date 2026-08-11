@@ -2,9 +2,12 @@ import assert from "node:assert/strict";
 import childProcess from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { validateWebmBuffer } from "./webm-audio.mjs";
+import { injectWebmDurationMilliseconds, validateWebmBuffer } from "./webm-audio.mjs";
+
+export { injectWebmDurationMilliseconds } from "./webm-audio.mjs";
 
 const MAX_PROCESS_BUFFER_BYTES = 64 * 1024 * 1024;
+const ENCODING_TRUE_PEAK_DBTP = -1.8;
 
 export const LOUDNESS_STANDARD = Object.freeze({
   version: "ana-tilim-loudness-v1",
@@ -92,17 +95,17 @@ export function resolveFfmpegPath({
   return executable;
 }
 
-function analysisArgs() {
+function analysisArgs(truePeakDbtp = LOUDNESS_STANDARD.truePeakDbtp) {
   return [
     "-hide_banner", "-nostdin", "-i", "pipe:0",
-    "-af", `loudnorm=I=${LOUDNESS_STANDARD.integratedLufs}:TP=${LOUDNESS_STANDARD.truePeakDbtp}:LRA=${LOUDNESS_STANDARD.lraLu}:print_format=json`,
+    "-af", `loudnorm=I=${LOUDNESS_STANDARD.integratedLufs}:TP=${truePeakDbtp}:LRA=${LOUDNESS_STANDARD.lraLu}:print_format=json`,
     "-f", "null", "-"
   ];
 }
 
 function normalizationArgs(input) {
   const filter = [
-    `loudnorm=I=${LOUDNESS_STANDARD.integratedLufs}:TP=${LOUDNESS_STANDARD.truePeakDbtp}:LRA=${LOUDNESS_STANDARD.lraLu}`,
+    `loudnorm=I=${LOUDNESS_STANDARD.integratedLufs}:TP=${ENCODING_TRUE_PEAK_DBTP}:LRA=${LOUDNESS_STANDARD.lraLu}`,
     `measured_I=${input.integratedLufs}`,
     `measured_LRA=${input.lraLu}`,
     `measured_TP=${input.truePeakDbtp}`,
@@ -114,6 +117,7 @@ function normalizationArgs(input) {
   return [
     "-hide_banner", "-nostdin", "-i", "pipe:0",
     "-map_metadata", "-1",
+    "-fflags", "+bitexact",
     "-af", filter,
     "-c:a", "libopus", "-b:a", "64k", "-vbr", "on", "-application", "voip",
     "-f", "webm", "pipe:1"
@@ -127,10 +131,10 @@ export function normalizeWebmBuffer({
 }) {
   assert.ok(path.isAbsolute(ffmpegPath), "ffmpeg path must be absolute");
   const inputValidation = validateWebmBuffer(buffer);
-  const firstPass = runProcess(spawnSync, ffmpegPath, analysisArgs(), { input: buffer }, "ffmpeg analysis");
+  const firstPass = runProcess(spawnSync, ffmpegPath, analysisArgs(ENCODING_TRUE_PEAK_DBTP), { input: buffer }, "ffmpeg analysis");
   const input = parseLoudnormAnalysis(firstPass.stderr);
   const normalization = runProcess(spawnSync, ffmpegPath, normalizationArgs(input), { input: buffer }, "ffmpeg normalization");
-  const outputBuffer = normalization.stdout;
+  const outputBuffer = injectWebmDurationMilliseconds(normalization.stdout, inputValidation.durationMs);
   const outputValidation = validateWebmBuffer(outputBuffer);
   const verification = runProcess(spawnSync, ffmpegPath, analysisArgs(), { input: outputBuffer }, "ffmpeg output verification");
   const output = parseLoudnormAnalysis(verification.stderr);

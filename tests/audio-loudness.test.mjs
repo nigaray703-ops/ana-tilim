@@ -4,14 +4,35 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
+  injectWebmDurationMilliseconds,
   LOUDNESS_STANDARD,
   normalizeWebmBuffer,
   parseLoudnormAnalysis,
   resolveFfmpegPath
 } from "../tools/lib/audio-loudness.mjs";
+import { readWebmDurationMilliseconds } from "../tools/lib/webm-audio.mjs";
 
 const projectRoot = path.resolve(import.meta.dirname, "..");
 const validWebm = fs.readFileSync(path.join(projectRoot, "prototype/assets/audio/human/alphabet/human_letter_01_b.webm"));
+
+test("injects a real Info duration into a pipe-produced WebM without moving later elements", () => {
+  const expectedDuration = readWebmDurationMilliseconds(validWebm);
+  const durationOffset = validWebm.indexOf(Buffer.from([0x44, 0x89]));
+  assert.ok(durationOffset > 0 && durationOffset < 1024, "fixture duration must be inside the WebM Info element");
+  const withoutDuration = Buffer.from(validWebm);
+  const durationValueBytes = withoutDuration[durationOffset + 2] & 0x7f;
+  withoutDuration[durationOffset] = 0xec;
+  withoutDuration[durationOffset + 1] = 0x80 | (durationValueBytes + 1);
+  assert.throws(() => readWebmDurationMilliseconds(withoutDuration), /duration element/);
+  const tracksId = Buffer.from([0x16, 0x54, 0xae, 0x6b]);
+  const tracksOffset = withoutDuration.indexOf(tracksId);
+
+  const repaired = injectWebmDurationMilliseconds(withoutDuration, expectedDuration);
+
+  assert.equal(repaired.length, withoutDuration.length);
+  assert.equal(repaired.indexOf(tracksId), tracksOffset);
+  assert.equal(readWebmDurationMilliseconds(repaired), expectedDuration);
+});
 
 function loudnormJson({ integrated = -25, peak = -5, lra = 1, threshold = -35, offset = 0 } = {}) {
   return `{
@@ -137,12 +158,15 @@ test("normalizes and verifies WebM through three pipe-only ffmpeg passes", () =>
   assert.equal(calls[2].input.equals(validWebm), true);
   assert.ok(calls[1].args.includes("-map_metadata"));
   assert.ok(calls[1].args.includes("-1"));
+  assert.deepEqual(calls[1].args.slice(calls[1].args.indexOf("-fflags"), calls[1].args.indexOf("-fflags") + 2), ["-fflags", "+bitexact"]);
   assert.ok(calls[1].args.includes("libopus"));
   const filter = calls[1].args[calls[1].args.indexOf("-af") + 1];
   for (const literal of [
-    "I=-18", "TP=-1.5", "LRA=7", "measured_I=-26.31", "measured_LRA=1.2",
+    "I=-18", "TP=-1.8", "LRA=7", "measured_I=-26.31", "measured_LRA=1.2",
     "measured_TP=-5.42", "measured_thresh=-36.8", "offset=0.02", "linear=true"
   ]) assert.match(filter, new RegExp(literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.match(calls[0].args[calls[0].args.indexOf("-af") + 1], /TP=-1\.8/);
+  assert.match(calls[2].args[calls[2].args.indexOf("-af") + 1], /TP=-1\.5/);
 });
 
 test("fails closed on ffmpeg errors and out-of-standard output", () => {
