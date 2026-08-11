@@ -14,7 +14,11 @@ const HASH_PATTERN = /^[a-f0-9]{64}$/;
 const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const ALL_STATUSES = new Set(["pending-review", "pending", "needs-rerecord", "recorded", "approved-current", "approved-take", "imported"]);
 const MANUAL_STATUSES = new Set(["pending-review", "pending", "needs-rerecord"]);
-const RETIRED_TARGET_IDS = new Set(["vocab:hayr"]);
+const RETIRED_TARGET_STATUSES = new Map([
+  ["vocab:hayr", "pending-review"],
+  ["reading:grammar-person-verbs-1", "pending"],
+  ["reading:sentence-self-introduction-4", "pending"]
+]);
 
 function isInside(root, candidate) {
   const relative = path.relative(root, candidate);
@@ -282,10 +286,11 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
 
     const migrated = clone(state);
     for (const stableId of retiredIds) {
-      assert.ok(RETIRED_TARGET_IDS.has(stableId), `recording workspace contains unknown target: ${stableId}`);
+      const expectedRetiredStatus = RETIRED_TARGET_STATUSES.get(stableId);
+      assert.ok(expectedRetiredStatus, `recording workspace contains unknown target: ${stableId}`);
       const retired = migrated.targets[stableId];
       assert.ok(
-        retired?.status === "pending-review" && retired.approvedTakeId === null && Array.isArray(retired.takes) && retired.takes.length === 0,
+        retired?.status === expectedRetiredStatus && retired.approvedTakeId === null && Array.isArray(retired.takes) && retired.takes.length === 0,
         `retired recording target still contains learner work: ${stableId}`
       );
       delete migrated.targets[stableId];

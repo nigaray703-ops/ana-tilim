@@ -23,7 +23,7 @@ const CATEGORY_COUNTS = Object.freeze({
 
 const NEEDS_RERECORD_IDS = new Set(["alphabet:zhe", "vocab:korushkunche"]);
 const FINAL_ADDITIONS_PATH = "课程/语法与基础句型/final-reading-additions.json";
-const FINAL_ADDITIONS_HASH = "083d77edde5e5db9aff650a48e32a7042d092afc38645fef5931fa351c0e34d9";
+const FINAL_ADDITIONS_HASH = "d215185773451f3bd6cfddce51d5137d70f0207ef3893635b01ee9302edc6912";
 const FINAL_ADDITION_GROUPS = Object.freeze([
   ["grammar-person-verbs", 3],
   ["grammar-possession", 3],
@@ -33,6 +33,10 @@ const FINAL_ADDITION_GROUPS = Object.freeze([
   ["sentence-location-direction", 4],
   ["sentence-ability-preference", 4],
   ["sentence-polite-reason", 4]
+]);
+const FINAL_AUDIO_REUSES = Object.freeze([
+  ["grammar-person-verbs-1", "reading:grammar-word-order-1"],
+  ["sentence-self-introduction-4", "reading:grammar-copula-2"]
 ]);
 const MISSING_ENGLISH = "暂无英语释义";
 const COURSE_PROJECT_ROOT = path.resolve(import.meta.dirname, "../..");
@@ -53,6 +57,10 @@ const COURSE_DATA_SCRIPTS = Object.freeze([
 
 function recordingTextHash({ value, latin, meaning, english }) {
   return crypto.createHash("sha256").update(JSON.stringify({ value, latin, meaning, english })).digest("hex");
+}
+
+function normalizedSpokenText(value) {
+  return value.normalize("NFC").replace(/[.!?؟،,:;؛]+$/u, "").replace(/[\s\u00a0]+/g, " ").trim();
 }
 
 function stableSourceId(category, item) {
@@ -302,11 +310,17 @@ function loadApprovedFirstTimeRecordings(projectRoot) {
     latin: item.latin,
     meaning: item.meaningZh,
     english: item.meaningEn,
+    reuseAudioFromStableId: item.reuseAudioFromStableId,
     file: `human_reading_${item.id.replaceAll("-", "_")}.webm`,
     outputPath: `./assets/audio/human/reading/human_reading_${item.id.replaceAll("-", "_")}.webm`
   })));
 
   assert.equal(readingTargets.length, 28);
+  assert.deepEqual(
+    readingTargets.filter((target) => target.reuseAudioFromStableId).map((target) => [target.sourceId, target.reuseAudioFromStableId]),
+    FINAL_AUDIO_REUSES,
+    "approved audio reuse contract drift"
+  );
   assert.equal(contract.vocabularyCorrections.length, 1);
   const correction = contract.vocabularyCorrections[0];
   const vocabularyTarget = {
@@ -376,9 +390,23 @@ export function buildRecordingCatalog({ projectRoot }) {
   }
 
   for (const candidate of loadApprovedFirstTimeRecordings(normalizedProjectRoot)) {
+    const matchingExistingTargets = targets.filter((target) => normalizedSpokenText(target.value) === normalizedSpokenText(candidate.value));
+    if (candidate.reuseAudioFromStableId) {
+      const reusableTarget = targets.find((target) => target.stableId === candidate.reuseAudioFromStableId);
+      assert.ok(reusableTarget, `approved reused audio target is missing: ${candidate.reuseAudioFromStableId}`);
+      assert.equal(reusableTarget.playable, true, `approved reused audio target must be playable: ${candidate.reuseAudioFromStableId}`);
+      assert.equal(normalizedSpokenText(reusableTarget.value), normalizedSpokenText(candidate.value), `approved reused audio text drift for ${candidate.sourceId}`);
+      assert.ok(fs.statSync(reusableTarget.absoluteOutputPath).size > 0, `approved reused audio file is empty: ${candidate.reuseAudioFromStableId}`);
+      continue;
+    }
+    assert.equal(
+      matchingExistingTargets.length,
+      0,
+      `first-time recording duplicates existing audio text: ${candidate.category}:${candidate.sourceId}`
+    );
     targets.push(normalizeFirstTimeTarget({ projectRoot: normalizedProjectRoot, candidate, stableIds }));
   }
 
-  assert.equal(targets.length, 555, "recording catalog count drift");
+  assert.equal(targets.length, 553, "recording catalog count drift");
   return Object.freeze({ schemaVersion: 1, generatedAt: new Date().toISOString(), targets: Object.freeze(targets) });
 }

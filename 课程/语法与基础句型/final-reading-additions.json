@@ -14,7 +14,7 @@
           "ruleEn": "Identify the subject, then notice how the verb ending changes with person.",
           "reviewStatus": "approved",
           "items": [
-            { "id": "grammar-person-verbs-1", "value": "مەن كىتاب ئوقۇيمەن.", "latin": "Men kitab oquymen.", "meaningZh": "我读书。", "meaningEn": "I read a book.", "patternZh": "我 + 读", "patternEn": "I + read", "lessonZh": "第一人称动词结尾", "lessonEn": "First-person verb ending", "reviewStatus": "approved" },
+            { "id": "grammar-person-verbs-1", "value": "مەن كىتاب ئوقۇيمەن.", "latin": "Men kitab oquymen.", "meaningZh": "我读书。", "meaningEn": "I read a book.", "patternZh": "我 + 读", "patternEn": "I + read", "lessonZh": "第一人称动词结尾", "lessonEn": "First-person verb ending", "reviewStatus": "approved", "reuseAudioFromStableId": "reading:grammar-word-order-1" },
             { "id": "grammar-person-verbs-2", "value": "سەن كىتاب ئوقۇيسەن.", "latin": "Sen kitab oquysen.", "meaningZh": "你读书。", "meaningEn": "You read a book.", "patternZh": "你 + 读", "patternEn": "You + read", "lessonZh": "第二人称动词结尾", "lessonEn": "Second-person verb ending", "reviewStatus": "approved" },
             { "id": "grammar-person-verbs-3", "value": "ئۇ كىتاب ئوقۇيدۇ.", "latin": "U kitab oquydu.", "meaningZh": "他（她）读书。", "meaningEn": "He or she reads a book.", "patternZh": "他（她）+ 读", "patternEn": "He or she + reads", "lessonZh": "第三人称动词结尾", "lessonEn": "Third-person verb ending", "reviewStatus": "approved" }
           ],
@@ -102,7 +102,7 @@
             { "id": "sentence-self-introduction-1", "value": "مېنىڭ ئىسمىم ئەلى.", "latin": "Mëning ismim Eli.", "meaningZh": "我的名字叫艾力。", "meaningEn": "My name is Eli.", "patternZh": "我的名字 + 艾力", "patternEn": "My name + Eli", "lessonZh": "介绍姓名", "lessonEn": "Introducing a name", "reviewStatus": "approved" },
             { "id": "sentence-self-introduction-2", "value": "مەن ئون ياشتا.", "latin": "Men on yashta.", "meaningZh": "我十岁。", "meaningEn": "I am ten years old.", "patternZh": "我 + 十岁", "patternEn": "I + ten years old", "lessonZh": "介绍年龄", "lessonEn": "Introducing age", "reviewStatus": "approved" },
             { "id": "sentence-self-introduction-3", "value": "مەن قەشقەردىن كەلدىم.", "latin": "Men Qeshqerdin keldim.", "meaningZh": "我来自喀什。", "meaningEn": "I come from Kashgar.", "patternZh": "我 + 来自喀什", "patternEn": "I + from Kashgar", "lessonZh": "介绍家乡", "lessonEn": "Introducing hometown", "reviewStatus": "approved" },
-            { "id": "sentence-self-introduction-4", "value": "مەن ئوقۇغۇچى.", "latin": "Men oqughuchi.", "meaningZh": "我是学生。", "meaningEn": "I am a student.", "patternZh": "我 + 学生", "patternEn": "I + student", "lessonZh": "介绍身份", "lessonEn": "Introducing a role", "reviewStatus": "approved" }
+            { "id": "sentence-self-introduction-4", "value": "مەن ئوقۇغۇچى.", "latin": "Men oqughuchi.", "meaningZh": "我是学生。", "meaningEn": "I am a student.", "patternZh": "我 + 学生", "patternEn": "I + student", "lessonZh": "介绍身份", "lessonEn": "Introducing a role", "reviewStatus": "approved", "reuseAudioFromStableId": "reading:grammar-copula-2" }
           ],
           "training": {
             "steps": ["rule", "compare", "recognition", "ordering", "completion"],
