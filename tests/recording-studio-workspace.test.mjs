@@ -421,7 +421,8 @@ test("refuses a take whose validated bytes were replaced after saving", () => {
   const workspace = createRecordingWorkspace(options);
   const take = workspace.saveTake({ stableId: "alphabet:aa", buffer: validWebm });
   const takePath = path.join(options.workspaceRoot, take.relativePath);
-  fs.writeFileSync(takePath, Buffer.concat([validWebm, Buffer.from([0]) ]));
+  assert.notEqual(normalizedWebm.length, validWebm.length, "replacement fixture should change validated metadata");
+  fs.writeFileSync(takePath, normalizedWebm);
 
   assert.throws(() => workspace.getTakePath({ stableId: "alphabet:aa", takeId: take.id }), /take metadata does not match/);
 });
