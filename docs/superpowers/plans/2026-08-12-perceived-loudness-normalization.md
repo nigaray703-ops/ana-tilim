@@ -12,7 +12,7 @@
 
 - Integrated loudness target is exactly `-20 LUFS`, selected after a read-only 552-file census showed this is the loudest common target that preserves the `-1.5 dBTP` release ceiling without audible compression of high-crest phonemes.
 - Maximum true peak is exactly `-1.5 dBTP`.
-- Loudness-range parameter is exactly `7 LU`.
+- Loudness-range ceiling is exactly `20 LU`; the real inventory peaks at `8.7 LU`, so this keeps every approved recording on FFmpeg's linear path and avoids dynamic compression.
 - Output stays WebM/Opus at the existing relative path and stable ID.
 - The current inventory must resolve 554 recording targets to exactly 552 unique physical files under `prototype/assets/audio/human`.
 - Analysis and staging must complete for all 552 files before any course audio replacement starts.
@@ -42,10 +42,10 @@
 import { LOUDNESS_STANDARD, parseLoudnormAnalysis } from "../tools/lib/audio-loudness.mjs";
 
 assert.deepEqual(LOUDNESS_STANDARD, {
-  version: "ana-tilim-loudness-v2",
+  version: "ana-tilim-loudness-v3",
   integratedLufs: -20,
   truePeakDbtp: -1.5,
-  lraLu: 7,
+  lraLu: 20,
   integratedToleranceLu: 1,
   durationToleranceMs: 100
 });
@@ -63,10 +63,10 @@ Expected: FAIL with `ERR_MODULE_NOT_FOUND` for `tools/lib/audio-loudness.mjs`.
 
 ```js
 export const LOUDNESS_STANDARD = Object.freeze({
-  version: "ana-tilim-loudness-v2",
+  version: "ana-tilim-loudness-v3",
   integratedLufs: -20,
   truePeakDbtp: -1.5,
-  lraLu: 7,
+  lraLu: 20,
   integratedToleranceLu: 1,
   durationToleranceMs: 100
 });
@@ -94,9 +94,9 @@ The fake `spawnSync` records exact argv and stdin bytes for analysis, normalizat
 - [ ] **Step 5: Implement `normalizeWebmBuffer` with three fail-closed passes**
 
 ```js
-const firstPass = `loudnorm=I=-20:TP=-1.8:LRA=7:print_format=json`;
+const firstPass = `loudnorm=I=-20:TP=-1.8:LRA=20:print_format=json`;
 const secondPass = [
-  "loudnorm=I=-20:TP=-1.8:LRA=7",
+  "loudnorm=I=-20:TP=-1.8:LRA=20",
   `measured_I=${input.integratedLufs}`,
   `measured_LRA=${input.lraLu}`,
   `measured_TP=${input.truePeakDbtp}`,
@@ -180,7 +180,7 @@ For each source, record original SHA/size/duration, normalize to the matching re
 ```js
 {
   schemaVersion: 1,
-  configVersion: "ana-tilim-loudness-v2",
+  configVersion: "ana-tilim-loudness-v3",
   batchId,
   createdAt,
   status: "prepared",
@@ -300,7 +300,7 @@ loudnessStandard: {
   version: LOUDNESS_STANDARD.version,
   integratedLufs: -20,
   truePeakDbtp: -1.5,
-  lraLu: 7
+  lraLu: 20
 }
 ```
 

@@ -22,7 +22,7 @@ function passthroughNormalizeTake({ buffer }) {
   return {
     buffer: Buffer.from(buffer),
     report: {
-      configVersion: "ana-tilim-loudness-v2",
+      configVersion: "ana-tilim-loudness-v3",
       input: { integratedLufs: -20, truePeakDbtp: -1.5, lraLu: 1, thresholdLufs: -30, offsetLu: 0 },
       output: { integratedLufs: -20, truePeakDbtp: -1.5, lraLu: 1, thresholdLufs: -30, offsetLu: 0 }
     }
@@ -231,7 +231,7 @@ test("persists only the normalized take bytes and derives metadata from that out
       return {
         buffer: Buffer.from(normalizedWebm),
         report: {
-          configVersion: "ana-tilim-loudness-v2",
+          configVersion: "ana-tilim-loudness-v3",
           input: { integratedLufs: -12, truePeakDbtp: -0.2, lraLu: 1, thresholdLufs: -22, offsetLu: 0 },
           output: { integratedLufs: -20, truePeakDbtp: -1.5, lraLu: 1, thresholdLufs: -30, offsetLu: 0 }
         }

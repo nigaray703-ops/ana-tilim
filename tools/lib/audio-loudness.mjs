@@ -10,10 +10,10 @@ const MAX_PROCESS_BUFFER_BYTES = 64 * 1024 * 1024;
 const ENCODING_TRUE_PEAK_DBTP = -1.8;
 
 export const LOUDNESS_STANDARD = Object.freeze({
-  version: "ana-tilim-loudness-v2",
+  version: "ana-tilim-loudness-v3",
   integratedLufs: -20,
   truePeakDbtp: -1.5,
-  lraLu: 7,
+  lraLu: 20,
   integratedToleranceLu: 1,
   durationToleranceMs: 100
 });

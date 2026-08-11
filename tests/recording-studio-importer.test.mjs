@@ -30,7 +30,7 @@ function normalizeTake({ stableId, buffer }) {
   if (stableId === "vocab:created") normalized[normalized.length - 4] ^= 1;
   return {
     buffer: normalized,
-    report: { configVersion: "ana-tilim-loudness-v2" }
+    report: { configVersion: "ana-tilim-loudness-v3" }
   };
 }
 

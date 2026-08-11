@@ -46,10 +46,10 @@ function loudnormJson({ integrated = -25, peak = -5, lra = 1, threshold = -35, o
 
 test("uses the approved perceived-loudness standard and parses finite ffmpeg measurements", () => {
   assert.deepEqual(LOUDNESS_STANDARD, {
-    version: "ana-tilim-loudness-v2",
+    version: "ana-tilim-loudness-v3",
     integratedLufs: -20,
     truePeakDbtp: -1.5,
-    lraLu: 7,
+    lraLu: 20,
     integratedToleranceLu: 1,
     durationToleranceMs: 100
   });
@@ -137,8 +137,8 @@ test("normalizes and verifies WebM through three pipe-only ffmpeg passes", () =>
     if (args.at(-1) === "pipe:1") return { status: 0, stdout: Buffer.from(validWebm), stderr: Buffer.from(loudnormJson()) };
     analysisCount += 1;
     const stderr = analysisCount === 1
-      ? loudnormJson({ integrated: -26.31, peak: -5.42, lra: 1.2, threshold: -36.8, offset: 0.02 })
-      : loudnormJson({ integrated: -20.02, peak: -1.53, lra: 1.1, threshold: -30.3, offset: 0 });
+      ? loudnormJson({ integrated: -16.33, peak: 0.27, lra: 8.7, threshold: -26.73, offset: 0.27 })
+      : loudnormJson({ integrated: -19.99, peak: -2.57, lra: 8.6, threshold: -30.25, offset: 0 });
     return { status: 0, stdout: Buffer.alloc(0), stderr: Buffer.from(stderr) };
   };
 
@@ -146,9 +146,9 @@ test("normalizes and verifies WebM through three pipe-only ffmpeg passes", () =>
 
   assert.equal(result.buffer.equals(validWebm), true);
   assert.deepEqual(result.report, {
-    configVersion: "ana-tilim-loudness-v2",
-    input: { integratedLufs: -26.31, truePeakDbtp: -5.42, lraLu: 1.2, thresholdLufs: -36.8, offsetLu: 0.02 },
-    output: { integratedLufs: -20.02, truePeakDbtp: -1.53, lraLu: 1.1, thresholdLufs: -30.3, offsetLu: 0 }
+    configVersion: "ana-tilim-loudness-v3",
+    input: { integratedLufs: -16.33, truePeakDbtp: 0.27, lraLu: 8.7, thresholdLufs: -26.73, offsetLu: 0.27 },
+    output: { integratedLufs: -19.99, truePeakDbtp: -2.57, lraLu: 8.6, thresholdLufs: -30.25, offsetLu: 0 }
   });
   assert.equal(calls.length, 3);
   assert.ok(calls.every((call) => call.args.includes("pipe:0")));
@@ -162,8 +162,8 @@ test("normalizes and verifies WebM through three pipe-only ffmpeg passes", () =>
   assert.ok(calls[1].args.includes("libopus"));
   const filter = calls[1].args[calls[1].args.indexOf("-af") + 1];
   for (const literal of [
-    "I=-20", "TP=-1.8", "LRA=7", "measured_I=-26.31", "measured_LRA=1.2",
-    "measured_TP=-5.42", "measured_thresh=-36.8", "offset=0.02", "linear=true"
+    "I=-20", "TP=-1.8", "LRA=20", "measured_I=-16.33", "measured_LRA=8.7",
+    "measured_TP=0.27", "measured_thresh=-26.73", "offset=0.27", "linear=true"
   ]) assert.match(filter, new RegExp(literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.match(calls[0].args[calls[0].args.indexOf("-af") + 1], /TP=-1\.8/);
   assert.match(calls[2].args[calls[2].args.indexOf("-af") + 1], /TP=-1\.5/);

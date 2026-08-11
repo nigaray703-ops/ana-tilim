@@ -16,7 +16,7 @@ const normalizedWebm = fs.readFileSync(path.join(repositoryRoot, "prototype/asse
 function normalizeTake() {
   return {
     buffer: Buffer.from(normalizedWebm),
-    report: { configVersion: "ana-tilim-loudness-v2" }
+    report: { configVersion: "ana-tilim-loudness-v3" }
   };
 }
 
@@ -195,10 +195,10 @@ test("streams raw takes safely and supports reviewed workspace and importer rout
   const preview = await request(fixture.server, { method: "POST", pathname: "/api/import/preview", headers: { "Content-Type": "application/json" }, body: "{}" });
   assert.equal(preview.status, 200);
   assert.deepEqual(json(preview).loudnessStandard, {
-    version: "ana-tilim-loudness-v2",
+    version: "ana-tilim-loudness-v3",
     integratedLufs: -20,
     truePeakDbtp: -1.5,
-    lraLu: 7
+    lraLu: 20
   });
   assert.equal(json(preview).operations[0].sourcePath, undefined);
   assertSafeJsonResponse(preview, fixture);
