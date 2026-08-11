@@ -209,20 +209,62 @@
     },
     groups: {
       ...finalReadingEnglish.groups,
-      "grammar-word-order": { title: "Subject + object + verb" },
-      "grammar-copula": { title: "A is B" },
-      "grammar-negative-emes": { title: "Is not" },
-      "grammar-yes-no-mu": { title: "Yes-or-no questions" },
-      "grammar-question-words": { title: "Who, what, and where" },
-      "grammar-bar-yoq": { title: "There is and there is not" },
-      "sentence-this-that": { title: "This is... / That is..." },
-      "sentence-who-what": { title: "Who? What? Where?" },
-      "sentence-i-you": { title: "I am... / You are..." },
-      "sentence-have": { title: "I have... / I do not have..." },
-      "sentence-like-need": { title: "I want... / I like..." },
-      "sentence-time": { title: "Time and dates" },
-      "sentence-no": { title: "Is not, does not have, and does not do" },
-      "sentence-question": { title: "Simple questions" },
+      "grammar-word-order": {
+        title: "Subject + object + verb",
+        rule: "Basic Uyghur statements commonly place the subject first, the object or place next, and the verb at the end."
+      },
+      "grammar-copula": {
+        title: "A is B",
+        rule: "Present-tense noun sentences commonly place the person or object directly beside its identity, without a separate word for ‘is’."
+      },
+      "grammar-negative-emes": {
+        title: "Is not",
+        rule: "To make a noun or adjective sentence negative, ئەمەس commonly goes at the end."
+      },
+      "grammar-yes-no-mu": {
+        title: "Yes-or-no questions",
+        rule: "Questions answered with yes or no commonly attach the question marker مۇ to the word being judged."
+      },
+      "grammar-question-words": {
+        title: "Who, what, and where",
+        rule: "Put كىم, نېمە, or قەيەردە where the missing information belongs; a separate مۇ is normally unnecessary."
+      },
+      "grammar-bar-yoq": {
+        title: "There is and there is not",
+        rule: "بار means that something exists or is present, while يوق means that it does not; both commonly go at the end."
+      },
+      "sentence-this-that": {
+        title: "This is... / That is...",
+        rule: "Use بۇ for a nearby ‘this’ and ئۇ for a more distant ‘that’, followed by the person or thing being identified."
+      },
+      "sentence-who-what": {
+        title: "Who? What? Where?",
+        rule: "Use كىم for a person, نېمە for a thing, and قەيەردە for a place."
+      },
+      "sentence-i-you": {
+        title: "I am... / You are...",
+        rule: "Begin with مەن, سىز, or ئۇ to identify the person, then add an identity or relationship."
+      },
+      "sentence-have": {
+        title: "I have... / I do not have...",
+        rule: "Use بار for having something and يوق for not having it; add مۇ after بار when asking a question."
+      },
+      "sentence-like-need": {
+        title: "I want... / I like...",
+        rule: "Use ماڭا … لازىم to express a need; in everyday action or preference sentences, place the verb at the end."
+      },
+      "sentence-time": {
+        title: "Time and dates",
+        rule: "Start with a time word such as بۈگۈن or ھازىر, then state the date or time."
+      },
+      "sentence-no": {
+        title: "Is not, does not have, and does not do",
+        rule: "ئەمەس negates a noun judgement, يوق expresses absence or non-possession, and verb negation appears in the verb form."
+      },
+      "sentence-question": {
+        title: "Simple questions",
+        rule: "Keep the basic statement order, then express the question on the word being judged or in the verb's question form."
+      },
       "dialogue-greeting": { title: "Meeting in the morning" },
       "dialogue-family": { title: "Introducing family" },
       "dialogue-shopping": { title: "Shopping" },

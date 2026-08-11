@@ -115,7 +115,7 @@ git add prototype/course-data/reading-data.js tests/units-six-seven-training.tes
 git commit -m "feat: add five-step reading contracts"
 ```
 
-### Task 2: Resume, compatibility and interaction behavior
+### Task 2: Resume, compatibility, interaction behavior and redundant combo copy
 
 **Files:**
 - Modify: `prototype/app.js`
@@ -170,13 +170,14 @@ function normalizeLegacyReadingTrainingProgress(saved) {
 
 Use this clone before local hydration, staged import and cloud apply validation. Preserve strict ordered-step validation for every other shape.
 
-- [ ] **Step 4: Improve the combo instruction copy**
+- [ ] **Step 4: Remove the redundant combo learning-points card**
 
 ```js
-"combo.readWithLatin": "先看 ULY 读音提示 {latin}，再点击播放按钮听真人发音并跟读。"
+assert.doesNotMatch(renderedCombo, /学习小点|怎么读|怎么来看/);
+assert.match(renderedCombo, /实际连写形|拆开看|播放/);
 ```
 
-Add an output assertion so the removed wording cannot return.
+Remove only the combo page’s duplicated “学习小点” card and its unused message keys. Keep the existing human-audio button, ULY, actual joined forms, connection explanation and meaning preview. Do not remove rule, feedback or operating instructions from other lesson types.
 
 - [ ] **Step 5: Run focused tests and verify GREEN**
 

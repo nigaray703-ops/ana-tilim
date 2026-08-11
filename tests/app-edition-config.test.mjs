@@ -464,8 +464,12 @@ assert.ok(
   "sync should cache-bust the shared resumable-unit styles"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./course-data/reading-data.js?v=20260811-final-course"'),
-  "sync should cache-bust the copied bilingual quote-name data"
+  normalizedDuplicateIndex.includes('src="./course-data/reading-data.js?v=20260812-five-step-reading"'),
+  "sync should cache-bust the complete five-step reading data"
+);
+assert.ok(
+  normalizedDuplicateIndex.includes('src="./i18n/reading-en.js?v=20260812-five-step-reading"'),
+  "sync should cache-bust the complete English five-step rules"
 );
 assert.ok(
   normalizedDuplicateIndex.includes('src="./course-data/vocab-data.js?v=20260811-final-course"'),
@@ -480,8 +484,8 @@ assert.ok(
   "sync should cache-bust the complete sentence glossary"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./app.js?v=20260811-final-course"'),
-  "sync should cache-bust the shared resumable-unit UI"
+  normalizedDuplicateIndex.includes('src="./app.js?v=20260812-five-step-reading"'),
+  "sync should cache-bust the shared five-step and legacy-migration UI"
 );
 assert.ok(
   normalizedDuplicateIndex.indexOf("./course-data/alphabet-data.js") < normalizedDuplicateIndex.indexOf("./course-data/latin-writing-data.js")

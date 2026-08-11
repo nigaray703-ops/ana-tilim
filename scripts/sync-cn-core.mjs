@@ -147,7 +147,7 @@ const sharedI18nScripts = [
   '<script src="./i18n/combo-en.js?v=20260809-bilingual"></script>',
   '<script src="./i18n/vocab-en.js?v=20260811-final-course"></script>',
   '<script src="./i18n/practice-en.js?v=20260809-bilingual"></script>',
-  '<script src="./i18n/reading-en.js?v=20260811-final-course"></script>',
+  '<script src="./i18n/reading-en.js?v=20260812-five-step-reading"></script>',
   '<script src="./i18n/course-en.js?v=20260809-bilingual"></script>',
   '<script src="./i18n/runtime.js?v=20260811-final-course"></script>'
 ].map((tag) => `${appMatchBeforeSharedI18n[1]}${tag}\n`).join("");
@@ -162,7 +162,7 @@ const sharedCacheReferences = [
   },
   {
     pattern: /(\bsrc=["']\.\/course-data\/reading-data\.js)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260811-final-course$2",
+    replacement: "$1?v=20260812-five-step-reading$2",
     label: "reading-data.js"
   },
   {
@@ -192,7 +192,7 @@ const sharedCacheReferences = [
   },
   {
     pattern: /(\bsrc=["']\.\/app\.js)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260811-final-course$2",
+    replacement: "$1?v=20260812-five-step-reading$2",
     label: "app.js"
   }
 ];

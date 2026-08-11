@@ -707,7 +707,7 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
 }
 
 const chineseRenderCount = renderCount;
-assert.equal(chineseRenderCount, 853, "full UI audit should render every retained main screen, all five steps of the eight final reading groups, and every existing lesson state");
+assert.equal(chineseRenderCount, 909, "full UI audit should render every retained main screen, all five steps of all 22 Unit 6 and Unit 7 topics, and every existing lesson state");
 
 auditLanguage = "en";
 vm.runInContext('applyInterfaceLanguage("en");', context);

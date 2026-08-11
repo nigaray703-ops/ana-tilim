@@ -1023,6 +1023,31 @@ function recordDailyActivity(activityId, date = new Date()) {
   }
 }
 
+function normalizeLegacyReadingTrainingProgressData(saved) {
+  const reading = saved?.learningProgress?.reading;
+  if (!reading || typeof reading !== "object" || Array.isArray(reading)) return saved;
+
+  const groupsById = new Map(readingUnits.flatMap((unit) => unit.groups).map((group) => [group.id, group]));
+  const legacyCompletedIds = Object.entries(reading)
+    .filter(([id, progress]) => {
+      const steps = groupsById.get(id)?.training?.steps || [];
+      return (
+        steps.length > 0 &&
+        progress?.completed === true &&
+        steps.every((stepId) => !Object.prototype.hasOwnProperty.call(progress, stepId))
+      );
+    })
+    .map(([id]) => id);
+
+  if (!legacyCompletedIds.length) return saved;
+  const normalized = JSON.parse(JSON.stringify(saved));
+  for (const id of legacyCompletedIds) {
+    const steps = groupsById.get(id).training.steps;
+    for (const stepId of steps) normalized.learningProgress.reading[id][stepId] = true;
+  }
+  return normalized;
+}
+
 function applyLocalProgressData(saved) {
   if (!saved || typeof saved !== "object") {
     return false;
@@ -1031,10 +1056,11 @@ function applyLocalProgressData(saved) {
   if (saved.learningProgress && typeof saved.learningProgress === "object") {
     progressTransfer.validateLearningProgress(saved.learningProgress);
   }
-  validateImportedProgressIds(saved);
-  const normalizedSavedScreen = normalizedPersistedSyllableScreen(saved.screen, saved.learningProgress);
+  const courseNormalizedSaved = normalizeLegacyReadingTrainingProgressData(saved);
+  validateImportedProgressIds(courseNormalizedSaved);
+  const normalizedSavedScreen = normalizedPersistedSyllableScreen(courseNormalizedSaved.screen, courseNormalizedSaved.learningProgress);
   const normalizedSaved = {
-    ...saved,
+    ...courseNormalizedSaved,
     screen: normalizedSavedScreen
   };
   const previousSyllableSentenceId = activeSyllableSentenceId();
@@ -1227,12 +1253,13 @@ function exportLocalProgress() {
 
 function importLocalProgressText(text) {
   const envelope = progressTransfer.parseImportPayload(text, { expectedEdition: appConfig.edition });
-  validateImportedProgressIds(envelope.data);
+  const normalizedData = normalizeLegacyReadingTrainingProgressData(envelope.data);
+  validateImportedProgressIds(normalizedData);
   const normalizedEnvelope = {
     ...envelope,
     data: {
-      ...envelope.data,
-      screen: normalizedPersistedSyllableScreen(envelope.data.screen, envelope.data.learningProgress)
+      ...normalizedData,
+      screen: normalizedPersistedSyllableScreen(normalizedData.screen, normalizedData.learningProgress)
     }
   };
   state.pendingProgressImport = normalizedEnvelope;
@@ -1528,15 +1555,17 @@ function initializeNewLearnerProgress() {
 }
 
 function validateCloudProgressSnapshot(snapshot) {
-  const learningProgress = snapshot?.learningProgress || {};
+  const normalizedSnapshot = normalizeLegacyReadingTrainingProgressData(snapshot);
+  const learningProgress = normalizedSnapshot?.learningProgress || {};
   progressTransfer.validateLearningProgress(learningProgress);
-  validateImportedProgressIds({ learningProgress, syllableMistakes: snapshot?.syllableMistakes });
+  validateImportedProgressIds({ learningProgress, syllableMistakes: normalizedSnapshot?.syllableMistakes });
+  return normalizedSnapshot;
 }
 
 function applyCloudSnapshot(snapshot) {
-  validateCloudProgressSnapshot(snapshot);
+  const validatedSnapshot = validateCloudProgressSnapshot(snapshot);
   const previousSyllableSentenceId = activeSyllableSentenceId();
-  const normalized = window.ANA_TILIM_CLOUD.normalizeSnapshot(snapshot);
+  const normalized = window.ANA_TILIM_CLOUD.normalizeSnapshot(validatedSnapshot);
   state.learningProgress = normalized.learningProgress;
   state.mistakes = normalized.mistakes;
   state.syllableMistakes = normalizeSyllableMistakes(normalized.syllableMistakes);
@@ -6299,24 +6328,6 @@ function renderComboLesson() {
             : ""
         }
 
-        <article class="card">
-          <p class="caption">${t("combo.learningPoints")}</p>
-          <div class="lesson-point-list">
-            <div class="lesson-point">
-              <strong>${t("combo.howToRead")}</strong>
-              <span>${
-                state.preferences.showLatin
-                  ? t("combo.readWithLatin", { latin: item.latin })
-                  : t("combo.readWithAudio")
-              }</span>
-            </div>
-            <div class="lesson-point">
-              <strong>${t("combo.howToSee")}</strong>
-              <span>${item.hint}</span>
-            </div>
-          </div>
-        </article>
-
         <div class="action-grid">
           <button class="secondary-button" data-action="go" data-target="comboRecognition" type="button">
             ${t("combo.recognize")}
@@ -7019,19 +7030,19 @@ function renderReadingTraining(group, unit) {
     content = `<article class="card reading-training-card"><p class="caption">${english ? "Recognise" : "辨认意思"}</p><h2>${escapeHtml(localizedTrainingText(exercise, "prompt"))}</h2><div class="reading-training-options">${exercise.options.map((option) => {
       const item = group.items.find((candidate) => candidate.id === option.itemId);
       return `<button class="choice-card ${state.readingTrainingChoiceId === option.id ? "selected" : ""}" data-action="pick-reading-training-answer" data-answer-id="${escapeHtml(option.id)}" type="button"><span class="uyghur">${escapeHtml(item?.value || "")}</span><small dir="ltr">${escapeHtml(item?.latin || "")}</small></button>`;
-    }).join("")}</div>${state.readingTrainingFeedback ? `<p class="feedback ${progress.recognition ? "good" : "bad"}" role="status">${escapeHtml(state.readingTrainingFeedback)}</p>` : ""}</article>`;
+    }).join("")}</div>${state.readingTrainingFeedback ? `<p class="feedback ${progress.recognition ? "good" : "bad"}" role="status" tabindex="-1" data-reading-training-feedback>${escapeHtml(state.readingTrainingFeedback)}</p>` : ""}</article>`;
     canContinue = progress.recognition === true;
   } else if (stepId === "ordering") {
     const exercise = training.ordering;
     const chosen = state.readingOrderingIds;
-    content = `<article class="card reading-training-card"><p class="caption">${english ? "Build the sentence" : "按顺序组成句子"}</p><div class="reading-order-result uyghur" dir="rtl">${chosen.map((id) => escapeHtml(exercise.tokens.find((token) => token.id === id)?.value || "")).join("") || (english ? "Choose the parts below" : "点击下方词块")}</div><div class="reading-training-options">${exercise.tokens.map((token) => `<button class="choice-card" data-action="pick-reading-order-token" data-token-id="${escapeHtml(token.id)}" type="button" ${chosen.includes(token.id) ? "disabled" : ""}><span class="uyghur">${escapeHtml(token.value)}</span></button>`).join("")}</div>${state.readingTrainingFeedback ? `<p class="feedback ${progress.ordering ? "good" : "bad"}" role="status">${escapeHtml(state.readingTrainingFeedback)}</p>` : ""}${chosen.length ? `<button class="secondary-button" data-action="reset-reading-order" type="button">${english ? "Reset" : "重新排序"}</button>` : ""}</article>`;
+    content = `<article class="card reading-training-card"><p class="caption">${english ? "Build the sentence" : "按顺序组成句子"}</p><div class="reading-order-result uyghur" dir="rtl">${chosen.map((id) => escapeHtml(exercise.tokens.find((token) => token.id === id)?.value || "")).join("") || (english ? "Choose the parts below" : "点击下方词块")}</div><div class="reading-training-options">${exercise.tokens.map((token) => `<button class="choice-card" data-action="pick-reading-order-token" data-token-id="${escapeHtml(token.id)}" type="button" ${chosen.includes(token.id) ? "disabled" : ""}><span class="uyghur">${escapeHtml(token.value)}</span></button>`).join("")}</div>${state.readingTrainingFeedback ? `<p class="feedback ${progress.ordering ? "good" : "bad"}" role="status" tabindex="-1" data-reading-training-feedback>${escapeHtml(state.readingTrainingFeedback)}</p>` : ""}${chosen.length ? `<button class="secondary-button" data-action="reset-reading-order" type="button">${english ? "Reset" : "重新排序"}</button>` : ""}</article>`;
     canContinue = progress.ordering === true;
   } else {
     const exercise = training.completion;
-    content = `<article class="card reading-training-card"><p class="caption">${english ? "Complete" : "补全句子"}</p><h2>${escapeHtml(localizedTrainingText(exercise, "prompt"))}</h2><div class="reading-training-options">${exercise.options.map((option) => `<button class="choice-card ${state.readingTrainingChoiceId === option.id ? "selected" : ""}" data-action="pick-reading-completion" data-answer-id="${escapeHtml(option.id)}" type="button"><span class="uyghur">${escapeHtml(option.value)}</span></button>`).join("")}</div>${state.readingTrainingFeedback ? `<p class="feedback ${progress.completion ? "good" : "bad"}" role="status">${escapeHtml(state.readingTrainingFeedback)}</p>` : ""}${progress.completion ? `<div class="reading-training-finished"><div class="uyghur">${escapeHtml(exercise.completedValue)}</div><p>${escapeHtml(localizedTrainingText(exercise, "meaning"))}</p></div>` : ""}</article>`;
+    content = `<article class="card reading-training-card"><p class="caption">${english ? "Complete" : "补全句子"}</p><h2>${escapeHtml(localizedTrainingText(exercise, "prompt"))}</h2><div class="reading-training-options">${exercise.options.map((option) => `<button class="choice-card ${state.readingTrainingChoiceId === option.id ? "selected" : ""}" data-action="pick-reading-completion" data-answer-id="${escapeHtml(option.id)}" type="button"><span class="uyghur">${escapeHtml(option.value)}</span></button>`).join("")}</div>${state.readingTrainingFeedback ? `<p class="feedback ${progress.completion ? "good" : "bad"}" role="status" tabindex="-1" data-reading-training-feedback>${escapeHtml(state.readingTrainingFeedback)}</p>` : ""}${progress.completion ? `<div class="reading-training-finished"><div class="uyghur">${escapeHtml(exercise.completedValue)}</div><p>${escapeHtml(localizedTrainingText(exercise, "meaning"))}</p></div>` : ""}</article>`;
   }
 
-  return `<div class="reading-training" data-reading-training-step="${stepId}">${renderReadingTrainingProgress(group)}${content}${canContinue && stepId !== "completion" ? `<button class="primary-button" data-action="continue-reading-training" type="button">${english ? "Continue" : "继续下一步"}</button>` : ""}</div>`;
+  return `<div class="reading-training" data-reading-training-step="${stepId}" data-reading-training-step-region tabindex="-1">${renderReadingTrainingProgress(group)}${content}${canContinue && stepId !== "completion" ? `<button class="primary-button" data-action="continue-reading-training" type="button">${english ? "Continue" : "继续下一步"}</button>` : ""}</div>`;
 }
 
 function renderGlossSegments(segments, formation = null) {
@@ -9259,6 +9270,7 @@ document.addEventListener("click", (event) => {
     markProgress("reading", group.id, "viewed");
     resetReadingTrainingState(group);
     goTo("reading");
+    if (readingTrainingSteps(group).length) focusSyllableRuleElement("[data-reading-training-step-region]");
     return;
   }
 
@@ -9274,6 +9286,7 @@ document.addEventListener("click", (event) => {
     state.readingTrainingFeedback = "";
     saveLocalProgress();
     render();
+    focusSyllableRuleElement("[data-reading-training-step-region]");
     return;
   }
 
@@ -9289,6 +9302,7 @@ document.addEventListener("click", (event) => {
       state.readingTrainingFeedback = i18n.getLanguage() === "en" ? "Try again." : "再看一遍句意后重试。";
     }
     render();
+    focusSyllableRuleElement("[data-reading-training-feedback]");
     return;
   }
 
@@ -9309,6 +9323,9 @@ document.addEventListener("click", (event) => {
       }
     }
     render();
+    focusSyllableRuleElement(
+      state.readingTrainingFeedback ? "[data-reading-training-feedback]" : "[data-reading-training-step-region]"
+    );
     return;
   }
 
@@ -9316,6 +9333,7 @@ document.addEventListener("click", (event) => {
     state.readingOrderingIds = [];
     state.readingTrainingFeedback = "";
     render();
+    focusSyllableRuleElement("[data-reading-training-step-region]");
     return;
   }
 
@@ -9331,6 +9349,7 @@ document.addEventListener("click", (event) => {
       state.readingTrainingFeedback = i18n.getLanguage() === "en" ? "Try again." : "再看一遍完整句后重试。";
     }
     render();
+    focusSyllableRuleElement("[data-reading-training-feedback]");
     return;
   }
 

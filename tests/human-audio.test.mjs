@@ -408,10 +408,8 @@ assert.ok(app.innerHTML.includes('data-action="play-audio"'), "combo page should
 assert.ok(app.innerHTML.includes('aria-label="Play با"'), "combo page should localize reusable audio chrome in English mode");
 assert.ok(!app.innerHTML.includes('aria-label="播放'), "combo page should not retain Chinese reusable audio chrome in English mode");
 assert.ok(!app.innerHTML.includes(">听</button>"), "combo page should not retain the Chinese reusable play label in English mode");
-assert.ok(
-  app.innerHTML.includes("a human recording provides the target pronunciation"),
-  "combo page should preserve course-domain human-audio guidance in English mode"
-);
+assert.ok(!app.innerHTML.includes("Learning points"), "combo page should omit the redundant learning-points card in English mode");
+assert.ok(!app.innerHTML.includes("a human recording provides the target pronunciation"), "combo page should not repeat guidance already represented by its enabled audio control");
 assert.ok(!app.innerHTML.includes("真人音频"), "combo page should not retain Chinese course-domain guidance in English mode");
 assert.ok(app.innerHTML.includes("./assets/audio/human/combos/human_combo_ba.webm"), "combo page should expose connected human audio");
 

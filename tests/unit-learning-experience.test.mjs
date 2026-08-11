@@ -78,7 +78,7 @@ const expectedVersionedAssets = [
   "./course-data/syllable-data.js?v=20260809-plan3-final-content",
   "./course-data/vocab-data.js?v=20260811-final-course",
   "./course-data/practice-data.js?v=20260728-learned-markers",
-  "./course-data/reading-data.js?v=20260811-final-course",
+  "./course-data/reading-data.js?v=20260812-five-step-reading",
   "./course-data/afanti-data.js?v=20260810-afanti-layout",
   "./course-data/afanti-english-data.js?v=20260810-reviewed-afanti",
   "./afanti-content.js?v=20260810-reviewed-afanti",
@@ -88,7 +88,7 @@ const expectedVersionedAssets = [
   "./i18n/combo-en.js?v=20260809-bilingual",
   "./i18n/vocab-en.js?v=20260811-final-course",
   "./i18n/practice-en.js?v=20260809-bilingual",
-  "./i18n/reading-en.js?v=20260811-final-course",
+  "./i18n/reading-en.js?v=20260812-five-step-reading",
   "./i18n/course-en.js?v=20260809-bilingual",
   "./i18n/runtime.js?v=20260811-final-course",
   "./unit-order.js?v=20260809-edition-unit-order",
@@ -102,7 +102,7 @@ const expectedVersionedAssets = [
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260810-unit-maps",
   "./feedback.js?v=20260810-feedback",
-  "./app.js?v=20260811-final-course"
+  "./app.js?v=20260812-five-step-reading"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -118,7 +118,7 @@ const previousEnglishUiCache = new Map([
   ["./styles.css?v=20260809-bilingual", { release: "before-english-layout" }],
   ["./app.js?v=20260809-bilingual-final", { release: "before-english-layout" }]
 ]);
-for (const url of ["./styles.css?v=20260811-final-course", "./app.js?v=20260811-final-course"]) {
+for (const url of ["./styles.css?v=20260811-final-course", "./app.js?v=20260812-five-step-reading"]) {
   assert.ok(versionedAppAssets.includes(url));
   assert.equal(previousEnglishUiCache.get(url), undefined);
 }
@@ -552,7 +552,9 @@ const context = {
           "[data-syllable-connection-question]",
           "[data-syllable-review-empty]",
           '[data-syllable-review-bucket="connection"]',
-          '[data-syllable-review-bucket="break"]'
+          '[data-syllable-review-bucket="break"]',
+          "[data-reading-training-step-region]",
+          "[data-reading-training-feedback]"
         ].includes(selector)
       ) {
         return {
@@ -4996,6 +4998,11 @@ includesAll(
   ["1 / 10", "上一个", "下一个", "letter-focus-play", "从右往左", "拆开看", "实际连写形", "بـ", "后连式写法", "ـا", "前连式写法", "接后一个字母", "接前一个字母", "拼接", "书写", "键盘", 'class="latin-transliteration combo-latin"', ">ba<"],
   "combo lesson"
 );
+assert.doesNotMatch(
+  app.innerHTML,
+  /学习小点|先用 ba 做过渡提示|这个例子很适合看/,
+  "combo lessons should not repeat audio, shape, or connection guidance in a redundant learning-points card"
+);
 assert.ok(!app.innerHTML.includes("本组目标"), "combo lesson should remove the optional group goal card");
 assert.ok(!app.innerHTML.includes('<div class="audio-strip">'), "combo lesson should put the listen button in the gradient card");
 clickDataset({ action: "select-adjacent-combo", id: "pa" });
@@ -7390,6 +7397,115 @@ assert.throws(
   /必须按训练顺序/,
   "import must reject reading training that skips the comparison step"
 );
+
+vm.runInContext("state.learningProgress.reading = {};", context);
+focusedSyllableSelector = "";
+clickDataset({ action: "open-reading-group", unitId: "grammar-basics", id: "grammar-word-order" });
+assert.ok(app.innerHTML.includes('data-reading-training-step="rule"'), "an existing grammar lesson should start at the rule step");
+assert.ok(app.innerHTML.includes("动词通常放在句末"), "the existing grammar lesson should use its approved rule");
+assert.equal(focusedSyllableSelector, "[data-reading-training-step-region]", "opening a five-step lesson should focus its current step region");
+clickDataset({ action: "continue-reading-training" });
+assert.ok(app.innerHTML.includes('data-reading-training-step="compare"'), "an existing grammar lesson should advance to comparison");
+assert.equal(focusedSyllableSelector, "[data-reading-training-step-region]", "continuing should focus the newly rendered reading step");
+clickDataset({ action: "go", target: "unit" });
+clickDataset({ action: "open-reading-group", unitId: "grammar-basics", id: "grammar-word-order" });
+assert.ok(app.innerHTML.includes('data-reading-training-step="compare"'), "an interrupted existing grammar lesson should resume at comparison");
+clickDataset({ action: "continue-reading-training" });
+clickDataset({ action: "pick-reading-training-answer", answerId: "b" });
+assert.equal(vm.runInContext("state.learningProgress.reading['grammar-word-order'].recognition", context), undefined, "a wrong legacy grammar recognition answer must not advance");
+assert.equal(focusedSyllableSelector, "[data-reading-training-feedback]", "a wrong reading answer should focus its feedback");
+clickDataset({ action: "pick-reading-training-answer", answerId: "a" });
+assert.equal(focusedSyllableSelector, "[data-reading-training-feedback]", "a correct reading answer should focus its feedback before continuation");
+clickDataset({ action: "continue-reading-training" });
+clickDataset({ action: "pick-reading-order-token", tokenId: "b" });
+clickDataset({ action: "pick-reading-order-token", tokenId: "a" });
+assert.equal(vm.runInContext("state.learningProgress.reading['grammar-word-order'].ordering", context), undefined, "a wrong legacy grammar ordering must not advance");
+assert.equal(focusedSyllableSelector, "[data-reading-training-feedback]", "a completed wrong ordering attempt should focus its feedback");
+clickDataset({ action: "reset-reading-order" });
+clickDataset({ action: "pick-reading-order-token", tokenId: "a" });
+clickDataset({ action: "pick-reading-order-token", tokenId: "b" });
+clickDataset({ action: "continue-reading-training" });
+clickDataset({ action: "pick-reading-completion", answerId: "b" });
+assert.equal(vm.runInContext("state.learningProgress.reading['grammar-word-order'].completed", context), undefined, "a wrong legacy grammar completion must not finish the lesson");
+assert.equal(focusedSyllableSelector, "[data-reading-training-feedback]", "a wrong completion answer should focus its feedback");
+clickDataset({ action: "pick-reading-completion", answerId: "a" });
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.reading['grammar-word-order'])", context)),
+  { viewed: true, rule: true, compare: true, recognition: true, ordering: true, completion: true, completed: true },
+  "an existing grammar lesson should save all five ordered steps"
+);
+assert.ok(app.innerHTML.includes('data-id="grammar-copula"'), "the completed existing grammar lesson should point to the next real lesson");
+
+vm.runInContext("state.learningProgress.reading = {};", context);
+clickDataset({ action: "open-reading-group", unitId: "sentence-patterns", id: "sentence-this-that" });
+clickDataset({ action: "continue-reading-training" });
+clickDataset({ action: "continue-reading-training" });
+clickDataset({ action: "pick-reading-training-answer", answerId: "b" });
+clickDataset({ action: "continue-reading-training" });
+clickDataset({ action: "pick-reading-order-token", tokenId: "a" });
+clickDataset({ action: "pick-reading-order-token", tokenId: "b" });
+clickDataset({ action: "continue-reading-training" });
+clickDataset({ action: "pick-reading-completion", answerId: "a" });
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.reading['sentence-this-that'])", context)),
+  { viewed: true, rule: true, compare: true, recognition: true, ordering: true, completion: true, completed: true },
+  "an existing sentence-pattern lesson should use the same five-step progress contract"
+);
+assert.ok(app.innerHTML.includes('data-id="sentence-who-what"'), "the completed sentence-pattern lesson should point to its next real lesson");
+
+const legacyReadingProgress = {
+  latinWriting: {},
+  letters: {},
+  combos: {},
+  syllableTraining: {},
+  vocab: {},
+  practice: {},
+  reading: { "grammar-word-order": { viewed: true, completed: true } }
+};
+assert.equal(
+  vm.runInContext(`applyLocalProgressData(${JSON.stringify({ learningProgress: legacyReadingProgress })})`, context),
+  true,
+  "legacy local progress with one exact completed reading lesson should hydrate"
+);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.reading['grammar-word-order'])", context)),
+  { viewed: true, rule: true, compare: true, recognition: true, ordering: true, completion: true, completed: true },
+  "legacy local completion should expand to the exact five-step progress entry"
+);
+
+const legacyReadingExport = JSON.parse(vm.runInContext(
+  "JSON.stringify(progressTransfer.createExportPayload(buildLocalProgressData(), { edition: appConfig.edition, brandName: appConfig.brandName }))",
+  context
+));
+legacyReadingExport.data.learningProgress = JSON.parse(JSON.stringify(legacyReadingProgress));
+const stagedLegacyReading = importProgressDirect(JSON.stringify(legacyReadingExport));
+assert.deepEqual(
+  JSON.parse(JSON.stringify(stagedLegacyReading.data.learningProgress.reading["grammar-word-order"])),
+  { viewed: true, rule: true, compare: true, recognition: true, ordering: true, completion: true, completed: true },
+  "legacy imported completion should stage only its expanded five-step progress"
+);
+vm.runInContext("state.pendingProgressImport = null", context);
+
+vm.runInContext(`applyCloudSnapshot(${JSON.stringify({ ...cloudSnapshotBase, learningProgress: legacyReadingProgress })})`, context);
+assert.deepEqual(
+  JSON.parse(vm.runInContext("JSON.stringify(state.learningProgress.reading['grammar-word-order'])", context)),
+  { viewed: true, rule: true, compare: true, recognition: true, ordering: true, completion: true, completed: true },
+  "legacy cloud completion should expand before cloud normalization and apply"
+);
+
+const readingStateBeforeInvalidLegacy = vm.runInContext("JSON.stringify(state.learningProgress)", context);
+for (const [label, progress, expectedError] of [
+  ["partial completed legacy entry", { viewed: true, rule: true, completed: true }, /完成状态与五步训练不一致/],
+  ["out-of-order legacy entry", { viewed: true, rule: true, recognition: true }, /必须按训练顺序/]
+]) {
+  assert.throws(
+    () => vm.runInContext(`applyLocalProgressData(${JSON.stringify({ learningProgress: { ...legacyReadingProgress, reading: { "grammar-word-order": progress } } })})`, context),
+    expectedError,
+    label
+  );
+  assert.equal(vm.runInContext("JSON.stringify(state.learningProgress)", context), readingStateBeforeInvalidLegacy, `${label} must not partially mutate current progress`);
+}
+setLanguage("zh");
 
 const schoolGloss = vm.runInContext("renderSentenceGlosses('بۈگۈن دەرس بارمۇ؟')", context);
 includesAll(
