@@ -1,4 +1,1214 @@
 (() => {
+const finalReadingGroups = Object.freeze(
+{
+  "grammar-basics": [
+    {
+      "id": "grammar-person-verbs",
+      "title": "人称与动词",
+      "rule": "先辨认主语，再观察动词结尾随人称变化。",
+      "reviewStatus": "approved",
+      "items": [
+        {
+          "id": "grammar-person-verbs-1",
+          "value": "مەن كىتاب ئوقۇيمەن.",
+          "latin": "Men kitab oquymen.",
+          "meaning": "我读书。",
+          "pattern": "我 + 读",
+          "lesson": "第一人称动词结尾",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "grammar-person-verbs-2",
+          "value": "سەن كىتاب ئوقۇيسەن.",
+          "latin": "Sen kitab oquysen.",
+          "meaning": "你读书。",
+          "pattern": "你 + 读",
+          "lesson": "第二人称动词结尾",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "grammar-person-verbs-3",
+          "value": "ئۇ كىتاب ئوقۇيدۇ.",
+          "latin": "U kitab oquydu.",
+          "meaning": "他（她）读书。",
+          "pattern": "他（她）+ 读",
+          "lesson": "第三人称动词结尾",
+          "reviewStatus": "approved"
+        }
+      ],
+      "training": {
+        "steps": [
+          "rule",
+          "compare",
+          "recognition",
+          "ordering",
+          "completion"
+        ],
+        "compareItemIds": [
+          "grammar-person-verbs-1",
+          "grammar-person-verbs-2"
+        ],
+        "recognition": {
+          "promptZh": "哪一句表示“你读书”？",
+          "promptEn": "Which sentence means ‘You read a book’ ?",
+          "options": [
+            {
+              "id": "a",
+              "itemId": "grammar-person-verbs-1"
+            },
+            {
+              "id": "b",
+              "itemId": "grammar-person-verbs-2"
+            }
+          ],
+          "answerId": "b"
+        },
+        "ordering": {
+          "tokens": [
+            {
+              "id": "b",
+              "value": "كىتاب ئوقۇيمەن."
+            },
+            {
+              "id": "a",
+              "value": "مەن "
+            }
+          ],
+          "answerIds": [
+            "a",
+            "b"
+          ],
+          "completedValue": "مەن كىتاب ئوقۇيمەن."
+        },
+        "completion": {
+          "promptZh": "补全“我读书”",
+          "promptEn": "Complete ‘I read a book’",
+          "options": [
+            {
+              "id": "a",
+              "value": "ئوقۇيمەن"
+            },
+            {
+              "id": "b",
+              "value": "ئوقۇيسەن"
+            }
+          ],
+          "answerId": "a",
+          "completedValue": "مەن كىتاب ئوقۇيمەن.",
+          "meaningZh": "我读书。",
+          "meaningEn": "I read a book."
+        }
+      }
+    },
+    {
+      "id": "grammar-possession",
+      "title": "所属关系",
+      "rule": "领属者和被领属名词相互配合，表达“谁的什么”。",
+      "reviewStatus": "approved",
+      "items": [
+        {
+          "id": "grammar-possession-1",
+          "value": "بۇ مېنىڭ كىتابىم.",
+          "latin": "Bu mëning kitabim.",
+          "meaning": "这是我的书。",
+          "pattern": "这个 + 我的 + 书",
+          "lesson": "第一人称所属",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "grammar-possession-2",
+          "value": "بۇ سېنىڭ كىتابىڭ.",
+          "latin": "Bu sëning kitabing.",
+          "meaning": "这是你的书。",
+          "pattern": "这个 + 你的 + 书",
+          "lesson": "第二人称所属",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "grammar-possession-3",
+          "value": "بۇ ئۇنىڭ كىتابى.",
+          "latin": "Bu uning kitabi.",
+          "meaning": "这是他（她）的书。",
+          "pattern": "这个 + 他（她）的 + 书",
+          "lesson": "第三人称所属",
+          "reviewStatus": "approved"
+        }
+      ],
+      "training": {
+        "steps": [
+          "rule",
+          "compare",
+          "recognition",
+          "ordering",
+          "completion"
+        ],
+        "compareItemIds": [
+          "grammar-possession-1",
+          "grammar-possession-3"
+        ],
+        "recognition": {
+          "promptZh": "哪一句表示“这是我的书”？",
+          "promptEn": "Which sentence means ‘This is my book’ ?",
+          "options": [
+            {
+              "id": "a",
+              "itemId": "grammar-possession-1"
+            },
+            {
+              "id": "b",
+              "itemId": "grammar-possession-3"
+            }
+          ],
+          "answerId": "a"
+        },
+        "ordering": {
+          "tokens": [
+            {
+              "id": "b",
+              "value": "مېنىڭ كىتابىم."
+            },
+            {
+              "id": "a",
+              "value": "بۇ "
+            }
+          ],
+          "answerIds": [
+            "a",
+            "b"
+          ],
+          "completedValue": "بۇ مېنىڭ كىتابىم."
+        },
+        "completion": {
+          "promptZh": "补全“这是你的书”",
+          "promptEn": "Complete ‘This is your book’",
+          "options": [
+            {
+              "id": "a",
+              "value": "مېنىڭ كىتابىم"
+            },
+            {
+              "id": "b",
+              "value": "سېنىڭ كىتابىڭ"
+            }
+          ],
+          "answerId": "b",
+          "completedValue": "بۇ سېنىڭ كىتابىڭ.",
+          "meaningZh": "这是你的书。",
+          "meaningEn": "This is your book."
+        }
+      }
+    },
+    {
+      "id": "grammar-location-direction",
+      "title": "地点与方向",
+      "rule": "比较“在某处、去某处、从某处来”三个方向关系。",
+      "reviewStatus": "approved",
+      "items": [
+        {
+          "id": "grammar-location-direction-1",
+          "value": "مەن مەكتەپتە.",
+          "latin": "Men mektepte.",
+          "meaning": "我在学校。",
+          "pattern": "我 + 在学校",
+          "lesson": "处所关系",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "grammar-location-direction-2",
+          "value": "مەن مەكتەپكە بارىمەن.",
+          "latin": "Men mektepke barimen.",
+          "meaning": "我去学校。",
+          "pattern": "我 + 去学校",
+          "lesson": "朝向关系",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "grammar-location-direction-3",
+          "value": "مەن مەكتەپتىن كەلدىم.",
+          "latin": "Men mekteptin keldim.",
+          "meaning": "我从学校来。",
+          "pattern": "我 + 从学校来",
+          "lesson": "来源关系",
+          "reviewStatus": "approved"
+        }
+      ],
+      "training": {
+        "steps": [
+          "rule",
+          "compare",
+          "recognition",
+          "ordering",
+          "completion"
+        ],
+        "compareItemIds": [
+          "grammar-location-direction-1",
+          "grammar-location-direction-2"
+        ],
+        "recognition": {
+          "promptZh": "哪一句表示“我去学校”？",
+          "promptEn": "Which sentence means ‘I go to school’ ?",
+          "options": [
+            {
+              "id": "a",
+              "itemId": "grammar-location-direction-1"
+            },
+            {
+              "id": "b",
+              "itemId": "grammar-location-direction-2"
+            }
+          ],
+          "answerId": "b"
+        },
+        "ordering": {
+          "tokens": [
+            {
+              "id": "b",
+              "value": "مەكتەپكە بارىمەن."
+            },
+            {
+              "id": "a",
+              "value": "مەن "
+            }
+          ],
+          "answerIds": [
+            "a",
+            "b"
+          ],
+          "completedValue": "مەن مەكتەپكە بارىمەن."
+        },
+        "completion": {
+          "promptZh": "补全“我从学校来”",
+          "promptEn": "Complete ‘I came from school’",
+          "options": [
+            {
+              "id": "a",
+              "value": "مەكتەپكە بارىمەن"
+            },
+            {
+              "id": "b",
+              "value": "مەكتەپتىن كەلدىم"
+            }
+          ],
+          "answerId": "b",
+          "completedValue": "مەن مەكتەپتىن كەلدىم.",
+          "meaningZh": "我从学校来。",
+          "meaningEn": "I came from school."
+        }
+      }
+    },
+    {
+      "id": "grammar-basic-time",
+      "title": "基础时间表达",
+      "rule": "先辨认时间词，再观察动作发生的时间。",
+      "reviewStatus": "approved",
+      "items": [
+        {
+          "id": "grammar-basic-time-1",
+          "value": "ھازىر مەن كىتاب ئوقۇيمەن.",
+          "latin": "Hazir men kitab oquymen.",
+          "meaning": "现在我读书。",
+          "pattern": "现在 + 我 + 读书",
+          "lesson": "现在",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "grammar-basic-time-2",
+          "value": "تۈنۈگۈن مەن كىتاب ئوقۇدۇم.",
+          "latin": "Tünügün men kitab oqudum.",
+          "meaning": "昨天我读了书。",
+          "pattern": "昨天 + 我 + 读书",
+          "lesson": "过去时间",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "grammar-basic-time-3",
+          "value": "ئەتە مەن مەكتەپكە بارىمەن.",
+          "latin": "Ete men mektepke barimen.",
+          "meaning": "明天我去学校。",
+          "pattern": "明天 + 我 + 去学校",
+          "lesson": "未来时间",
+          "reviewStatus": "approved"
+        }
+      ],
+      "training": {
+        "steps": [
+          "rule",
+          "compare",
+          "recognition",
+          "ordering",
+          "completion"
+        ],
+        "compareItemIds": [
+          "grammar-basic-time-1",
+          "grammar-basic-time-2"
+        ],
+        "recognition": {
+          "promptZh": "哪一句表示昨天发生的事？",
+          "promptEn": "Which sentence describes yesterday?",
+          "options": [
+            {
+              "id": "a",
+              "itemId": "grammar-basic-time-1"
+            },
+            {
+              "id": "b",
+              "itemId": "grammar-basic-time-2"
+            }
+          ],
+          "answerId": "b"
+        },
+        "ordering": {
+          "tokens": [
+            {
+              "id": "b",
+              "value": "مەن مەكتەپكە بارىمەن."
+            },
+            {
+              "id": "a",
+              "value": "ئەتە "
+            }
+          ],
+          "answerIds": [
+            "a",
+            "b"
+          ],
+          "completedValue": "ئەتە مەن مەكتەپكە بارىمەن."
+        },
+        "completion": {
+          "promptZh": "补全“现在我读书”",
+          "promptEn": "Complete ‘I am reading now’",
+          "options": [
+            {
+              "id": "a",
+              "value": "ھازىر"
+            },
+            {
+              "id": "b",
+              "value": "تۈنۈگۈن"
+            }
+          ],
+          "answerId": "a",
+          "completedValue": "ھازىر مەن كىتاب ئوقۇيمەن.",
+          "meaningZh": "现在我读书。",
+          "meaningEn": "I am reading a book now."
+        }
+      }
+    }
+  ],
+  "sentence-patterns": [
+    {
+      "id": "sentence-self-introduction",
+      "title": "自我介绍",
+      "rule": "用姓名、年龄、家乡和身份组成简短自我介绍。",
+      "reviewStatus": "approved",
+      "items": [
+        {
+          "id": "sentence-self-introduction-1",
+          "value": "مېنىڭ ئىسمىم ئەلى.",
+          "latin": "Mëning ismim Eli.",
+          "meaning": "我的名字叫艾力。",
+          "pattern": "我的名字 + 艾力",
+          "lesson": "介绍姓名",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "sentence-self-introduction-2",
+          "value": "مەن ئون ياشتا.",
+          "latin": "Men on yashta.",
+          "meaning": "我十岁。",
+          "pattern": "我 + 十岁",
+          "lesson": "介绍年龄",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "sentence-self-introduction-3",
+          "value": "مەن قەشقەردىن كەلدىم.",
+          "latin": "Men Qeshqerdin keldim.",
+          "meaning": "我来自喀什。",
+          "pattern": "我 + 来自喀什",
+          "lesson": "介绍家乡",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "sentence-self-introduction-4",
+          "value": "مەن ئوقۇغۇچى.",
+          "latin": "Men oqughuchi.",
+          "meaning": "我是学生。",
+          "pattern": "我 + 学生",
+          "lesson": "介绍身份",
+          "reviewStatus": "approved"
+        }
+      ],
+      "training": {
+        "steps": [
+          "rule",
+          "compare",
+          "recognition",
+          "ordering",
+          "completion"
+        ],
+        "compareItemIds": [
+          "sentence-self-introduction-1",
+          "sentence-self-introduction-3"
+        ],
+        "recognition": {
+          "promptZh": "哪一句介绍家乡？",
+          "promptEn": "Which sentence introduces a hometown?",
+          "options": [
+            {
+              "id": "a",
+              "itemId": "sentence-self-introduction-1"
+            },
+            {
+              "id": "b",
+              "itemId": "sentence-self-introduction-3"
+            }
+          ],
+          "answerId": "b"
+        },
+        "ordering": {
+          "tokens": [
+            {
+              "id": "b",
+              "value": "ئون ياشتا."
+            },
+            {
+              "id": "a",
+              "value": "مەن "
+            }
+          ],
+          "answerIds": [
+            "a",
+            "b"
+          ],
+          "completedValue": "مەن ئون ياشتا."
+        },
+        "completion": {
+          "promptZh": "补全“我是学生”",
+          "promptEn": "Complete ‘I am a student’",
+          "options": [
+            {
+              "id": "a",
+              "value": "ئوقۇغۇچى"
+            },
+            {
+              "id": "b",
+              "value": "مەكتەپتە"
+            }
+          ],
+          "answerId": "a",
+          "completedValue": "مەن ئوقۇغۇچى.",
+          "meaningZh": "我是学生。",
+          "meaningEn": "I am a student."
+        }
+      }
+    },
+    {
+      "id": "sentence-location-direction",
+      "title": "地点与方向句型",
+      "rule": "在完整句中练习位置、去向、来源和地点提问。",
+      "reviewStatus": "approved",
+      "items": [
+        {
+          "id": "sentence-location-direction-1",
+          "value": "كىتاب ئۈستەلدە.",
+          "latin": "Kitab üstelde.",
+          "meaning": "书在桌子上。",
+          "pattern": "书 + 在桌子上",
+          "lesson": "描述位置",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "sentence-location-direction-2",
+          "value": "مەن بازارغا بارىمەن.",
+          "latin": "Men bazargha barimen.",
+          "meaning": "我去市场。",
+          "pattern": "我 + 去市场",
+          "lesson": "描述去向",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "sentence-location-direction-3",
+          "value": "مەن ئۆيدىن كەلدىم.",
+          "latin": "Men öydin keldim.",
+          "meaning": "我从家里来。",
+          "pattern": "我 + 从家里来",
+          "lesson": "描述来源",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "sentence-location-direction-4",
+          "value": "بازار قەيەردە؟",
+          "latin": "Bazar qeyerde?",
+          "meaning": "市场在哪里？",
+          "pattern": "市场 + 在哪里",
+          "lesson": "询问地点",
+          "reviewStatus": "approved"
+        }
+      ],
+      "training": {
+        "steps": [
+          "rule",
+          "compare",
+          "recognition",
+          "ordering",
+          "completion"
+        ],
+        "compareItemIds": [
+          "sentence-location-direction-1",
+          "sentence-location-direction-4"
+        ],
+        "recognition": {
+          "promptZh": "哪一句是在问地点？",
+          "promptEn": "Which sentence asks for a location?",
+          "options": [
+            {
+              "id": "a",
+              "itemId": "sentence-location-direction-1"
+            },
+            {
+              "id": "b",
+              "itemId": "sentence-location-direction-4"
+            }
+          ],
+          "answerId": "b"
+        },
+        "ordering": {
+          "tokens": [
+            {
+              "id": "b",
+              "value": "بازارغا بارىمەن."
+            },
+            {
+              "id": "a",
+              "value": "مەن "
+            }
+          ],
+          "answerIds": [
+            "a",
+            "b"
+          ],
+          "completedValue": "مەن بازارغا بارىمەن."
+        },
+        "completion": {
+          "promptZh": "补全“市场在哪里？”",
+          "promptEn": "Complete ‘Where is the market?’",
+          "options": [
+            {
+              "id": "a",
+              "value": "قەيەردە"
+            },
+            {
+              "id": "b",
+              "value": "بارىمەن"
+            }
+          ],
+          "answerId": "a",
+          "completedValue": "بازار قەيەردە؟",
+          "meaningZh": "市场在哪里？",
+          "meaningEn": "Where is the market?"
+        }
+      }
+    },
+    {
+      "id": "sentence-ability-preference",
+      "title": "能力、愿望与需要",
+      "rule": "用完整句表达会做、想做、喜欢做和需要什么。",
+      "reviewStatus": "approved",
+      "items": [
+        {
+          "id": "sentence-ability-preference-1",
+          "value": "مەن ئۇيغۇرچە سۆزلىيەلەيمەن.",
+          "latin": "Men uyghurche sözliyeleymen.",
+          "meaning": "我会说维吾尔语。",
+          "pattern": "我 + 会说维吾尔语",
+          "lesson": "表达能力",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "sentence-ability-preference-2",
+          "value": "مەن چاي ئىچكۈم كېلىدۇ.",
+          "latin": "Men chay ichküm këlidu.",
+          "meaning": "我想喝茶。",
+          "pattern": "我 + 想喝茶",
+          "lesson": "表达愿望",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "sentence-ability-preference-3",
+          "value": "مەن كىتاب ئوقۇشنى ياخشى كۆرىمەن.",
+          "latin": "Men kitab oqushni yaxshi körimen.",
+          "meaning": "我喜欢读书。",
+          "pattern": "我 + 喜欢读书",
+          "lesson": "表达喜好",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "sentence-ability-preference-4",
+          "value": "ماڭا قەلەم لازىم.",
+          "latin": "Manga qelem lazim.",
+          "meaning": "我需要一支笔。",
+          "pattern": "对我 + 笔 + 需要",
+          "lesson": "表达需要",
+          "reviewStatus": "approved"
+        }
+      ],
+      "training": {
+        "steps": [
+          "rule",
+          "compare",
+          "recognition",
+          "ordering",
+          "completion"
+        ],
+        "compareItemIds": [
+          "sentence-ability-preference-1",
+          "sentence-ability-preference-3"
+        ],
+        "recognition": {
+          "promptZh": "哪一句表示“我喜欢读书”？",
+          "promptEn": "Which sentence means ‘I like reading’ ?",
+          "options": [
+            {
+              "id": "a",
+              "itemId": "sentence-ability-preference-1"
+            },
+            {
+              "id": "b",
+              "itemId": "sentence-ability-preference-3"
+            }
+          ],
+          "answerId": "b"
+        },
+        "ordering": {
+          "tokens": [
+            {
+              "id": "b",
+              "value": "قەلەم لازىم."
+            },
+            {
+              "id": "a",
+              "value": "ماڭا "
+            }
+          ],
+          "answerIds": [
+            "a",
+            "b"
+          ],
+          "completedValue": "ماڭا قەلەم لازىم."
+        },
+        "completion": {
+          "promptZh": "补全“我会说维吾尔语”",
+          "promptEn": "Complete ‘I can speak Uyghur’",
+          "options": [
+            {
+              "id": "a",
+              "value": "سۆزلىيەلەيمەن"
+            },
+            {
+              "id": "b",
+              "value": "ياخشى كۆرىمەن"
+            }
+          ],
+          "answerId": "a",
+          "completedValue": "مەن ئۇيغۇرچە سۆزلىيەلەيمەن.",
+          "meaningZh": "我会说维吾尔语。",
+          "meaningEn": "I can speak Uyghur."
+        }
+      }
+    },
+    {
+      "id": "sentence-polite-reason",
+      "title": "礼貌请求与原因结果",
+      "rule": "先学习礼貌请求，再用连接词说明原因或结果。",
+      "reviewStatus": "approved",
+      "items": [
+        {
+          "id": "sentence-polite-reason-1",
+          "value": "كەچۈرۈڭ، سۇ بېرىڭ.",
+          "latin": "Kechürüng, su bëring.",
+          "meaning": "请问，请给我水。",
+          "pattern": "请问 + 请给水",
+          "lesson": "礼貌请求",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "sentence-polite-reason-2",
+          "value": "كىتابنى ئالسام بولامدۇ؟",
+          "latin": "Kitabni alsam bolamdu?",
+          "meaning": "我可以拿这本书吗？",
+          "pattern": "书 + 我拿 + 可以吗",
+          "lesson": "请求许可",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "sentence-polite-reason-3",
+          "value": "مەن ئۆيگە قايتىمەن، چۈنكى كەچ بولدى.",
+          "latin": "Men öyge qaytimen, chünki kech boldi.",
+          "meaning": "我要回家，因为天晚了。",
+          "pattern": "结果 + 因为 + 原因",
+          "lesson": "说明原因",
+          "reviewStatus": "approved"
+        },
+        {
+          "id": "sentence-polite-reason-4",
+          "value": "يامغۇر ياغدى، شۇڭا مەن ئۆيدە قالدىم.",
+          "latin": "Yamghur yaghdi, shunga men öyde qaldim.",
+          "meaning": "下雨了，所以我留在家里。",
+          "pattern": "原因 + 所以 + 结果",
+          "lesson": "说明结果",
+          "reviewStatus": "approved"
+        }
+      ],
+      "training": {
+        "steps": [
+          "rule",
+          "compare",
+          "recognition",
+          "ordering",
+          "completion"
+        ],
+        "compareItemIds": [
+          "sentence-polite-reason-1",
+          "sentence-polite-reason-3"
+        ],
+        "recognition": {
+          "promptZh": "哪一句在说明原因？",
+          "promptEn": "Which sentence gives a reason?",
+          "options": [
+            {
+              "id": "a",
+              "itemId": "sentence-polite-reason-1"
+            },
+            {
+              "id": "b",
+              "itemId": "sentence-polite-reason-3"
+            }
+          ],
+          "answerId": "b"
+        },
+        "ordering": {
+          "tokens": [
+            {
+              "id": "b",
+              "value": "سۇ بېرىڭ."
+            },
+            {
+              "id": "a",
+              "value": "كەچۈرۈڭ، "
+            }
+          ],
+          "answerIds": [
+            "a",
+            "b"
+          ],
+          "completedValue": "كەچۈرۈڭ، سۇ بېرىڭ."
+        },
+        "completion": {
+          "promptZh": "补全“下雨了，所以我留在家里”",
+          "promptEn": "Complete the cause-result sentence",
+          "options": [
+            {
+              "id": "a",
+              "value": "چۈنكى"
+            },
+            {
+              "id": "b",
+              "value": "شۇڭا"
+            }
+          ],
+          "answerId": "b",
+          "completedValue": "يامغۇر ياغدى، شۇڭا مەن ئۆيدە قالدىم.",
+          "meaningZh": "下雨了，所以我留在家里。",
+          "meaningEn": "It rained, so I stayed at home."
+        }
+      }
+    }
+  ]
+}
+);
+
+const legacyReadingTrainingByGroupId = Object.freeze({
+  "grammar-word-order": {
+    rule: "维吾尔语基础陈述句常按主语、宾语或地点、动词排列，动词通常放在句末。",
+    training: {
+      steps: ["rule", "compare", "recognition", "ordering", "completion"],
+      compareItemIds: ["grammar-word-order-1", "grammar-word-order-3"],
+      recognition: {
+        promptZh: "哪一句表示“我喝茶”？",
+        promptEn: "Which sentence means ‘I drink tea’ ?",
+        options: [{ id: "a", itemId: "grammar-word-order-2" }, { id: "b", itemId: "grammar-word-order-3" }],
+        answerId: "a"
+      },
+      ordering: {
+        tokens: [{ id: "b", value: "كىتاب ئوقۇيمەن." }, { id: "a", value: "مەن " }],
+        answerIds: ["a", "b"],
+        completedValue: "مەن كىتاب ئوقۇيمەن."
+      },
+      completion: {
+        promptZh: "补全“我读书”",
+        promptEn: "Complete ‘I read a book’",
+        options: [{ id: "a", value: "ئوقۇيمەن" }, { id: "b", value: "ئىچىمەن" }],
+        answerId: "a",
+        completedValue: "مەن كىتاب ئوقۇيمەن.",
+        meaningZh: "我读书。",
+        meaningEn: "I read a book."
+      }
+    }
+  },
+  "grammar-copula": {
+    rule: "现在时名词句常把对象和身份直接并列，不必另外写出“是”。",
+    training: {
+      steps: ["rule", "compare", "recognition", "ordering", "completion"],
+      compareItemIds: ["grammar-copula-1", "grammar-copula-3"],
+      recognition: {
+        promptZh: "哪一句表示“我是学生”？",
+        promptEn: "Which sentence means ‘I am a student’ ?",
+        options: [{ id: "a", itemId: "grammar-copula-2" }, { id: "b", itemId: "grammar-copula-3" }],
+        answerId: "a"
+      },
+      ordering: {
+        tokens: [{ id: "b", value: "ئوقۇغۇچى." }, { id: "a", value: "مەن " }],
+        answerIds: ["a", "b"],
+        completedValue: "مەن ئوقۇغۇچى."
+      },
+      completion: {
+        promptZh: "补全“我是学生”",
+        promptEn: "Complete ‘I am a student’",
+        options: [{ id: "a", value: "ئوقۇغۇچى" }, { id: "b", value: "دوختۇر" }],
+        answerId: "a",
+        completedValue: "مەن ئوقۇغۇچى.",
+        meaningZh: "我是学生。",
+        meaningEn: "I am a student."
+      }
+    }
+  },
+  "grammar-negative-emes": {
+    rule: "名词句或形容词句的否定常把 ئەمەس 放在句末。",
+    training: {
+      steps: ["rule", "compare", "recognition", "ordering", "completion"],
+      compareItemIds: ["grammar-negative-emes-1", "grammar-negative-emes-2"],
+      recognition: {
+        promptZh: "哪一句表示“他（她）不是医生”？",
+        promptEn: "Which sentence means ‘He or she is not a doctor’ ?",
+        options: [{ id: "a", itemId: "grammar-negative-emes-1" }, { id: "b", itemId: "grammar-negative-emes-2" }],
+        answerId: "b"
+      },
+      ordering: {
+        tokens: [{ id: "b", value: "ئەمەس." }, { id: "a", value: "بۇ كىتاب " }],
+        answerIds: ["a", "b"],
+        completedValue: "بۇ كىتاب ئەمەس."
+      },
+      completion: {
+        promptZh: "补全“这不是书”",
+        promptEn: "Complete ‘This is not a book’",
+        options: [{ id: "a", value: "ئەمەس" }, { id: "b", value: "بار" }],
+        answerId: "a",
+        completedValue: "بۇ كىتاب ئەمەس.",
+        meaningZh: "这不是书。",
+        meaningEn: "This is not a book."
+      }
+    }
+  },
+  "grammar-yes-no-mu": {
+    rule: "能用“是”或“不是”回答的问题，常把疑问标记 مۇ 连在判断重点后面。",
+    training: {
+      steps: ["rule", "compare", "recognition", "ordering", "completion"],
+      compareItemIds: ["grammar-yes-no-mu-1", "grammar-yes-no-mu-3"],
+      recognition: {
+        promptZh: "哪一句表示“您有书吗”？",
+        promptEn: "Which sentence means ‘Do you have a book’ ?",
+        options: [{ id: "a", itemId: "grammar-yes-no-mu-1" }, { id: "b", itemId: "grammar-yes-no-mu-3" }],
+        answerId: "b"
+      },
+      ordering: {
+        tokens: [{ id: "b", value: "كىتابمۇ؟" }, { id: "a", value: "بۇ " }],
+        answerIds: ["a", "b"],
+        completedValue: "بۇ كىتابمۇ؟"
+      },
+      completion: {
+        promptZh: "补全“这是书吗？”",
+        promptEn: "Complete ‘Is this a book?’",
+        options: [{ id: "a", value: "كىتابمۇ" }, { id: "b", value: "كىتاب" }],
+        answerId: "a",
+        completedValue: "بۇ كىتابمۇ؟",
+        meaningZh: "这是书吗？",
+        meaningEn: "Is this a book?"
+      }
+    }
+  },
+  "grammar-question-words": {
+    rule: "有疑问词时，把 كىم、نېمە 或 قەيەردە 放在要询问的位置，通常不再加 مۇ。",
+    training: {
+      steps: ["rule", "compare", "recognition", "ordering", "completion"],
+      compareItemIds: ["grammar-question-words-1", "grammar-question-words-3"],
+      recognition: {
+        promptZh: "哪一句表示“学校在哪里”？",
+        promptEn: "Which sentence means ‘Where is the school’ ?",
+        options: [{ id: "a", itemId: "grammar-question-words-2" }, { id: "b", itemId: "grammar-question-words-3" }],
+        answerId: "b"
+      },
+      ordering: {
+        tokens: [{ id: "b", value: "نېمە؟" }, { id: "a", value: "بۇ " }],
+        answerIds: ["a", "b"],
+        completedValue: "بۇ نېمە؟"
+      },
+      completion: {
+        promptZh: "补全“这是谁？”",
+        promptEn: "Complete ‘Who is this?’",
+        options: [{ id: "a", value: "كىم" }, { id: "b", value: "نېمە" }],
+        answerId: "a",
+        completedValue: "بۇ كىم؟",
+        meaningZh: "这是谁？",
+        meaningEn: "Who is this?"
+      }
+    }
+  },
+  "grammar-bar-yoq": {
+    rule: "بار 表示有或存在，يوق 表示没有或不存在，两者通常放在句末。",
+    training: {
+      steps: ["rule", "compare", "recognition", "ordering", "completion"],
+      compareItemIds: ["grammar-bar-yoq-1", "grammar-bar-yoq-2"],
+      recognition: {
+        promptZh: "哪一句表示“我没有笔”？",
+        promptEn: "Which sentence means ‘I do not have a pen’ ?",
+        options: [{ id: "a", itemId: "grammar-bar-yoq-1" }, { id: "b", itemId: "grammar-bar-yoq-2" }],
+        answerId: "b"
+      },
+      ordering: {
+        tokens: [{ id: "b", value: "قەلەم بار." }, { id: "a", value: "مەندە " }],
+        answerIds: ["a", "b"],
+        completedValue: "مەندە قەلەم بار."
+      },
+      completion: {
+        promptZh: "补全“我没有笔”",
+        promptEn: "Complete ‘I do not have a pen’",
+        options: [{ id: "a", value: "يوق" }, { id: "b", value: "بار" }],
+        answerId: "a",
+        completedValue: "مەندە قەلەم يوق.",
+        meaningZh: "我没有笔。",
+        meaningEn: "I do not have a pen."
+      }
+    }
+  },
+  "sentence-this-that": {
+    rule: "用 بۇ 指近处的“这”，用 ئۇ 指较远的“那”，再接要说明的人或物。",
+    training: {
+      steps: ["rule", "compare", "recognition", "ordering", "completion"],
+      compareItemIds: ["sentence-this-that-1", "sentence-this-that-3"],
+      recognition: {
+        promptZh: "哪一句表示“那是学校”？",
+        promptEn: "Which sentence means ‘That is a school’ ?",
+        options: [{ id: "a", itemId: "sentence-this-that-1" }, { id: "b", itemId: "sentence-this-that-3" }],
+        answerId: "b"
+      },
+      ordering: {
+        tokens: [{ id: "b", value: "قەلەم." }, { id: "a", value: "بۇ " }],
+        answerIds: ["a", "b"],
+        completedValue: "بۇ قەلەم."
+      },
+      completion: {
+        promptZh: "补全“这是书”",
+        promptEn: "Complete ‘This is a book’",
+        options: [{ id: "a", value: "كىتاب" }, { id: "b", value: "مەكتەپ" }],
+        answerId: "a",
+        completedValue: "بۇ كىتاب.",
+        meaningZh: "这是书。",
+        meaningEn: "This is a book."
+      }
+    }
+  },
+  "sentence-who-what": {
+    rule: "用 كىم 问人、نېمە 问事物、قەيەردە 问地点。",
+    training: {
+      steps: ["rule", "compare", "recognition", "ordering", "completion"],
+      compareItemIds: ["sentence-who-what-1", "sentence-who-what-3"],
+      recognition: {
+        promptZh: "哪一句表示“这是什么”？",
+        promptEn: "Which sentence means ‘What is this’ ?",
+        options: [{ id: "a", itemId: "sentence-who-what-1" }, { id: "b", itemId: "sentence-who-what-2" }],
+        answerId: "b"
+      },
+      ordering: {
+        tokens: [{ id: "b", value: "قەيەردە؟" }, { id: "a", value: "مەكتەپ " }],
+        answerIds: ["a", "b"],
+        completedValue: "مەكتەپ قەيەردە؟"
+      },
+      completion: {
+        promptZh: "补全“这是谁？”",
+        promptEn: "Complete ‘Who is this?’",
+        options: [{ id: "a", value: "كىم" }, { id: "b", value: "نېمە" }],
+        answerId: "a",
+        completedValue: "بۇ كىم؟",
+        meaningZh: "这是谁？",
+        meaningEn: "Who is this?"
+      }
+    }
+  },
+  "sentence-i-you": {
+    rule: "先用 مەن、سىز 或 ئۇ 指明人物，再接身份或关系。",
+    training: {
+      steps: ["rule", "compare", "recognition", "ordering", "completion"],
+      compareItemIds: ["sentence-i-you-1", "sentence-i-you-3"],
+      recognition: {
+        promptZh: "哪一句表示“这是我的朋友”？",
+        promptEn: "Which sentence means ‘This is my friend’ ?",
+        options: [{ id: "a", itemId: "sentence-i-you-3" }, { id: "b", itemId: "sentence-i-you-4" }],
+        answerId: "b"
+      },
+      ordering: {
+        tokens: [{ id: "b", value: "ئوقۇغۇچى." }, { id: "a", value: "مەن " }],
+        answerIds: ["a", "b"],
+        completedValue: "مەن ئوقۇغۇچى."
+      },
+      completion: {
+        promptZh: "补全“您是老师”",
+        promptEn: "Complete ‘You are a teacher’",
+        options: [{ id: "a", value: "مۇئەللىم" }, { id: "b", value: "دوختۇر" }],
+        answerId: "a",
+        completedValue: "سىز مۇئەللىم.",
+        meaningZh: "您是老师。",
+        meaningEn: "You are a teacher."
+      }
+    }
+  },
+  "sentence-have": {
+    rule: "用 بار 表示有，用 يوق 表示没有；需要询问时可在 بار 后接 مۇ。",
+    training: {
+      steps: ["rule", "compare", "recognition", "ordering", "completion"],
+      compareItemIds: ["sentence-have-1", "sentence-have-2"],
+      recognition: {
+        promptZh: "哪一句表示“我们有馕”？",
+        promptEn: "Which sentence means ‘We have naan’ ?",
+        options: [{ id: "a", itemId: "sentence-have-3" }, { id: "b", itemId: "sentence-have-4" }],
+        answerId: "b"
+      },
+      ordering: {
+        tokens: [{ id: "b", value: "قەلەم بار." }, { id: "a", value: "مەندە " }],
+        answerIds: ["a", "b"],
+        completedValue: "مەندە قەلەم بار."
+      },
+      completion: {
+        promptZh: "补全“我没有笔”",
+        promptEn: "Complete ‘I do not have a pen’",
+        options: [{ id: "a", value: "يوق" }, { id: "b", value: "بار" }],
+        answerId: "a",
+        completedValue: "مەندە قەلەم يوق.",
+        meaningZh: "我没有笔。",
+        meaningEn: "I do not have a pen."
+      }
+    }
+  },
+  "sentence-like-need": {
+    rule: "用 ماڭا … لازىم 表达需要；表达日常动作或喜好时，动词放在句末。",
+    training: {
+      steps: ["rule", "compare", "recognition", "ordering", "completion"],
+      compareItemIds: ["sentence-like-need-1", "sentence-like-need-4"],
+      recognition: {
+        promptZh: "哪一句表示“我要馕”？",
+        promptEn: "Which sentence means ‘I want naan’ ?",
+        options: [{ id: "a", itemId: "sentence-like-need-1" }, { id: "b", itemId: "sentence-like-need-2" }],
+        answerId: "b"
+      },
+      ordering: {
+        tokens: [{ id: "b", value: "چاي ئىچىمەن." }, { id: "a", value: "مەن " }],
+        answerIds: ["a", "b"],
+        completedValue: "مەن چاي ئىچىمەن."
+      },
+      completion: {
+        promptZh: "补全“我要水”",
+        promptEn: "Complete ‘I want water’",
+        options: [{ id: "a", value: "سۇ لازىم" }, { id: "b", value: "نان لازىم" }],
+        answerId: "a",
+        completedValue: "ماڭا سۇ لازىم.",
+        meaningZh: "我要水。",
+        meaningEn: "I want water."
+      }
+    }
+  },
+  "sentence-time": {
+    rule: "先说 بۈگۈن 或 ھازىر 等时间词，再说明日期或时刻。",
+    training: {
+      steps: ["rule", "compare", "recognition", "ordering", "completion"],
+      compareItemIds: ["sentence-time-1", "sentence-time-2"],
+      recognition: {
+        promptZh: "哪一句表示“现在八点”？",
+        promptEn: "Which sentence means ‘It is eight o’clock now’ ?",
+        options: [{ id: "a", itemId: "sentence-time-3" }, { id: "b", itemId: "sentence-time-4" }],
+        answerId: "b"
+      },
+      ordering: {
+        tokens: [{ id: "b", value: "دۈشەنبە." }, { id: "a", value: "بۈگۈن " }],
+        answerIds: ["a", "b"],
+        completedValue: "بۈگۈن دۈشەنبە."
+      },
+      completion: {
+        promptZh: "补全“现在八点”",
+        promptEn: "Complete ‘It is eight o’clock now’",
+        options: [{ id: "a", value: "سەككىز" }, { id: "b", value: "دۈشەنبە" }],
+        answerId: "a",
+        completedValue: "ھازىر سائەت سەككىز.",
+        meaningZh: "现在八点。",
+        meaningEn: "It is eight o'clock now."
+      }
+    }
+  },
+  "sentence-no": {
+    rule: "ئەمەس 否定名词判断，يوق 表示不在或没有，动词否定则体现在动词形式中。",
+    training: {
+      steps: ["rule", "compare", "recognition", "ordering", "completion"],
+      compareItemIds: ["sentence-no-1", "sentence-no-4"],
+      recognition: {
+        promptZh: "哪一句表示“我不喝茶”？",
+        promptEn: "Which sentence means ‘I do not drink tea’ ?",
+        options: [{ id: "a", itemId: "sentence-no-2" }, { id: "b", itemId: "sentence-no-3" }],
+        answerId: "b"
+      },
+      ordering: {
+        tokens: [{ id: "b", value: "ئەمەس." }, { id: "a", value: "بۇ كىتاب " }],
+        answerIds: ["a", "b"],
+        completedValue: "بۇ كىتاب ئەمەس."
+      },
+      completion: {
+        promptZh: "补全“他（她）不在家”",
+        promptEn: "Complete ‘He or she is not at home’",
+        options: [{ id: "a", value: "يوق" }, { id: "b", value: "ئەمەس" }],
+        answerId: "a",
+        completedValue: "ئۇ ئۆيدە يوق.",
+        meaningZh: "他/她不在家。",
+        meaningEn: "He/she is not at home."
+      }
+    }
+  },
+  "sentence-question": {
+    rule: "简单疑问句保留原有陈述结构，并在判断重点或动词疑问形式中表达提问。",
+    training: {
+      steps: ["rule", "compare", "recognition", "ordering", "completion"],
+      compareItemIds: ["sentence-question-1", "sentence-question-3"],
+      recognition: {
+        promptZh: "哪一句表示“他（她）来吗？”",
+        promptEn: "Which sentence means ‘Is he or she coming’ ?",
+        options: [{ id: "a", itemId: "sentence-question-2" }, { id: "b", itemId: "sentence-question-4" }],
+        answerId: "b"
+      },
+      ordering: {
+        tokens: [{ id: "b", value: "كىتابمۇ؟" }, { id: "a", value: "بۇ " }],
+        answerIds: ["a", "b"],
+        completedValue: "بۇ كىتابمۇ؟"
+      },
+      completion: {
+        promptZh: "补全“您好吗？”",
+        promptEn: "Complete ‘Are you well?’",
+        options: [{ id: "a", value: "ياخشىمۇ" }, { id: "b", value: "كىتابمۇ" }],
+        answerId: "a",
+        completedValue: "سىز ياخشىمۇ؟",
+        meaningZh: "您好吗？",
+        meaningEn: "Are you well?"
+      }
+    }
+  }
+});
+
 const readingUnits = [
   {
     id: "grammar-basics",
@@ -11,6 +1221,7 @@ const readingUnits = [
       {
         id: "grammar-word-order",
         title: "主语 + 宾语 + 动词",
+        ...legacyReadingTrainingByGroupId["grammar-word-order"],
         items: [
           {
             id: "grammar-word-order-1",
@@ -41,6 +1252,7 @@ const readingUnits = [
       {
         id: "grammar-copula",
         title: "A 是 B",
+        ...legacyReadingTrainingByGroupId["grammar-copula"],
         items: [
           {
             id: "grammar-copula-1",
@@ -71,6 +1283,7 @@ const readingUnits = [
       {
         id: "grammar-negative-emes",
         title: "不是",
+        ...legacyReadingTrainingByGroupId["grammar-negative-emes"],
         items: [
           {
             id: "grammar-negative-emes-1",
@@ -101,6 +1314,7 @@ const readingUnits = [
       {
         id: "grammar-yes-no-mu",
         title: "是 / 否疑问",
+        ...legacyReadingTrainingByGroupId["grammar-yes-no-mu"],
         items: [
           {
             id: "grammar-yes-no-mu-1",
@@ -131,6 +1345,7 @@ const readingUnits = [
       {
         id: "grammar-question-words",
         title: "谁 / 什么 / 哪里",
+        ...legacyReadingTrainingByGroupId["grammar-question-words"],
         items: [
           {
             id: "grammar-question-words-1",
@@ -161,6 +1376,7 @@ const readingUnits = [
       {
         id: "grammar-bar-yoq",
         title: "有 / 没有",
+        ...legacyReadingTrainingByGroupId["grammar-bar-yoq"],
         items: [
           {
             id: "grammar-bar-yoq-1",
@@ -187,7 +1403,8 @@ const readingUnits = [
             reviewStatus: "待母语者审校"
           }
         ]
-      }
+      },
+      ...finalReadingGroups["grammar-basics"]
     ]
   },
   {
@@ -201,6 +1418,7 @@ const readingUnits = [
       {
         id: "sentence-this-that",
         title: "这是…… / 那是……",
+        ...legacyReadingTrainingByGroupId["sentence-this-that"],
         items: [
           { id: "sentence-this-that-1", value: "بۇ قەلەم.", meaning: "这是笔。", reviewStatus: "待母语者审校" },
           { id: "sentence-this-that-2", value: "بۇ كىتاب.", meaning: "这是书。", reviewStatus: "待母语者审校" },
@@ -211,6 +1429,7 @@ const readingUnits = [
       {
         id: "sentence-who-what",
         title: "谁？什么？哪里？",
+        ...legacyReadingTrainingByGroupId["sentence-who-what"],
         items: [
           { id: "sentence-who-what-1", value: "بۇ كىم؟", meaning: "这是谁？", reviewStatus: "待母语者审校" },
           { id: "sentence-who-what-2", value: "بۇ نېمە؟", meaning: "这是什么？", reviewStatus: "待母语者审校" },
@@ -221,6 +1440,7 @@ const readingUnits = [
       {
         id: "sentence-i-you",
         title: "我是…… / 你是……",
+        ...legacyReadingTrainingByGroupId["sentence-i-you"],
         items: [
           { id: "sentence-i-you-1", value: "مەن ئوقۇغۇچى.", meaning: "我是学生。", reviewStatus: "待母语者审校" },
           { id: "sentence-i-you-2", value: "سىز مۇئەللىم.", meaning: "您是老师。", reviewStatus: "待母语者审校" },
@@ -231,6 +1451,7 @@ const readingUnits = [
       {
         id: "sentence-have",
         title: "我有…… / 我没有……",
+        ...legacyReadingTrainingByGroupId["sentence-have"],
         items: [
           { id: "sentence-have-1", value: "مەندە قەلەم بار.", meaning: "我有笔。", reviewStatus: "待母语者审校" },
           { id: "sentence-have-2", value: "مەندە قەلەم يوق.", meaning: "我没有笔。", reviewStatus: "待母语者审校" },
@@ -241,6 +1462,7 @@ const readingUnits = [
       {
         id: "sentence-like-need",
         title: "我要…… / 我喜欢……",
+        ...legacyReadingTrainingByGroupId["sentence-like-need"],
         items: [
           { id: "sentence-like-need-1", value: "ماڭا سۇ لازىم.", meaning: "我要水。", reviewStatus: "待母语者审校" },
           { id: "sentence-like-need-2", value: "ماڭا نان لازىم.", meaning: "我要馕。", reviewStatus: "待母语者审校" },
@@ -251,6 +1473,7 @@ const readingUnits = [
       {
         id: "sentence-time",
         title: "时间和日期",
+        ...legacyReadingTrainingByGroupId["sentence-time"],
         items: [
           { id: "sentence-time-1", value: "بۈگۈن قايسى كۈن؟", meaning: "今天星期几？", reviewStatus: "待母语者审校" },
           { id: "sentence-time-2", value: "بۈگۈن دۈشەنبە.", meaning: "今天是星期一。", reviewStatus: "待母语者审校" },
@@ -261,6 +1484,7 @@ const readingUnits = [
       {
         id: "sentence-no",
         title: "不是 / 没有 / 不做",
+        ...legacyReadingTrainingByGroupId["sentence-no"],
         items: [
           { id: "sentence-no-1", value: "بۇ كىتاب ئەمەس.", meaning: "这不是书。", reviewStatus: "待母语者审校" },
           { id: "sentence-no-2", value: "ئۇ ئۆيدە يوق.", meaning: "他/她不在家。", reviewStatus: "待母语者审校" },
@@ -271,13 +1495,15 @@ const readingUnits = [
       {
         id: "sentence-question",
         title: "简单疑问句",
+        ...legacyReadingTrainingByGroupId["sentence-question"],
         items: [
           { id: "sentence-question-1", value: "بۇ كىتابمۇ؟", meaning: "这是书吗？", reviewStatus: "待母语者审校" },
           { id: "sentence-question-2", value: "سىز ياخشىمۇ؟", meaning: "您好吗？", reviewStatus: "待母语者审校" },
           { id: "sentence-question-3", value: "سىز چاي ئىچەمسىز؟", meaning: "您喝茶吗？", reviewStatus: "待母语者审校" },
           { id: "sentence-question-4", value: "ئۇ كېلەمدۇ؟", meaning: "他/她来吗？", reviewStatus: "待母语者审校" }
         ]
-      }
+      },
+      ...finalReadingGroups["sentence-patterns"]
     ]
   },
   {

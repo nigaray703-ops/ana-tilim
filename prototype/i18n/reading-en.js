@@ -1,4 +1,185 @@
 (() => {
+  const finalReadingEnglish = Object.freeze(
+{
+  "groups": {
+    "grammar-person-verbs": {
+      "title": "Person and verbs",
+      "rule": "Identify the subject, then notice how the verb ending changes with person."
+    },
+    "grammar-possession": {
+      "title": "Possession",
+      "rule": "The possessor and possessed noun work together to express whose item it is."
+    },
+    "grammar-location-direction": {
+      "title": "Location and direction",
+      "rule": "Compare being at a place, going to it, and coming from it."
+    },
+    "grammar-basic-time": {
+      "title": "Basic time expressions",
+      "rule": "Identify the time word, then notice when the action happens."
+    },
+    "sentence-self-introduction": {
+      "title": "Self-introduction",
+      "rule": "Build a short introduction with name, age, hometown, and role."
+    },
+    "sentence-location-direction": {
+      "title": "Location and direction patterns",
+      "rule": "Practise location, destination, origin, and asking where in full sentences."
+    },
+    "sentence-ability-preference": {
+      "title": "Ability, wishes, and needs",
+      "rule": "Use full sentences to express ability, wishes, preferences, and needs."
+    },
+    "sentence-polite-reason": {
+      "title": "Polite requests and cause-result",
+      "rule": "Learn polite requests, then use connectors to explain cause or result."
+    }
+  },
+  "items": {
+    "grammar-person-verbs-1": {
+      "pattern": "I + read",
+      "meaning": "I read a book.",
+      "lesson": "First-person verb ending"
+    },
+    "grammar-person-verbs-2": {
+      "pattern": "You + read",
+      "meaning": "You read a book.",
+      "lesson": "Second-person verb ending"
+    },
+    "grammar-person-verbs-3": {
+      "pattern": "He or she + reads",
+      "meaning": "He or she reads a book.",
+      "lesson": "Third-person verb ending"
+    },
+    "grammar-possession-1": {
+      "pattern": "This + my + book",
+      "meaning": "This is my book.",
+      "lesson": "First-person possession"
+    },
+    "grammar-possession-2": {
+      "pattern": "This + your + book",
+      "meaning": "This is your book.",
+      "lesson": "Second-person possession"
+    },
+    "grammar-possession-3": {
+      "pattern": "This + his or her + book",
+      "meaning": "This is his or her book.",
+      "lesson": "Third-person possession"
+    },
+    "grammar-location-direction-1": {
+      "pattern": "I + at school",
+      "meaning": "I am at school.",
+      "lesson": "Location relationship"
+    },
+    "grammar-location-direction-2": {
+      "pattern": "I + go to school",
+      "meaning": "I go to school.",
+      "lesson": "Direction toward"
+    },
+    "grammar-location-direction-3": {
+      "pattern": "I + came from school",
+      "meaning": "I came from school.",
+      "lesson": "Direction from"
+    },
+    "grammar-basic-time-1": {
+      "pattern": "Now + I + read",
+      "meaning": "I am reading a book now.",
+      "lesson": "Present time"
+    },
+    "grammar-basic-time-2": {
+      "pattern": "Yesterday + I + read",
+      "meaning": "I read a book yesterday.",
+      "lesson": "Past time"
+    },
+    "grammar-basic-time-3": {
+      "pattern": "Tomorrow + I + go to school",
+      "meaning": "I will go to school tomorrow.",
+      "lesson": "Future time"
+    },
+    "sentence-self-introduction-1": {
+      "pattern": "My name + Eli",
+      "meaning": "My name is Eli.",
+      "lesson": "Introducing a name"
+    },
+    "sentence-self-introduction-2": {
+      "pattern": "I + ten years old",
+      "meaning": "I am ten years old.",
+      "lesson": "Introducing age"
+    },
+    "sentence-self-introduction-3": {
+      "pattern": "I + from Kashgar",
+      "meaning": "I come from Kashgar.",
+      "lesson": "Introducing hometown"
+    },
+    "sentence-self-introduction-4": {
+      "pattern": "I + student",
+      "meaning": "I am a student.",
+      "lesson": "Introducing a role"
+    },
+    "sentence-location-direction-1": {
+      "pattern": "Book + on the table",
+      "meaning": "The book is on the table.",
+      "lesson": "Describing location"
+    },
+    "sentence-location-direction-2": {
+      "pattern": "I + go to the market",
+      "meaning": "I go to the market.",
+      "lesson": "Describing destination"
+    },
+    "sentence-location-direction-3": {
+      "pattern": "I + came from home",
+      "meaning": "I came from home.",
+      "lesson": "Describing origin"
+    },
+    "sentence-location-direction-4": {
+      "pattern": "Market + where",
+      "meaning": "Where is the market?",
+      "lesson": "Asking a location"
+    },
+    "sentence-ability-preference-1": {
+      "pattern": "I + can speak Uyghur",
+      "meaning": "I can speak Uyghur.",
+      "lesson": "Expressing ability"
+    },
+    "sentence-ability-preference-2": {
+      "pattern": "I + want to drink tea",
+      "meaning": "I want to drink tea.",
+      "lesson": "Expressing a wish"
+    },
+    "sentence-ability-preference-3": {
+      "pattern": "I + like reading",
+      "meaning": "I like reading books.",
+      "lesson": "Expressing preference"
+    },
+    "sentence-ability-preference-4": {
+      "pattern": "For me + pen + needed",
+      "meaning": "I need a pen.",
+      "lesson": "Expressing a need"
+    },
+    "sentence-polite-reason-1": {
+      "pattern": "Excuse me + please give water",
+      "meaning": "Excuse me, please give me water.",
+      "lesson": "Polite request"
+    },
+    "sentence-polite-reason-2": {
+      "pattern": "Book + if I take + is it okay",
+      "meaning": "May I take the book?",
+      "lesson": "Asking permission"
+    },
+    "sentence-polite-reason-3": {
+      "pattern": "Result + because + reason",
+      "meaning": "I am going home because it is late.",
+      "lesson": "Giving a reason"
+    },
+    "sentence-polite-reason-4": {
+      "pattern": "Cause + so + result",
+      "meaning": "It rained, so I stayed at home.",
+      "lesson": "Giving a result"
+    }
+  }
+}
+  );
+
   window.ANA_TILIM_READING_EN = {
     units: {
       "grammar-basics": {
@@ -27,20 +208,63 @@
       }
     },
     groups: {
-      "grammar-word-order": { title: "Subject + object + verb" },
-      "grammar-copula": { title: "A is B" },
-      "grammar-negative-emes": { title: "Is not" },
-      "grammar-yes-no-mu": { title: "Yes-or-no questions" },
-      "grammar-question-words": { title: "Who, what, and where" },
-      "grammar-bar-yoq": { title: "There is and there is not" },
-      "sentence-this-that": { title: "This is... / That is..." },
-      "sentence-who-what": { title: "Who? What? Where?" },
-      "sentence-i-you": { title: "I am... / You are..." },
-      "sentence-have": { title: "I have... / I do not have..." },
-      "sentence-like-need": { title: "I want... / I like..." },
-      "sentence-time": { title: "Time and dates" },
-      "sentence-no": { title: "Is not, does not have, and does not do" },
-      "sentence-question": { title: "Simple questions" },
+      ...finalReadingEnglish.groups,
+      "grammar-word-order": {
+        title: "Subject + object + verb",
+        rule: "Basic Uyghur statements commonly place the subject first, the object or place next, and the verb at the end."
+      },
+      "grammar-copula": {
+        title: "A is B",
+        rule: "Present-tense noun sentences commonly place the person or object directly beside its identity, without a separate word for ‘is’."
+      },
+      "grammar-negative-emes": {
+        title: "Is not",
+        rule: "To make a noun or adjective sentence negative, ئەمەس commonly goes at the end."
+      },
+      "grammar-yes-no-mu": {
+        title: "Yes-or-no questions",
+        rule: "Questions answered with yes or no commonly attach the question marker مۇ to the word being judged."
+      },
+      "grammar-question-words": {
+        title: "Who, what, and where",
+        rule: "Put كىم, نېمە, or قەيەردە where the missing information belongs; a separate مۇ is normally unnecessary."
+      },
+      "grammar-bar-yoq": {
+        title: "There is and there is not",
+        rule: "بار means that something exists or is present, while يوق means that it does not; both commonly go at the end."
+      },
+      "sentence-this-that": {
+        title: "This is... / That is...",
+        rule: "Use بۇ for a nearby ‘this’ and ئۇ for a more distant ‘that’, followed by the person or thing being identified."
+      },
+      "sentence-who-what": {
+        title: "Who? What? Where?",
+        rule: "Use كىم for a person, نېمە for a thing, and قەيەردە for a place."
+      },
+      "sentence-i-you": {
+        title: "I am... / You are...",
+        rule: "Begin with مەن, سىز, or ئۇ to identify the person, then add an identity or relationship."
+      },
+      "sentence-have": {
+        title: "I have... / I do not have...",
+        rule: "Use بار for having something and يوق for not having it; add مۇ after بار when asking a question."
+      },
+      "sentence-like-need": {
+        title: "I want... / I like...",
+        rule: "Use ماڭا … لازىم to express a need; in everyday action or preference sentences, place the verb at the end."
+      },
+      "sentence-time": {
+        title: "Time and dates",
+        rule: "Start with a time word such as بۈگۈن or ھازىر, then state the date or time."
+      },
+      "sentence-no": {
+        title: "Is not, does not have, and does not do",
+        rule: "ئەمەس negates a noun judgement, يوق expresses absence or non-possession, and verb negation appears in the verb form."
+      },
+      "sentence-question": {
+        title: "Simple questions",
+        rule: "Keep the basic statement order, then express the question on the word being judged or in the verb's question form."
+      },
       "dialogue-greeting": { title: "Meeting in the morning" },
       "dialogue-family": { title: "Introducing family" },
       "dialogue-shopping": { title: "Shopping" },
@@ -105,6 +329,7 @@
       "proverb-qaduwq": { title: "Do not forget the source" }
     },
     items: {
+      ...finalReadingEnglish.items,
       "grammar-word-order-1": {
         pattern: "Who + what + does what",
         meaning: "I read a book.",

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Ana Tilim 本地音频录制工作台</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="studio-header">
+      <div><p class="eyebrow">Ana Tilim 本地工具</p><h1>音频录制工作台</h1></div>
+      <p id="local-only-note">仅保存在这台电脑，不会自动上传或上线。</p>
+    </header>
+    <main>
+      <section class="filter-panel" aria-labelledby="filter-title">
+        <div class="audit-copy"><h2 id="filter-title">查找录音目标</h2><p id="audit-summary">正在读取录音目录…</p></div>
+        <div id="status-cards" class="status-cards" aria-label="录音任务状态"></div>
+        <div class="filter-controls">
+          <label>搜索 <input id="target-search" type="search" autocomplete="off" placeholder="文字、ULY、中文、英文或 ID" /></label>
+          <label>分类 <select id="category-filter"><option value="all">全部分类</option></select></label>
+          <label>状态 <select id="status-filter"><option value="all">全部状态</option></select></label>
+        </div>
+      </section>
+      <section class="studio-layout" aria-label="录音目标工作区">
+        <div class="list-panel"><div id="target-list" role="list" aria-label="录音目标列表"></div></div>
+        <article id="target-detail" aria-label="所选录音目标"></article>
+        <section id="import-panel" class="import-panel" aria-labelledby="import-title">
+          <h2 id="import-title">批准录音导入</h2>
+          <p>先生成只读预览，确认后才会写入课程音频。</p>
+          <button id="preview-import" type="button">预览导入</button>
+          <div id="import-plan"></div>
+          <button id="apply-import" type="button" disabled>确认导入</button>
+        </section>
+      </section>
+    </main>
+    <div id="studio-status" role="status" aria-live="polite">正在准备本机工作台…</div>
+    <div id="studio-alert" role="alert" hidden></div>
+    <script src="/app.js"></script>
+  </body>
+</html>

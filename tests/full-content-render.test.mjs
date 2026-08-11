@@ -662,12 +662,36 @@ for (const group of courseData.vocabGroups) {
 
 for (const unit of courseData.readingUnits) {
   for (const group of unit.groups) {
-    renderState(
-      { screen: "reading", selectedReadingUnitId: unit.id, selectedReadingGroupId: group.id },
-      `reading group ${group.id}`
-    );
-    for (const item of group.items) {
-      assert.ok(app.innerHTML.includes(item.value), `reading group ${group.id} should render ${item.id}`);
+    if (group.training) {
+      for (const [readingTrainingStepIndex, stepId] of group.training.steps.entries()) {
+        const completedSteps = Object.fromEntries(group.training.steps.slice(0, readingTrainingStepIndex).map((id) => [id, true]));
+        renderState(
+          {
+            screen: "reading",
+            selectedReadingUnitId: unit.id,
+            selectedReadingGroupId: group.id,
+            readingTrainingStepIndex,
+            readingTrainingChoiceId: "",
+            readingOrderingIds: [],
+            readingTrainingFeedback: "",
+            learningProgress: {
+              latinWriting: {}, letters: {}, combos: {}, syllableTraining: {}, vocab: {}, practice: {},
+              reading: { [group.id]: { viewed: true, ...completedSteps } }
+            }
+          },
+          `reading group ${group.id} ${stepId}`,
+          stepId === "rule" ? group.items[0].value : ""
+        );
+        assert.ok(app.innerHTML.includes(`data-reading-training-step="${stepId}"`), `${group.id} should render its ${stepId} step`);
+      }
+    } else {
+      renderState(
+        { screen: "reading", selectedReadingUnitId: unit.id, selectedReadingGroupId: group.id },
+        `reading group ${group.id}`
+      );
+      for (const item of group.items) {
+        assert.ok(app.innerHTML.includes(item.value), `reading group ${group.id} should render ${item.id}`);
+      }
     }
   }
 }
@@ -683,7 +707,7 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
 }
 
 const chineseRenderCount = renderCount;
-assert.equal(chineseRenderCount, 814, "full UI audit should render every retained main screen, feedback state, both modes of all seven Uyghur keyboard lessons, all seven QWERTY lesson states, six Afanti stories in each allowed language state, syllable warmup/rule/judgment/review/sentence state, real 2/4/8 form state, lesson item, reading group, and practice item");
+assert.equal(chineseRenderCount, 909, "full UI audit should render every retained main screen, all five steps of all 22 Unit 6 and Unit 7 topics, and every existing lesson state");
 
 auditLanguage = "en";
 vm.runInContext('applyInterfaceLanguage("en");', context);

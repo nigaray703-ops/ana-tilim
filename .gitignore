@@ -1,4 +1,5 @@
 .DS_Store
 .pnpm-store/
 .worktrees/
+/recording-workspace/
 supabase/.temp/

@@ -54,18 +54,6 @@
     },
     {
       "order": 5,
-      "id": "hayr",
-      "groupId": "greetings",
-      "value": "خەير",
-      "latin": "xeyr",
-      "file": "human_vocab_hayr.webm",
-      "outputPath": "./assets/audio/human/vocab/human_vocab_hayr.webm",
-      "reviewStatus": "已接入",
-      "playable": true,
-      "statusLabel": "真人音频"
-    },
-    {
-      "order": 8,
       "id": "xush-keldingiz",
       "groupId": "greetings",
       "value": "خۇش كەلدىڭىز",
@@ -77,19 +65,19 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 9,
-      "id": "marhaba",
+      "order": 6,
+      "id": "erzimaydu",
       "groupId": "greetings",
-      "value": "مەرھابا",
-      "latin": "merhaba",
-      "file": "human_vocab_marhaba.webm",
-      "outputPath": "./assets/audio/human/vocab/human_vocab_marhaba.webm",
+      "value": "ئەرزىمەيدۇ",
+      "latin": "erzimeydu",
+      "file": "human_vocab_erzimeydu.webm",
+      "outputPath": "./assets/audio/human/vocab/human_vocab_erzimeydu.webm",
       "reviewStatus": "已接入",
       "playable": true,
       "statusLabel": "真人音频"
     },
     {
-      "order": 10,
+      "order": 7,
       "id": "kechurung",
       "groupId": "greetings",
       "value": "كەچۈرۈڭ",
@@ -101,7 +89,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 11,
+      "order": 8,
       "id": "yaxshi",
       "groupId": "greetings",
       "value": "ياخشى",
@@ -113,7 +101,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 12,
+      "order": 9,
       "id": "qandaq",
       "groupId": "greetings",
       "value": "قانداق",
@@ -125,7 +113,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 13,
+      "order": 10,
       "id": "xeyirlik-etigen",
       "groupId": "greetings",
       "value": "خەيرلىك ئەتىگەن",
@@ -137,7 +125,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 14,
+      "order": 11,
       "id": "xeyirlik-kech",
       "groupId": "greetings",
       "value": "خەيرلىك كەچ",
@@ -149,7 +137,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 15,
+      "order": 12,
       "id": "korushkunche",
       "groupId": "greetings",
       "value": "كۆرۈشكىچە",
@@ -161,7 +149,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 16,
+      "order": 13,
       "id": "men",
       "groupId": "pronouns",
       "value": "مەن",
@@ -173,7 +161,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 17,
+      "order": 14,
       "id": "sen",
       "groupId": "pronouns",
       "value": "سەن",
@@ -185,7 +173,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 18,
+      "order": 15,
       "id": "siz",
       "groupId": "pronouns",
       "value": "سىز",
@@ -197,7 +185,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 19,
+      "order": 16,
       "id": "u-pronoun",
       "groupId": "pronouns",
       "value": "ئۇ",
@@ -209,7 +197,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 20,
+      "order": 17,
       "id": "biz",
       "groupId": "pronouns",
       "value": "بىز",
@@ -221,7 +209,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 21,
+      "order": 18,
       "id": "ular",
       "groupId": "pronouns",
       "value": "ئۇلار",
@@ -233,7 +221,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 22,
+      "order": 19,
       "id": "bu",
       "groupId": "pronouns",
       "value": "بۇ",
@@ -245,7 +233,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 23,
+      "order": 20,
       "id": "shu",
       "groupId": "pronouns",
       "value": "شۇ",
@@ -257,7 +245,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 24,
+      "order": 21,
       "id": "mening",
       "groupId": "pronouns",
       "value": "مېنىڭ",
@@ -269,7 +257,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 25,
+      "order": 22,
       "id": "sening",
       "groupId": "pronouns",
       "value": "سېنىڭ",
@@ -281,7 +269,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 26,
+      "order": 23,
       "id": "sizning",
       "groupId": "pronouns",
       "value": "سىزنىڭ",
@@ -293,7 +281,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 27,
+      "order": 24,
       "id": "uning",
       "groupId": "pronouns",
       "value": "ئۇنىڭ",
@@ -305,7 +293,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 28,
+      "order": 25,
       "id": "bizning",
       "groupId": "pronouns",
       "value": "بىزنىڭ",
@@ -317,7 +305,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 29,
+      "order": 26,
       "id": "kim",
       "groupId": "pronouns",
       "value": "كىم",
@@ -329,7 +317,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 30,
+      "order": 27,
       "id": "nime",
       "groupId": "pronouns",
       "value": "نېمە",
@@ -341,7 +329,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 31,
+      "order": 28,
       "id": "ana-family",
       "groupId": "family",
       "value": "ئانا",
@@ -353,7 +341,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 32,
+      "order": 29,
       "id": "apa-family",
       "groupId": "family",
       "value": "ئاپا",
@@ -365,7 +353,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 33,
+      "order": 30,
       "id": "ata-family",
       "groupId": "family",
       "value": "ئاتا",
@@ -377,7 +365,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 34,
+      "order": 31,
       "id": "dada-family",
       "groupId": "family",
       "value": "دادا",
@@ -389,7 +377,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 35,
+      "order": 32,
       "id": "aile-family",
       "groupId": "family",
       "value": "ئائىلە",
@@ -401,7 +389,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 36,
+      "order": 33,
       "id": "bala-family",
       "groupId": "family",
       "value": "بالا",
@@ -413,7 +401,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 37,
+      "order": 34,
       "id": "oghul-family",
       "groupId": "family",
       "value": "ئوغۇل",
@@ -425,7 +413,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 38,
+      "order": 35,
       "id": "qiz-family",
       "groupId": "family",
       "value": "قىز",
@@ -437,7 +425,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 39,
+      "order": 36,
       "id": "aka-family",
       "groupId": "family",
       "value": "ئاكا",
@@ -449,7 +437,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 40,
+      "order": 37,
       "id": "inim-family",
       "groupId": "family",
       "value": "ئىنىم",
@@ -461,7 +449,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 41,
+      "order": 38,
       "id": "singil-family",
       "groupId": "family",
       "value": "سىڭىل",
@@ -473,7 +461,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 42,
+      "order": 39,
       "id": "acha-family",
       "groupId": "family",
       "value": "ئاچا",
@@ -485,7 +473,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 43,
+      "order": 40,
       "id": "chong-ata-family",
       "groupId": "family",
       "value": "چوڭ ئاتا",
@@ -497,7 +485,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 44,
+      "order": 41,
       "id": "chong-ana-family",
       "groupId": "family",
       "value": "چوڭ ئانا",
@@ -509,7 +497,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 45,
+      "order": 42,
       "id": "dost-family",
       "groupId": "family",
       "value": "دوست",
@@ -521,7 +509,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 46,
+      "order": 43,
       "id": "one",
       "groupId": "numbers",
       "value": "بىر",
@@ -533,7 +521,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 47,
+      "order": 44,
       "id": "two",
       "groupId": "numbers",
       "value": "ئىككى",
@@ -545,7 +533,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 48,
+      "order": 45,
       "id": "three",
       "groupId": "numbers",
       "value": "ئۈچ",
@@ -557,7 +545,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 49,
+      "order": 46,
       "id": "four",
       "groupId": "numbers",
       "value": "تۆت",
@@ -569,7 +557,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 50,
+      "order": 47,
       "id": "five",
       "groupId": "numbers",
       "value": "بەش",
@@ -581,7 +569,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 51,
+      "order": 48,
       "id": "six",
       "groupId": "numbers",
       "value": "ئالتە",
@@ -593,7 +581,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 52,
+      "order": 49,
       "id": "seven",
       "groupId": "numbers",
       "value": "يەتتە",
@@ -605,7 +593,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 53,
+      "order": 50,
       "id": "eight",
       "groupId": "numbers",
       "value": "سەككىز",
@@ -617,7 +605,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 54,
+      "order": 51,
       "id": "nine",
       "groupId": "numbers",
       "value": "توققۇز",
@@ -629,7 +617,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 55,
+      "order": 52,
       "id": "ten",
       "groupId": "numbers",
       "value": "ئون",
@@ -641,7 +629,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 56,
+      "order": 53,
       "id": "twenty",
       "groupId": "numbers",
       "value": "يىگىرمە",
@@ -653,7 +641,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 57,
+      "order": 54,
       "id": "thirty",
       "groupId": "numbers",
       "value": "ئوتتۇز",
@@ -665,7 +653,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 58,
+      "order": 55,
       "id": "forty",
       "groupId": "numbers",
       "value": "قىرىق",
@@ -677,7 +665,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 59,
+      "order": 56,
       "id": "fifty",
       "groupId": "numbers",
       "value": "ئەللىك",
@@ -689,7 +677,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 60,
+      "order": 57,
       "id": "sixty",
       "groupId": "numbers",
       "value": "ئاتمىش",
@@ -701,7 +689,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 61,
+      "order": 58,
       "id": "seventy",
       "groupId": "numbers",
       "value": "يەتمىش",
@@ -713,7 +701,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 62,
+      "order": 59,
       "id": "eighty",
       "groupId": "numbers",
       "value": "سەكسەن",
@@ -725,7 +713,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 63,
+      "order": 60,
       "id": "ninety",
       "groupId": "numbers",
       "value": "توقسان",
@@ -737,7 +725,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 64,
+      "order": 61,
       "id": "hundred",
       "groupId": "numbers",
       "value": "يۈز",
@@ -749,7 +737,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 65,
+      "order": 62,
       "id": "thousand",
       "groupId": "numbers",
       "value": "مىڭ",
@@ -761,7 +749,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 66,
+      "order": 63,
       "id": "ten-thousand",
       "groupId": "numbers",
       "value": "ئون مىڭ",
@@ -773,7 +761,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 67,
+      "order": 64,
       "id": "hundred-thousand",
       "groupId": "numbers",
       "value": "يۈز مىڭ",
@@ -785,7 +773,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 68,
+      "order": 65,
       "id": "million",
       "groupId": "numbers",
       "value": "بىر مىليون",
@@ -797,7 +785,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 69,
+      "order": 66,
       "id": "ten-million",
       "groupId": "numbers",
       "value": "ئون مىليون",
@@ -809,7 +797,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 70,
+      "order": 67,
       "id": "hundred-million",
       "groupId": "numbers",
       "value": "يۈز مىليون",
@@ -821,7 +809,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 71,
+      "order": 68,
       "id": "billion",
       "groupId": "numbers",
       "value": "بىر مىليارد",
@@ -833,7 +821,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 72,
+      "order": 69,
       "id": "bugun",
       "groupId": "time",
       "value": "بۈگۈن",
@@ -845,7 +833,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 73,
+      "order": 70,
       "id": "ete",
       "groupId": "time",
       "value": "ئەتە",
@@ -857,7 +845,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 74,
+      "order": 71,
       "id": "tunugun",
       "groupId": "time",
       "value": "تۈنۈگۈن",
@@ -869,7 +857,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 75,
+      "order": 72,
       "id": "hazir",
       "groupId": "time",
       "value": "ھازىر",
@@ -881,7 +869,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 76,
+      "order": 73,
       "id": "waqit",
       "groupId": "time",
       "value": "ۋاقىت",
@@ -893,7 +881,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 77,
+      "order": 74,
       "id": "kun",
       "groupId": "time",
       "value": "كۈن",
@@ -905,7 +893,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 78,
+      "order": 75,
       "id": "hepte",
       "groupId": "time",
       "value": "ھەپتە",
@@ -917,7 +905,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 79,
+      "order": 76,
       "id": "ay-time",
       "groupId": "time",
       "value": "ئاي",
@@ -929,7 +917,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 80,
+      "order": 77,
       "id": "yil",
       "groupId": "time",
       "value": "يىل",
@@ -941,7 +929,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 81,
+      "order": 78,
       "id": "etigen",
       "groupId": "time",
       "value": "ئەتىگەن",
@@ -953,7 +941,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 82,
+      "order": 79,
       "id": "chush",
       "groupId": "time",
       "value": "چۈش",
@@ -965,7 +953,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 83,
+      "order": 80,
       "id": "kech",
       "groupId": "time",
       "value": "كەچ",
@@ -977,7 +965,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 84,
+      "order": 81,
       "id": "keche",
       "groupId": "time",
       "value": "كېچە",
@@ -989,7 +977,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 85,
+      "order": 82,
       "id": "dushenbe",
       "groupId": "time",
       "value": "دۈشەنبە",
@@ -1001,7 +989,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 86,
+      "order": 83,
       "id": "seshenbe",
       "groupId": "time",
       "value": "سەيشەنبە",
@@ -1013,7 +1001,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 87,
+      "order": 84,
       "id": "charshenbe",
       "groupId": "time",
       "value": "چارشەنبە",
@@ -1025,7 +1013,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 88,
+      "order": 85,
       "id": "peyshenbe",
       "groupId": "time",
       "value": "پەيشەنبە",
@@ -1037,7 +1025,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 89,
+      "order": 86,
       "id": "jume",
       "groupId": "time",
       "value": "جۈمە",
@@ -1049,7 +1037,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 90,
+      "order": 87,
       "id": "shenbe",
       "groupId": "time",
       "value": "شەنبە",
@@ -1061,7 +1049,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 91,
+      "order": 88,
       "id": "yekshembe",
       "groupId": "time",
       "value": "يەكشەنبە",
@@ -1073,7 +1061,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 92,
+      "order": 89,
       "id": "yanwar",
       "groupId": "time",
       "value": "يانۋار",
@@ -1085,7 +1073,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 93,
+      "order": 90,
       "id": "fewral",
       "groupId": "time",
       "value": "فېۋرال",
@@ -1097,7 +1085,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 94,
+      "order": 91,
       "id": "mart",
       "groupId": "time",
       "value": "مارت",
@@ -1109,7 +1097,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 95,
+      "order": 92,
       "id": "aprel",
       "groupId": "time",
       "value": "ئاپرېل",
@@ -1121,7 +1109,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 96,
+      "order": 93,
       "id": "may-month",
       "groupId": "time",
       "value": "ماي",
@@ -1133,7 +1121,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 97,
+      "order": 94,
       "id": "iyun",
       "groupId": "time",
       "value": "ئىيۇن",
@@ -1145,7 +1133,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 98,
+      "order": 95,
       "id": "iyul",
       "groupId": "time",
       "value": "ئىيۇل",
@@ -1157,7 +1145,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 99,
+      "order": 96,
       "id": "awghust",
       "groupId": "time",
       "value": "ئاۋغۇست",
@@ -1169,7 +1157,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 100,
+      "order": 97,
       "id": "sentyabr",
       "groupId": "time",
       "value": "سېنتەبىر",
@@ -1181,7 +1169,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 101,
+      "order": 98,
       "id": "oktyabr",
       "groupId": "time",
       "value": "ئۆكتەبىر",
@@ -1193,7 +1181,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 102,
+      "order": 99,
       "id": "noyabr",
       "groupId": "time",
       "value": "نويابىر",
@@ -1205,7 +1193,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 103,
+      "order": 100,
       "id": "dekabr",
       "groupId": "time",
       "value": "دېكابىر",
@@ -1217,7 +1205,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 104,
+      "order": 101,
       "id": "bash-body",
       "groupId": "body",
       "value": "باش",
@@ -1229,7 +1217,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 105,
+      "order": 102,
       "id": "koz-body",
       "groupId": "body",
       "value": "كۆز",
@@ -1241,7 +1229,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 106,
+      "order": 103,
       "id": "qulaq-body",
       "groupId": "body",
       "value": "قۇلاق",
@@ -1253,7 +1241,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 107,
+      "order": 104,
       "id": "burun-body",
       "groupId": "body",
       "value": "بۇرۇن",
@@ -1265,7 +1253,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 108,
+      "order": 105,
       "id": "eghiz-body",
       "groupId": "body",
       "value": "ئېغىز",
@@ -1277,7 +1265,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 109,
+      "order": 106,
       "id": "qol-body",
       "groupId": "body",
       "value": "قول",
@@ -1289,7 +1277,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 110,
+      "order": 107,
       "id": "put-body",
       "groupId": "body",
       "value": "پۇت",
@@ -1301,7 +1289,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 111,
+      "order": 108,
       "id": "yurek-body",
       "groupId": "body",
       "value": "يۈرەك",
@@ -1313,7 +1301,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 112,
+      "order": 109,
       "id": "boyun-body",
       "groupId": "body",
       "value": "بويۇن",
@@ -1325,7 +1313,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 113,
+      "order": 110,
       "id": "arqa-body",
       "groupId": "body",
       "value": "ئارقا",
@@ -1337,7 +1325,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 114,
+      "order": 111,
       "id": "chish-body",
       "groupId": "body",
       "value": "چىش",
@@ -1349,7 +1337,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 115,
+      "order": 112,
       "id": "til-body",
       "groupId": "body",
       "value": "تىل",
@@ -1361,7 +1349,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 116,
+      "order": 113,
       "id": "chach-body",
       "groupId": "body",
       "value": "چاچ",
@@ -1373,7 +1361,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 117,
+      "order": 114,
       "id": "qorsaq-body",
       "groupId": "body",
       "value": "قورساق",
@@ -1385,7 +1373,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 118,
+      "order": 115,
       "id": "nan-food",
       "groupId": "food",
       "value": "نان",
@@ -1397,7 +1385,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 119,
+      "order": 116,
       "id": "su-food",
       "groupId": "food",
       "value": "سۇ",
@@ -1409,7 +1397,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 120,
+      "order": 117,
       "id": "chay-food",
       "groupId": "food",
       "value": "چاي",
@@ -1421,7 +1409,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 121,
+      "order": 118,
       "id": "gosh-food",
       "groupId": "food",
       "value": "گۆش",
@@ -1433,7 +1421,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 122,
+      "order": 119,
       "id": "polu-food",
       "groupId": "food",
       "value": "پولو",
@@ -1445,7 +1433,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 123,
+      "order": 120,
       "id": "mewe-food",
       "groupId": "food",
       "value": "مېۋە",
@@ -1457,7 +1445,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 124,
+      "order": 121,
       "id": "tuz-food",
       "groupId": "food",
       "value": "تۇز",
@@ -1469,7 +1457,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 125,
+      "order": 122,
       "id": "sheker-food",
       "groupId": "food",
       "value": "شېكەر",
@@ -1481,7 +1469,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 126,
+      "order": 123,
       "id": "sut-food",
       "groupId": "food",
       "value": "سۈت",
@@ -1493,7 +1481,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 127,
+      "order": 124,
       "id": "tuxum-food",
       "groupId": "food",
       "value": "تۇخۇم",
@@ -1505,7 +1493,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 128,
+      "order": 125,
       "id": "guruch-food",
       "groupId": "food",
       "value": "گۈرۈچ",
@@ -1517,7 +1505,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 129,
+      "order": 126,
       "id": "shorpa-food",
       "groupId": "food",
       "value": "شورپا",
@@ -1529,7 +1517,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 130,
+      "order": 127,
       "id": "qetiq-food",
       "groupId": "food",
       "value": "قېتىق",
@@ -1541,7 +1529,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 131,
+      "order": 128,
       "id": "pemidur-vegetable",
       "groupId": "vegetables",
       "value": "پەمىدۇر",
@@ -1553,7 +1541,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 132,
+      "order": 129,
       "id": "piyaz-vegetable",
       "groupId": "vegetables",
       "value": "پىياز",
@@ -1565,7 +1553,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 133,
+      "order": 130,
       "id": "yangyu-vegetable",
       "groupId": "vegetables",
       "value": "ياڭيۇ",
@@ -1577,7 +1565,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 134,
+      "order": 131,
       "id": "berengge-vegetable",
       "groupId": "vegetables",
       "value": "بەرەڭگە",
@@ -1589,7 +1577,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 135,
+      "order": 132,
       "id": "sewze-vegetable",
       "groupId": "vegetables",
       "value": "سەۋزە",
@@ -1601,7 +1589,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 136,
+      "order": 133,
       "id": "samsaq-vegetable",
       "groupId": "vegetables",
       "value": "سامساق",
@@ -1613,7 +1601,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 137,
+      "order": 134,
       "id": "terxemek-vegetable",
       "groupId": "vegetables",
       "value": "تەرخەمەك",
@@ -1625,7 +1613,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 138,
+      "order": 135,
       "id": "kawa-vegetable",
       "groupId": "vegetables",
       "value": "كاۋا",
@@ -1637,7 +1625,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 139,
+      "order": 136,
       "id": "laza-vegetable",
       "groupId": "vegetables",
       "value": "لازا",
@@ -1649,7 +1637,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 140,
+      "order": 137,
       "id": "koktat-vegetable",
       "groupId": "vegetables",
       "value": "كۆكتات",
@@ -1661,7 +1649,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 141,
+      "order": 138,
       "id": "yesiwilek-vegetable",
       "groupId": "vegetables",
       "value": "يېسىۋىلەك",
@@ -1673,7 +1661,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 142,
+      "order": 139,
       "id": "palek-vegetable",
       "groupId": "vegetables",
       "value": "پالەك",
@@ -1685,7 +1673,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 143,
+      "order": 140,
       "id": "chamghur-vegetable",
       "groupId": "vegetables",
       "value": "چامغۇر",
@@ -1697,7 +1685,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 144,
+      "order": 141,
       "id": "badamjan-vegetable",
       "groupId": "vegetables",
       "value": "بادامجان",
@@ -1709,7 +1697,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 145,
+      "order": 142,
       "id": "qizilmuch-vegetable",
       "groupId": "vegetables",
       "value": "قىزىلمۇچ",
@@ -1721,7 +1709,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 146,
+      "order": 143,
       "id": "it-animal",
       "groupId": "animals",
       "value": "ئىت",
@@ -1733,7 +1721,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 147,
+      "order": 144,
       "id": "mushuk-animal",
       "groupId": "animals",
       "value": "مۈشۈك",
@@ -1745,7 +1733,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 148,
+      "order": 145,
       "id": "beliq-animal",
       "groupId": "animals",
       "value": "بېلىق",
@@ -1757,7 +1745,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 149,
+      "order": 146,
       "id": "qush-animal",
       "groupId": "animals",
       "value": "قۇش",
@@ -1769,7 +1757,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 150,
+      "order": 147,
       "id": "kala-animal",
       "groupId": "animals",
       "value": "كالا",
@@ -1781,7 +1769,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 151,
+      "order": 148,
       "id": "qoy-animal",
       "groupId": "animals",
       "value": "قوي",
@@ -1793,7 +1781,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 152,
+      "order": 149,
       "id": "toxu-animal",
       "groupId": "animals",
       "value": "توخۇ",
@@ -1805,7 +1793,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 153,
+      "order": 150,
       "id": "at-animal",
       "groupId": "animals",
       "value": "ئات",
@@ -1817,7 +1805,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 154,
+      "order": 151,
       "id": "toge-animal",
       "groupId": "animals",
       "value": "تۆگە",
@@ -1829,7 +1817,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 155,
+      "order": 152,
       "id": "bore-animal",
       "groupId": "animals",
       "value": "بۆرە",
@@ -1841,7 +1829,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 156,
+      "order": 153,
       "id": "burkut-animal",
       "groupId": "animals",
       "value": "بۈركۈت",
@@ -1853,7 +1841,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 157,
+      "order": 154,
       "id": "ochke-animal",
       "groupId": "animals",
       "value": "ئۆچكە",
@@ -1865,7 +1853,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 158,
+      "order": 155,
       "id": "chashqan-animal",
       "groupId": "animals",
       "value": "چاشقان",
@@ -1877,7 +1865,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 159,
+      "order": 156,
       "id": "toshqan-animal",
       "groupId": "animals",
       "value": "توشقان",
@@ -1889,7 +1877,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 160,
+      "order": 157,
       "id": "yilan-animal",
       "groupId": "animals",
       "value": "يىلان",
@@ -1901,7 +1889,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 161,
+      "order": 158,
       "id": "oy-home",
       "groupId": "home",
       "value": "ئۆي",
@@ -1913,7 +1901,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 162,
+      "order": 159,
       "id": "ishik-home",
       "groupId": "home",
       "value": "ئىشىك",
@@ -1925,7 +1913,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 163,
+      "order": 160,
       "id": "dereze-home",
       "groupId": "home",
       "value": "دېرىزە",
@@ -1937,7 +1925,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 164,
+      "order": 161,
       "id": "stol-home",
       "groupId": "home",
       "value": "ئۈستەل",
@@ -1949,7 +1937,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 165,
+      "order": 162,
       "id": "kitab-home",
       "groupId": "home",
       "value": "كىتاب",
@@ -1961,7 +1949,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 166,
+      "order": 163,
       "id": "orunduq-home",
       "groupId": "home",
       "value": "ئورۇندۇق",
@@ -1973,7 +1961,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 167,
+      "order": 164,
       "id": "kariwat-home",
       "groupId": "home",
       "value": "كارىۋات",
@@ -1985,7 +1973,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 168,
+      "order": 165,
       "id": "chiragh-home",
       "groupId": "home",
       "value": "چىراغ",
@@ -1997,7 +1985,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 169,
+      "order": 166,
       "id": "qelem-home",
       "groupId": "home",
       "value": "قەلەم",
@@ -2009,7 +1997,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 170,
+      "order": 167,
       "id": "depter-home",
       "groupId": "home",
       "value": "دەپتەر",
@@ -2021,7 +2009,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 171,
+      "order": 168,
       "id": "somka-home",
       "groupId": "home",
       "value": "سومكا",
@@ -2033,7 +2021,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 172,
+      "order": 169,
       "id": "telefon-home",
       "groupId": "home",
       "value": "تېلېفون",
@@ -2045,7 +2033,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 173,
+      "order": 170,
       "id": "achquch-home",
       "groupId": "home",
       "value": "ئاچقۇچ",
@@ -2057,7 +2045,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 174,
+      "order": 171,
       "id": "saet-home",
       "groupId": "home",
       "value": "سائەت",
@@ -2069,7 +2057,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 175,
+      "order": 172,
       "id": "pul-home",
       "groupId": "home",
       "value": "پۇل",
@@ -2081,7 +2069,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 176,
+      "order": 173,
       "id": "qizil-color",
       "groupId": "colors",
       "value": "قىزىل",
@@ -2093,7 +2081,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 177,
+      "order": 174,
       "id": "kok-color",
       "groupId": "colors",
       "value": "كۆك",
@@ -2105,7 +2093,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 178,
+      "order": 175,
       "id": "yeshil-color",
       "groupId": "colors",
       "value": "يېشىل",
@@ -2117,7 +2105,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 179,
+      "order": 176,
       "id": "seriq-color",
       "groupId": "colors",
       "value": "سېرىق",
@@ -2129,7 +2117,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 180,
+      "order": 177,
       "id": "qara-color",
       "groupId": "colors",
       "value": "قارا",
@@ -2141,7 +2129,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 181,
+      "order": 178,
       "id": "aq-color",
       "groupId": "colors",
       "value": "ئاق",
@@ -2153,7 +2141,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 182,
+      "order": 179,
       "id": "toq-seriq-color",
       "groupId": "colors",
       "value": "توق سېرىق",
@@ -2165,7 +2153,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 183,
+      "order": 180,
       "id": "binepshe-color",
       "groupId": "colors",
       "value": "بىنەپشە",
@@ -2177,7 +2165,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 184,
+      "order": 181,
       "id": "qongur-color",
       "groupId": "colors",
       "value": "قوڭۇر",
@@ -2189,7 +2177,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 185,
+      "order": 182,
       "id": "kulreng-color",
       "groupId": "colors",
       "value": "كۈلرەڭ",
@@ -2201,7 +2189,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 186,
+      "order": 183,
       "id": "altun-color",
       "groupId": "colors",
       "value": "ئالتۇن",
@@ -2213,7 +2201,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 187,
+      "order": 184,
       "id": "kumush-color",
       "groupId": "colors",
       "value": "كۈمۈش",
@@ -2225,7 +2213,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 188,
+      "order": 185,
       "id": "halreng-color",
       "groupId": "colors",
       "value": "ھالرەڭ",
@@ -2237,7 +2225,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 189,
+      "order": 186,
       "id": "sus-kok-color",
       "groupId": "colors",
       "value": "سۇس كۆك",
@@ -2249,7 +2237,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 190,
+      "order": 187,
       "id": "qeniq-kok-color",
       "groupId": "colors",
       "value": "قېنىق كۆك",
@@ -2261,7 +2249,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 191,
+      "order": 188,
       "id": "kelish-action",
       "groupId": "actions",
       "value": "كېلىش",
@@ -2273,7 +2261,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 192,
+      "order": 189,
       "id": "ketish-action",
       "groupId": "actions",
       "value": "كېتىش",
@@ -2285,7 +2273,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 193,
+      "order": 190,
       "id": "oqush-action",
       "groupId": "actions",
       "value": "ئوقۇش",
@@ -2297,7 +2285,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 194,
+      "order": 191,
       "id": "yezish-action",
       "groupId": "actions",
       "value": "يېزىش",
@@ -2309,7 +2297,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 195,
+      "order": 192,
       "id": "korush-action",
       "groupId": "actions",
       "value": "كۆرۈش",
@@ -2321,7 +2309,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 196,
+      "order": 193,
       "id": "anglash-action",
       "groupId": "actions",
       "value": "ئاڭلاش",
@@ -2333,7 +2321,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 197,
+      "order": 194,
       "id": "sozlesh-action",
       "groupId": "actions",
       "value": "سۆزلەش",
@@ -2345,7 +2333,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 198,
+      "order": 195,
       "id": "yeyish-action",
       "groupId": "actions",
       "value": "يېيىش",
@@ -2357,7 +2345,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 199,
+      "order": 196,
       "id": "ichish-action",
       "groupId": "actions",
       "value": "ئىچىش",
@@ -2369,7 +2357,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 200,
+      "order": 197,
       "id": "berish-action",
       "groupId": "actions",
       "value": "بېرىش",
@@ -2381,7 +2369,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 201,
+      "order": 198,
       "id": "elish-action",
       "groupId": "actions",
       "value": "ئېلىش",
@@ -2393,7 +2381,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 202,
+      "order": 199,
       "id": "echish-action",
       "groupId": "actions",
       "value": "ئېچىش",
@@ -2405,7 +2393,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 203,
+      "order": 200,
       "id": "taqash-action",
       "groupId": "actions",
       "value": "تاقاش",
@@ -2417,7 +2405,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 204,
+      "order": 201,
       "id": "olturush-action",
       "groupId": "actions",
       "value": "ئولتۇرۇش",
@@ -2429,7 +2417,7 @@
       "statusLabel": "真人音频"
     },
     {
-      "order": 205,
+      "order": 202,
       "id": "bilish-action",
       "groupId": "actions",
       "value": "بىلىش",

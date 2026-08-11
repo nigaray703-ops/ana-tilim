@@ -25,6 +25,11 @@ const checks = [
     args: ["--check", "scripts/sync-cn-core.mjs"]
   },
   {
+    label: "syntax: domestic final audio sync",
+    command: node,
+    args: ["--check", "scripts/sync-cn-final-audio.mjs"]
+  },
+  {
     label: "syntax: edition parity",
     command: node,
     args: ["--check", "scripts/check-edition-parity.mjs"]
@@ -123,6 +128,11 @@ const checks = [
     label: "syntax: reading data",
     command: node,
     args: ["--check", "prototype/course-data/reading-data.js"]
+  },
+  {
+    label: "syntax: final reading manifest builder",
+    command: node,
+    args: ["--check", "tools/build-final-reading-manifest.mjs"]
   },
   {
     label: "syntax: shared Afanti data",
@@ -271,6 +281,36 @@ const checks = [
     args: ["tests/course-data-integrity.test.mjs"]
   },
   {
+    label: "test: final grammar and sentence recording additions",
+    command: node,
+    args: ["tests/final-reading-additions.test.mjs"]
+  },
+  {
+    label: "test: units six and seven five-step training",
+    command: node,
+    args: ["tests/units-six-seven-training.test.mjs"]
+  },
+  {
+    label: "test: final reading manifest builder",
+    command: node,
+    args: ["tests/build-final-reading-manifest.test.mjs"]
+  },
+  {
+    label: "test: final course content and audio integration",
+    command: node,
+    args: ["tests/final-course-integration.test.mjs"]
+  },
+  {
+    label: "test: final course content freeze",
+    command: node,
+    args: ["tests/course-content-freeze.test.mjs"]
+  },
+  {
+    label: "test: domestic final audio sync",
+    command: node,
+    args: ["tests/sync-cn-reading-audio.test.mjs"]
+  },
+  {
     label: "test: learning experience",
     command: node,
     args: ["tests/unit-learning-experience.test.mjs"]
@@ -279,6 +319,51 @@ const checks = [
     label: "test: human audio",
     command: node,
     args: ["tests/human-audio.test.mjs"]
+  },
+  {
+    label: "test: WebM audio validation",
+    command: node,
+    args: ["tests/webm-audio.test.mjs"]
+  },
+  {
+    label: "test: perceived audio loudness",
+    command: node,
+    args: ["--test", "tests/audio-loudness.test.mjs"]
+  },
+  {
+    label: "test: human audio loudness batch",
+    command: node,
+    args: ["--test", "tests/human-audio-loudness-batch.test.mjs"]
+  },
+  {
+    label: "test: recording studio catalog",
+    command: node,
+    args: ["tests/recording-studio-catalog.test.mjs"]
+  },
+  {
+    label: "test: recording studio workspace",
+    command: node,
+    args: ["tests/recording-studio-workspace.test.mjs"]
+  },
+  {
+    label: "test: recording studio importer",
+    command: node,
+    args: ["tests/recording-studio-importer.test.mjs"]
+  },
+  {
+    label: "test: recording studio server",
+    command: node,
+    args: ["tests/recording-studio-server.test.mjs"]
+  },
+  {
+    label: "test: recording studio launcher",
+    command: node,
+    args: ["tests/start-recording-studio.test.mjs"]
+  },
+  {
+    label: "test: recording studio interface",
+    command: node,
+    args: ["tests/recording-studio-ui.test.mjs"]
   },
   {
     label: "test: brand assets",

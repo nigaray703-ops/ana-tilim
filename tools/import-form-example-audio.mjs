@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
+import { validateWebmBuffer } from "./lib/webm-audio.mjs";
 
 const projectRoot = path.resolve(import.meta.dirname, "..");
 const sourceArgument = process.argv.slice(2).find((argument) => !argument.startsWith("--"));
@@ -81,39 +82,6 @@ function buildFormExampleItems(letterDetails) {
   return [...byValue.values()];
 }
 
-function readEbmlVint(buffer, offset) {
-  const firstByte = buffer[offset];
-  let length = 1;
-  let marker = 0x80;
-
-  while (length <= 8 && !(firstByte & marker)) {
-    length += 1;
-    marker >>= 1;
-  }
-
-  assert.ok(length <= 8 && offset + length <= buffer.length, "WebM should contain a valid EBML variable-length integer");
-
-  let value = firstByte & (marker - 1);
-  for (let index = 1; index < length; index += 1) {
-    value = value * 256 + buffer[offset + index];
-  }
-
-  return { length, value };
-}
-
-function readWebmDurationMilliseconds(buffer) {
-  const durationId = Buffer.from([0x44, 0x89]);
-  const durationOffset = buffer.indexOf(durationId);
-  assert.notEqual(durationOffset, -1, "WebM should contain a duration element");
-
-  const durationSize = readEbmlVint(buffer, durationOffset + durationId.length);
-  const valueOffset = durationOffset + durationId.length + durationSize.length;
-
-  if (durationSize.value === 4) return buffer.readFloatBE(valueOffset);
-  if (durationSize.value === 8) return buffer.readDoubleBE(valueOffset);
-  assert.fail(`WebM duration should use a 4-byte or 8-byte float, received ${durationSize.value} bytes`);
-}
-
 function main() {
   const { letterDetails, comboGroups, vocabGroups } = loadCourseData();
   const reusableValues = new Set(
@@ -134,9 +102,11 @@ function main() {
   for (const sourceFile of expectedSourceFiles) {
     const sourcePath = path.join(sourceDirectory, sourceFile);
     const buffer = fs.readFileSync(sourcePath);
-    assert.ok(buffer.length > 4096, `${sourceFile} should contain playable audio data`);
-    assert.deepEqual([...buffer.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3], `${sourceFile} should have a valid WebM header`);
-    assert.ok(Number.isFinite(readWebmDurationMilliseconds(buffer)) && readWebmDurationMilliseconds(buffer) > 0, `${sourceFile} should have a positive duration`);
+    try {
+      validateWebmBuffer(buffer);
+    } catch (error) {
+      assert.fail(`${sourceFile}: ${error.message}`);
+    }
   }
 
   if (checkOnly) {

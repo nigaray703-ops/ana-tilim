@@ -1,6 +1,15 @@
 import assert from "node:assert/strict";
+import childProcess from "node:child_process";
 import fs from "node:fs";
+import path from "node:path";
 import vm from "node:vm";
+import {
+  LOUDNESS_STANDARD,
+  isIntegratedLoudnessWithinTolerance,
+  parseLoudnormAnalysis,
+  resolveFfmpegPath
+} from "../tools/lib/audio-loudness.mjs";
+import { validateWebmBuffer } from "../tools/lib/webm-audio.mjs";
 
 const manifestPath = "prototype/assets/audio/human/alphabet/manifest.json";
 const comboManifestPath = "prototype/assets/audio/human/combos/manifest.json";
@@ -27,6 +36,7 @@ const audioManifests = [
   { manifest: readingManifest, manifestPath: readingManifestPath },
   { manifest: formExampleManifest, manifestPath: formExampleManifestPath }
 ];
+const physicalAudioPaths = new Set();
 
 function loadCourseData() {
   const dataContext = {
@@ -74,46 +84,6 @@ const expectedVocabAudioAliases = [
   { id: "beliq-food", sourceId: "beliq-animal" }
 ];
 
-function readEbmlVint(buffer, offset) {
-  const firstByte = buffer[offset];
-  let length = 1;
-  let marker = 0x80;
-
-  while (length <= 8 && !(firstByte & marker)) {
-    length += 1;
-    marker >>= 1;
-  }
-
-  assert.ok(length <= 8 && offset + length <= buffer.length, "WebM should contain a valid EBML variable-length integer");
-
-  let value = firstByte & (marker - 1);
-  for (let index = 1; index < length; index += 1) {
-    value = value * 256 + buffer[offset + index];
-  }
-
-  return { length, value };
-}
-
-function readWebmDurationMilliseconds(buffer) {
-  const durationId = Buffer.from([0x44, 0x89]);
-  const durationOffset = buffer.indexOf(durationId);
-  assert.notEqual(durationOffset, -1, "WebM should contain a duration element");
-
-  const durationSize = readEbmlVint(buffer, durationOffset + durationId.length);
-  const valueOffset = durationOffset + durationId.length + durationSize.length;
-  let durationUnits;
-
-  if (durationSize.value === 4) {
-    durationUnits = buffer.readFloatBE(valueOffset);
-  } else if (durationSize.value === 8) {
-    durationUnits = buffer.readDoubleBE(valueOffset);
-  } else {
-    assert.fail(`WebM duration should use a 4-byte or 8-byte float, received ${durationSize.value} bytes`);
-  }
-
-  return durationUnits;
-}
-
 assert.equal(manifest.items.length, 32, "human audio manifest should cover all 32 letters");
 assert.equal(comboManifest.items.length, 34, "combo human audio manifest should cover all combo items");
 assert.equal(comboItemCount - comboManifest.items.length, 0, "all combo examples should have connected recordings");
@@ -129,12 +99,56 @@ assert.deepEqual(
 );
 assert.equal(vocabItemCount - vocabRecordedIds.size, 0, "every vocabulary item should have connected audio");
 assert.equal(practiceManifest.items.length, 0, "practice should reuse alphabet audio instead of duplicate files");
-assert.equal(readingManifest.items.length, 164, "reading human audio manifest should cover every reading line");
+assert.equal(readingManifest.items.length, 192, "reading human audio manifest should cover every reading line");
 assert.equal(formExampleManifest.items.length, 94, "form example human audio manifest should cover every newly recorded example");
+
+function stableFormExampleKey(value) {
+  let hash = 2166136261;
+  for (const character of value.normalize("NFC")) {
+    hash ^= character.codePointAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+function sourceFormExamples(course) {
+  const byValue = new Map();
+  for (const letter of Object.values(course.letterDetails)) {
+    for (const example of letter.formExamples || []) {
+      if (!example.word) continue;
+      const current = byValue.get(example.word);
+      if (current) {
+        current.latin ||= example.latin || "";
+        continue;
+      }
+      byValue.set(example.word, { id: `form-example-${stableFormExampleKey(example.word)}`, latin: example.latin || "未提供转写" });
+    }
+  }
+  const reusableValues = new Set([...course.comboGroups, ...course.vocabGroups].flatMap((group) => group.items.map((item) => item.value)));
+  return [...byValue.entries()]
+    .filter(([value]) => !reusableValues.has(value))
+    .map(([, item]) => item);
+}
+
+const canonicalFormExamples = sourceFormExamples(courseData);
+const canonicalFormLatinById = new Map(canonicalFormExamples.map((item) => [item.id, item.latin]));
+const formLatinMismatches = formExampleManifest.items
+  .filter((item) => canonicalFormLatinById.get(item.id) !== item.latin)
+  .map((item) => ({ id: item.id, manifestLatin: item.latin, canonicalLatin: canonicalFormLatinById.get(item.id) }));
+assert.equal(canonicalFormExamples.length, 94, "current course data should derive the same 94 dedicated form examples");
+assert.deepEqual(formLatinMismatches, [], `form example manifest latin drift: ${JSON.stringify(formLatinMismatches)}`);
 assert.equal(new Set(manifest.items.map((item) => item.file)).size, 32, "audio filenames should be unique");
 assert.equal(new Set(comboManifest.items.map((item) => item.file)).size, comboManifest.items.length, "combo audio filenames should be unique");
 assert.equal(new Set(vocabManifest.items.map((item) => item.file)).size, vocabManifest.items.length, "vocab audio filenames should be unique");
-assert.equal(new Set(readingManifest.items.map((item) => item.file)).size, readingManifest.items.length, "reading audio filenames should be unique");
+assert.equal(new Set(readingManifest.items.map((item) => item.file)).size, 190, "reading audio should contain 190 files plus two approved exact-text reuses");
+assert.deepEqual(
+  readingManifest.items.filter((item) => ["grammar-person-verbs-1", "sentence-self-introduction-4"].includes(item.id)).map((item) => [item.id, item.file]),
+  [
+    ["grammar-person-verbs-1", "human_reading_grammar_word_order_1.webm"],
+    ["sentence-self-introduction-4", "human_reading_grammar_copula_2.webm"]
+  ],
+  "the two approved exact-text rows should reuse their established recordings"
+);
 assert.equal(
   new Set(formExampleManifest.items.map((item) => item.file)).size,
   formExampleManifest.items.length,
@@ -156,7 +170,7 @@ assert.ok(
 for (const { manifest: audioManifest, manifestPath: audioManifestPath } of audioManifests) {
   const audioDirectory = audioManifestPath.slice(0, audioManifestPath.lastIndexOf("/") + 1);
   const directoryAudioFiles = fs.readdirSync(audioDirectory).filter((file) => file.endsWith(".webm")).sort();
-  const manifestAudioFiles = audioManifest.items.map((item) => item.file).sort();
+  const manifestAudioFiles = [...new Set(audioManifest.items.map((item) => item.file))].sort();
   assert.deepEqual(
     directoryAudioFiles,
     manifestAudioFiles,
@@ -164,17 +178,36 @@ for (const { manifest: audioManifest, manifestPath: audioManifestPath } of audio
   );
   for (const item of audioManifest.items) {
     const audioPath = `${audioDirectory}${item.file}`;
+    physicalAudioPaths.add(path.resolve(audioPath));
     assert.ok(fs.existsSync(audioPath), `${item.file} should exist`);
     assert.ok(fs.statSync(audioPath).size > 4096, `${item.file} should contain playable audio data`);
     const audioBuffer = fs.readFileSync(audioPath);
-    assert.deepEqual(
-      [...audioBuffer.subarray(0, 4)],
-      [0x1a, 0x45, 0xdf, 0xa3],
-      `${item.file} should have a valid WebM EBML header`
+    try {
+      validateWebmBuffer(audioBuffer);
+    } catch (error) {
+      assert.fail(`${item.file}: ${error.message}`);
+    }
+  }
+}
+assert.equal(physicalAudioPaths.size, 552, "all 554 logical targets should resolve to exactly 552 physical WebM files");
+
+if (process.env.ANA_TILIM_FFMPEG) {
+  const ffmpegPath = resolveFfmpegPath();
+  for (const audioPath of [...physicalAudioPaths].sort()) {
+    const result = childProcess.spawnSync(ffmpegPath, [
+      "-hide_banner", "-nostdin", "-i", audioPath,
+      "-af", `loudnorm=I=${LOUDNESS_STANDARD.integratedLufs}:TP=${LOUDNESS_STANDARD.truePeakDbtp}:LRA=${LOUDNESS_STANDARD.lraLu}:print_format=json`,
+      "-f", "null", "-"
+    ], { encoding: null, maxBuffer: 64 * 1024 * 1024 });
+    assert.equal(result.status, 0, `${path.relative(process.cwd(), audioPath)}: ffmpeg loudness analysis failed: ${String(result.stderr || "")}`);
+    const measurement = parseLoudnormAnalysis(result.stderr);
+    assert.ok(
+      isIntegratedLoudnessWithinTolerance(measurement.integratedLufs),
+      `${path.relative(process.cwd(), audioPath)}: integrated loudness ${measurement.integratedLufs} is outside the release standard`
     );
     assert.ok(
-      Number.isFinite(readWebmDurationMilliseconds(audioBuffer)) && readWebmDurationMilliseconds(audioBuffer) > 0,
-      `${item.file} should report a positive duration`
+      measurement.truePeakDbtp <= LOUDNESS_STANDARD.truePeakDbtp,
+      `${path.relative(process.cwd(), audioPath)}: true peak ${measurement.truePeakDbtp} exceeds the release standard`
     );
   }
 }
@@ -281,8 +314,8 @@ const expectedAudioCoverage = {
   alphabet: { total: 32, recorded: 32, pending: 0 },
   "form-example": { total: 126, recorded: 126, pending: 0 },
   combo: { total: 34, recorded: 34, pending: 0 },
-  vocab: { total: 207, recorded: 207, pending: 0 },
-  reading: { total: 164, recorded: 164, pending: 0 }
+  vocab: { total: 206, recorded: 206, pending: 0 },
+  reading: { total: 192, recorded: 192, pending: 0 }
 };
 const allCoverageTargets = coverageCategories.flatMap((category) => category.items);
 
@@ -291,9 +324,9 @@ assert.deepEqual(
   ["alphabet", "form-example", "combo", "vocab", "reading"],
   "audio coverage catalog should include every content type that needs its own recording"
 );
-assert.equal(allCoverageTargets.length, 563, "audio coverage catalog should list all 563 retained audio targets");
-assert.equal(new Set(allCoverageTargets.map((item) => item.id)).size, 563, "audio coverage target IDs should be unique");
-assert.equal(allCoverageTargets.filter((item) => item.existingAudio).length, 563, "audio coverage catalog should recognize all 563 connected recordings");
+assert.equal(allCoverageTargets.length, 590, "audio coverage catalog should list all 590 retained logical audio targets");
+assert.equal(new Set(allCoverageTargets.map((item) => item.id)).size, 590, "audio coverage target IDs should be unique");
+assert.equal(allCoverageTargets.filter((item) => item.existingAudio).length, 590, "audio coverage catalog should recognize all 590 connected recordings");
 assert.equal(allCoverageTargets.filter((item) => !item.existingAudio).length, 0, "audio coverage catalog should have no pending recordings");
 
 const formExampleTargets = coverageCategories.find((category) => category.id === "form-example").items;
@@ -375,10 +408,8 @@ assert.ok(app.innerHTML.includes('data-action="play-audio"'), "combo page should
 assert.ok(app.innerHTML.includes('aria-label="Play با"'), "combo page should localize reusable audio chrome in English mode");
 assert.ok(!app.innerHTML.includes('aria-label="播放'), "combo page should not retain Chinese reusable audio chrome in English mode");
 assert.ok(!app.innerHTML.includes(">听</button>"), "combo page should not retain the Chinese reusable play label in English mode");
-assert.ok(
-  app.innerHTML.includes("a human recording provides the target pronunciation"),
-  "combo page should preserve course-domain human-audio guidance in English mode"
-);
+assert.ok(!app.innerHTML.includes("Learning points"), "combo page should omit the redundant learning-points card in English mode");
+assert.ok(!app.innerHTML.includes("a human recording provides the target pronunciation"), "combo page should not repeat guidance already represented by its enabled audio control");
 assert.ok(!app.innerHTML.includes("真人音频"), "combo page should not retain Chinese course-domain guidance in English mode");
 assert.ok(app.innerHTML.includes("./assets/audio/human/combos/human_combo_ba.webm"), "combo page should expose connected human audio");
 

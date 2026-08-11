@@ -1,0 +1,195 @@
+{
+  "schemaVersion": 1,
+  "ownerDecision": "approved-topics",
+  "releaseStatus": "approved",
+  "units": [
+    {
+      "unitId": "grammar-basics",
+      "groups": [
+        {
+          "id": "grammar-person-verbs",
+          "titleZh": "人称与动词",
+          "titleEn": "Person and verbs",
+          "ruleZh": "先辨认主语，再观察动词结尾随人称变化。",
+          "ruleEn": "Identify the subject, then notice how the verb ending changes with person.",
+          "reviewStatus": "approved",
+          "items": [
+            { "id": "grammar-person-verbs-1", "value": "مەن كىتاب ئوقۇيمەن.", "latin": "Men kitab oquymen.", "meaningZh": "我读书。", "meaningEn": "I read a book.", "patternZh": "我 + 读", "patternEn": "I + read", "lessonZh": "第一人称动词结尾", "lessonEn": "First-person verb ending", "reviewStatus": "approved", "reuseAudioFromStableId": "reading:grammar-word-order-1" },
+            { "id": "grammar-person-verbs-2", "value": "سەن كىتاب ئوقۇيسەن.", "latin": "Sen kitab oquysen.", "meaningZh": "你读书。", "meaningEn": "You read a book.", "patternZh": "你 + 读", "patternEn": "You + read", "lessonZh": "第二人称动词结尾", "lessonEn": "Second-person verb ending", "reviewStatus": "approved" },
+            { "id": "grammar-person-verbs-3", "value": "ئۇ كىتاب ئوقۇيدۇ.", "latin": "U kitab oquydu.", "meaningZh": "他（她）读书。", "meaningEn": "He or she reads a book.", "patternZh": "他（她）+ 读", "patternEn": "He or she + reads", "lessonZh": "第三人称动词结尾", "lessonEn": "Third-person verb ending", "reviewStatus": "approved" }
+          ],
+          "training": {
+            "steps": ["rule", "compare", "recognition", "ordering", "completion"],
+            "compareItemIds": ["grammar-person-verbs-1", "grammar-person-verbs-2"],
+            "recognition": { "promptZh": "哪一句表示“你读书”？", "promptEn": "Which sentence means ‘You read a book’ ?", "options": [{ "id": "a", "itemId": "grammar-person-verbs-1" }, { "id": "b", "itemId": "grammar-person-verbs-2" }], "answerId": "b" },
+            "ordering": { "tokens": [{ "id": "b", "value": "كىتاب ئوقۇيمەن." }, { "id": "a", "value": "مەن " }], "answerIds": ["a", "b"], "completedValue": "مەن كىتاب ئوقۇيمەن." },
+            "completion": { "promptZh": "补全“我读书”", "promptEn": "Complete ‘I read a book’", "options": [{ "id": "a", "value": "ئوقۇيمەن" }, { "id": "b", "value": "ئوقۇيسەن" }], "answerId": "a", "completedValue": "مەن كىتاب ئوقۇيمەن.", "meaningZh": "我读书。", "meaningEn": "I read a book." }
+          }
+        },
+        {
+          "id": "grammar-possession",
+          "titleZh": "所属关系",
+          "titleEn": "Possession",
+          "ruleZh": "领属者和被领属名词相互配合，表达“谁的什么”。",
+          "ruleEn": "The possessor and possessed noun work together to express whose item it is.",
+          "reviewStatus": "approved",
+          "items": [
+            { "id": "grammar-possession-1", "value": "بۇ مېنىڭ كىتابىم.", "latin": "Bu mëning kitabim.", "meaningZh": "这是我的书。", "meaningEn": "This is my book.", "patternZh": "这个 + 我的 + 书", "patternEn": "This + my + book", "lessonZh": "第一人称所属", "lessonEn": "First-person possession", "reviewStatus": "approved" },
+            { "id": "grammar-possession-2", "value": "بۇ سېنىڭ كىتابىڭ.", "latin": "Bu sëning kitabing.", "meaningZh": "这是你的书。", "meaningEn": "This is your book.", "patternZh": "这个 + 你的 + 书", "patternEn": "This + your + book", "lessonZh": "第二人称所属", "lessonEn": "Second-person possession", "reviewStatus": "approved" },
+            { "id": "grammar-possession-3", "value": "بۇ ئۇنىڭ كىتابى.", "latin": "Bu uning kitabi.", "meaningZh": "这是他（她）的书。", "meaningEn": "This is his or her book.", "patternZh": "这个 + 他（她）的 + 书", "patternEn": "This + his or her + book", "lessonZh": "第三人称所属", "lessonEn": "Third-person possession", "reviewStatus": "approved" }
+          ],
+          "training": {
+            "steps": ["rule", "compare", "recognition", "ordering", "completion"],
+            "compareItemIds": ["grammar-possession-1", "grammar-possession-3"],
+            "recognition": { "promptZh": "哪一句表示“这是我的书”？", "promptEn": "Which sentence means ‘This is my book’ ?", "options": [{ "id": "a", "itemId": "grammar-possession-1" }, { "id": "b", "itemId": "grammar-possession-3" }], "answerId": "a" },
+            "ordering": { "tokens": [{ "id": "b", "value": "مېنىڭ كىتابىم." }, { "id": "a", "value": "بۇ " }], "answerIds": ["a", "b"], "completedValue": "بۇ مېنىڭ كىتابىم." },
+            "completion": { "promptZh": "补全“这是你的书”", "promptEn": "Complete ‘This is your book’", "options": [{ "id": "a", "value": "مېنىڭ كىتابىم" }, { "id": "b", "value": "سېنىڭ كىتابىڭ" }], "answerId": "b", "completedValue": "بۇ سېنىڭ كىتابىڭ.", "meaningZh": "这是你的书。", "meaningEn": "This is your book." }
+          }
+        },
+        {
+          "id": "grammar-location-direction",
+          "titleZh": "地点与方向",
+          "titleEn": "Location and direction",
+          "ruleZh": "比较“在某处、去某处、从某处来”三个方向关系。",
+          "ruleEn": "Compare being at a place, going to it, and coming from it.",
+          "reviewStatus": "approved",
+          "items": [
+            { "id": "grammar-location-direction-1", "value": "مەن مەكتەپتە.", "latin": "Men mektepte.", "meaningZh": "我在学校。", "meaningEn": "I am at school.", "patternZh": "我 + 在学校", "patternEn": "I + at school", "lessonZh": "处所关系", "lessonEn": "Location relationship", "reviewStatus": "approved" },
+            { "id": "grammar-location-direction-2", "value": "مەن مەكتەپكە بارىمەن.", "latin": "Men mektepke barimen.", "meaningZh": "我去学校。", "meaningEn": "I go to school.", "patternZh": "我 + 去学校", "patternEn": "I + go to school", "lessonZh": "朝向关系", "lessonEn": "Direction toward", "reviewStatus": "approved" },
+            { "id": "grammar-location-direction-3", "value": "مەن مەكتەپتىن كەلدىم.", "latin": "Men mekteptin keldim.", "meaningZh": "我从学校来。", "meaningEn": "I came from school.", "patternZh": "我 + 从学校来", "patternEn": "I + came from school", "lessonZh": "来源关系", "lessonEn": "Direction from", "reviewStatus": "approved" }
+          ],
+          "training": {
+            "steps": ["rule", "compare", "recognition", "ordering", "completion"],
+            "compareItemIds": ["grammar-location-direction-1", "grammar-location-direction-2"],
+            "recognition": { "promptZh": "哪一句表示“我去学校”？", "promptEn": "Which sentence means ‘I go to school’ ?", "options": [{ "id": "a", "itemId": "grammar-location-direction-1" }, { "id": "b", "itemId": "grammar-location-direction-2" }], "answerId": "b" },
+            "ordering": { "tokens": [{ "id": "b", "value": "مەكتەپكە بارىمەن." }, { "id": "a", "value": "مەن " }], "answerIds": ["a", "b"], "completedValue": "مەن مەكتەپكە بارىمەن." },
+            "completion": { "promptZh": "补全“我从学校来”", "promptEn": "Complete ‘I came from school’", "options": [{ "id": "a", "value": "مەكتەپكە بارىمەن" }, { "id": "b", "value": "مەكتەپتىن كەلدىم" }], "answerId": "b", "completedValue": "مەن مەكتەپتىن كەلدىم.", "meaningZh": "我从学校来。", "meaningEn": "I came from school." }
+          }
+        },
+        {
+          "id": "grammar-basic-time",
+          "titleZh": "基础时间表达",
+          "titleEn": "Basic time expressions",
+          "ruleZh": "先辨认时间词，再观察动作发生的时间。",
+          "ruleEn": "Identify the time word, then notice when the action happens.",
+          "reviewStatus": "approved",
+          "items": [
+            { "id": "grammar-basic-time-1", "value": "ھازىر مەن كىتاب ئوقۇيمەن.", "latin": "Hazir men kitab oquymen.", "meaningZh": "现在我读书。", "meaningEn": "I am reading a book now.", "patternZh": "现在 + 我 + 读书", "patternEn": "Now + I + read", "lessonZh": "现在", "lessonEn": "Present time", "reviewStatus": "approved" },
+            { "id": "grammar-basic-time-2", "value": "تۈنۈگۈن مەن كىتاب ئوقۇدۇم.", "latin": "Tünügün men kitab oqudum.", "meaningZh": "昨天我读了书。", "meaningEn": "I read a book yesterday.", "patternZh": "昨天 + 我 + 读书", "patternEn": "Yesterday + I + read", "lessonZh": "过去时间", "lessonEn": "Past time", "reviewStatus": "approved" },
+            { "id": "grammar-basic-time-3", "value": "ئەتە مەن مەكتەپكە بارىمەن.", "latin": "Ete men mektepke barimen.", "meaningZh": "明天我去学校。", "meaningEn": "I will go to school tomorrow.", "patternZh": "明天 + 我 + 去学校", "patternEn": "Tomorrow + I + go to school", "lessonZh": "未来时间", "lessonEn": "Future time", "reviewStatus": "approved" }
+          ],
+          "training": {
+            "steps": ["rule", "compare", "recognition", "ordering", "completion"],
+            "compareItemIds": ["grammar-basic-time-1", "grammar-basic-time-2"],
+            "recognition": { "promptZh": "哪一句表示昨天发生的事？", "promptEn": "Which sentence describes yesterday?", "options": [{ "id": "a", "itemId": "grammar-basic-time-1" }, { "id": "b", "itemId": "grammar-basic-time-2" }], "answerId": "b" },
+            "ordering": { "tokens": [{ "id": "b", "value": "مەن مەكتەپكە بارىمەن." }, { "id": "a", "value": "ئەتە " }], "answerIds": ["a", "b"], "completedValue": "ئەتە مەن مەكتەپكە بارىمەن." },
+            "completion": { "promptZh": "补全“现在我读书”", "promptEn": "Complete ‘I am reading now’", "options": [{ "id": "a", "value": "ھازىر" }, { "id": "b", "value": "تۈنۈگۈن" }], "answerId": "a", "completedValue": "ھازىر مەن كىتاب ئوقۇيمەن.", "meaningZh": "现在我读书。", "meaningEn": "I am reading a book now." }
+          }
+        }
+      ]
+    },
+    {
+      "unitId": "sentence-patterns",
+      "groups": [
+        {
+          "id": "sentence-self-introduction",
+          "titleZh": "自我介绍",
+          "titleEn": "Self-introduction",
+          "ruleZh": "用姓名、年龄、家乡和身份组成简短自我介绍。",
+          "ruleEn": "Build a short introduction with name, age, hometown, and role.",
+          "reviewStatus": "approved",
+          "items": [
+            { "id": "sentence-self-introduction-1", "value": "مېنىڭ ئىسمىم ئەلى.", "latin": "Mëning ismim Eli.", "meaningZh": "我的名字叫艾力。", "meaningEn": "My name is Eli.", "patternZh": "我的名字 + 艾力", "patternEn": "My name + Eli", "lessonZh": "介绍姓名", "lessonEn": "Introducing a name", "reviewStatus": "approved" },
+            { "id": "sentence-self-introduction-2", "value": "مەن ئون ياشتا.", "latin": "Men on yashta.", "meaningZh": "我十岁。", "meaningEn": "I am ten years old.", "patternZh": "我 + 十岁", "patternEn": "I + ten years old", "lessonZh": "介绍年龄", "lessonEn": "Introducing age", "reviewStatus": "approved" },
+            { "id": "sentence-self-introduction-3", "value": "مەن قەشقەردىن كەلدىم.", "latin": "Men Qeshqerdin keldim.", "meaningZh": "我来自喀什。", "meaningEn": "I come from Kashgar.", "patternZh": "我 + 来自喀什", "patternEn": "I + from Kashgar", "lessonZh": "介绍家乡", "lessonEn": "Introducing hometown", "reviewStatus": "approved" },
+            { "id": "sentence-self-introduction-4", "value": "مەن ئوقۇغۇچى.", "latin": "Men oqughuchi.", "meaningZh": "我是学生。", "meaningEn": "I am a student.", "patternZh": "我 + 学生", "patternEn": "I + student", "lessonZh": "介绍身份", "lessonEn": "Introducing a role", "reviewStatus": "approved", "reuseAudioFromStableId": "reading:grammar-copula-2" }
+          ],
+          "training": {
+            "steps": ["rule", "compare", "recognition", "ordering", "completion"],
+            "compareItemIds": ["sentence-self-introduction-1", "sentence-self-introduction-3"],
+            "recognition": { "promptZh": "哪一句介绍家乡？", "promptEn": "Which sentence introduces a hometown?", "options": [{ "id": "a", "itemId": "sentence-self-introduction-1" }, { "id": "b", "itemId": "sentence-self-introduction-3" }], "answerId": "b" },
+            "ordering": { "tokens": [{ "id": "b", "value": "ئون ياشتا." }, { "id": "a", "value": "مەن " }], "answerIds": ["a", "b"], "completedValue": "مەن ئون ياشتا." },
+            "completion": { "promptZh": "补全“我是学生”", "promptEn": "Complete ‘I am a student’", "options": [{ "id": "a", "value": "ئوقۇغۇچى" }, { "id": "b", "value": "مەكتەپتە" }], "answerId": "a", "completedValue": "مەن ئوقۇغۇچى.", "meaningZh": "我是学生。", "meaningEn": "I am a student." }
+          }
+        },
+        {
+          "id": "sentence-location-direction",
+          "titleZh": "地点与方向句型",
+          "titleEn": "Location and direction patterns",
+          "ruleZh": "在完整句中练习位置、去向、来源和地点提问。",
+          "ruleEn": "Practise location, destination, origin, and asking where in full sentences.",
+          "reviewStatus": "approved",
+          "items": [
+            { "id": "sentence-location-direction-1", "value": "كىتاب ئۈستەلدە.", "latin": "Kitab üstelde.", "meaningZh": "书在桌子上。", "meaningEn": "The book is on the table.", "patternZh": "书 + 在桌子上", "patternEn": "Book + on the table", "lessonZh": "描述位置", "lessonEn": "Describing location", "reviewStatus": "approved" },
+            { "id": "sentence-location-direction-2", "value": "مەن بازارغا بارىمەن.", "latin": "Men bazargha barimen.", "meaningZh": "我去市场。", "meaningEn": "I go to the market.", "patternZh": "我 + 去市场", "patternEn": "I + go to the market", "lessonZh": "描述去向", "lessonEn": "Describing destination", "reviewStatus": "approved" },
+            { "id": "sentence-location-direction-3", "value": "مەن ئۆيدىن كەلدىم.", "latin": "Men öydin keldim.", "meaningZh": "我从家里来。", "meaningEn": "I came from home.", "patternZh": "我 + 从家里来", "patternEn": "I + came from home", "lessonZh": "描述来源", "lessonEn": "Describing origin", "reviewStatus": "approved" },
+            { "id": "sentence-location-direction-4", "value": "بازار قەيەردە؟", "latin": "Bazar qeyerde?", "meaningZh": "市场在哪里？", "meaningEn": "Where is the market?", "patternZh": "市场 + 在哪里", "patternEn": "Market + where", "lessonZh": "询问地点", "lessonEn": "Asking a location", "reviewStatus": "approved" }
+          ],
+          "training": {
+            "steps": ["rule", "compare", "recognition", "ordering", "completion"],
+            "compareItemIds": ["sentence-location-direction-1", "sentence-location-direction-4"],
+            "recognition": { "promptZh": "哪一句是在问地点？", "promptEn": "Which sentence asks for a location?", "options": [{ "id": "a", "itemId": "sentence-location-direction-1" }, { "id": "b", "itemId": "sentence-location-direction-4" }], "answerId": "b" },
+            "ordering": { "tokens": [{ "id": "b", "value": "بازارغا بارىمەن." }, { "id": "a", "value": "مەن " }], "answerIds": ["a", "b"], "completedValue": "مەن بازارغا بارىمەن." },
+            "completion": { "promptZh": "补全“市场在哪里？”", "promptEn": "Complete ‘Where is the market?’", "options": [{ "id": "a", "value": "قەيەردە" }, { "id": "b", "value": "بارىمەن" }], "answerId": "a", "completedValue": "بازار قەيەردە؟", "meaningZh": "市场在哪里？", "meaningEn": "Where is the market?" }
+          }
+        },
+        {
+          "id": "sentence-ability-preference",
+          "titleZh": "能力、愿望与需要",
+          "titleEn": "Ability, wishes, and needs",
+          "ruleZh": "用完整句表达会做、想做、喜欢做和需要什么。",
+          "ruleEn": "Use full sentences to express ability, wishes, preferences, and needs.",
+          "reviewStatus": "approved",
+          "items": [
+            { "id": "sentence-ability-preference-1", "value": "مەن ئۇيغۇرچە سۆزلىيەلەيمەن.", "latin": "Men uyghurche sözliyeleymen.", "meaningZh": "我会说维吾尔语。", "meaningEn": "I can speak Uyghur.", "patternZh": "我 + 会说维吾尔语", "patternEn": "I + can speak Uyghur", "lessonZh": "表达能力", "lessonEn": "Expressing ability", "reviewStatus": "approved" },
+            { "id": "sentence-ability-preference-2", "value": "مەن چاي ئىچكۈم كېلىدۇ.", "latin": "Men chay ichküm këlidu.", "meaningZh": "我想喝茶。", "meaningEn": "I want to drink tea.", "patternZh": "我 + 想喝茶", "patternEn": "I + want to drink tea", "lessonZh": "表达愿望", "lessonEn": "Expressing a wish", "reviewStatus": "approved" },
+            { "id": "sentence-ability-preference-3", "value": "مەن كىتاب ئوقۇشنى ياخشى كۆرىمەن.", "latin": "Men kitab oqushni yaxshi körimen.", "meaningZh": "我喜欢读书。", "meaningEn": "I like reading books.", "patternZh": "我 + 喜欢读书", "patternEn": "I + like reading", "lessonZh": "表达喜好", "lessonEn": "Expressing preference", "reviewStatus": "approved" },
+            { "id": "sentence-ability-preference-4", "value": "ماڭا قەلەم لازىم.", "latin": "Manga qelem lazim.", "meaningZh": "我需要一支笔。", "meaningEn": "I need a pen.", "patternZh": "对我 + 笔 + 需要", "patternEn": "For me + pen + needed", "lessonZh": "表达需要", "lessonEn": "Expressing a need", "reviewStatus": "approved" }
+          ],
+          "training": {
+            "steps": ["rule", "compare", "recognition", "ordering", "completion"],
+            "compareItemIds": ["sentence-ability-preference-1", "sentence-ability-preference-3"],
+            "recognition": { "promptZh": "哪一句表示“我喜欢读书”？", "promptEn": "Which sentence means ‘I like reading’ ?", "options": [{ "id": "a", "itemId": "sentence-ability-preference-1" }, { "id": "b", "itemId": "sentence-ability-preference-3" }], "answerId": "b" },
+            "ordering": { "tokens": [{ "id": "b", "value": "قەلەم لازىم." }, { "id": "a", "value": "ماڭا " }], "answerIds": ["a", "b"], "completedValue": "ماڭا قەلەم لازىم." },
+            "completion": { "promptZh": "补全“我会说维吾尔语”", "promptEn": "Complete ‘I can speak Uyghur’", "options": [{ "id": "a", "value": "سۆزلىيەلەيمەن" }, { "id": "b", "value": "ياخشى كۆرىمەن" }], "answerId": "a", "completedValue": "مەن ئۇيغۇرچە سۆزلىيەلەيمەن.", "meaningZh": "我会说维吾尔语。", "meaningEn": "I can speak Uyghur." }
+          }
+        },
+        {
+          "id": "sentence-polite-reason",
+          "titleZh": "礼貌请求与原因结果",
+          "titleEn": "Polite requests and cause-result",
+          "ruleZh": "先学习礼貌请求，再用连接词说明原因或结果。",
+          "ruleEn": "Learn polite requests, then use connectors to explain cause or result.",
+          "reviewStatus": "approved",
+          "items": [
+            { "id": "sentence-polite-reason-1", "value": "كەچۈرۈڭ، سۇ بېرىڭ.", "latin": "Kechürüng, su bëring.", "meaningZh": "请问，请给我水。", "meaningEn": "Excuse me, please give me water.", "patternZh": "请问 + 请给水", "patternEn": "Excuse me + please give water", "lessonZh": "礼貌请求", "lessonEn": "Polite request", "reviewStatus": "approved" },
+            { "id": "sentence-polite-reason-2", "value": "كىتابنى ئالسام بولامدۇ؟", "latin": "Kitabni alsam bolamdu?", "meaningZh": "我可以拿这本书吗？", "meaningEn": "May I take the book?", "patternZh": "书 + 我拿 + 可以吗", "patternEn": "Book + if I take + is it okay", "lessonZh": "请求许可", "lessonEn": "Asking permission", "reviewStatus": "approved" },
+            { "id": "sentence-polite-reason-3", "value": "مەن ئۆيگە قايتىمەن، چۈنكى كەچ بولدى.", "latin": "Men öyge qaytimen, chünki kech boldi.", "meaningZh": "我要回家，因为天晚了。", "meaningEn": "I am going home because it is late.", "patternZh": "结果 + 因为 + 原因", "patternEn": "Result + because + reason", "lessonZh": "说明原因", "lessonEn": "Giving a reason", "reviewStatus": "approved" },
+            { "id": "sentence-polite-reason-4", "value": "يامغۇر ياغدى، شۇڭا مەن ئۆيدە قالدىم.", "latin": "Yamghur yaghdi, shunga men öyde qaldim.", "meaningZh": "下雨了，所以我留在家里。", "meaningEn": "It rained, so I stayed at home.", "patternZh": "原因 + 所以 + 结果", "patternEn": "Cause + so + result", "lessonZh": "说明结果", "lessonEn": "Giving a result", "reviewStatus": "approved" }
+          ],
+          "training": {
+            "steps": ["rule", "compare", "recognition", "ordering", "completion"],
+            "compareItemIds": ["sentence-polite-reason-1", "sentence-polite-reason-3"],
+            "recognition": { "promptZh": "哪一句在说明原因？", "promptEn": "Which sentence gives a reason?", "options": [{ "id": "a", "itemId": "sentence-polite-reason-1" }, { "id": "b", "itemId": "sentence-polite-reason-3" }], "answerId": "b" },
+            "ordering": { "tokens": [{ "id": "b", "value": "سۇ بېرىڭ." }, { "id": "a", "value": "كەچۈرۈڭ، " }], "answerIds": ["a", "b"], "completedValue": "كەچۈرۈڭ، سۇ بېرىڭ." },
+            "completion": { "promptZh": "补全“下雨了，所以我留在家里”", "promptEn": "Complete the cause-result sentence", "options": [{ "id": "a", "value": "چۈنكى" }, { "id": "b", "value": "شۇڭا" }], "answerId": "b", "completedValue": "يامغۇر ياغدى، شۇڭا مەن ئۆيدە قالدىم.", "meaningZh": "下雨了，所以我留在家里。", "meaningEn": "It rained, so I stayed at home." }
+          }
+        }
+      ]
+    }
+  ],
+  "vocabularyCorrections": [
+    {
+      "oldId": "marhaba",
+      "oldFile": "human_vocab_marhaba.webm",
+      "id": "erzimaydu",
+      "value": "ئەرزىمەيدۇ",
+      "latin": "erzimeydu",
+      "meaningZh": "不客气、不用谢",
+      "meaningEn": "You're welcome.",
+      "file": "human_vocab_erzimeydu.webm",
+      "reviewStatus": "approved",
+      "sourceNote": "负责人纠正并要求重新录制；录音采用前不替换正式课程。"
+    }
+  ]
+}

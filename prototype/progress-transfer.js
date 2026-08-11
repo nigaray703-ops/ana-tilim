@@ -18,6 +18,7 @@
     "listen",
     "completed"
   ]);
+  const READING_TRAINING_PROGRESS_FIELDS = new Set(["rule", "compare", "ordering", "completion"]);
   const LATIN_WRITING_PROGRESS_FIELDS = Object.freeze({
     qwerty: new Set(["completed", "completedIds"]),
     "uyghur-keyboard": new Set(["completed", "completedIds"]),
@@ -75,7 +76,7 @@
           if (latinFields && !latinFields.has(field)) {
             throw new Error(`${entryPath} 包含未知字段 ${field}`);
           }
-          if (PROGRESS_BOOLEAN_FIELDS.has(field)) {
+          if (PROGRESS_BOOLEAN_FIELDS.has(field) || (scope === "reading" && READING_TRAINING_PROGRESS_FIELDS.has(field))) {
             if (typeof fieldValue !== "boolean") {
               throw new Error(`${entryPath}.${field} 必须是布尔值`);
             }
