@@ -33,7 +33,7 @@
 - Modify: `scripts/check-project.mjs`
 
 **Interfaces:**
-- Produces: `LOUDNESS_STANDARD`, `resolveFfmpegPath({ env, pathValue, accessSync, execFileSync })`, `parseLoudnormAnalysis(stderr)`, and `normalizeWebmBuffer({ buffer, ffmpegPath, temporaryRoot, fsApi, execFileSync })`.
+- Produces: `LOUDNESS_STANDARD`, `resolveFfmpegPath({ env, pathValue, accessSync, spawnSync })`, `parseLoudnormAnalysis(stderr)`, and `normalizeWebmBuffer({ buffer, ffmpegPath, temporaryRoot, fsApi, spawnSync })`.
 - `normalizeWebmBuffer` returns `{ buffer: Buffer, report: { configVersion, input, output } }`, where each measurement has finite `integratedLufs`, `truePeakDbtp`, `lraLu`, and `thresholdLufs` values.
 
 - [ ] **Step 1: Write the failing configuration and parser tests**
@@ -89,7 +89,7 @@ export function parseLoudnormAnalysis(stderr) {
 
 - [ ] **Step 4: Add RED tests for two-pass execution and explicit temporary cleanup**
 
-The fake `execFileSync` records exact argv for analysis, normalization, and output verification. Assert the second pass includes measured I/LRA/TP/threshold/offset, `linear=true`, `-c:a libopus`, `-map_metadata -1`, and the fixed targets. Inject a failure after creating the output and assert both explicit temporary paths are unlinked one at a time.
+The fake `spawnSync` records exact argv for analysis, normalization, and output verification while returning explicit `{ status, stdout, stderr }` results. Assert the second pass includes measured I/LRA/TP/threshold/offset, `linear=true`, `-c:a libopus`, `-map_metadata -1`, and the fixed targets. Inject a failure after creating the output and assert both explicit temporary paths are unlinked one at a time.
 
 - [ ] **Step 5: Implement `normalizeWebmBuffer` with three fail-closed passes**
 
@@ -143,7 +143,7 @@ git commit -m "feat: add perceived loudness engine"
 
 **Interfaces:**
 - Consumes: `LOUDNESS_STANDARD` and `normalizeWebmBuffer` from Task 1; `buildRecordingCatalog({ projectRoot })` from `tools/recording-studio/catalog.mjs`.
-- Produces: `createHumanAudioLoudnessBatch({ projectRoot, workspaceRoot, ffmpegPath, fsApi, execFileSync })` with `prepare({ batchId })`, `apply({ planPath })`, and `readPlan({ planPath })`.
+- Produces: `createHumanAudioLoudnessBatch({ projectRoot, workspaceRoot, ffmpegPath, fsApi, spawnSync })` with `prepare({ batchId })`, `apply({ planPath })`, and `readPlan({ planPath })`.
 - A plan is schema version 1 and contains exactly 552 unique operations sorted by relative path, plus all 554 stable IDs and their physical-file association.
 
 - [ ] **Step 1: Write the failing physical-inventory test**
