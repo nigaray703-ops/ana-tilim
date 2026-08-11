@@ -138,6 +138,22 @@ export function createHumanAudioLoudnessBatch({
     return writeExclusiveFile(candidate, `${JSON.stringify(value, null, 2)}\n`, label);
   }
 
+  function fsyncDirectory(directory) {
+    const descriptor = fsApi.openSync(directory, "r");
+    try {
+      fsApi.fsyncSync(descriptor);
+    } finally {
+      fsApi.closeSync(descriptor);
+    }
+  }
+
+  function replaceJsonAtomically(candidate, value, label) {
+    const temporary = `${candidate}.tmp-${crypto.randomBytes(4).toString("hex")}`;
+    writeExclusiveJson(temporary, value, `${label} temporary`);
+    fsApi.renameSync(temporary, candidate);
+    fsyncDirectory(path.dirname(candidate));
+  }
+
   function buildInventory() {
     assert.ok(catalog && Array.isArray(catalog.targets), "recording catalog targets are required");
     const stableIds = new Set();
@@ -346,5 +362,218 @@ export function createHumanAudioLoudnessBatch({
     return JSON.parse(JSON.stringify(plan));
   }
 
-  return Object.freeze({ buildInventory, prepare, readPlan });
+  function apply({ planPath, appliedAt = new Date().toISOString() }) {
+    assertIsoTimestamp(appliedAt, "loudness batch appliedAt");
+    const resolvedPlanPath = path.resolve(planPath);
+    const batchRoot = path.dirname(resolvedPlanPath);
+    const journalPath = path.join(batchRoot, "journal.json");
+    assert.equal(fsApi.existsSync(journalPath), false, "loudness batch already has a journal");
+    const plan = readPlan({ planPath: resolvedPlanPath });
+    const journal = {
+      schemaVersion: 1,
+      configVersion: LOUDNESS_STANDARD.version,
+      batchId: plan.batchId,
+      planSha256: sha256(fsApi.readFileSync(resolvedPlanPath)),
+      createdAt: new Date().toISOString(),
+      status: "backing-up",
+      backupRelativePaths: [],
+      changedRelativePaths: [],
+      appliedAt: null,
+      recoveredAt: null,
+      error: null
+    };
+    writeExclusiveJson(journalPath, journal, "loudness batch journal");
+
+    try {
+      for (const operation of plan.operations) {
+        const sourcePath = path.resolve(normalizedProjectRoot, operation.relativePath);
+        assertSafeAudioFile(fsApi, audioRoot, sourcePath, `source audio ${operation.relativePath}`);
+        const source = fsApi.readFileSync(sourcePath);
+        assert.equal(sha256(source), operation.originalSha256, `source changed before backup: ${operation.relativePath}`);
+        const backupRelativePath = path.join("backups", operation.relativePath);
+        const backupPath = path.join(batchRoot, backupRelativePath);
+        writeExclusiveFile(backupPath, source, `backup audio ${operation.relativePath}`);
+        assert.equal(sha256(fsApi.readFileSync(backupPath)), operation.originalSha256, `backup verification failed: ${operation.relativePath}`);
+        journal.backupRelativePaths.push(backupRelativePath);
+        replaceJsonAtomically(journalPath, journal, "loudness batch journal");
+      }
+    } catch (error) {
+      journal.status = "backup-failed";
+      journal.error = String(error?.message || error);
+      replaceJsonAtomically(journalPath, journal, "loudness batch journal");
+      throw error;
+    }
+
+    journal.status = "applying";
+    replaceJsonAtomically(journalPath, journal, "loudness batch journal");
+    let pendingTemporaryPath = null;
+    try {
+      for (const [index, operation] of plan.operations.entries()) {
+        const sourcePath = path.resolve(normalizedProjectRoot, operation.relativePath);
+        const sourceBefore = fsApi.readFileSync(sourcePath);
+        assert.equal(sha256(sourceBefore), operation.originalSha256, `source changed before replacement: ${operation.relativePath}`);
+        const stagedPath = path.resolve(batchRoot, operation.stagedRelativePath);
+        const staged = fsApi.readFileSync(stagedPath);
+        assert.equal(sha256(staged), operation.outputSha256, `staged audio changed before replacement: ${operation.relativePath}`);
+        pendingTemporaryPath = path.join(
+          path.dirname(sourcePath),
+          `.${path.basename(sourcePath)}.loudness-replacement-${plan.batchId}-${index}.tmp`
+        );
+        writeExclusiveFile(pendingTemporaryPath, staged, `replacement audio ${operation.relativePath}`);
+        assert.equal(sha256(fsApi.readFileSync(pendingTemporaryPath)), operation.outputSha256, `replacement temporary changed: ${operation.relativePath}`);
+        fsApi.renameSync(pendingTemporaryPath, sourcePath);
+        pendingTemporaryPath = null;
+        fsyncDirectory(path.dirname(sourcePath));
+        assert.equal(sha256(fsApi.readFileSync(sourcePath)), operation.outputSha256, `replacement verification failed: ${operation.relativePath}`);
+        journal.changedRelativePaths.push(operation.relativePath);
+        replaceJsonAtomically(journalPath, journal, "loudness batch journal");
+      }
+      journal.status = "applied";
+      journal.appliedAt = appliedAt;
+      journal.error = null;
+      replaceJsonAtomically(journalPath, journal, "loudness batch journal");
+      return {
+        batchId: plan.batchId,
+        status: journal.status,
+        appliedAt,
+        operations: plan.operations.map(({ relativePath, originalSha256, outputSha256 }) => ({ relativePath, originalSha256, outputSha256 }))
+      };
+    } catch (error) {
+      if (pendingTemporaryPath && fsApi.existsSync(pendingTemporaryPath)) fsApi.unlinkSync(pendingTemporaryPath);
+      let rollbackError = null;
+      for (const relativePath of [...journal.changedRelativePaths].reverse()) {
+        const operation = plan.operations.find((item) => item.relativePath === relativePath);
+        const sourcePath = path.resolve(normalizedProjectRoot, relativePath);
+        const backupPath = path.resolve(batchRoot, "backups", relativePath);
+        try {
+          const backup = fsApi.readFileSync(backupPath);
+          assert.equal(sha256(backup), operation.originalSha256, `backup changed before recovery: ${relativePath}`);
+          const restoreTemporary = path.join(
+            path.dirname(sourcePath),
+            `.${path.basename(sourcePath)}.loudness-restore-${plan.batchId}.tmp`
+          );
+          writeExclusiveFile(restoreTemporary, backup, `recovery audio ${relativePath}`);
+          fsApi.renameSync(restoreTemporary, sourcePath);
+          fsyncDirectory(path.dirname(sourcePath));
+          assert.equal(sha256(fsApi.readFileSync(sourcePath)), operation.originalSha256, `recovery verification failed: ${relativePath}`);
+          journal.changedRelativePaths = journal.changedRelativePaths.filter((item) => item !== relativePath);
+          replaceJsonAtomically(journalPath, journal, "loudness batch journal");
+        } catch (candidateError) {
+          rollbackError = candidateError;
+          break;
+        }
+      }
+      journal.status = rollbackError ? "manual-recovery-required" : "recovered";
+      journal.recoveredAt = rollbackError ? null : new Date().toISOString();
+      journal.error = rollbackError
+        ? `${String(error?.message || error)}; recovery failed: ${String(rollbackError?.message || rollbackError)}`
+        : String(error?.message || error);
+      replaceJsonAtomically(journalPath, journal, "loudness batch journal");
+      if (rollbackError) throw new AggregateError([error, rollbackError], "loudness replacement and recovery failed");
+      throw error;
+    }
+  }
+
+  function recover({ planPath, recoveredAt = new Date().toISOString() }) {
+    assertIsoTimestamp(recoveredAt, "loudness batch recoveredAt");
+    const resolvedPlanPath = path.resolve(planPath);
+    assert.ok(isInside(normalizedWorkspaceRoot, resolvedPlanPath), "loudness recovery plan escapes the workspace root");
+    assertNoSymlinkFrom(workspaceAnchor(resolvedPlanPath), resolvedPlanPath, "loudness recovery plan");
+    const planBytes = fsApi.readFileSync(resolvedPlanPath);
+    let plan;
+    try {
+      plan = JSON.parse(planBytes.toString("utf8"));
+    } catch (error) {
+      assert.fail(`malformed loudness recovery plan: ${error.message}`);
+    }
+    assertExactKeys(plan, [
+      "schemaVersion", "configVersion", "batchId", "createdAt", "status", "projectRootHash",
+      "targetCount", "physicalFileCount", "operations"
+    ], "loudness recovery plan");
+    assert.equal(plan.schemaVersion, 1, "unsupported loudness recovery plan schema");
+    assert.equal(plan.configVersion, LOUDNESS_STANDARD.version, "loudness recovery plan config version is invalid");
+    assert.equal(plan.status, "prepared", "loudness recovery plan is not prepared");
+    assert.equal(plan.projectRootHash, sha256(Buffer.from(normalizedProjectRoot)), "loudness recovery plan project root is stale");
+    const batchRoot = path.resolve(normalizedWorkspaceRoot, "loudness-batches", plan.batchId);
+    assert.equal(resolvedPlanPath, path.join(batchRoot, "plan.json"), "loudness recovery plan path is invalid");
+    assert.ok(Array.isArray(plan.operations), "loudness recovery operations must be an array");
+    assert.equal(new Set(plan.operations.map((item) => item.relativePath)).size, plan.operations.length, "loudness recovery plan has duplicate paths");
+
+    const journalPath = path.join(batchRoot, "journal.json");
+    assertNoSymlinkFrom(workspaceAnchor(journalPath), journalPath, "loudness recovery journal");
+    let journal;
+    try {
+      journal = JSON.parse(fsApi.readFileSync(journalPath, "utf8"));
+    } catch (error) {
+      assert.fail(`malformed loudness recovery journal: ${error.message}`);
+    }
+    assertExactKeys(journal, [
+      "schemaVersion", "configVersion", "batchId", "planSha256", "createdAt", "status",
+      "backupRelativePaths", "changedRelativePaths", "appliedAt", "recoveredAt", "error"
+    ], "loudness recovery journal");
+    assert.equal(journal.schemaVersion, 1, "unsupported loudness recovery journal schema");
+    assert.equal(journal.configVersion, LOUDNESS_STANDARD.version, "loudness recovery journal config is invalid");
+    assert.equal(journal.batchId, plan.batchId, "loudness recovery journal batch is invalid");
+    assert.equal(journal.planSha256, sha256(planBytes), "loudness recovery plan has changed");
+    assertIsoTimestamp(journal.createdAt, "loudness recovery journal createdAt");
+    assert.ok(["applying", "manual-recovery-required"].includes(journal.status), "loudness journal does not require recovery");
+    assert.ok(Array.isArray(journal.backupRelativePaths), "loudness recovery backup paths must be an array");
+    assert.ok(Array.isArray(journal.changedRelativePaths), "loudness recovery changed paths must be an array");
+    assert.equal(new Set(journal.changedRelativePaths).size, journal.changedRelativePaths.length, "loudness recovery journal has duplicate changed paths");
+    const operationsByPath = new Map(plan.operations.map((item) => [item.relativePath, item]));
+
+    try {
+      for (const operation of plan.operations) {
+        const sourcePath = path.resolve(normalizedProjectRoot, operation.relativePath);
+        assertSafeAudioFile(fsApi, audioRoot, sourcePath, `recovery source ${operation.relativePath}`);
+        const sourceSha = sha256(fsApi.readFileSync(sourcePath));
+        const changed = journal.changedRelativePaths.includes(operation.relativePath);
+        assert.equal(
+          sourceSha,
+          changed ? operation.outputSha256 : operation.originalSha256,
+          `source state does not match the recovery journal: ${operation.relativePath}`
+        );
+        const stagedPath = path.resolve(batchRoot, operation.stagedRelativePath);
+        assert.ok(isInside(batchRoot, stagedPath), `recovery staged path escapes its batch: ${operation.relativePath}`);
+        assert.equal(sha256(fsApi.readFileSync(stagedPath)), operation.outputSha256, `staged audio changed before recovery: ${operation.relativePath}`);
+        if (changed) {
+          const expectedBackupRelativePath = path.join("backups", operation.relativePath);
+          assert.ok(journal.backupRelativePaths.includes(expectedBackupRelativePath), `recovery backup is missing from the journal: ${operation.relativePath}`);
+          const backupPath = path.resolve(batchRoot, expectedBackupRelativePath);
+          assert.ok(isInside(batchRoot, backupPath), `recovery backup path escapes its batch: ${operation.relativePath}`);
+          assert.equal(sha256(fsApi.readFileSync(backupPath)), operation.originalSha256, `backup changed before recovery: ${operation.relativePath}`);
+        }
+      }
+
+      for (const relativePath of [...journal.changedRelativePaths].reverse()) {
+        const operation = operationsByPath.get(relativePath);
+        assert.ok(operation, `recovery journal contains an unknown changed path: ${relativePath}`);
+        const sourcePath = path.resolve(normalizedProjectRoot, relativePath);
+        const backupPath = path.resolve(batchRoot, "backups", relativePath);
+        const backup = fsApi.readFileSync(backupPath);
+        const restoreTemporary = path.join(
+          path.dirname(sourcePath),
+          `.${path.basename(sourcePath)}.loudness-restore-${plan.batchId}.tmp`
+        );
+        writeExclusiveFile(restoreTemporary, backup, `restart recovery audio ${relativePath}`);
+        fsApi.renameSync(restoreTemporary, sourcePath);
+        fsyncDirectory(path.dirname(sourcePath));
+        assert.equal(sha256(fsApi.readFileSync(sourcePath)), operation.originalSha256, `restart recovery verification failed: ${relativePath}`);
+        journal.changedRelativePaths = journal.changedRelativePaths.filter((item) => item !== relativePath);
+        replaceJsonAtomically(journalPath, journal, "loudness recovery journal");
+      }
+      journal.status = "recovered";
+      journal.recoveredAt = recoveredAt;
+      journal.error = null;
+      replaceJsonAtomically(journalPath, journal, "loudness recovery journal");
+      return { batchId: plan.batchId, status: journal.status, recoveredAt };
+    } catch (error) {
+      journal.status = "manual-recovery-required";
+      journal.error = String(error?.message || error);
+      replaceJsonAtomically(journalPath, journal, "loudness recovery journal");
+      throw error;
+    }
+  }
+
+  return Object.freeze({ buildInventory, prepare, readPlan, apply, recover });
 }

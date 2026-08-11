@@ -54,6 +54,29 @@ function prepareFixture(batchId) {
   return { fixture, controller, prepared };
 }
 
+function prepareReplacementFixture(batchId) {
+  const fixture = createFixture();
+  const controller = createHumanAudioLoudnessBatch({
+    projectRoot: fixture.fixtureProjectRoot,
+    workspaceRoot: fixture.workspaceRoot,
+    ffmpegPath: "/trusted/ffmpeg",
+    catalog: fixture.catalog,
+    normalizeBuffer: () => ({ buffer: Buffer.from(alternateWebm), report: literalReport(-22) })
+  });
+  const prepared = controller.prepare({ batchId, createdAt: "2026-08-12T01:00:00.000Z" });
+  return { fixture, controller, prepared };
+}
+
+function fsProxy(overrides) {
+  return new Proxy(fs, {
+    get(target, property) {
+      if (Object.hasOwn(overrides, property)) return overrides[property];
+      const value = target[property];
+      return typeof value === "function" ? value.bind(target) : value;
+    }
+  });
+}
+
 test("builds the exact 554-target to 552-physical-file human audio inventory", () => {
   const workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ana-tilim-loudness-inventory-"));
   const controller = createHumanAudioLoudnessBatch({
@@ -168,4 +191,153 @@ test("readPlan rejects config, ordering, duplicate, and path drift", () => {
     fs.writeFileSync(item.prepared.planPath, `${JSON.stringify(plan, null, 2)}\n`);
     assert.throws(() => item.controller.readPlan({ planPath: item.prepared.planPath }), expected);
   }
+});
+
+test("apply backs up every source before atomically replacing the prepared files", () => {
+  const item = prepareReplacementFixture("fixture-apply-success");
+  const result = item.controller.apply({ planPath: item.prepared.planPath, appliedAt: "2026-08-12T02:00:00.000Z" });
+
+  assert.equal(result.status, "applied");
+  assert.equal(fs.readFileSync(item.fixture.firstPath).equals(alternateWebm), true);
+  assert.equal(fs.readFileSync(item.fixture.secondPath).equals(alternateWebm), true);
+  const batchRoot = path.dirname(item.prepared.planPath);
+  for (const operation of item.prepared.plan.operations) {
+    const backupPath = path.join(batchRoot, "backups", operation.relativePath);
+    assert.equal(sha256(fs.readFileSync(backupPath)), operation.originalSha256);
+  }
+  const journal = JSON.parse(fs.readFileSync(path.join(batchRoot, "journal.json"), "utf8"));
+  assert.equal(journal.status, "applied");
+  assert.deepEqual(journal.changedRelativePaths, item.prepared.plan.operations.map((operation) => operation.relativePath));
+  assert.throws(() => item.controller.apply({ planPath: item.prepared.planPath }), /already has a journal/);
+});
+
+test("a backup failure prevents every course replacement", () => {
+  const item = prepareReplacementFixture("fixture-backup-failure");
+  let backupFilesOpened = 0;
+  const failingFs = fsProxy({
+    openSync(candidate, flags, mode) {
+      if (String(candidate).includes(`${path.sep}backups${path.sep}`) && String(candidate).endsWith(".webm")) {
+        backupFilesOpened += 1;
+        if (backupFilesOpened === 2) throw new Error("fixture backup failed");
+      }
+      return fs.openSync(candidate, flags, mode);
+    }
+  });
+  const controller = createHumanAudioLoudnessBatch({
+    projectRoot: item.fixture.fixtureProjectRoot,
+    workspaceRoot: item.fixture.workspaceRoot,
+    ffmpegPath: "/trusted/ffmpeg",
+    catalog: item.fixture.catalog,
+    fsApi: failingFs,
+    normalizeBuffer: () => assert.fail("apply must not normalize again")
+  });
+
+  assert.throws(() => controller.apply({ planPath: item.prepared.planPath }), /fixture backup failed/);
+  assert.equal(fs.readFileSync(item.fixture.firstPath).equals(validWebm), true);
+  assert.equal(fs.readFileSync(item.fixture.secondPath).equals(validWebm), true);
+  const journal = JSON.parse(fs.readFileSync(path.join(path.dirname(item.prepared.planPath), "journal.json"), "utf8"));
+  assert.equal(journal.status, "backup-failed");
+  assert.deepEqual(journal.changedRelativePaths, []);
+});
+
+test("a middle replacement failure restores every earlier changed file", () => {
+  const item = prepareReplacementFixture("fixture-replacement-failure");
+  let injected = false;
+  const failingFs = fsProxy({
+    renameSync(source, destination) {
+      if (!injected && destination === item.fixture.secondPath && String(source).includes(".loudness-replacement-")) {
+        injected = true;
+        throw new Error("fixture replacement failed");
+      }
+      return fs.renameSync(source, destination);
+    }
+  });
+  const controller = createHumanAudioLoudnessBatch({
+    projectRoot: item.fixture.fixtureProjectRoot,
+    workspaceRoot: item.fixture.workspaceRoot,
+    ffmpegPath: "/trusted/ffmpeg",
+    catalog: item.fixture.catalog,
+    fsApi: failingFs,
+    normalizeBuffer: () => assert.fail("apply must not normalize again")
+  });
+
+  assert.throws(() => controller.apply({ planPath: item.prepared.planPath }), /fixture replacement failed/);
+  assert.equal(fs.readFileSync(item.fixture.firstPath).equals(validWebm), true);
+  assert.equal(fs.readFileSync(item.fixture.secondPath).equals(validWebm), true);
+  const journal = JSON.parse(fs.readFileSync(path.join(path.dirname(item.prepared.planPath), "journal.json"), "utf8"));
+  assert.equal(journal.status, "recovered");
+  assert.deepEqual(journal.changedRelativePaths, []);
+  assert.equal(fs.readdirSync(path.dirname(item.fixture.secondPath)).some((name) => name.includes(".loudness-replacement-")), false);
+});
+
+test("a restarted controller recovers only journaled changed files from verified backups", () => {
+  const item = prepareReplacementFixture("fixture-restart-recovery");
+  const batchRoot = path.dirname(item.prepared.planPath);
+  for (const operation of item.prepared.plan.operations) {
+    const sourcePath = path.resolve(item.fixture.fixtureProjectRoot, operation.relativePath);
+    const backupPath = path.join(batchRoot, "backups", operation.relativePath);
+    fs.mkdirSync(path.dirname(backupPath), { recursive: true });
+    fs.writeFileSync(backupPath, fs.readFileSync(sourcePath));
+  }
+  const changed = item.prepared.plan.operations[0];
+  fs.writeFileSync(path.resolve(item.fixture.fixtureProjectRoot, changed.relativePath), alternateWebm);
+  const planBytes = fs.readFileSync(item.prepared.planPath);
+  const journalPath = path.join(batchRoot, "journal.json");
+  fs.writeFileSync(journalPath, `${JSON.stringify({
+    schemaVersion: 1,
+    configVersion: "ana-tilim-loudness-v1",
+    batchId: item.prepared.plan.batchId,
+    planSha256: sha256(planBytes),
+    createdAt: "2026-08-12T02:00:00.000Z",
+    status: "applying",
+    backupRelativePaths: item.prepared.plan.operations.map((operation) => path.join("backups", operation.relativePath)),
+    changedRelativePaths: [changed.relativePath],
+    appliedAt: null,
+    recoveredAt: null,
+    error: null
+  }, null, 2)}\n`);
+
+  const recovered = item.controller.recover({ planPath: item.prepared.planPath, recoveredAt: "2026-08-12T03:00:00.000Z" });
+
+  assert.deepEqual(recovered, {
+    batchId: item.prepared.plan.batchId,
+    status: "recovered",
+    recoveredAt: "2026-08-12T03:00:00.000Z"
+  });
+  assert.equal(fs.readFileSync(item.fixture.firstPath).equals(validWebm), true);
+  assert.equal(fs.readFileSync(item.fixture.secondPath).equals(validWebm), true);
+  const journal = JSON.parse(fs.readFileSync(journalPath, "utf8"));
+  assert.equal(journal.status, "recovered");
+  assert.deepEqual(journal.changedRelativePaths, []);
+  assert.equal(journal.recoveredAt, "2026-08-12T03:00:00.000Z");
+});
+
+test("restart recovery fails closed when its exact backup has changed", () => {
+  const item = prepareReplacementFixture("fixture-restart-tamper");
+  const operation = item.prepared.plan.operations[0];
+  const batchRoot = path.dirname(item.prepared.planPath);
+  const backupRelativePath = path.join("backups", operation.relativePath);
+  const backupPath = path.join(batchRoot, backupRelativePath);
+  fs.mkdirSync(path.dirname(backupPath), { recursive: true });
+  fs.writeFileSync(backupPath, alternateWebm);
+  fs.writeFileSync(path.resolve(item.fixture.fixtureProjectRoot, operation.relativePath), alternateWebm);
+  fs.writeFileSync(path.join(batchRoot, "journal.json"), `${JSON.stringify({
+    schemaVersion: 1,
+    configVersion: "ana-tilim-loudness-v1",
+    batchId: item.prepared.plan.batchId,
+    planSha256: sha256(fs.readFileSync(item.prepared.planPath)),
+    createdAt: "2026-08-12T02:00:00.000Z",
+    status: "applying",
+    backupRelativePaths: [backupRelativePath],
+    changedRelativePaths: [operation.relativePath],
+    appliedAt: null,
+    recoveredAt: null,
+    error: null
+  }, null, 2)}\n`);
+
+  assert.throws(
+    () => item.controller.recover({ planPath: item.prepared.planPath, recoveredAt: "2026-08-12T03:00:00.000Z" }),
+    /backup changed before recovery/
+  );
+  assert.equal(fs.readFileSync(path.resolve(item.fixture.fixtureProjectRoot, operation.relativePath)).equals(alternateWebm), true);
 });
