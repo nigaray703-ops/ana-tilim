@@ -799,11 +799,21 @@ assertManifestMatches("prototype/assets/audio/human/alphabet/manifest.json", alp
 })), "alphabet");
 assertManifestMatches("prototype/assets/audio/human/combos/manifest.json", comboItems, "combo", { exact: false });
 assertManifestMatches("prototype/assets/audio/human/vocab/manifest.json", vocabItems, "vocab", { exact: false });
+const canonicalUlyReadingGroupIds = new Set([
+  "grammar-person-verbs",
+  "grammar-possession",
+  "grammar-location-direction",
+  "grammar-basic-time",
+  "sentence-self-introduction",
+  "sentence-location-direction",
+  "sentence-ability-preference",
+  "sentence-polite-reason"
+]);
 const readingAudioCourseItems = readingUnits.flatMap((unit) =>
   unit.groups.flatMap((group) =>
     group.items.map((item) => ({
       ...item,
-      latin: group.training ? item.latin : item.pattern || item.speaker || unit.subtitle
+      latin: canonicalUlyReadingGroupIds.has(group.id) ? item.latin : item.pattern || item.speaker || unit.subtitle
     }))
   )
 );

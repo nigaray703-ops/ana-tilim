@@ -34,6 +34,7 @@ const FINAL_ADDITION_GROUPS = Object.freeze([
   ["sentence-ability-preference", 4],
   ["sentence-polite-reason", 4]
 ]);
+const FINAL_ADDITION_GROUP_IDS = new Set(FINAL_ADDITION_GROUPS.map(([groupId]) => groupId));
 const FINAL_AUDIO_REUSES = Object.freeze([
   ["grammar-person-verbs-1", "reading:grammar-word-order-1"],
   ["sentence-self-introduction-4", "reading:grammar-copula-2"]
@@ -137,6 +138,7 @@ function sourceIndexes(course) {
   }
   for (const unit of course.readingUnits) {
     for (const group of unit.groups) {
+      const manifestUsesCanonicalUly = FINAL_ADDITION_GROUP_IDS.has(group.id);
       for (const item of group.items) {
         addSourceIndex(indexes.reading, "reading", item.id, {
           source: item,
@@ -145,8 +147,8 @@ function sourceIndexes(course) {
           value: item.value,
           latin: item.latin,
           meaning: item.meaning,
-          manifestLatin: group.training ? item.latin : (item.pattern || item.speaker || unit.subtitle),
-          manifestLatinCaseInsensitive: Boolean(group.training)
+          manifestLatin: manifestUsesCanonicalUly ? item.latin : (item.pattern || item.speaker || unit.subtitle),
+          manifestLatinCaseInsensitive: manifestUsesCanonicalUly
         });
       }
     }

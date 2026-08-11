@@ -286,6 +286,11 @@ const checks = [
     args: ["tests/final-reading-additions.test.mjs"]
   },
   {
+    label: "test: units six and seven five-step training",
+    command: node,
+    args: ["tests/units-six-seven-training.test.mjs"]
+  },
+  {
     label: "test: final reading manifest builder",
     command: node,
     args: ["tests/build-final-reading-manifest.test.mjs"]
