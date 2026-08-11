@@ -460,7 +460,7 @@ assert.equal(
   "duplicate normalization should use the standard feedback tag"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('href="./styles.css?v=20260812-glyph-clearance"'),
+  normalizedDuplicateIndex.includes('href="./styles.css?v=20260812-final-layout"'),
   "sync should cache-bust the shared resumable-unit styles"
 );
 assert.ok(
@@ -484,7 +484,7 @@ assert.ok(
   "sync should cache-bust the complete sentence glossary"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./app.js?v=20260812-five-step-reading"'),
+  normalizedDuplicateIndex.includes('src="./app.js?v=20260812-unified-letter-choices"'),
   "sync should cache-bust the shared five-step and legacy-migration UI"
 );
 assert.ok(

@@ -2207,6 +2207,12 @@ html[lang="en"] .nav-button {
   background: var(--teal);
 }
 
+.reading-training-card > h2 {
+  margin: 0;
+  font-size: clamp(19px, 2.4vw, 22px);
+  line-height: 1.45;
+}
+
 .reading-training-card .reading-line,
 .reading-training-compare .reading-line {
   grid-template-columns: minmax(0, 1fr);

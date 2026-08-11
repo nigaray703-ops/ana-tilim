@@ -69,7 +69,7 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260812-glyph-clearance",
+  "./styles.css?v=20260812-final-layout",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260809-bilingual",
@@ -102,7 +102,7 @@ const expectedVersionedAssets = [
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260810-unit-maps",
   "./feedback.js?v=20260810-feedback",
-  "./app.js?v=20260812-five-step-reading"
+  "./app.js?v=20260812-unified-letter-choices"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -118,7 +118,7 @@ const previousEnglishUiCache = new Map([
   ["./styles.css?v=20260809-bilingual", { release: "before-english-layout" }],
   ["./app.js?v=20260809-bilingual-final", { release: "before-english-layout" }]
 ]);
-for (const url of ["./styles.css?v=20260812-glyph-clearance", "./app.js?v=20260812-five-step-reading"]) {
+for (const url of ["./styles.css?v=20260812-final-layout", "./app.js?v=20260812-unified-letter-choices"]) {
   assert.ok(versionedAppAssets.includes(url));
   assert.equal(previousEnglishUiCache.get(url), undefined);
 }
@@ -182,6 +182,11 @@ assert.match(
   styleSource,
   /\.letter-only-choice \.choice-art\.uyghur\s*\{[^}]*height:\s*76px;[^}]*line-height:\s*1\.5;/s,
   "every Uyghur letter-only choice should reserve enough ink height for tall and descending glyphs"
+);
+assert.match(
+  styleSource,
+  /\.reading-training-card\s*>\s*h2\s*\{[^}]*font-size:\s*clamp\(19px,\s*2\.4vw,\s*22px\);[^}]*line-height:\s*1\.45;/s,
+  "unit six and seven rule headings should stay below the lesson title hierarchy"
 );
 for (const phrase of [
   "prototype/course-data.js",
@@ -4876,6 +4881,15 @@ for (const hiddenAnswer of ["<strong>", "class=\"caption\"", "class=\"step-state
 
 const letterOddHtml = renderState("state.screen = 'letterOdd'; state.selectedGroupId = 'vowels-basic'; state.currentLetterId = 'aa'; state.selectedPicture = ''");
 const letterOddChoiceGrid = letterOddHtml.match(/<div class="choice-grid">[\s\S]*?<\/div>/)?.[0] || "";
+assert.equal(
+  (letterOddChoiceGrid.match(/class="choice-card letter-only-choice"/g) || []).length,
+  2,
+  "odd-one-out options should use the same full-width letter-only cards as recognition"
+);
+assert.ok(
+  !letterOddChoiceGrid.includes('class="step-state"'),
+  "odd-one-out options should keep their answer labels outside the letter cards"
+);
 includesAll(
   letterOddHtml,
   ["找不同", "目标 ئە", "ئ + ە"],
@@ -4928,7 +4942,11 @@ for (const [groupId, currentLetterId, expectedPrompt] of expectedOddLetterPrompt
     `${currentLetterId} odd-one-out target glyph should match its own cue`
   );
 }
-includesAll(letterOddChoiceGrid, ["ئا", "ئە", "选择"], "letter odd-one-out choice labels");
+includesAll(
+  letterOddChoiceGrid,
+  ["ئا", "ئە", 'aria-label="字母选项 1：ئا"', 'aria-label="字母选项 2：ئە"'],
+  "letter odd-one-out choice labels"
+);
 for (const answerHint of ["ئ + ا", "ئ + ە", "元音，a", "元音，e"]) {
   assert.ok(!letterOddChoiceGrid.includes(answerHint), `letter odd-one-out options should hide answer hint ${answerHint}`);
 }

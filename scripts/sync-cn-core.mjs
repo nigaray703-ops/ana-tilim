@@ -157,7 +157,7 @@ indexUpdateMessages.push("Normalized index.html: shared i18n runtime before app.
 const sharedCacheReferences = [
   {
     pattern: /(\bhref=["']\.\/styles\.css)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260812-glyph-clearance$2",
+    replacement: "$1?v=20260812-final-layout$2",
     label: "styles.css"
   },
   {
@@ -192,7 +192,7 @@ const sharedCacheReferences = [
   },
   {
     pattern: /(\bsrc=["']\.\/app\.js)(?:\?[^"']*)?(["'])/g,
-    replacement: "$1?v=20260812-five-step-reading$2",
+    replacement: "$1?v=20260812-unified-letter-choices$2",
     label: "app.js"
   }
 ];

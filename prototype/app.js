@@ -5288,19 +5288,22 @@ function renderLetterOddPractice() {
         </article>
         <div class="choice-grid">
           ${choices
-            .map((choice) => {
+            .map((choice, index) => {
               const selected = state.selectedPicture === choice.id;
               const correctChoice = choice.id === target.id;
               const resultClass = selected ? (correctChoice ? "correct" : "wrong") : "";
               return `
                 <button
-                  class="choice-card ${resultClass}"
+                  class="${["choice-card", "letter-only-choice", resultClass].filter(Boolean).join(" ")}"
                   data-action="pick-letter-odd"
                   data-id="${choice.id}"
                   type="button"
+                  aria-label="${t("alphabet.choiceAria", {
+                    count: index + 1,
+                    letter: displayStandaloneLetterGlyph(choice.letter)
+                  })}"
                 >
                   <span class="choice-art uyghur">${displayStandaloneLetterGlyph(choice.letter)}</span>
-                  <span class="step-state">${selected ? (correctChoice ? t("alphabet.correct") : t("alphabet.lookAgain")) : t("alphabet.choose")}</span>
                 </button>
               `;
             })
