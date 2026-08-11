@@ -4861,13 +4861,61 @@ const letterOddHtml = renderState("state.screen = 'letterOdd'; state.selectedGro
 const letterOddChoiceGrid = letterOddHtml.match(/<div class="choice-grid">[\s\S]*?<\/div>/)?.[0] || "";
 includesAll(
   letterOddHtml,
-  ["找不同", "目标 ئا", "ئ + ە"],
+  ["找不同", "目标 ئە", "ئ + ە"],
   "letter odd-one-out exercise"
 );
+
+const expectedOddLetterPrompts = [
+  ["vowels-basic", "aa", "目标 ئە，找出：ئ + ە"],
+  ["vowels-basic", "ae", "目标 ئا，找出：ئ + ا"],
+  ["dot-bone", "be", "目标 پ，找出：下方三个点"],
+  ["dot-bone", "pe", "目标 ت，找出：上方两个点"],
+  ["dot-bone", "te", "目标 پ，找出：下方三个点"],
+  ["curved", "jim", "目标 چ，找出：弯形，下方三个点"],
+  ["curved", "che", "目标 خ，找出：弯形，上方一个点"],
+  ["curved", "khe", "目标 چ，找出：弯形，下方三个点"],
+  ["breakers", "dal", "目标 ر，找出：弧形，无点"],
+  ["breakers", "re", "目标 ز，找出：弧形，上方一个点"],
+  ["breakers", "ze", "目标 ژ，找出：弧形，上方三个点"],
+  ["breakers", "zhe", "目标 ز，找出：弧形，上方一个点"],
+  ["teeth", "sin", "目标 ش，找出：连续齿形，上方三个点"],
+  ["teeth", "shin", "目标 س，找出：连续齿形，无点"],
+  ["round-dots", "ghayn", "目标 ف，找出：较小圆形，上方一个点"],
+  ["round-dots", "fe", "目标 ق，找出：圆形，上方两个点"],
+  ["round-dots", "qaf", "目标 ف，找出：较小圆形，上方一个点"],
+  ["k-family", "kaf", "目标 گ，找出：k 系加线形"],
+  ["k-family", "gaf", "目标 ڭ，找出：k 系鼻音形"],
+  ["k-family", "ng", "目标 گ，找出：k 系加线形"],
+  ["no-dot", "lam", "目标 م，找出：无点圆形"],
+  ["no-dot", "mim", "目标 ل，找出：无点竖形"],
+  ["nun-he", "nun", "目标 ھ，找出：无点开口形"],
+  ["nun-he", "he", "目标 ن，找出：上方一个点"],
+  ["vowels-round", "o", "目标 ئۇ，找出：ئ + ۇ"],
+  ["vowels-round", "u", "目标 ئۆ，找出：ئ + ۆ"],
+  ["vowels-round", "oe", "目标 ئۈ，找出：ئ + ۈ"],
+  ["vowels-round", "ue", "目标 ئۆ，找出：ئ + ۆ"],
+  ["tail", "waw", "目标 ئې，找出：ئ + ې"],
+  ["tail", "ee", "目标 ئى，找出：ئ + ى"],
+  ["tail", "ii", "目标 ي，找出：下方两个点，可连接"],
+  ["tail", "ye", "目标 ئى，找出：ئ + ى"]
+];
+
+for (const [groupId, currentLetterId, expectedPrompt] of expectedOddLetterPrompts) {
+  const html = renderState(
+    `state.screen = 'letterOdd'; state.selectedGroupId = '${groupId}'; state.currentLetterId = '${currentLetterId}'; state.selectedPicture = ''`
+  );
+  const prompt = html.match(/<h2 class="section-title">\s*([\s\S]*?)\s*<\/h2>/)?.[1]?.trim() || "";
+  assert.equal(
+    prompt,
+    expectedPrompt,
+    `${currentLetterId} odd-one-out target glyph should match its own cue`
+  );
+}
 includesAll(letterOddChoiceGrid, ["ئا", "ئە", "选择"], "letter odd-one-out choice labels");
 for (const answerHint of ["ئ + ا", "ئ + ە", "元音，a", "元音，e"]) {
   assert.ok(!letterOddChoiceGrid.includes(answerHint), `letter odd-one-out options should hide answer hint ${answerHint}`);
 }
+renderState("state.screen = 'letterOdd'; state.selectedGroupId = 'vowels-basic'; state.currentLetterId = 'aa'; state.selectedPicture = ''");
 clickDataset({ action: "pick-letter-odd", id: "ae" });
 includesAll(app.innerHTML, ["找对了", "ئە"], "correct odd-one-out feedback");
 

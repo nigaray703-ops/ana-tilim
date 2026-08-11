@@ -5253,7 +5253,7 @@ function renderLetterOddPractice() {
         <article class="card">
           <p class="caption">${t("alphabet.oddCompare")}</p>
           <h2 class="section-title">
-            ${t("alphabet.oddPrompt", { letter: displayStandaloneLetterGlyph(letter.letter), cue: target.cue })}
+            ${t("alphabet.oddPrompt", { letter: displayStandaloneLetterGlyph(target.letter), cue: target.cue })}
           </h2>
           <p class="muted">${t("alphabet.oddHint")}</p>
         </article>
