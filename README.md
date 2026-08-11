@@ -20,7 +20,7 @@
   <a href="https://github.com/nigaray703-ops/ana-tilim">GitHub repository / GitHub 仓库</a>
 </p>
 
-> **Source-visible, not open source.** You may study the repository and build a
+> **Independent portfolio project. Source-visible, not open source, and not a community or collaborative open-source project.** You may study the repository and build a
 > genuinely independent project from general ideas, but you may not copy,
 > rebrand, redistribute, or present this website, a fork, or a lightly modified
 > version as your own original work. See [LICENSE.md](./LICENSE.md).
@@ -37,6 +37,17 @@ reading, writing, spelling, and keyboard skills.
 
 Ana Tilim 意为“我的母语”。项目既适合从零开始学习维吾尔语的人，也适合会说、
 但希望加强识字、书写、拼写和键盘输入能力的学习者。
+
+The project was independently created, directed, owned, and officially maintained
+by [`nigaray703-ops`](https://github.com/nigaray703-ops) as a professional portfolio
+project. Public visibility, a fork, feedback, or a suggestion does not make anyone
+else a co-author, co-owner, official collaborator, or maintainer. See
+[`AUTHORS.md`](./AUTHORS.md) and [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+
+本项目由 [`nigaray703-ops`](https://github.com/nigaray703-ops) 独立创建、主导、拥有和
+正式维护，用作职业作品集。公开仓库、Fork、反馈或建议不会让其他人成为共同作者、共同
+所有者、正式协作者或维护者。详见 [`AUTHORS.md`](./AUTHORS.md) 与
+[`CONTRIBUTING.md`](./CONTRIBUTING.md)。
 
 The learning path connects letter recognition, pronunciation, vocabulary,
 listening, reading, writing, and practical use instead of treating them as
@@ -161,7 +172,7 @@ node scripts/check-project.mjs
 The check runner validates JavaScript syntax, ULY transliteration, course-data
 integrity, learning interactions, human-audio manifests and files, cloud-sync
 behavior, the Supabase schema, the re-recording queue, full-content rendering,
-and Git whitespace.
+ownership and contribution policy, and Git whitespace.
 
 检查脚本会验证 JavaScript 语法、ULY 转写、课程数据完整性、学习交互、真人音频文件与
 清单、云同步行为、Supabase 数据库结构、重录队列、完整内容渲染及 Git 空白字符。
@@ -175,6 +186,10 @@ prototype/                  Web prototype and application assets
   index.html                Prototype entry point
 tests/                      Project verification scripts
 scripts/check-project.mjs   Complete project check runner
+.github/CODEOWNERS          Owner review responsibility for every path
+AUTHORS.md                  Project owner and sole official maintainer
+CONTRIBUTING.md             Feedback-only and no external code contributions
+LICENSE.md                  Reference, ownership, and human-audio terms
 tools/                      Content and audio import utilities
 课程/                       Course authoring and review documents
 审校与音频准备包/           Language review and recording workflow
@@ -210,7 +225,8 @@ exports to this repository.
 ## Copyright and human audio / 版权与真人音频
 
 Copyright © 2026 Nigaray703-ops. All rights reserved. This repository is
-source-visible for learning and reference; it is not open source.
+an independent portfolio project, source-visible for learning and reference;
+it is not a community or collaborative open-source project.
 
 You may cite the project with clear attribution and may independently implement
 general ideas using your own code, original content, different branding, and a
@@ -257,14 +273,24 @@ design, or human recordings.
 
 ## Feedback and controlled contributions / 反馈与受控贡献
 
-Corrections and suggestions are welcome through the repository owner's official
-GitHub account. Only the owner decides what is accepted into the official
-repository and deployment. Sending feedback or a proposed change does not grant
-permission to republish this project or use its audio elsewhere.
+Factual corrections, broken links, audio problems, accessibility issues, and
+security concerns may be reported through the repository owner's official GitHub
+account or the deployed website. **Unsolicited pull requests are not accepted,
+and this project does not recruit co-developers or co-maintainers.** Only the owner
+decides whether and how a correction enters the official repository and deployment.
 
-欢迎通过仓库所有者的 GitHub 官方账号提出纠错和建议。只有所有者决定哪些内容进入正式
-仓库和正式网站。提交反馈或修改建议，不代表获得重新发布本项目或在其他地方使用音频的
-许可。
+可以通过仓库所有者的 GitHub 官方账号或正式网站报告事实错误、失效链接、音频问题、
+无障碍问题或安全问题。**本项目不接收未经邀请的 Pull Request，也不招募共同开发者或
+共同维护者。** 是否修正以及如何修正，只由所有者决定。
+
+Feedback, suggestions, corrections, discussions, pull requests, or forks do not
+create joint authorship, joint ownership, official collaborator or maintainer
+status, or permission to republish the project or reuse its audio. See
+[`CONTRIBUTING.md`](./CONTRIBUTING.md).
+
+反馈、建议、纠错、讨论、Pull Request 或 Fork 不会形成共同作者、共同所有者、正式协作者
+或维护者身份，也不会获得重新发布本项目或复用音频的许可。完整边界见
+[`CONTRIBUTING.md`](./CONTRIBUTING.md)。
 
 Language, curriculum, or audio corrections should follow the review and
 recording workflow in [`审校与音频准备包/`](./审校与音频准备包/). Course-data editing

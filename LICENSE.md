@@ -4,6 +4,12 @@ Copyright © 2026 Nigaray703-ops. All rights reserved.
 
 This repository is source-visible for learning and reference. It is not open source, and no open-source license is granted.
 
+## Ownership and no joint authorship
+
+This is an independent portfolio project owned and officially maintained solely by `nigaray703-ops`. Public access, cloning, downloading, or forking does not transfer ownership or grant co-author, co-owner, collaborator, or maintainer status.
+
+Submitting feedback, suggestions, corrections, discussions, pull requests, or other proposed changes does not create joint authorship, joint ownership, an employment or partnership relationship, or any license beyond the limited permissions stated below. Any different arrangement requires a separate signed written agreement from the owner.
+
 ## Permitted use
 
 - Use the official deployed website for personal language learning.
@@ -31,6 +37,8 @@ Third-party fonts remain subject to the licenses included with those font files,
 
 本仓库公开可查看，仅允许学习和参考，不是开源项目，也没有授予开放源码许可。
 
+- 本项目是由 `nigaray703-ops` 独立拥有和正式维护的个人作品集项目。公开访问、克隆、下载或 Fork 不会转移所有权，也不会产生共同作者、共同所有者、正式协作者或维护者身份。
+- 提交反馈、建议、纠错、讨论、Pull Request 或其他拟议修改，不会形成共同创作、共同所有、雇佣或合作关系，也不会获得本条款以外的许可；任何不同安排都必须由所有者另行签署书面协议。
 - 可以访问正式网站进行个人语言学习，可以查看实现思路，也可以在清楚注明来源和官方链接的前提下引用项目。
 - 可以借鉴一般想法后，使用自己编写的代码、原创内容、不同品牌和不同视觉设计独立开发明显不同的作品。
 - 未经所有者事先书面许可，不得复制、改编、重新发布、托管、出售或分发本项目的大量源码、课程、文案、品牌、Logo 或界面设计。

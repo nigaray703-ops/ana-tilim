@@ -235,6 +235,11 @@ const checks = [
     args: ["tests/content-policy.test.mjs"]
   },
   {
+    label: "test: ownership and contribution policy",
+    command: node,
+    args: ["tests/ownership-policy.test.mjs"]
+  },
+  {
     label: "test: sentence glossary",
     command: node,
     args: ["tests/sentence-glossary.test.mjs"]
