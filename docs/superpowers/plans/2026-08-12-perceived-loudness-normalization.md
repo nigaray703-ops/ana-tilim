@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Integrated loudness target is exactly `-18 LUFS`.
+- Integrated loudness target is exactly `-20 LUFS`, selected after a read-only 552-file census showed this is the loudest common target that preserves the `-1.5 dBTP` release ceiling without audible compression of high-crest phonemes.
 - Maximum true peak is exactly `-1.5 dBTP`.
 - Loudness-range parameter is exactly `7 LU`.
 - Output stays WebM/Opus at the existing relative path and stable ID.
@@ -42,8 +42,8 @@
 import { LOUDNESS_STANDARD, parseLoudnormAnalysis } from "../tools/lib/audio-loudness.mjs";
 
 assert.deepEqual(LOUDNESS_STANDARD, {
-  version: "ana-tilim-loudness-v1",
-  integratedLufs: -18,
+  version: "ana-tilim-loudness-v2",
+  integratedLufs: -20,
   truePeakDbtp: -1.5,
   lraLu: 7,
   integratedToleranceLu: 1,
@@ -63,8 +63,8 @@ Expected: FAIL with `ERR_MODULE_NOT_FOUND` for `tools/lib/audio-loudness.mjs`.
 
 ```js
 export const LOUDNESS_STANDARD = Object.freeze({
-  version: "ana-tilim-loudness-v1",
-  integratedLufs: -18,
+  version: "ana-tilim-loudness-v2",
+  integratedLufs: -20,
   truePeakDbtp: -1.5,
   lraLu: 7,
   integratedToleranceLu: 1,
@@ -94,9 +94,9 @@ The fake `spawnSync` records exact argv and stdin bytes for analysis, normalizat
 - [ ] **Step 5: Implement `normalizeWebmBuffer` with three fail-closed passes**
 
 ```js
-const firstPass = `loudnorm=I=-18:TP=-1.5:LRA=7:print_format=json`;
+const firstPass = `loudnorm=I=-20:TP=-1.8:LRA=7:print_format=json`;
 const secondPass = [
-  "loudnorm=I=-18:TP=-1.5:LRA=7",
+  "loudnorm=I=-20:TP=-1.8:LRA=7",
   `measured_I=${input.integratedLufs}`,
   `measured_LRA=${input.lraLu}`,
   `measured_TP=${input.truePeakDbtp}`,
@@ -106,7 +106,7 @@ const secondPass = [
 ].join(":");
 ```
 
-Pass the input buffer through `spawnSync` stdin, capture normalized WebM from stdout, and pass that buffer through stdin for verification. Set a fixed buffer ceiling above the 20 MiB upload limit. Validate input/output with `validateWebmBuffer`, verify duration drift is at most `max(100ms, inputDuration * 0.03)`, verify `abs(output.integratedLufs + 18) <= 1`, and verify `output.truePeakDbtp <= -1.5`.
+Pass the input buffer through `spawnSync` stdin, capture normalized WebM from stdout, and pass that buffer through stdin for verification. Set a fixed buffer ceiling above the 20 MiB upload limit. Validate input/output with `validateWebmBuffer`, verify duration drift is at most `max(100ms, inputDuration * 0.03)`, verify `abs(output.integratedLufs + 20) <= 1`, and verify `output.truePeakDbtp <= -1.5`.
 
 - [ ] **Step 6: Run focused tests and wire them into the full checker**
 
@@ -180,7 +180,7 @@ For each source, record original SHA/size/duration, normalize to the matching re
 ```js
 {
   schemaVersion: 1,
-  configVersion: "ana-tilim-loudness-v1",
+  configVersion: "ana-tilim-loudness-v2",
   batchId,
   createdAt,
   status: "prepared",
@@ -298,13 +298,13 @@ Extend `publicPlan` with:
 ```js
 loudnessStandard: {
   version: LOUDNESS_STANDARD.version,
-  integratedLufs: -18,
+  integratedLufs: -20,
   truePeakDbtp: -1.5,
   lraLu: 7
 }
 ```
 
-Render the exact text `感知响度：-18 LUFS · 真峰值不高于 -1.5 dBTP` next to import details. Keep preview zero-write and preserve all current focus, retry, immutable-target, and playback-before-finalize gates.
+Render the exact text `感知响度：-20 LUFS · 真峰值不高于 -1.5 dBTP` next to import details. Keep preview zero-write and preserve all current focus, retry, immutable-target, and playback-before-finalize gates.
 
 - [ ] **Step 6: Run recording-studio suites and commit Task 4**
 
@@ -355,7 +355,7 @@ Snapshot all 552 original SHAs before the command and compare them after it. Exp
 
 - [ ] **Step 4: Review objective outliers before application**
 
-Read `report.json` and reject the batch if it contains nonfinite values, silence, duration drift, output outside `-18 ± 1 LUFS`, true peak above `-1.5 dBTP`, missing target, or an unrepresented disk file. Record minimum, median, maximum, and the new `غ` measurement without changing speech content.
+Read `report.json` and reject the batch if it contains nonfinite values, silence, duration drift, output outside `-20 ± 1 LUFS`, true peak above `-1.5 dBTP`, missing target, or an unrepresented disk file. Record minimum, median, maximum, and the new `غ` measurement without changing speech content.
 
 - [ ] **Step 5: Apply the reviewed batch atomically**
 
@@ -400,7 +400,7 @@ Expected: exactly the 552 planned WebM paths are staged; `recording-workspace/`,
 
 - [ ] **Step 1: Add persistent source-level loudness coverage**
 
-Assert the catalog still resolves all 554 recording targets and all 552 physical files. Add a release-only branch gated by `ANA_TILIM_FFMPEG`: it analyzes every unique physical file, requires finite measurements, `abs(integratedLufs + 18) <= 1`, and `truePeakDbtp <= -1.5`. Without that explicit environment variable, the test retains its existing WebM, path, manifest, and course-binding checks and never invokes a local binary.
+Assert the catalog still resolves all 554 recording targets and all 552 physical files. Add a release-only branch gated by `ANA_TILIM_FFMPEG`: it analyzes every unique physical file, requires finite measurements, `abs(integratedLufs + 20) <= 1`, and `truePeakDbtp <= -1.5`. Without that explicit environment variable, the test retains its existing WebM, path, manifest, and course-binding checks and never invokes a local binary.
 
 - [ ] **Step 2: Verify representative browser playback**
 

@@ -336,7 +336,7 @@ test("import preview renders full hashes, exact safe destination, and text-hash 
   const { context, document } = createHarness({
     catalogTargets: [target],
     routes: {
-      "/api/import/preview": { planId: "plan-a", loudnessStandard: { version: "ana-tilim-loudness-v1", integratedLufs: -18, truePeakDbtp: -1.5, lraLu: 7 }, operations: [{ stableId: target.stableId, currentSha256: oldHash, replacementSha256: newHash, recordingTextHash: target.recordingTextHash, targetExisted: true, targetFilename: target.currentFile, backupDescriptor: "backups/<本次导入批次>/alphabet/human_letter_01_a.webm" }] }
+      "/api/import/preview": { planId: "plan-a", loudnessStandard: { version: "ana-tilim-loudness-v2", integratedLufs: -20, truePeakDbtp: -1.5, lraLu: 7 }, operations: [{ stableId: target.stableId, currentSha256: oldHash, replacementSha256: newHash, recordingTextHash: target.recordingTextHash, targetExisted: true, targetFilename: target.currentFile, backupDescriptor: "backups/<本次导入批次>/alphabet/human_letter_01_a.webm" }] }
     }
   });
   await context.recordingStudio.ready;
@@ -347,7 +347,7 @@ test("import preview renders full hashes, exact safe destination, and text-hash 
   assert.match(detail, /human_letter_01_a\.webm/);
   assert.match(detail, /backups\/<本次导入批次>\/alphabet\/human_letter_01_a\.webm/);
   assert.match(detail, /录音文本哈希已核对，无变更/);
-  assert.match(detail, /感知响度：-18 LUFS · 真峰值不高于 -1\.5 dBTP/);
+  assert.match(detail, /感知响度：-20 LUFS · 真峰值不高于 -1\.5 dBTP/);
   assert.match(document.getElementById("apply-import").textContent, /1/);
 });
 

@@ -211,12 +211,17 @@ export function createHumanAudioLoudnessBatch({
       for (const item of inventory.files) {
         const source = fsApi.readFileSync(item.absolutePath);
         assert.equal(sha256(source), item.originalSha256, `source changed before staging: ${item.relativePath}`);
-        const normalized = normalizeBuffer({
-          buffer: Buffer.from(source),
-          ffmpegPath,
-          relativePath: item.relativePath,
-          stableIds: [...item.stableIds]
-        });
+        let normalized;
+        try {
+          normalized = normalizeBuffer({
+            buffer: Buffer.from(source),
+            ffmpegPath,
+            relativePath: item.relativePath,
+            stableIds: [...item.stableIds]
+          });
+        } catch (error) {
+          assert.fail(`failed to normalize ${item.relativePath}: ${error.message}`);
+        }
         assert.ok(normalized && Buffer.isBuffer(normalized.buffer), `normalizer returned no WebM for ${item.relativePath}`);
         assert.ok(normalized.report && normalized.report.configVersion === LOUDNESS_STANDARD.version, `normalizer report is invalid for ${item.relativePath}`);
         const outputValidation = validateWebmBuffer(normalized.buffer);

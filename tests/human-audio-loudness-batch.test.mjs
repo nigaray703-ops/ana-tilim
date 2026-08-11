@@ -35,9 +35,9 @@ function createFixture() {
 
 function literalReport(integratedLufs) {
   return {
-    configVersion: "ana-tilim-loudness-v1",
+    configVersion: "ana-tilim-loudness-v2",
     input: { integratedLufs, truePeakDbtp: -4, lraLu: 1, thresholdLufs: -35, offsetLu: 0 },
-    output: { integratedLufs: -18, truePeakDbtp: -1.5, lraLu: 1, thresholdLufs: -28, offsetLu: 0 }
+    output: { integratedLufs: -20, truePeakDbtp: -1.5, lraLu: 1, thresholdLufs: -30, offsetLu: 0 }
   };
 }
 
@@ -152,7 +152,7 @@ test("a normalization failure leaves every source unchanged and never publishes 
 
   assert.throws(
     () => controller.prepare({ batchId: "fixture-failure", createdAt: "2026-08-12T01:00:00.000Z" }),
-    /fixture normalization failed/
+    /second\.webm.*fixture normalization failed/
   );
   const batchRoot = path.join(fixture.workspaceRoot, "loudness-batches", "fixture-failure");
   assert.equal(fs.existsSync(path.join(batchRoot, "plan.json")), false);
@@ -285,7 +285,7 @@ test("a restarted controller recovers only journaled changed files from verified
   const journalPath = path.join(batchRoot, "journal.json");
   fs.writeFileSync(journalPath, `${JSON.stringify({
     schemaVersion: 1,
-    configVersion: "ana-tilim-loudness-v1",
+    configVersion: "ana-tilim-loudness-v2",
     batchId: item.prepared.plan.batchId,
     planSha256: sha256(planBytes),
     createdAt: "2026-08-12T02:00:00.000Z",
@@ -323,7 +323,7 @@ test("restart recovery fails closed when its exact backup has changed", () => {
   fs.writeFileSync(path.resolve(item.fixture.fixtureProjectRoot, operation.relativePath), alternateWebm);
   fs.writeFileSync(path.join(batchRoot, "journal.json"), `${JSON.stringify({
     schemaVersion: 1,
-    configVersion: "ana-tilim-loudness-v1",
+    configVersion: "ana-tilim-loudness-v2",
     batchId: item.prepared.plan.batchId,
     planSha256: sha256(fs.readFileSync(item.prepared.planPath)),
     createdAt: "2026-08-12T02:00:00.000Z",

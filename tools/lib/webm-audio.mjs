@@ -68,8 +68,17 @@ function readChildren(buffer, start, end) {
 }
 
 function findInfoStructure(buffer) {
-  const roots = readChildren(buffer, 0, buffer.length);
-  const segment = roots.find((element) => sameId(buffer, element, SEGMENT_ID));
+  let segment;
+  let rootOffset = 0;
+  while (rootOffset < buffer.length) {
+    const root = readElement(buffer, rootOffset, buffer.length);
+    if (sameId(buffer, root, SEGMENT_ID)) {
+      segment = root;
+      break;
+    }
+    assert.equal(root.sizeUnknown, false, "WebM root element must have a finite size before Segment");
+    rootOffset = root.dataEnd;
+  }
   assert.ok(segment, "WebM should contain a Segment element");
   const children = readChildren(buffer, segment.dataOffset, segment.dataEnd);
   const infoIndex = children.findIndex((element) => sameId(buffer, element, INFO_ID));
