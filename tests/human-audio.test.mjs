@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
+import childProcess from "node:child_process";
 import fs from "node:fs";
+import path from "node:path";
 import vm from "node:vm";
+import {
+  LOUDNESS_STANDARD,
+  isIntegratedLoudnessWithinTolerance,
+  parseLoudnormAnalysis,
+  resolveFfmpegPath
+} from "../tools/lib/audio-loudness.mjs";
 import { validateWebmBuffer } from "../tools/lib/webm-audio.mjs";
 
 const manifestPath = "prototype/assets/audio/human/alphabet/manifest.json";
@@ -28,6 +36,7 @@ const audioManifests = [
   { manifest: readingManifest, manifestPath: readingManifestPath },
   { manifest: formExampleManifest, manifestPath: formExampleManifestPath }
 ];
+const physicalAudioPaths = new Set();
 
 function loadCourseData() {
   const dataContext = {
@@ -169,6 +178,7 @@ for (const { manifest: audioManifest, manifestPath: audioManifestPath } of audio
   );
   for (const item of audioManifest.items) {
     const audioPath = `${audioDirectory}${item.file}`;
+    physicalAudioPaths.add(path.resolve(audioPath));
     assert.ok(fs.existsSync(audioPath), `${item.file} should exist`);
     assert.ok(fs.statSync(audioPath).size > 4096, `${item.file} should contain playable audio data`);
     const audioBuffer = fs.readFileSync(audioPath);
@@ -177,6 +187,28 @@ for (const { manifest: audioManifest, manifestPath: audioManifestPath } of audio
     } catch (error) {
       assert.fail(`${item.file}: ${error.message}`);
     }
+  }
+}
+assert.equal(physicalAudioPaths.size, 552, "all 554 logical targets should resolve to exactly 552 physical WebM files");
+
+if (process.env.ANA_TILIM_FFMPEG) {
+  const ffmpegPath = resolveFfmpegPath();
+  for (const audioPath of [...physicalAudioPaths].sort()) {
+    const result = childProcess.spawnSync(ffmpegPath, [
+      "-hide_banner", "-nostdin", "-i", audioPath,
+      "-af", `loudnorm=I=${LOUDNESS_STANDARD.integratedLufs}:TP=${LOUDNESS_STANDARD.truePeakDbtp}:LRA=${LOUDNESS_STANDARD.lraLu}:print_format=json`,
+      "-f", "null", "-"
+    ], { encoding: null, maxBuffer: 64 * 1024 * 1024 });
+    assert.equal(result.status, 0, `${path.relative(process.cwd(), audioPath)}: ffmpeg loudness analysis failed: ${String(result.stderr || "")}`);
+    const measurement = parseLoudnormAnalysis(result.stderr);
+    assert.ok(
+      isIntegratedLoudnessWithinTolerance(measurement.integratedLufs),
+      `${path.relative(process.cwd(), audioPath)}: integrated loudness ${measurement.integratedLufs} is outside the release standard`
+    );
+    assert.ok(
+      measurement.truePeakDbtp <= LOUDNESS_STANDARD.truePeakDbtp,
+      `${path.relative(process.cwd(), audioPath)}: true peak ${measurement.truePeakDbtp} exceeds the release standard`
+    );
   }
 }
 function makeElement(id) {

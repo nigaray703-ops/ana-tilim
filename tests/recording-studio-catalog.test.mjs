@@ -81,6 +81,7 @@ test("builds the immutable source-bound 554-target published catalog with approv
     { alphabet: 32, combos: 34, vocab: 202, reading: 192, "form-examples": 94 }
   );
   assert.equal(new Set(catalog.targets.map((item) => item.stableId)).size, 554);
+  assert.equal(new Set(catalog.targets.map((item) => item.absoluteOutputPath)).size, 552);
   assert.ok(Object.isFrozen(catalog));
   assert.ok(Object.isFrozen(catalog.targets));
 
