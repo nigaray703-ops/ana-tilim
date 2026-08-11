@@ -164,6 +164,7 @@ const comboAudioItems = comboGroups
 
 const pendingVocabAudioIds = new Set();
 const vocabAudioSourceIdByItemId = new Map([
+  ["erzimaydu", "erzimeydu"],
   ["ten-tens", "ten"],
   ["yuz-body", "hundred"],
   ["may-food", "may-month"],

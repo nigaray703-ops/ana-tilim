@@ -704,6 +704,12 @@ vm.runInContext(fs.readFileSync(feedbackPath, "utf8"), context, { filename: feed
 vm.runInContext(fs.readFileSync("prototype/cloud-sync.js", "utf8"), context, { filename: "prototype/cloud-sync.js" });
 vm.runInContext(fs.readFileSync("prototype/app.js", "utf8"), context, { filename: "prototype/app.js" });
 
+assert.equal(
+  vm.runInContext("vocabAudioByItemId.erzimaydu.outputPath", context),
+  "./assets/audio/human/vocab/human_vocab_erzimeydu.webm",
+  "the approved erzimeydu recording filename must be mapped explicitly from its stable vocabulary ID"
+);
+
 assert.deepEqual(
   JSON.parse(vm.runInContext("JSON.stringify(buildLocalProgressData().syllableMistakes ?? null)", context)),
   { connection: [], break: [] },
