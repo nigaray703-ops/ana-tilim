@@ -76,7 +76,7 @@ function fixtureState(targets) {
 
 function createHarness({ catalogTargets, state = fixtureState(catalogTargets), routes = {}, mediaDevices, MediaRecorder } = {}) {
   const document = new FakeDocument();
-  for (const [id, tag] of [["target-search", "input"], ["category-filter", "select"], ["status-filter", "select"], ["target-list", "div"], ["target-detail", "article"], ["import-panel", "section"], ["preview-import", "button"], ["import-plan", "div"], ["apply-import", "button"], ["studio-status", "div"], ["studio-alert", "div"], ["audit-summary", "p"]]) document.register(id, tag);
+  for (const [id, tag] of [["target-search", "input"], ["category-filter", "select"], ["status-filter", "select"], ["status-cards", "div"], ["target-list", "div"], ["target-detail", "article"], ["import-panel", "section"], ["preview-import", "button"], ["import-plan", "div"], ["apply-import", "button"], ["studio-status", "div"], ["studio-alert", "div"], ["audit-summary", "p"]]) document.register(id, tag);
   const calls = [];
   const windowListeners = new Map();
   const fetch = async (url, options = {}) => {
@@ -118,6 +118,7 @@ function descendants(node, predicate, found = []) {
 function buttonByText(document, label) {
   return descendants(document.getElementById("target-detail"), (element) => element.tagName === "BUTTON" && element.textContent === label)[0]
     || descendants(document.getElementById("import-panel"), (element) => element.tagName === "BUTTON" && element.textContent === label)[0]
+    || descendants(document.getElementById("status-cards"), (element) => element.tagName === "BUTTON" && element.textContent.includes(label))[0]
     || document.getElementById(label);
 }
 
@@ -130,10 +131,44 @@ test("recording studio app loads the real API and renders the exact audit baseli
   const { context, document } = createHarness({ catalogTargets: targets });
   await context.recordingStudio.ready;
   assert.match(document.getElementById("audit-summary").textContent, /527/);
-  assert.match(document.getElementById("audit-summary").textContent, /待审听 525/);
-  assert.match(document.getElementById("audit-summary").textContent, /需要重录 2/);
+  assert.match(document.getElementById("audit-summary").textContent, /待审核已有音频 525/);
+  assert.match(document.getElementById("audit-summary").textContent, /需要新录制 0/);
+  assert.match(document.getElementById("audit-summary").textContent, /需要重新录制 2/);
+  assert.deepEqual(
+    document.getElementById("status-filter").children.map((option) => option.textContent),
+    ["全部状态", "待审核已有音频", "需要新录制", "需要重新录制", "已录制待采用", "已确认"]
+  );
+  assert.deepEqual(
+    document.getElementById("status-cards").children.map((card) => card.textContent),
+    ["待审核已有音频 525", "需要新录制 0", "需要重新录制 2", "已录制待采用 0", "已确认 0"]
+  );
   assert.equal(document.getElementById("target-list").children.length, 527);
   assert.equal(document.getElementById("target-list").children[0].getAttribute("aria-current"), "true");
+});
+
+test("status cards separate new recordings from rerecords and combine with existing filters without mutation", async () => {
+  const targets = [
+    fixtureTarget("alphabet:aa"),
+    fixtureTarget("alphabet:zhe", { initialStatus: "needs-rerecord" }),
+    fixtureTarget("vocab:korushkunche", { category: "vocab", value: "كۆرۈشكىچە", latin: "körüşkiche", initialStatus: "needs-rerecord" })
+  ];
+  const { context, document, calls } = createHarness({ catalogTargets: targets });
+  await context.recordingStudio.ready;
+
+  document.getElementById("category-filter").value = "vocab";
+  await document.getElementById("category-filter").trigger("change");
+  document.getElementById("target-search").value = "korushkunche";
+  await document.getElementById("target-search").trigger("input");
+  await buttonByText(document, "需要重新录制").click();
+
+  assert.equal(context.recordingStudio.model.status, "needs-rerecord");
+  assert.equal(document.getElementById("target-list").children.length, 1);
+  assert.equal(document.getElementById("target-list").children[0].id, "target-vocab%3Akorushkunche");
+  assert.equal(buttonByText(document, "需要重新录制").getAttribute("aria-pressed"), "true");
+
+  await buttonByText(document, "需要重新录制").click();
+  assert.equal(context.recordingStudio.model.status, "all");
+  assert.equal(calls.some((call) => call.url.startsWith("/api/targets/")), false);
 });
 
 test("recording studio source keeps the local-only, one-target import safety contract", () => {

@@ -1,8 +1,10 @@
 (() => {
   const categoryLabels = { alphabet: "字母", combos: "组合", vocab: "词汇", reading: "阅读", "form-examples": "写法例词" };
-  const statusLabels = { "pending-review": "待审听", "needs-rerecord": "需要重录", pending: "尚未录制", recorded: "已录制", "approved-current": "已批准当前音频", "approved-take": "已批准 take", imported: "已采用" };
+  const statusLabels = { "pending-review": "待审核已有音频", "needs-rerecord": "需要重新录制", pending: "需要新录制", recorded: "已录制待采用", "approved-current": "已批准当前音频", "approved-take": "已批准 take", imported: "已采用" };
+  const STATUS_FILTERS = Object.freeze([["pending-review", "待审核已有音频"], ["pending", "需要新录制"], ["needs-rerecord", "需要重新录制"], ["recorded", "已录制待采用"], ["confirmed", "已确认"]]);
+  const CONFIRMED_STATUSES = new Set(["approved-current", "approved-take", "imported"]);
   const model = { catalog: [], workspace: null, selectedStableId: null, query: "", category: "all", status: "all", activeRecorder: null, recordingTargetId: null, previewPlan: null, pendingUpload: null, imported: new Map(), playedProduction: new Map(), busy: false };
-  const elements = Object.fromEntries(["target-search", "category-filter", "status-filter", "target-list", "target-detail", "preview-import", "import-plan", "apply-import", "studio-status", "studio-alert", "audit-summary"].map((id) => [id, document.getElementById(id)]));
+  const elements = Object.fromEntries(["target-search", "category-filter", "status-filter", "status-cards", "target-list", "target-detail", "preview-import", "import-plan", "apply-import", "studio-status", "studio-alert", "audit-summary"].map((id) => [id, document.getElementById(id)]));
 
   function text(value) { return value == null || value === "" ? "暂无英语释义" : String(value); }
   function setStatus(message, isError = false) { elements["studio-status"].textContent = message; elements["studio-status"].classList?.toggle("status-error", isError); elements["studio-alert"].hidden = !isError; elements["studio-alert"].textContent = isError ? message : ""; }
@@ -12,7 +14,8 @@
   function targetState(stableId) { return model.workspace?.targets?.[stableId]; }
   function currentTarget() { return model.catalog.find((target) => target.stableId === model.selectedStableId) || null; }
   function normalized(target) { return [target.stableId, target.value, target.latin, target.meaning, target.english].filter(Boolean).join(" ").toLocaleLowerCase(); }
-  function filteredTargets() { const query = model.query.trim().toLocaleLowerCase(); return model.catalog.filter((target) => (model.category === "all" || target.category === model.category) && (model.status === "all" || targetState(target.stableId)?.status === model.status) && (!query || normalized(target).includes(query))); }
+  function statusMatchesFilter(status, filterId) { if (filterId === "all") return true; if (filterId === "confirmed") return CONFIRMED_STATUSES.has(status); return status === filterId; }
+  function filteredTargets() { const query = model.query.trim().toLocaleLowerCase(); return model.catalog.filter((target) => (model.category === "all" || target.category === model.category) && statusMatchesFilter(targetState(target.stableId)?.status, model.status) && (!query || normalized(target).includes(query))); }
   function apiError(payload) { return payload?.error?.message || "本机服务返回了无法识别的结果。"; }
   async function request(url, options = {}) { const response = await fetch(url, options); let payload; try { payload = await response.json(); } catch { throw new Error("本机服务返回的数据无法读取。"); } if (!response.ok) throw new Error(apiError(payload)); return payload; }
   function jsonRequest(url, body) { return request(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); }
@@ -30,16 +33,17 @@
 
   function populateFilters() {
     const categories = [...new Set(model.catalog.map((target) => target.category))];
-    const statuses = [...new Set(model.catalog.map((target) => targetState(target.stableId)?.status).filter(Boolean))];
     elements["category-filter"].replaceChildren(...["all", ...categories].map((value) => option(value, value === "all" ? "全部分类" : categoryLabels[value] || value)));
-    elements["status-filter"].replaceChildren(...["all", ...statuses].map((value) => option(value, value === "all" ? "全部状态" : statusLabels[value] || value)));
+    elements["status-filter"].replaceChildren(option("all", "全部状态"), ...STATUS_FILTERS.map(([value, label]) => option(value, label)));
     elements["category-filter"].value = model.category;
     elements["status-filter"].value = model.status;
   }
   function option(value, label) { const item = document.createElement("option"); item.value = value; item.textContent = label; return item; }
   function button(label, handler, className = "") { const item = document.createElement("button"); item.type = "button"; item.className = className; item.textContent = label; item.disabled = model.busy || (label === "开始录音" && Boolean(model.activeRecorder || model.recordingTargetId || model.pendingUpload)) || (label === "停止并保存 take" && model.activeRecorder?.state !== "recording"); item.addEventListener("click", handler); return item; }
   function row(target, index) { const state = targetState(target.stableId); const item = button("", () => selectTarget(target.stableId)); item.id = `target-${encodeURIComponent(target.stableId)}`; item.className = "target-row"; item.setAttribute("aria-current", String(target.stableId === model.selectedStableId)); const ordinal = document.createElement("span"); ordinal.className = "target-index"; ordinal.textContent = String(index + 1); const value = document.createElement("span"); value.className = "target-text"; value.textContent = target.value; const status = document.createElement("span"); status.className = "target-status"; status.textContent = statusLabels[state?.status] || "待审听"; item.append(ordinal, value, status); return item; }
-  function renderSummary() { const counts = Object.values(model.workspace?.targets || {}).reduce((all, target) => ({ ...all, [target.status]: (all[target.status] || 0) + 1 }), {}); const byCategory = Object.keys(categoryLabels).map((category) => `${categoryLabels[category]} ${model.catalog.filter((target) => target.category === category).length}`).join(" · "); elements["audit-summary"].textContent = `${model.catalog.length} 项｜待审听 ${counts["pending-review"] || 0}｜需要重录 ${counts["needs-rerecord"] || 0}｜${byCategory}`; }
+  function statusCount(counts, filterId) { return filterId === "confirmed" ? [...CONFIRMED_STATUSES].reduce((total, status) => total + (counts[status] || 0), 0) : counts[filterId] || 0; }
+  function applyStatusFilter(filterId) { model.status = model.status === filterId ? "all" : filterId; const visible = filteredTargets(); if (!visible.some((target) => target.stableId === model.selectedStableId)) model.selectedStableId = visible[0]?.stableId || null; render(); }
+  function renderSummary() { const counts = Object.values(model.workspace?.targets || {}).reduce((all, target) => ({ ...all, [target.status]: (all[target.status] || 0) + 1 }), {}); const summary = STATUS_FILTERS.map(([id, label]) => `${label} ${statusCount(counts, id)}`).join("｜"); const byCategory = Object.keys(categoryLabels).map((category) => `${categoryLabels[category]} ${model.catalog.filter((target) => target.category === category).length}`).join(" · "); elements["audit-summary"].textContent = `${model.catalog.length} 项｜${summary}｜${byCategory}`; const cards = STATUS_FILTERS.map(([id, label]) => { const card = button(`${label} ${statusCount(counts, id)}`, () => applyStatusFilter(id)); card.className = "status-card"; card.dataset.statusFilter = id; card.setAttribute("aria-pressed", String(model.status === id)); return card; }); elements["status-cards"].replaceChildren(...cards); }
   function renderList() { const visible = filteredTargets(); elements["target-list"].replaceChildren(...(visible.length ? visible.map(row) : [empty("没有符合当前搜索与筛选条件的录音目标。")])); }
   function empty(message) { const item = document.createElement("p"); item.className = "muted"; item.textContent = message; return item; }
   function render() { if (!model.workspace) return; populateFilters(); renderSummary(); renderList(); renderDetail(); renderImport(); }
@@ -95,7 +99,7 @@
   function onUnload() { releaseTracks(model.activeRecorder?.stream); if (model.activeRecorder?.state === "recording") model.activeRecorder.stop(); }
   elements["target-search"].addEventListener("input", (event) => { model.query = event.target.value; const visible = filteredTargets(); if (!visible.some((target) => target.stableId === model.selectedStableId)) model.selectedStableId = visible[0]?.stableId || null; render(); });
   elements["category-filter"].addEventListener("change", (event) => { model.category = event.target.value; const visible = filteredTargets(); if (!visible.some((target) => target.stableId === model.selectedStableId)) model.selectedStableId = visible[0]?.stableId || null; render(); });
-  elements["status-filter"].addEventListener("change", (event) => { model.status = event.target.value; const visible = filteredTargets(); if (!visible.some((target) => target.stableId === model.selectedStableId)) model.selectedStableId = visible[0]?.stableId || null; render(); });
+  elements["status-filter"].addEventListener("change", (event) => { const next = event.target.value; model.status = next === model.status ? "all" : next; const visible = filteredTargets(); if (!visible.some((target) => target.stableId === model.selectedStableId)) model.selectedStableId = visible[0]?.stableId || null; render(); });
   elements["preview-import"].addEventListener("click", previewImport); elements["apply-import"].addEventListener("click", applyImport); globalThis.addEventListener?.("beforeunload", onUnload);
   const ready = refresh().then(() => setStatus("本机录音工作台已准备就绪。" )).catch((error) => setStatus(error.message || "无法读取本机录音目录。", true));
   globalThis.recordingStudio = { model, ready, refresh, startRecording, stopRecording, uploadPending };
