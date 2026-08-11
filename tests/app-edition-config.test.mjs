@@ -460,7 +460,7 @@ assert.equal(
   "duplicate normalization should use the standard feedback tag"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('href="./styles.css?v=20260811-final-course"'),
+  normalizedDuplicateIndex.includes('href="./styles.css?v=20260812-glyph-clearance"'),
   "sync should cache-bust the shared resumable-unit styles"
 );
 assert.ok(

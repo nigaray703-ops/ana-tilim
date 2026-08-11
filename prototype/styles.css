@@ -1636,6 +1636,11 @@ html[lang="en"] .nav-button {
   min-height: 48px;
 }
 
+.section-title.writing-target-heading {
+  overflow: visible;
+  white-space: normal;
+}
+
 .writing-target-letter {
   display: inline-grid;
   place-items: center;
@@ -1825,12 +1830,16 @@ html[lang="en"] .nav-button {
 }
 
 .form-example-word .form-example-word-text {
+  display: grid;
+  place-items: center;
+  min-height: 52px;
   max-width: 100%;
+  padding-block: 4px 8px;
   color: #000;
   font-family: "Scheherazade New", "Noto Naskh Arabic", serif;
   font-size: 28px;
   font-weight: 500;
-  line-height: 1.15;
+  line-height: 1.45;
   overflow-wrap: anywhere;
 }
 
@@ -2643,6 +2652,11 @@ html[lang="en"] .nav-button {
   width: 76px;
   height: 64px;
   font-size: 34px;
+}
+
+.letter-only-choice .choice-art.uyghur {
+  height: 76px;
+  line-height: 1.5;
 }
 
 .choice-card strong {
