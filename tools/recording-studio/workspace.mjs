@@ -53,6 +53,9 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
   for (const target of catalog.targets) {
     assert.equal(typeof target?.stableId, "string", "catalog target stable ID is required");
     assert.match(target.recordingTextHash, HASH_PATTERN, `catalog target hash is invalid for ${target.stableId}`);
+    assert.equal(typeof target.playable, "boolean", `catalog target playable flag is required for ${target.stableId}`);
+    if (!target.playable) assert.equal(target.initialStatus, "pending", `nonplayable target must start pending: ${target.stableId}`);
+    if (target.initialStatus === "pending") assert.equal(target.playable, false, `pending target must be nonplayable: ${target.stableId}`);
     assert.ok(!catalogById.has(target.stableId), `duplicate catalog target: ${target.stableId}`);
     catalogById.set(target.stableId, target);
   }

@@ -76,6 +76,25 @@ test("creates the exact review baseline from the catalog and persists it", () =>
   assert.equal(afterRestart["alphabet:zhe"].status, "needs-rerecord");
 });
 
+test("locks first-time recording targets to the nonplayable pending contract before creating workspace state", () => {
+  for (const [overrides, message] of [
+    [{ playable: false, initialStatus: "pending-review" }, /nonplayable target must start pending/],
+    [{ playable: true, initialStatus: "pending" }, /pending target must be nonplayable/]
+  ]) {
+    const workspaceRoot = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "ana-tilim-recording-target-contract-")), "workspace");
+    const invalidCatalog = {
+      ...catalog,
+      targets: catalog.targets.map((item) => item.stableId === "alphabet:aa" ? { ...item, ...overrides } : item)
+    };
+
+    assert.throws(
+      () => createRecordingWorkspace({ projectRoot, workspaceRoot, catalog: invalidCatalog }),
+      message
+    );
+    assert.equal(fs.existsSync(workspaceRoot), false);
+  }
+});
+
 test("stores immutable validated takes and an approved take survives restart", () => {
   const options = createOptions();
   const workspace = createRecordingWorkspace(options);
@@ -128,7 +147,7 @@ test("only an explicitly selected playable current recording can be approved", (
 
   const unplayableCatalog = {
     ...catalog,
-    targets: catalog.targets.map((item) => item.stableId === "alphabet:aa" ? { ...item, playable: false } : item)
+    targets: catalog.targets.map((item) => item.stableId === "alphabet:aa" ? { ...item, playable: false, initialStatus: "pending" } : item)
   };
   const unplayableWorkspace = createRecordingWorkspace(createOptions({ catalogOverride: unplayableCatalog }));
   assert.throws(() => unplayableWorkspace.markCurrentApproved({ stableId: "alphabet:aa" }), /playable current audio/);

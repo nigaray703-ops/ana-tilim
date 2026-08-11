@@ -171,6 +171,28 @@ test("status cards separate new recordings from rerecords and combine with exist
   assert.equal(calls.some((call) => call.url.startsWith("/api/targets/")), false);
 });
 
+test("a first-time recording target explains the missing current audio and never exposes current-audio audit actions", async () => {
+  const target = fixtureTarget("reading:new-grammar-1", {
+    category: "reading",
+    value: "مەن كىتاب ئوقۇيمەن.",
+    latin: "Men kitab oquymen.",
+    playable: false,
+    initialStatus: "pending"
+  });
+  const { context, document } = createHarness({ catalogTargets: [target] });
+  await context.recordingStudio.ready;
+  const detail = document.getElementById("target-detail");
+
+  assert.equal(descendants(detail, (element) => element.tagName === "AUDIO").length, 0);
+  assert.equal(buttonByText(document, "当前音频正确"), null);
+  assert.equal(buttonByText(document, "需要重录"), null);
+  assert.ok(buttonByText(document, "开始录音"));
+  assert.equal(
+    descendants(detail, (element) => element.textContent === "这是新增内容，需要首次录制。").length,
+    1
+  );
+});
+
 test("recording studio source keeps the local-only, one-target import safety contract", () => {
   const source = fs.readFileSync(appPath, "utf8");
   assert.match(source, /audio\/webm/);
