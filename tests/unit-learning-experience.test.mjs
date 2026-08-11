@@ -69,7 +69,7 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260811-final-course",
+  "./styles.css?v=20260812-glyph-clearance",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260809-bilingual",
@@ -118,7 +118,7 @@ const previousEnglishUiCache = new Map([
   ["./styles.css?v=20260809-bilingual", { release: "before-english-layout" }],
   ["./app.js?v=20260809-bilingual-final", { release: "before-english-layout" }]
 ]);
-for (const url of ["./styles.css?v=20260811-final-course", "./app.js?v=20260812-five-step-reading"]) {
+for (const url of ["./styles.css?v=20260812-glyph-clearance", "./app.js?v=20260812-five-step-reading"]) {
   assert.ok(versionedAppAssets.includes(url));
   assert.equal(previousEnglishUiCache.get(url), undefined);
 }
@@ -172,6 +172,16 @@ assert.match(
   styleSource,
   /\.form-example-shape strong\s*\{[^}]*min-height:\s*52px;[^}]*place-items:\s*center;/s,
   "every real 2, 4, or 8 form glyph should stay vertically inside its example cell"
+);
+assert.match(
+  styleSource,
+  /\.section-title\.writing-target-heading\s*\{[^}]*overflow:\s*visible;[^}]*white-space:\s*normal;/s,
+  "the large writing target must not be clipped by the generic single-line section-title rule"
+);
+assert.match(
+  styleSource,
+  /\.letter-only-choice \.choice-art\.uyghur\s*\{[^}]*height:\s*76px;[^}]*line-height:\s*1\.5;/s,
+  "every Uyghur letter-only choice should reserve enough ink height for tall and descending glyphs"
 );
 for (const phrase of [
   "prototype/course-data.js",
@@ -4724,8 +4734,13 @@ assert.ok(
   formExampleWordTextStyle.includes("font-size: 28px;") &&
     formExampleWordTextStyle.includes("font-weight: 500;") &&
     formExampleWordTextStyle.includes("color: #000;") &&
+    formExampleWordTextStyle.includes("display: grid;") &&
+    formExampleWordTextStyle.includes("place-items: center;") &&
+    formExampleWordTextStyle.includes("min-height: 52px;") &&
+    formExampleWordTextStyle.includes("padding-block: 4px 8px;") &&
+    formExampleWordTextStyle.includes("line-height: 1.45;") &&
     formExampleWordTextStyle.includes('font-family: "Scheherazade New", "Noto Naskh Arabic", serif;'),
-  "letter form words should use the bundled Scheherazade New shape"
+  "letter form words should use the bundled Scheherazade New shape with enough ink clearance for every point"
 );
 const formExampleAudioWordStyle = styleSource.match(/\.form-example-audio-word\s*\{[^}]*\}/)?.[0] || "";
 assert.ok(
