@@ -4,7 +4,7 @@
 
 **Goal:** Normalize all 552 retained human WebM files and every future recording-studio take to one perceived-loudness standard without changing course IDs, recording text, or paths.
 
-**Architecture:** A focused synchronous Node module owns the versioned EBU R128 configuration, strict `ffmpeg` discovery, two-pass `loudnorm` execution, verification, and explicit temporary-file cleanup. A separate batch controller builds the manifest-backed physical inventory, stages and validates all outputs, then applies them with per-file backups and a durable journal; the recording workspace reuses the same normalizer before persisting a take. The website continues to play normalized WebM/Opus files directly and gains no runtime gain table.
+**Architecture:** A focused synchronous Node module owns the versioned EBU R128 configuration, strict `ffmpeg` discovery, piped two-pass `loudnorm` execution, and output verification without temporary take files. A separate batch controller builds the manifest-backed physical inventory, stages and validates all outputs, then applies them with per-file backups and a durable journal; the recording workspace reuses the same normalizer before persisting a take. The website continues to play normalized WebM/Opus files directly and gains no runtime gain table.
 
 **Tech Stack:** Node.js ESM, `node:test`, local `ffmpeg` with `loudnorm`, WebM/Opus, existing recording catalog/workspace/importer/server, existing project check runner.
 
@@ -33,7 +33,7 @@
 - Modify: `scripts/check-project.mjs`
 
 **Interfaces:**
-- Produces: `LOUDNESS_STANDARD`, `resolveFfmpegPath({ env, pathValue, accessSync, spawnSync })`, `parseLoudnormAnalysis(stderr)`, and `normalizeWebmBuffer({ buffer, ffmpegPath, temporaryRoot, fsApi, spawnSync })`.
+- Produces: `LOUDNESS_STANDARD`, `resolveFfmpegPath({ env, pathValue, fsApi, spawnSync })`, `parseLoudnormAnalysis(stderr)`, and `normalizeWebmBuffer({ buffer, ffmpegPath, spawnSync })`.
 - `normalizeWebmBuffer` returns `{ buffer: Buffer, report: { configVersion, input, output } }`, where each measurement has finite `integratedLufs`, `truePeakDbtp`, `lraLu`, and `thresholdLufs` values.
 
 - [ ] **Step 1: Write the failing configuration and parser tests**
@@ -87,9 +87,9 @@ export function parseLoudnormAnalysis(stderr) {
 }
 ```
 
-- [ ] **Step 4: Add RED tests for two-pass execution and explicit temporary cleanup**
+- [ ] **Step 4: Add RED tests for three piped passes and zero temporary audio files**
 
-The fake `spawnSync` records exact argv for analysis, normalization, and output verification while returning explicit `{ status, stdout, stderr }` results. Assert the second pass includes measured I/LRA/TP/threshold/offset, `linear=true`, `-c:a libopus`, `-map_metadata -1`, and the fixed targets. Inject a failure after creating the output and assert both explicit temporary paths are unlinked one at a time.
+The fake `spawnSync` records exact argv and stdin bytes for analysis, normalization, and output verification while returning explicit `{ status, stdout, stderr }` results. Assert all inputs use `pipe:0`, the normalized WebM returns from `pipe:1`, and the second pass includes measured I/LRA/TP/threshold/offset, `linear=true`, `-c:a libopus`, `-map_metadata -1`, and the fixed targets. Inject failures in each pass and assert the filesystem is never called.
 
 - [ ] **Step 5: Implement `normalizeWebmBuffer` with three fail-closed passes**
 
@@ -106,13 +106,13 @@ const secondPass = [
 ].join(":");
 ```
 
-Create the two temporary files with exclusive mode `0o600`, validate input/output with `validateWebmBuffer`, verify duration drift is at most `max(100ms, inputDuration * 0.03)`, verify `abs(output.integratedLufs + 18) <= 1`, and verify `output.truePeakDbtp <= -1.5`. In `finally`, unlink only the two exact files if each exists.
+Pass the input buffer through `spawnSync` stdin, capture normalized WebM from stdout, and pass that buffer through stdin for verification. Set a fixed buffer ceiling above the 20 MiB upload limit. Validate input/output with `validateWebmBuffer`, verify duration drift is at most `max(100ms, inputDuration * 0.03)`, verify `abs(output.integratedLufs + 18) <= 1`, and verify `output.truePeakDbtp <= -1.5`.
 
 - [ ] **Step 6: Run focused tests and wire them into the full checker**
 
 Run: `"$BUNDLED_NODE" --test tests/audio-loudness.test.mjs`
 
-Expected: PASS, including missing tool, unsupported `loudnorm`, non-zero exit, silent/nonfinite analysis, output peak, duration, WebM, symlink, and cleanup cases.
+Expected: PASS, including missing tool, unsupported `loudnorm`, non-zero exit, silent/nonfinite analysis, output peak, duration, WebM, symlink, and zero temporary audio-file cases.
 
 Add to `scripts/check-project.mjs`:
 
@@ -343,7 +343,7 @@ Require `loudnorm` and `libopus`. If absent, request approval for one narrowly s
 
 - [ ] **Step 2: Run real engine integration fixtures**
 
-Use copied WebM fixtures representing over-loud, quiet, and near-target inputs. Verify actual output WebM/Opus, duration, integrated loudness tolerance, true peak, repeatability, and explicit temp cleanup before touching the 552 source files.
+Use copied WebM fixtures representing over-loud, quiet, and near-target inputs. Verify actual output WebM/Opus, duration, integrated loudness tolerance, true peak, repeatability, and absence of temporary take files before touching the 552 source files.
 
 - [ ] **Step 3: Prepare the real batch without source writes**
 
