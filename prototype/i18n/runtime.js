@@ -9,7 +9,7 @@
   const practiceGroupFields = ["title", "goal", "status"];
   const practiceItemFields = ["type", "label", "hint", "audioStatus"];
   const readingUnitFields = ["title", "subtitle"];
-  const readingGroupFields = ["title", "intro"];
+  const readingGroupFields = ["title", "intro", "rule"];
   const readingItemFields = ["pattern", "speaker", "meaning", "lesson"];
   let currentLanguage = "en";
 

@@ -2154,6 +2154,71 @@ html[lang="en"] .nav-button {
   gap: 10px;
 }
 
+.reading-training,
+.reading-training-card,
+.reading-training-compare,
+.reading-training-options {
+  display: grid;
+  gap: 12px;
+}
+
+.reading-training-progress {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reading-training-progress li {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.reading-training-progress li span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+}
+
+.reading-training-progress li.active span,
+.reading-training-progress li.done span {
+  color: #fff;
+  border-color: var(--teal);
+  background: var(--teal);
+}
+
+.reading-training-card .reading-line,
+.reading-training-compare .reading-line {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.reading-order-result,
+.reading-training-finished {
+  min-height: 72px;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: rgba(223, 246, 247, 0.72);
+  text-align: center;
+}
+
+@media (max-width: 620px) {
+  .reading-training-progress {
+    grid-template-columns: repeat(5, minmax(54px, 1fr));
+    overflow-x: auto;
+  }
+}
+
 .reading-line {
   position: relative;
   display: grid;

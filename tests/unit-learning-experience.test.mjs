@@ -69,16 +69,16 @@ assert.ok(!styleSource.includes("data-font-size"), "removed font-size mode shoul
 assert.ok(!appSource.includes("set-font-size"), "removed font-size mode should not leave an action handler");
 
 const expectedVersionedAssets = [
-  "./styles.css?v=20260810-feedback-i18n",
+  "./styles.css?v=20260811-final-course",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
   "./course-data/alphabet-data.js?v=20260809-bilingual",
   "./course-data/latin-writing-data.js?v=20260810-unit-maps",
   "./course-data/combo-data.js?v=20260728-uly-transliteration",
   "./course-data/syllable-data.js?v=20260809-plan3-final-content",
-  "./course-data/vocab-data.js?v=20260728-uly-transliteration",
+  "./course-data/vocab-data.js?v=20260811-final-course",
   "./course-data/practice-data.js?v=20260728-learned-markers",
-  "./course-data/reading-data.js?v=20260810-quote-profiles",
+  "./course-data/reading-data.js?v=20260811-final-course",
   "./course-data/afanti-data.js?v=20260810-afanti-layout",
   "./course-data/afanti-english-data.js?v=20260810-reviewed-afanti",
   "./afanti-content.js?v=20260810-reviewed-afanti",
@@ -86,23 +86,23 @@ const expectedVersionedAssets = [
   "./i18n/ui-messages.js?v=20260810-feedback-i18n",
   "./i18n/alphabet-en.js?v=20260809-bilingual",
   "./i18n/combo-en.js?v=20260809-bilingual",
-  "./i18n/vocab-en.js?v=20260809-bilingual",
+  "./i18n/vocab-en.js?v=20260811-final-course",
   "./i18n/practice-en.js?v=20260809-bilingual",
-  "./i18n/reading-en.js?v=20260809-bilingual",
+  "./i18n/reading-en.js?v=20260811-final-course",
   "./i18n/course-en.js?v=20260809-bilingual",
-  "./i18n/runtime.js?v=20260810-feedback-i18n",
+  "./i18n/runtime.js?v=20260811-final-course",
   "./unit-order.js?v=20260809-edition-unit-order",
   "./uyghur-keyboard.js?v=20260809-phone-morphemes",
   "./latin-keyboard.js?v=20260809-latin-qwerty",
   "./sentence-morphemes.js?v=20260809-word-formation",
-  "./sentence-glossary.js?v=20260809-word-formation",
-  "./progress-transfer.js?v=20260810-feedback-i18n",
+  "./sentence-glossary.js?v=20260811-final-course",
+  "./progress-transfer.js?v=20260811-final-course",
   "./audio-controller.js?v=20260728-uly-transliteration",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8",
   "./cloud-config.js?v=20260728-cloud-sync",
   "./cloud-sync.js?v=20260810-unit-maps",
   "./feedback.js?v=20260810-feedback",
-  "./app.js?v=20260810-feedback-i18n"
+  "./app.js?v=20260811-final-course"
 ];
 const versionedAppAssets = [
   ...indexHtml.matchAll(
@@ -118,7 +118,7 @@ const previousEnglishUiCache = new Map([
   ["./styles.css?v=20260809-bilingual", { release: "before-english-layout" }],
   ["./app.js?v=20260809-bilingual-final", { release: "before-english-layout" }]
 ]);
-for (const url of ["./styles.css?v=20260810-feedback-i18n", "./app.js?v=20260810-feedback-i18n"]) {
+for (const url of ["./styles.css?v=20260811-final-course", "./app.js?v=20260811-final-course"]) {
   assert.ok(versionedAppAssets.includes(url));
   assert.equal(previousEnglishUiCache.get(url), undefined);
 }
@@ -142,7 +142,7 @@ const previousFinalReviewCache = new Map([
 ]);
 for (const finalAssetUrl of [
   "./i18n/ui-messages.js?v=20260810-feedback-i18n",
-  "./i18n/runtime.js?v=20260810-feedback-i18n"
+  "./i18n/runtime.js?v=20260811-final-course"
 ]) {
   assert.ok(versionedAppAssets.includes(finalAssetUrl), `${finalAssetUrl} should be requested by production HTML`);
   assert.equal(
@@ -7289,6 +7289,53 @@ assert.ok(
 );
 const lastReadingCourse = renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'dialogue-theater'; state.selectedReadingGroupId = 'dialogue-guest'");
 assert.ok(!lastReadingCourse.includes("继续学习本单元下一课程"), "the last reading lesson should not show a nonexistent continuation");
+
+vm.runInContext("state.learningProgress.reading = {};", context);
+clickDataset({ action: "open-reading-group", unitId: "grammar-basics", id: "grammar-person-verbs" });
+assert.equal(vm.runInContext("state.selectedReadingGroupId", context), "grammar-person-verbs");
+assert.ok(
+  app.innerHTML.includes('data-reading-training-step="rule"'),
+  "a newly published grammar group should begin with its rule step"
+);
+assert.ok(app.innerHTML.includes("先辨认主语"), "the rule step should explain the approved grammar rule");
+assert.ok(app.innerHTML.includes('data-action="continue-reading-training"'), "the rule step should expose one clear continuation");
+clickDataset({ action: "continue-reading-training" });
+assert.ok(app.innerHTML.includes('data-reading-training-step="compare"'), "rule completion should advance to comparison");
+assert.equal(vm.runInContext("state.learningProgress.reading['grammar-person-verbs'].rule", context), true);
+clickDataset({ action: "go", target: "unit" });
+clickDataset({ action: "open-reading-group", unitId: "grammar-basics", id: "grammar-person-verbs" });
+assert.ok(app.innerHTML.includes('data-reading-training-step="compare"'), "reopening a partial lesson should resume at its first incomplete step");
+clickDataset({ action: "continue-reading-training" });
+assert.ok(app.innerHTML.includes('data-reading-training-step="recognition"'));
+clickDataset({ action: "pick-reading-training-answer", answerId: "a" });
+assert.equal(vm.runInContext("state.learningProgress.reading['grammar-person-verbs'].recognition", context), undefined, "a wrong recognition answer must not complete the step");
+clickDataset({ action: "pick-reading-training-answer", answerId: "b" });
+assert.equal(vm.runInContext("state.learningProgress.reading['grammar-person-verbs'].recognition", context), true);
+clickDataset({ action: "continue-reading-training" });
+assert.ok(app.innerHTML.includes('data-reading-training-step="ordering"'));
+clickDataset({ action: "pick-reading-order-token", tokenId: "b" });
+clickDataset({ action: "pick-reading-order-token", tokenId: "a" });
+assert.equal(vm.runInContext("state.learningProgress.reading['grammar-person-verbs'].ordering", context), undefined, "a wrong word order must not complete the step");
+clickDataset({ action: "reset-reading-order" });
+clickDataset({ action: "pick-reading-order-token", tokenId: "a" });
+clickDataset({ action: "pick-reading-order-token", tokenId: "b" });
+assert.equal(vm.runInContext("state.learningProgress.reading['grammar-person-verbs'].ordering", context), true);
+clickDataset({ action: "continue-reading-training" });
+assert.ok(app.innerHTML.includes('data-reading-training-step="completion"'));
+clickDataset({ action: "pick-reading-completion", answerId: "b" });
+assert.equal(vm.runInContext("state.learningProgress.reading['grammar-person-verbs'].completed", context), undefined, "a wrong completion answer must not complete the lesson");
+clickDataset({ action: "pick-reading-completion", answerId: "a" });
+assert.equal(
+  vm.runInContext("JSON.stringify(state.learningProgress.reading['grammar-person-verbs'])", context),
+  JSON.stringify({ viewed: true, rule: true, compare: true, recognition: true, ordering: true, completion: true, completed: true }),
+  "the five approved steps should produce one exact resumable reading progress entry"
+);
+assert.ok(app.innerHTML.includes('data-id="grammar-possession"'), "completed training should unlock the next lesson CTA");
+assert.throws(
+  () => vm.runInContext(`validateImportedProgressIds({ learningProgress: { reading: { "grammar-person-verbs": { viewed: true, rule: true, recognition: true } } } })`, context),
+  /必须按训练顺序/,
+  "import must reject reading training that skips the comparison step"
+);
 
 const schoolGloss = vm.runInContext("renderSentenceGlosses('بۈگۈن دەرس بارمۇ؟')", context);
 includesAll(

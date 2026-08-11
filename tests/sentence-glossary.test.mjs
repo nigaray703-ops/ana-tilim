@@ -104,7 +104,7 @@ for (const [word, record] of Object.entries(morphemes)) {
   }
 }
 
-assert.equal(sentenceCount, 164, "all current reading sentences should be covered");
+assert.equal(sentenceCount, 192, "all current reading sentences should be covered");
 assert.ok(tokenCount > sentenceCount, "sentence glossing should expose individual words, not whole-sentence labels");
 
 console.log(`sentence glossary checks passed (${sentenceCount} sentences, ${tokenCount} word tokens)`);

@@ -17,13 +17,13 @@ const CATEGORY_COUNTS = Object.freeze({
   alphabet: 32,
   combos: 34,
   vocab: 202,
-  reading: 164,
+  reading: 192,
   "form-examples": 94
 });
 
 const NEEDS_RERECORD_IDS = new Set(["alphabet:zhe", "vocab:korushkunche"]);
 const FINAL_ADDITIONS_PATH = "课程/语法与基础句型/final-reading-additions.json";
-const FINAL_ADDITIONS_HASH = "d215185773451f3bd6cfddce51d5137d70f0207ef3893635b01ee9302edc6912";
+const FINAL_ADDITIONS_HASH = "237948cc87ebcecfbf707d955c23f903e680bfb960e46a4e5ce08b88a9068c41";
 const FINAL_ADDITION_GROUPS = Object.freeze([
   ["grammar-person-verbs", 3],
   ["grammar-possession", 3],
@@ -145,7 +145,8 @@ function sourceIndexes(course) {
           value: item.value,
           latin: item.latin,
           meaning: item.meaning,
-          manifestLatin: item.pattern || item.speaker || unit.subtitle
+          manifestLatin: group.training ? item.latin : (item.pattern || item.speaker || unit.subtitle),
+          manifestLatinCaseInsensitive: Boolean(group.training)
         });
       }
     }
@@ -258,12 +259,16 @@ function normalizeTarget({ projectRoot, category, item, indexes, stableIds, engl
   assert.equal(item.value ?? item.recordingText, joined.value, `value drift for ${stableId}`);
   assert.equal(typeof item.latin, "string", `manifest latin must be text for ${stableId}`);
   const expectedManifestLatin = joined.manifestLatin ?? joined.latin;
-  assert.equal(item.latin, expectedManifestLatin, `latin drift for ${stableId}`);
+  if (joined.manifestLatinCaseInsensitive) {
+    assert.equal(item.latin.toLocaleLowerCase("en"), expectedManifestLatin.toLocaleLowerCase("en"), `latin drift for ${stableId}`);
+  } else {
+    assert.equal(item.latin, expectedManifestLatin, `latin drift for ${stableId}`);
+  }
   if (joined.groupId && category !== "form-examples") assert.equal(item.groupId, joined.groupId, `group ID drift for ${stableId}`);
   if (joined.unitId) assert.equal(item.unitId, joined.unitId, `unit ID drift for ${stableId}`);
 
   const value = joined.value;
-  const latin = joined.latin;
+  const latin = joined.manifestLatinCaseInsensitive ? item.latin : joined.latin;
   const meaning = joined.meaning;
   const english = englishFor({ category, sourceId, source: joined.source, englishCatalog });
   assert.ok(typeof value === "string" && value.trim(), `missing source value for ${stableId}`);
@@ -297,7 +302,7 @@ function loadApprovedFirstTimeRecordings(projectRoot) {
   assert.equal(contractHash, FINAL_ADDITIONS_HASH, "approved first-time recording contract drift");
   assert.equal(contract.schemaVersion, 1);
   assert.equal(contract.ownerDecision, "approved-topics");
-  assert.equal(contract.releaseStatus, "pending-audio");
+  assert.equal(contract.releaseStatus, "approved");
 
   const groups = contract.units.flatMap((unit) => unit.groups.map((group) => ({ ...group, unitId: unit.unitId })));
   assert.deepEqual(groups.map((group) => [group.id, group.items.length]), FINAL_ADDITION_GROUPS);
@@ -390,6 +395,18 @@ export function buildRecordingCatalog({ projectRoot }) {
   }
 
   for (const candidate of loadApprovedFirstTimeRecordings(normalizedProjectRoot)) {
+    const publishedTarget = targets.find((target) => target.stableId === `${candidate.category}:${candidate.sourceId}`);
+    if (publishedTarget) {
+      assert.equal(publishedTarget.value, candidate.value, `published final value drift for ${publishedTarget.stableId}`);
+      assert.equal(publishedTarget.latin.toLocaleLowerCase("en"), candidate.latin.toLocaleLowerCase("en"), `published final latin drift for ${publishedTarget.stableId}`);
+      assert.equal(publishedTarget.meaning, candidate.meaning, `published final meaning drift for ${publishedTarget.stableId}`);
+      if (candidate.reuseAudioFromStableId) {
+        const reusableTarget = targets.find((target) => target.stableId === candidate.reuseAudioFromStableId);
+        assert.ok(reusableTarget, `approved reused audio target is missing: ${candidate.reuseAudioFromStableId}`);
+        assert.equal(publishedTarget.absoluteOutputPath, reusableTarget.absoluteOutputPath, `published reused audio path drift for ${candidate.sourceId}`);
+      }
+      continue;
+    }
     const matchingExistingTargets = targets.filter((target) => normalizedSpokenText(target.value) === normalizedSpokenText(candidate.value));
     if (candidate.reuseAudioFromStableId) {
       const reusableTarget = targets.find((target) => target.stableId === candidate.reuseAudioFromStableId);
@@ -407,6 +424,6 @@ export function buildRecordingCatalog({ projectRoot }) {
     targets.push(normalizeFirstTimeTarget({ projectRoot: normalizedProjectRoot, candidate, stableIds }));
   }
 
-  assert.equal(targets.length, 553, "recording catalog count drift");
+  assert.equal(targets.length, 554, "recording catalog count drift");
   return Object.freeze({ schemaVersion: 1, generatedAt: new Date().toISOString(), targets: Object.freeze(targets) });
 }

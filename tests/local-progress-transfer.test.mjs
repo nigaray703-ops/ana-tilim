@@ -207,6 +207,11 @@ const malformedNestedCases = [
     /learningProgress\.letters\.dot-bone 包含未知字段 futureHtml/
   ],
   [
+    "final reading training fields must stay scoped to reading progress",
+    { learningProgress: { letters: { "dot-bone": { rule: true } } } },
+    /learningProgress\.letters\.dot-bone 包含未知字段 rule/
+  ],
+  [
     "syllable submitted IDs must be an array",
     { learningProgress: { syllableTraining: { "two-letter-warmup": { completedIds: "warmup-ba" } } } },
     /learningProgress\.syllableTraining\.two-letter-warmup\.completedIds 必须是数组/

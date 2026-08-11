@@ -25,6 +25,11 @@ const checks = [
     args: ["--check", "scripts/sync-cn-core.mjs"]
   },
   {
+    label: "syntax: domestic final audio sync",
+    command: node,
+    args: ["--check", "scripts/sync-cn-final-audio.mjs"]
+  },
+  {
     label: "syntax: edition parity",
     command: node,
     args: ["--check", "scripts/check-edition-parity.mjs"]
@@ -123,6 +128,11 @@ const checks = [
     label: "syntax: reading data",
     command: node,
     args: ["--check", "prototype/course-data/reading-data.js"]
+  },
+  {
+    label: "syntax: final reading manifest builder",
+    command: node,
+    args: ["--check", "tools/build-final-reading-manifest.mjs"]
   },
   {
     label: "syntax: shared Afanti data",
@@ -274,6 +284,26 @@ const checks = [
     label: "test: final grammar and sentence recording additions",
     command: node,
     args: ["tests/final-reading-additions.test.mjs"]
+  },
+  {
+    label: "test: final reading manifest builder",
+    command: node,
+    args: ["tests/build-final-reading-manifest.test.mjs"]
+  },
+  {
+    label: "test: final course content and audio integration",
+    command: node,
+    args: ["tests/final-course-integration.test.mjs"]
+  },
+  {
+    label: "test: final course content freeze",
+    command: node,
+    args: ["tests/course-content-freeze.test.mjs"]
+  },
+  {
+    label: "test: domestic final audio sync",
+    command: node,
+    args: ["tests/sync-cn-reading-audio.test.mjs"]
   },
   {
     label: "test: learning experience",

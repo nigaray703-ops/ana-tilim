@@ -16,8 +16,44 @@ const ALL_STATUSES = new Set(["pending-review", "pending", "needs-rerecord", "re
 const MANUAL_STATUSES = new Set(["pending-review", "pending", "needs-rerecord"]);
 const RETIRED_TARGET_STATUSES = new Map([
   ["vocab:hayr", "pending-review"],
+  ["vocab:marhaba", "pending-review"],
   ["reading:grammar-person-verbs-1", "pending"],
   ["reading:sentence-self-introduction-4", "pending"]
+]);
+const APPROVED_PUBLISHED_REUSE_IDS = new Set([
+  "reading:grammar-person-verbs-1",
+  "reading:sentence-self-introduction-4"
+]);
+const APPROVED_PUBLISHED_ADDITION_IDS = new Set([
+  "vocab:erzimaydu",
+  "reading:grammar-person-verbs-1",
+  "reading:grammar-person-verbs-2",
+  "reading:grammar-person-verbs-3",
+  "reading:grammar-possession-1",
+  "reading:grammar-possession-2",
+  "reading:grammar-possession-3",
+  "reading:grammar-location-direction-1",
+  "reading:grammar-location-direction-2",
+  "reading:grammar-location-direction-3",
+  "reading:grammar-basic-time-1",
+  "reading:grammar-basic-time-2",
+  "reading:grammar-basic-time-3",
+  "reading:sentence-self-introduction-1",
+  "reading:sentence-self-introduction-2",
+  "reading:sentence-self-introduction-3",
+  "reading:sentence-self-introduction-4",
+  "reading:sentence-location-direction-1",
+  "reading:sentence-location-direction-2",
+  "reading:sentence-location-direction-3",
+  "reading:sentence-location-direction-4",
+  "reading:sentence-ability-preference-1",
+  "reading:sentence-ability-preference-2",
+  "reading:sentence-ability-preference-3",
+  "reading:sentence-ability-preference-4",
+  "reading:sentence-polite-reason-1",
+  "reading:sentence-polite-reason-2",
+  "reading:sentence-polite-reason-3",
+  "reading:sentence-polite-reason-4"
 ]);
 
 function isInside(root, candidate) {
@@ -282,7 +318,13 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
     const existingIds = Object.keys(state.targets);
     const missingIds = [...catalogById.keys()].filter((stableId) => !Object.hasOwn(state.targets, stableId));
     const retiredIds = existingIds.filter((stableId) => !catalogById.has(stableId));
-    if (missingIds.length === 0 && retiredIds.length === 0) return state;
+    const publishedReuseIds = existingIds.filter(
+      (stableId) =>
+        APPROVED_PUBLISHED_REUSE_IDS.has(stableId) &&
+        catalogById.get(stableId)?.playable === true &&
+        state.targets[stableId]?.status === "pending"
+    );
+    if (missingIds.length === 0 && retiredIds.length === 0 && publishedReuseIds.length === 0) return state;
 
     const migrated = clone(state);
     for (const stableId of retiredIds) {
@@ -297,13 +339,21 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
     }
     for (const stableId of missingIds) {
       const target = catalogById.get(stableId);
-      assert.equal(target.initialStatus, "pending", `existing workspace may only add a new pending recording target: ${stableId}`);
+      const approvedReuse = APPROVED_PUBLISHED_REUSE_IDS.has(stableId);
+      assert.ok(APPROVED_PUBLISHED_ADDITION_IDS.has(stableId), `existing workspace may only add an approved published recording target: ${stableId}`);
       migrated.targets[stableId] = {
-        status: target.initialStatus,
+        status: approvedReuse ? "approved-current" : target.initialStatus,
         approvedTakeId: null,
         recordingTextHash: target.recordingTextHash,
         takes: []
       };
+    }
+    for (const stableId of publishedReuseIds) {
+      const previous = migrated.targets[stableId];
+      const target = catalogById.get(stableId);
+      assert.equal(previous.recordingTextHash, target.recordingTextHash, `stale recording text for ${stableId}`);
+      assert.ok(previous.approvedTakeId === null && Array.isArray(previous.takes) && previous.takes.length === 0, `retired recording target still contains learner work: ${stableId}`);
+      previous.status = "approved-current";
     }
     migrated.updatedAt = new Date().toISOString();
     validateState(migrated);

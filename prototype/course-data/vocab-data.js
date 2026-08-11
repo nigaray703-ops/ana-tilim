@@ -10,7 +10,7 @@ const vocabTopicDefinitions = [
       ["kop-rahmat", "كۆپ رەھمەت", "köp rehmet", "非常感谢"],
       ["xosh", "خوش", "xosh", "再见、告别", ["خ", "و", "ش"]],
       ["xush-keldingiz", "خۇش كەلدىڭىز", "xush keldingiz", "欢迎"],
-      ["marhaba", "مەرھابا", "merhaba", "不客气、请"],
+      ["erzimaydu", "ئەرزىمەيدۇ", "erzimeydu", "不客气、不用谢"],
       ["kechurung", "كەچۈرۈڭ", "kechürüng", "对不起、请原谅"],
       ["yaxshi", "ياخشى", "yaxshi", "好、很好"],
       ["qandaq", "قانداق", "qandaq", "怎么样、如何"],
@@ -295,7 +295,7 @@ const vocabTopicDefinitions = [
 const vocabSectionDefinitions = {
   greetings: [
     ["daily", "日常问候", ["yaxshimusiz", "xeyirlik-etigen", "xeyirlik-kech", "qandaq", "yaxshi"]],
-    ["polite", "礼貌用语", ["rahmat", "kop-rahmat", "marhaba", "kechurung", "xush-keldingiz", "xosh", "korushkunche"]]
+    ["polite", "礼貌用语", ["rahmat", "kop-rahmat", "erzimaydu", "kechurung", "xush-keldingiz", "xosh", "korushkunche"]]
   ],
   pronouns: [
     ["person", "人称", ["men", "sen", "siz", "u-pronoun", "biz", "ular"]],

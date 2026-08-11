@@ -373,6 +373,7 @@ fs.writeFileSync(path.join(duplicateUnitOrderTargetPath, "index.html"), `<!docty
     <script src="./course-data/syllable-data.js?v=old-before"></script>
     <script src="./course-data/afanti-data.js?v=old-before"></script>
     <script src="./afanti-content.js?v=old-before"></script>
+    <script src="./course-data/vocab-data.js?v=old-before"></script>
     <script src="./course-data/reading-data.js?v=old-before"></script>
     <script src="./course-data.js?v=cn-course"></script>
     <script src="./unit-order.js?v=old-before"></script>
@@ -380,6 +381,7 @@ fs.writeFileSync(path.join(duplicateUnitOrderTargetPath, "index.html"), `<!docty
     <script src="./feedback.js?v=old-before"></script>
     <script src="./domestic-duplicate-fixture.js?v=1"></script>
     <script src="./progress-transfer.js?v=old-syllable"></script>
+    <script src="./sentence-glossary.js?v=old-before"></script>
     <script src="./app.js?v=cn-app"></script>
     <script src="./course-data/latin-writing-data.js?v=old-after"></script>
     <script src="./course-data/syllable-data.js?v=old-after"></script>
@@ -458,19 +460,27 @@ assert.equal(
   "duplicate normalization should use the standard feedback tag"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('href="./styles.css?v=20260810-feedback-i18n"'),
+  normalizedDuplicateIndex.includes('href="./styles.css?v=20260811-final-course"'),
   "sync should cache-bust the shared resumable-unit styles"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./course-data/reading-data.js?v=20260810-quote-profiles"'),
+  normalizedDuplicateIndex.includes('src="./course-data/reading-data.js?v=20260811-final-course"'),
   "sync should cache-bust the copied bilingual quote-name data"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./progress-transfer.js?v=20260810-feedback-i18n"'),
+  normalizedDuplicateIndex.includes('src="./course-data/vocab-data.js?v=20260811-final-course"'),
+  "sync should cache-bust the corrected final vocabulary data"
+);
+assert.ok(
+  normalizedDuplicateIndex.includes('src="./progress-transfer.js?v=20260811-final-course"'),
   "sync should cache-bust the resumable unit progress validator"
 );
 assert.ok(
-  normalizedDuplicateIndex.includes('src="./app.js?v=20260810-feedback-i18n"'),
+  normalizedDuplicateIndex.includes('src="./sentence-glossary.js?v=20260811-final-course"'),
+  "sync should cache-bust the complete sentence glossary"
+);
+assert.ok(
+  normalizedDuplicateIndex.includes('src="./app.js?v=20260811-final-course"'),
   "sync should cache-bust the shared resumable-unit UI"
 );
 assert.ok(

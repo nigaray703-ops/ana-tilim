@@ -198,6 +198,10 @@ const readingAudioItems = readingUnits
       folder: "reading",
       prefix: "reading",
       id: item.id,
+      fileId: ({
+        "grammar-person-verbs-1": "grammar-word-order-1",
+        "sentence-self-introduction-4": "grammar-copula-2"
+      })[item.id] || item.id,
       value: item.value,
       latin: item.audioLatin,
       order: index + 1
@@ -495,7 +499,7 @@ const dailyActivitySteps = Object.freeze({
   syllableTraining: new Set(["completed"]),
   vocab: new Set(["viewed", "recognition", "keyboard", "completed"]),
   practice: new Set(["viewed", "listen", "repeat", "write", "keyboard", "review", "completed"]),
-  reading: new Set(["viewed", "completed"])
+  reading: new Set(["viewed", "rule", "compare", "recognition", "ordering", "completion", "completed"])
 });
 
 function learningUnitById(unitId) {
@@ -925,6 +929,10 @@ const state = {
   syllableSentenceShowStandard: false,
   syllableSentenceHelperViewed: false,
   syllableSentenceAudioPlayed: false,
+  readingTrainingStepIndex: 0,
+  readingTrainingChoiceId: "",
+  readingOrderingIds: [],
+  readingTrainingFeedback: "",
   selectedAfantiStoryId: afantiStories[0]?.id || "",
   afantiVisibleLanguages: { latin: false, zh: false, en: false },
   practiceSpoken: false,
@@ -1140,6 +1148,10 @@ function restoreHydratedLessonPosition() {
   if (state.screen === "syllableWarmup") {
     state.syllableItemIndex = syllableWarmupResumeIndex();
     state.syllableShowStandard = false;
+    return;
+  }
+  if (state.screen === "reading") {
+    resetReadingTrainingState(currentReadingGroup());
   }
 }
 
@@ -1289,6 +1301,28 @@ function validateImportedProgressIds(saved) {
         const expectedSubmittedCount = expectedSyllableCompletedIds(id).length;
         if (Array.isArray(completedIds) && completedIds.length === expectedSubmittedCount && bucket[id].completed !== true) {
           throw new Error(`learningProgress.${scope}.${id} 已提交全部题目，必须标记完成`);
+        }
+      }
+      if (scope === "reading") {
+        const group = readingUnits.flatMap((unit) => unit.groups).find((candidate) => candidate.id === id);
+        const trainingSteps = group?.training?.steps || [];
+        if (trainingSteps.length) {
+          const allowedFields = new Set(["viewed", ...trainingSteps, "completed"]);
+          const unknownField = Object.keys(bucket[id]).find((field) => !allowedFields.has(field));
+          if (unknownField) {
+            throw new Error(`learningProgress.reading.${id} 包含未知字段 ${unknownField}`);
+          }
+          let foundIncomplete = false;
+          for (const stepId of trainingSteps) {
+            if (bucket[id][stepId] !== true) foundIncomplete = true;
+            if (foundIncomplete && bucket[id][stepId] === true) {
+              throw new Error(`learningProgress.reading.${id} 必须按训练顺序完成 ${stepId}`);
+            }
+          }
+          const allComplete = trainingSteps.every((stepId) => bucket[id][stepId] === true);
+          if (Boolean(bucket[id].completed) !== allComplete) {
+            throw new Error(`learningProgress.reading.${id} 的完成状态与五步训练不一致`);
+          }
         }
       }
       const expectedLatinIds = scope === "latinWriting" ? expectedLatinWritingCompletedIds(id) : null;
@@ -2119,12 +2153,15 @@ function markProgress(scope, id, step) {
     if (finishedSteps) {
       progress.completed = true;
     }
+  } else if (scope === "reading" && step === "completion") {
+    progress.completed = true;
+    recordDailyActivity(`${scope}:${id}:completed`);
   } else if (scope === "practice" && step === "listen") {
     const group = practiceGroups.find((item) => item.id === id);
     if (group && practiceListeningRoundComplete(group)) {
       progress.completed = true;
     }
-  } else if (["recognition", "keyboard", "build", "repeat", "write", "review", "completed"].includes(step)) {
+  } else if (scope !== "reading" && ["recognition", "keyboard", "build", "repeat", "write", "review", "completed"].includes(step)) {
     progress.completed = true;
   }
 }
@@ -6922,6 +6959,80 @@ function renderReadingLine(unit, item) {
   `;
 }
 
+function readingTrainingSteps(group = currentReadingGroup()) {
+  return Array.isArray(group?.training?.steps) ? group.training.steps : [];
+}
+
+function readingTrainingProgress(group = currentReadingGroup()) {
+  return state.learningProgress.reading?.[group.id] || {};
+}
+
+function readingTrainingResumeIndex(group = currentReadingGroup()) {
+  const steps = readingTrainingSteps(group);
+  const progress = readingTrainingProgress(group);
+  const firstIncomplete = steps.findIndex((stepId) => progress[stepId] !== true);
+  return firstIncomplete >= 0 ? firstIncomplete : Math.max(0, steps.length - 1);
+}
+
+function resetReadingTrainingState(group = currentReadingGroup()) {
+  state.readingTrainingStepIndex = readingTrainingResumeIndex(group);
+  state.readingTrainingChoiceId = "";
+  state.readingOrderingIds = [];
+  state.readingTrainingFeedback = "";
+}
+
+function localizedTrainingText(training, field) {
+  const suffix = i18n.getLanguage() === "en" ? "En" : "Zh";
+  return training?.[`${field}${suffix}`] || "";
+}
+
+function renderReadingTrainingProgress(group) {
+  const labels = i18n.getLanguage() === "en"
+    ? { rule: "Rule", compare: "Compare", recognition: "Recognise", ordering: "Order", completion: "Complete" }
+    : { rule: "规则", compare: "对比", recognition: "辨认", ordering: "排序", completion: "补全" };
+  const progress = readingTrainingProgress(group);
+  return `<ol class="reading-training-progress">${readingTrainingSteps(group).map((stepId, index) => `
+    <li class="${index === state.readingTrainingStepIndex ? "active" : ""} ${progress[stepId] ? "done" : ""}">
+      <span>${index + 1}</span><strong>${labels[stepId]}</strong>
+    </li>`).join("")}</ol>`;
+}
+
+function renderReadingTraining(group, unit) {
+  const training = group.training;
+  const steps = readingTrainingSteps(group);
+  const stepId = steps[Math.min(state.readingTrainingStepIndex, steps.length - 1)] || "rule";
+  const progress = readingTrainingProgress(group);
+  const english = i18n.getLanguage() === "en";
+  let content = "";
+  let canContinue = false;
+
+  if (stepId === "rule") {
+    content = `<article class="card reading-training-card"><p class="caption">${english ? "Rule" : "先看规则"}</p><h2>${escapeHtml(group.rule)}</h2>${group.items.map((item) => renderReadingLine(unit, item)).join("")}</article>`;
+    canContinue = true;
+  } else if (stepId === "compare") {
+    const compareItems = training.compareItemIds.map((id) => group.items.find((item) => item.id === id)).filter(Boolean);
+    content = `<article class="card reading-training-card"><p class="caption">${english ? "Compare" : "对比句子"}</p><div class="reading-training-compare">${compareItems.map((item) => renderReadingLine(unit, item)).join("")}</div></article>`;
+    canContinue = true;
+  } else if (stepId === "recognition") {
+    const exercise = training.recognition;
+    content = `<article class="card reading-training-card"><p class="caption">${english ? "Recognise" : "辨认意思"}</p><h2>${escapeHtml(localizedTrainingText(exercise, "prompt"))}</h2><div class="reading-training-options">${exercise.options.map((option) => {
+      const item = group.items.find((candidate) => candidate.id === option.itemId);
+      return `<button class="choice-card ${state.readingTrainingChoiceId === option.id ? "selected" : ""}" data-action="pick-reading-training-answer" data-answer-id="${escapeHtml(option.id)}" type="button"><span class="uyghur">${escapeHtml(item?.value || "")}</span><small dir="ltr">${escapeHtml(item?.latin || "")}</small></button>`;
+    }).join("")}</div>${state.readingTrainingFeedback ? `<p class="feedback ${progress.recognition ? "good" : "bad"}" role="status">${escapeHtml(state.readingTrainingFeedback)}</p>` : ""}</article>`;
+    canContinue = progress.recognition === true;
+  } else if (stepId === "ordering") {
+    const exercise = training.ordering;
+    const chosen = state.readingOrderingIds;
+    content = `<article class="card reading-training-card"><p class="caption">${english ? "Build the sentence" : "按顺序组成句子"}</p><div class="reading-order-result uyghur" dir="rtl">${chosen.map((id) => escapeHtml(exercise.tokens.find((token) => token.id === id)?.value || "")).join("") || (english ? "Choose the parts below" : "点击下方词块")}</div><div class="reading-training-options">${exercise.tokens.map((token) => `<button class="choice-card" data-action="pick-reading-order-token" data-token-id="${escapeHtml(token.id)}" type="button" ${chosen.includes(token.id) ? "disabled" : ""}><span class="uyghur">${escapeHtml(token.value)}</span></button>`).join("")}</div>${state.readingTrainingFeedback ? `<p class="feedback ${progress.ordering ? "good" : "bad"}" role="status">${escapeHtml(state.readingTrainingFeedback)}</p>` : ""}${chosen.length ? `<button class="secondary-button" data-action="reset-reading-order" type="button">${english ? "Reset" : "重新排序"}</button>` : ""}</article>`;
+    canContinue = progress.ordering === true;
+  } else {
+    const exercise = training.completion;
+    content = `<article class="card reading-training-card"><p class="caption">${english ? "Complete" : "补全句子"}</p><h2>${escapeHtml(localizedTrainingText(exercise, "prompt"))}</h2><div class="reading-training-options">${exercise.options.map((option) => `<button class="choice-card ${state.readingTrainingChoiceId === option.id ? "selected" : ""}" data-action="pick-reading-completion" data-answer-id="${escapeHtml(option.id)}" type="button"><span class="uyghur">${escapeHtml(option.value)}</span></button>`).join("")}</div>${state.readingTrainingFeedback ? `<p class="feedback ${progress.completion ? "good" : "bad"}" role="status">${escapeHtml(state.readingTrainingFeedback)}</p>` : ""}${progress.completion ? `<div class="reading-training-finished"><div class="uyghur">${escapeHtml(exercise.completedValue)}</div><p>${escapeHtml(localizedTrainingText(exercise, "meaning"))}</p></div>` : ""}</article>`;
+  }
+
+  return `<div class="reading-training" data-reading-training-step="${stepId}">${renderReadingTrainingProgress(group)}${content}${canContinue && stepId !== "completion" ? `<button class="primary-button" data-action="continue-reading-training" type="button">${english ? "Continue" : "继续下一步"}</button>` : ""}</div>`;
+}
+
 function renderGlossSegments(segments, formation = null) {
   if (!segments?.length) return "";
 
@@ -6999,12 +7110,10 @@ function renderReadingLesson() {
         `<button class="back-button" data-action="go" data-target="unit" type="button" aria-label="${t("common.back")}">←</button>`
       )}
       <section class="stack">
-        <div class="reading-list ${unit.readingKind}">
-          ${group.items.map((item) => renderReadingLine(unit, item)).join("")}
-        </div>
-        ${renderContinueCourseButton(
+        ${group.training ? renderReadingTraining(group, unit) : `<div class="reading-list ${unit.readingKind}">${group.items.map((item) => renderReadingLine(unit, item)).join("")}</div>`}
+        ${!group.training || readingTrainingProgress(group).completion === true ? renderContinueCourseButton(
           nextGroup ? { action: "open-reading-group", id: nextGroup.id, unitId: unit.id } : null
-        )}
+        ) : ""}
         <button class="secondary-button" data-action="go" data-target="unit" type="button">
           ${t("reading.backToLessons")}
         </button>
@@ -9147,7 +9256,80 @@ document.addEventListener("click", (event) => {
     state.selectedReadingUnitId = unit.id;
     state.selectedReadingGroupId = group.id;
     markProgress("reading", group.id, "viewed");
+    resetReadingTrainingState(group);
     goTo("reading");
+    return;
+  }
+
+  if (action === "continue-reading-training") {
+    const group = currentReadingGroup();
+    const steps = readingTrainingSteps(group);
+    const stepId = steps[state.readingTrainingStepIndex];
+    if (["rule", "compare"].includes(stepId)) markProgress("reading", group.id, stepId);
+    if (readingTrainingProgress(group)[stepId] !== true) return;
+    state.readingTrainingStepIndex = Math.min(state.readingTrainingStepIndex + 1, steps.length - 1);
+    state.readingTrainingChoiceId = "";
+    state.readingOrderingIds = [];
+    state.readingTrainingFeedback = "";
+    saveLocalProgress();
+    render();
+    return;
+  }
+
+  if (action === "pick-reading-training-answer") {
+    const group = currentReadingGroup();
+    const answerId = button.dataset.answerId;
+    state.readingTrainingChoiceId = answerId;
+    if (answerId === group.training?.recognition?.answerId) {
+      markProgress("reading", group.id, "recognition");
+      state.readingTrainingFeedback = i18n.getLanguage() === "en" ? "Correct." : "正确，可以继续。";
+      saveLocalProgress();
+    } else {
+      state.readingTrainingFeedback = i18n.getLanguage() === "en" ? "Try again." : "再看一遍句意后重试。";
+    }
+    render();
+    return;
+  }
+
+  if (action === "pick-reading-order-token") {
+    const group = currentReadingGroup();
+    const exercise = group.training?.ordering;
+    const tokenId = button.dataset.tokenId;
+    if (!exercise || state.readingOrderingIds.includes(tokenId)) return;
+    state.readingOrderingIds.push(tokenId);
+    if (state.readingOrderingIds.length === exercise.answerIds.length) {
+      const correct = state.readingOrderingIds.every((id, index) => id === exercise.answerIds[index]);
+      state.readingTrainingFeedback = correct
+        ? (i18n.getLanguage() === "en" ? "Correct sentence order." : "顺序正确，可以继续。")
+        : (i18n.getLanguage() === "en" ? "That order is not correct. Reset and try again." : "顺序不对，请重新排列。");
+      if (correct) {
+        markProgress("reading", group.id, "ordering");
+        saveLocalProgress();
+      }
+    }
+    render();
+    return;
+  }
+
+  if (action === "reset-reading-order") {
+    state.readingOrderingIds = [];
+    state.readingTrainingFeedback = "";
+    render();
+    return;
+  }
+
+  if (action === "pick-reading-completion") {
+    const group = currentReadingGroup();
+    const answerId = button.dataset.answerId;
+    state.readingTrainingChoiceId = answerId;
+    if (answerId === group.training?.completion?.answerId) {
+      markProgress("reading", group.id, "completion");
+      state.readingTrainingFeedback = i18n.getLanguage() === "en" ? "Completed." : "本课五步练习已完成。";
+      saveLocalProgress();
+    } else {
+      state.readingTrainingFeedback = i18n.getLanguage() === "en" ? "Try again." : "再看一遍完整句后重试。";
+    }
+    render();
     return;
   }
 

@@ -20,7 +20,7 @@ assert.ok(fs.existsSync(contractPath), "final 28-item review contract should exi
 const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
 assert.equal(contract.schemaVersion, 1);
 assert.equal(contract.ownerDecision, "approved-topics");
-assert.equal(contract.releaseStatus, "pending-audio");
+assert.equal(contract.releaseStatus, "approved");
 assert.deepEqual(contract.units.map((unit) => unit.unitId), ["grammar-basics", "sentence-patterns"]);
 
 const groups = contract.units.flatMap((unit) => unit.groups.map((group) => ({ ...group, unitId: unit.unitId })));

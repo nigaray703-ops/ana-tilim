@@ -315,7 +315,7 @@ function assertReadingUnit({ id, title, minGroups, maxGroups, expectedKind }) {
   return unit;
 }
 
-function assertManifestMatches(manifestPath, courseItems, label, { exact = true } = {}) {
+function assertManifestMatches(manifestPath, courseItems, label, { exact = true, allowedDuplicateFiles = [], caseInsensitiveLatin = false } = {}) {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
   assertList(manifest.items, `${label} audio manifest items`);
   if (exact) {
@@ -327,7 +327,8 @@ function assertManifestMatches(manifestPath, courseItems, label, { exact = true 
     );
   }
   assertUnique(manifest.items.map((item) => item.id || item.letterId), `${label} audio manifest ids`);
-  assertUnique(manifest.items.map((item) => item.file), `${label} audio manifest filenames`);
+  const duplicateFiles = manifest.items.map((item) => item.file).filter((file, index, files) => files.indexOf(file) !== index);
+  assert.deepEqual(duplicateFiles.sort(), [...allowedDuplicateFiles].sort(), `${label} audio manifest filename reuse drift`);
 
   const courseById = Object.fromEntries(courseItems.map((item) => [item.id || item.letterId, item]));
   for (const audioItem of manifest.items) {
@@ -335,7 +336,11 @@ function assertManifestMatches(manifestPath, courseItems, label, { exact = true 
     const courseItem = courseById[id];
     assert.ok(courseItem, `${label} audio item ${id} should point to an existing course item`);
     assert.equal(audioItem.value || audioItem.letter, courseItem.value || courseItem.letter, `${label} audio item ${id} value should match course data`);
-    assert.equal(audioItem.latin, courseItem.latin, `${label} audio item ${id} latin should match course data`);
+    assert.equal(
+      caseInsensitiveLatin ? audioItem.latin.toLocaleLowerCase("en") : audioItem.latin,
+      caseInsensitiveLatin ? courseItem.latin.toLocaleLowerCase("en") : courseItem.latin,
+      `${label} audio item ${id} latin should match course data`
+    );
     assertText(audioItem.file, `${label} audio item ${id} file`);
     assert.ok(audioItem.file.endsWith(".webm"), `${label} audio item ${id} file should be webm`);
     assert.ok(audioItem.outputPath.endsWith(audioItem.file), `${label} audio item ${id} output path should include file name`);
@@ -511,7 +516,7 @@ const formExampleItems = Object.values(letterDetails).flatMap((letter) =>
 
 assert.equal(comboItems.length, 34, "all 34 basic combinations should be available for ULY review");
 assert.equal(vocabItems.length, 206, "all 206 retained vocabulary items should be available for ULY review after removing xeyr");
-assert.equal(readingItems.length, 164, "all 164 reading items should be available for ULY review");
+assert.equal(readingItems.length, 192, "all 192 reading items should be available for ULY review");
 
 for (const [label, items] of [
   ["combination", comboItems],
@@ -574,8 +579,8 @@ assertUnique(
   "all learning item ids"
 );
 
-const grammarUnit = assertReadingUnit({ id: "grammar-basics", title: "语法入门", minGroups: 6, maxGroups: 6, expectedKind: "grammar" });
-const sentenceUnit = assertReadingUnit({ id: "sentence-patterns", title: "基础句型", minGroups: 6, maxGroups: 10, expectedKind: "sentence" });
+const grammarUnit = assertReadingUnit({ id: "grammar-basics", title: "语法入门", minGroups: 10, maxGroups: 10, expectedKind: "grammar" });
+const sentenceUnit = assertReadingUnit({ id: "sentence-patterns", title: "基础句型", minGroups: 12, maxGroups: 12, expectedKind: "sentence" });
 const dialogueUnit = assertReadingUnit({ id: "dialogue-theater", title: "对话小剧场", minGroups: 5, maxGroups: 8, expectedKind: "dialogue" });
 const storyUnit = assertReadingUnit({ id: "short-stories", title: "小故事", minGroups: 5, maxGroups: 8, expectedKind: "story" });
 const quoteUnit = assertReadingUnit({ id: "famous-quotes", title: "名人名言", minGroups: 10, maxGroups: 10, expectedKind: "quote" });
@@ -798,11 +803,14 @@ const readingAudioCourseItems = readingUnits.flatMap((unit) =>
   unit.groups.flatMap((group) =>
     group.items.map((item) => ({
       ...item,
-      latin: item.pattern || item.speaker || unit.subtitle
+      latin: group.training ? item.latin : item.pattern || item.speaker || unit.subtitle
     }))
   )
 );
-assertManifestMatches("prototype/assets/audio/human/reading/manifest.json", readingAudioCourseItems, "reading");
+assertManifestMatches("prototype/assets/audio/human/reading/manifest.json", readingAudioCourseItems, "reading", {
+  allowedDuplicateFiles: ["human_reading_grammar_word_order_1.webm", "human_reading_grammar_copula_2.webm"],
+  caseInsensitiveLatin: true
+});
 const practiceAudioManifest = JSON.parse(fs.readFileSync("prototype/assets/audio/human/practice/manifest.json", "utf8"));
 assert.equal(practiceAudioManifest.status, "reuses_alphabet_human_audio", "practice audio manifest should document alphabet audio reuse");
 assert.equal(practiceAudioManifest.items.length, 0, "practice audio manifest should not duplicate alphabet audio files");

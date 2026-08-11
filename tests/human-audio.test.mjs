@@ -90,7 +90,7 @@ assert.deepEqual(
 );
 assert.equal(vocabItemCount - vocabRecordedIds.size, 0, "every vocabulary item should have connected audio");
 assert.equal(practiceManifest.items.length, 0, "practice should reuse alphabet audio instead of duplicate files");
-assert.equal(readingManifest.items.length, 164, "reading human audio manifest should cover every reading line");
+assert.equal(readingManifest.items.length, 192, "reading human audio manifest should cover every reading line");
 assert.equal(formExampleManifest.items.length, 94, "form example human audio manifest should cover every newly recorded example");
 
 function stableFormExampleKey(value) {
@@ -131,7 +131,15 @@ assert.deepEqual(formLatinMismatches, [], `form example manifest latin drift: ${
 assert.equal(new Set(manifest.items.map((item) => item.file)).size, 32, "audio filenames should be unique");
 assert.equal(new Set(comboManifest.items.map((item) => item.file)).size, comboManifest.items.length, "combo audio filenames should be unique");
 assert.equal(new Set(vocabManifest.items.map((item) => item.file)).size, vocabManifest.items.length, "vocab audio filenames should be unique");
-assert.equal(new Set(readingManifest.items.map((item) => item.file)).size, readingManifest.items.length, "reading audio filenames should be unique");
+assert.equal(new Set(readingManifest.items.map((item) => item.file)).size, 190, "reading audio should contain 190 files plus two approved exact-text reuses");
+assert.deepEqual(
+  readingManifest.items.filter((item) => ["grammar-person-verbs-1", "sentence-self-introduction-4"].includes(item.id)).map((item) => [item.id, item.file]),
+  [
+    ["grammar-person-verbs-1", "human_reading_grammar_word_order_1.webm"],
+    ["sentence-self-introduction-4", "human_reading_grammar_copula_2.webm"]
+  ],
+  "the two approved exact-text rows should reuse their established recordings"
+);
 assert.equal(
   new Set(formExampleManifest.items.map((item) => item.file)).size,
   formExampleManifest.items.length,
@@ -153,7 +161,7 @@ assert.ok(
 for (const { manifest: audioManifest, manifestPath: audioManifestPath } of audioManifests) {
   const audioDirectory = audioManifestPath.slice(0, audioManifestPath.lastIndexOf("/") + 1);
   const directoryAudioFiles = fs.readdirSync(audioDirectory).filter((file) => file.endsWith(".webm")).sort();
-  const manifestAudioFiles = audioManifest.items.map((item) => item.file).sort();
+  const manifestAudioFiles = [...new Set(audioManifest.items.map((item) => item.file))].sort();
   assert.deepEqual(
     directoryAudioFiles,
     manifestAudioFiles,
@@ -275,7 +283,7 @@ const expectedAudioCoverage = {
   "form-example": { total: 126, recorded: 126, pending: 0 },
   combo: { total: 34, recorded: 34, pending: 0 },
   vocab: { total: 206, recorded: 206, pending: 0 },
-  reading: { total: 164, recorded: 164, pending: 0 }
+  reading: { total: 192, recorded: 192, pending: 0 }
 };
 const allCoverageTargets = coverageCategories.flatMap((category) => category.items);
 
@@ -284,9 +292,9 @@ assert.deepEqual(
   ["alphabet", "form-example", "combo", "vocab", "reading"],
   "audio coverage catalog should include every content type that needs its own recording"
 );
-assert.equal(allCoverageTargets.length, 562, "audio coverage catalog should list all 562 retained audio targets after removing xeyr");
-assert.equal(new Set(allCoverageTargets.map((item) => item.id)).size, 562, "audio coverage target IDs should be unique");
-assert.equal(allCoverageTargets.filter((item) => item.existingAudio).length, 562, "audio coverage catalog should recognize all 562 connected recordings");
+assert.equal(allCoverageTargets.length, 590, "audio coverage catalog should list all 590 retained logical audio targets");
+assert.equal(new Set(allCoverageTargets.map((item) => item.id)).size, 590, "audio coverage target IDs should be unique");
+assert.equal(allCoverageTargets.filter((item) => item.existingAudio).length, 590, "audio coverage catalog should recognize all 590 connected recordings");
 assert.equal(allCoverageTargets.filter((item) => !item.existingAudio).length, 0, "audio coverage catalog should have no pending recordings");
 
 const formExampleTargets = coverageCategories.find((category) => category.id === "form-example").items;

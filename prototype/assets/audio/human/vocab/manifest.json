@@ -66,12 +66,12 @@
     },
     {
       "order": 6,
-      "id": "marhaba",
+      "id": "erzimaydu",
       "groupId": "greetings",
-      "value": "مەرھابا",
-      "latin": "merhaba",
-      "file": "human_vocab_marhaba.webm",
-      "outputPath": "./assets/audio/human/vocab/human_vocab_marhaba.webm",
+      "value": "ئەرزىمەيدۇ",
+      "latin": "erzimeydu",
+      "file": "human_vocab_erzimeydu.webm",
+      "outputPath": "./assets/audio/human/vocab/human_vocab_erzimeydu.webm",
       "reviewStatus": "已接入",
       "playable": true,
       "statusLabel": "真人音频"

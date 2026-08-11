@@ -9,6 +9,12 @@ import { buildRecordingCatalog } from "../tools/recording-studio/catalog.mjs";
 
 const projectRoot = path.resolve(import.meta.dirname, "..");
 const catalog = buildRecordingCatalog({ projectRoot });
+const publishedAdditionIds = new Set([
+  "vocab:erzimaydu",
+  ...catalog.targets
+    .filter((target) => target.category === "reading" && /^(?:grammar-(?:person-verbs|possession|location-direction|basic-time)|sentence-(?:self-introduction|location-direction|ability-preference|polite-reason))-\d+$/u.test(target.sourceId))
+    .map((target) => target.stableId)
+]);
 const validWebm = fs.readFileSync(catalog.targets.find((target) => target.stableId === "alphabet:aa").absoluteOutputPath);
 
 function createOptions({ catalogOverride = catalog, fsApi } = {}) {
@@ -65,9 +71,9 @@ test("creates the exact expanded review baseline from the catalog and persists i
   const state = workspace.loadState();
 
   assert.equal(state.schemaVersion, 1);
-  assert.equal(Object.keys(state.targets).length, 553);
-  assert.equal(Object.values(state.targets).filter((target) => target.status === "pending-review").length, 524);
-  assert.equal(Object.values(state.targets).filter((target) => target.status === "pending").length, 27);
+  assert.equal(Object.keys(state.targets).length, 554);
+  assert.equal(Object.values(state.targets).filter((target) => target.status === "pending-review").length, 552);
+  assert.equal(Object.values(state.targets).filter((target) => target.status === "pending").length, 0);
   assert.equal(Object.values(state.targets).filter((target) => target.status === "needs-rerecord").length, 2);
   assert.equal(state.targets["alphabet:zhe"].status, "needs-rerecord");
   assert.equal(state.targets["vocab:korushkunche"].status, "needs-rerecord");
@@ -77,7 +83,7 @@ test("creates the exact expanded review baseline from the catalog and persists i
   assert.equal(afterRestart["alphabet:zhe"].status, "needs-rerecord");
 });
 
-test("adds newly approved pending targets to an existing workspace without changing saved review decisions", () => {
+test("adds newly published targets to an existing workspace without changing saved review decisions", () => {
   const retiredHayrTarget = Object.freeze({
     ...catalog.targets.find((target) => target.stableId === "vocab:xosh"),
     stableId: "vocab:hayr",
@@ -95,7 +101,7 @@ test("adds newly approved pending targets to an existing workspace without chang
   });
   const legacyCatalog = {
     ...catalog,
-    targets: [...catalog.targets.filter((target) => target.initialStatus !== "pending"), retiredHayrTarget]
+    targets: [...catalog.targets.filter((target) => !publishedAdditionIds.has(target.stableId)), retiredHayrTarget]
   };
   const options = createOptions({ catalogOverride: legacyCatalog });
   const legacyWorkspace = createRecordingWorkspace(options);
@@ -105,46 +111,42 @@ test("adds newly approved pending targets to an existing workspace without chang
 
   const expandedWorkspace = createRecordingWorkspace({ ...options, catalog });
   const expanded = expandedWorkspace.loadState();
-  assert.equal(Object.keys(expanded.targets).length, 553);
+  assert.equal(Object.keys(expanded.targets).length, 554);
   assert.equal(expanded.targets["alphabet:aa"].status, "approved-current");
   assert.equal(expanded.targets["alphabet:zhe"].status, "needs-rerecord");
-  assert.equal(expanded.targets["reading:grammar-person-verbs-1"], undefined);
-  assert.equal(expanded.targets["reading:grammar-person-verbs-2"].status, "pending");
-  assert.equal(expanded.targets["vocab:erzimaydu"].status, "pending");
+  assert.equal(expanded.targets["reading:grammar-person-verbs-1"].status, "approved-current");
+  assert.equal(expanded.targets["reading:grammar-person-verbs-2"].status, "pending-review");
+  assert.equal(expanded.targets["vocab:erzimaydu"].status, "pending-review");
   assert.equal(expanded.targets["vocab:hayr"], undefined);
 
   const afterRestart = createRecordingWorkspace({ ...options, catalog }).loadState();
-  assert.equal(Object.keys(afterRestart.targets).length, 553);
+  assert.equal(Object.keys(afterRestart.targets).length, 554);
   assert.equal(afterRestart.targets["alphabet:aa"].status, "approved-current");
-  assert.equal(afterRestart.targets["vocab:erzimaydu"].status, "pending");
+  assert.equal(afterRestart.targets["vocab:erzimaydu"].status, "pending-review");
 });
 
-test("retires exact duplicate first-time targets from the previous workspace only while they have no takes", () => {
-  const source = catalog.targets.find((target) => target.stableId === "reading:grammar-person-verbs-2");
+test("converts empty approved audio reuse targets while preserving any earlier recorded take", () => {
+  const source = catalog.targets.find((target) => target.stableId === "reading:grammar-person-verbs-1");
   const redundantTarget = Object.freeze({
     ...source,
-    stableId: "reading:grammar-person-verbs-1",
-    sourceId: "grammar-person-verbs-1",
-    value: "مەن كىتاب ئوقۇيمەن.",
-    latin: "Men kitab oquymen.",
-    recordingTextHash: recordingTextHash({ value: "مەن كىتاب ئوقۇيمەن.", latin: "Men kitab oquymen.", meaning: source.meaning, english: source.english })
+    playable: false,
+    initialStatus: "pending"
   });
-  const previousCatalog = { ...catalog, targets: [...catalog.targets, redundantTarget] };
+  const previousCatalog = { ...catalog, targets: [...catalog.targets.filter((target) => target.stableId !== redundantTarget.stableId), redundantTarget] };
   const options = createOptions({ catalogOverride: previousCatalog });
   createRecordingWorkspace(options).loadState();
 
   const migrated = createRecordingWorkspace({ ...options, catalog }).loadState();
-  assert.equal(migrated.targets[redundantTarget.stableId], undefined);
-  assert.equal(Object.keys(migrated.targets).length, 553);
+  assert.equal(migrated.targets[redundantTarget.stableId].status, "approved-current");
+  assert.equal(Object.keys(migrated.targets).length, 554);
 
   const unsafeOptions = createOptions({ catalogOverride: previousCatalog });
   const unsafeWorkspace = createRecordingWorkspace(unsafeOptions);
   unsafeWorkspace.loadState();
-  unsafeWorkspace.saveTake({ stableId: redundantTarget.stableId, buffer: validWebm });
-  assert.throws(
-    () => createRecordingWorkspace({ ...unsafeOptions, catalog }).loadState(),
-    /retired recording target still contains learner work: reading:grammar-person-verbs-1/
-  );
+  const retainedTake = unsafeWorkspace.saveTake({ stableId: redundantTarget.stableId, buffer: validWebm });
+  const retained = createRecordingWorkspace({ ...unsafeOptions, catalog }).loadState();
+  assert.equal(retained.targets[redundantTarget.stableId].status, "recorded");
+  assert.equal(retained.targets[redundantTarget.stableId].takes[0].id, retainedTake.id);
 });
 
 test("refuses to retire xeyr when its old workspace entry contains a take", () => {

@@ -58,7 +58,7 @@ const vocabGroupFields = ["title", "goal", "status"];
 const practiceGroupFields = ["title", "goal", "status"];
 const practiceItemFields = ["type", "label", "hint", "audioStatus"];
 const readingUnitFields = ["title", "subtitle"];
-const readingGroupFields = ["title", "intro"];
+const readingGroupFields = ["title", "intro", "rule"];
 const readingItemFields = ["pattern", "speaker", "meaning", "lesson"];
 const alphabetEnglish = english.alphabet;
 const comboEnglish = english.combos;
@@ -84,6 +84,9 @@ assert.equal(vocabEnglish.items.yaxshimusiz.meaning, "Hello; how are you?");
 assert.equal(vocabEnglish.items.men.meaning, "I; me");
 assert.equal(vocabEnglish.items["ana-family"].meaning, "Mother; mum");
 assert.equal(vocabEnglish.items.one.meaning, "One");
+assert.equal(vocabEnglish.items.erzimaydu.meaning, "You're welcome.");
+assert.equal(Object.hasOwn(vocabEnglish.items, "marhaba"), false);
+assert.equal(Object.hasOwn(vocabEnglish.items, "xeyr"), false);
 assert.equal(Object.keys(practiceEnglish.groups).length, 5);
 assert.equal(Object.keys(practiceEnglish.templates).length, 4);
 assert.equal(Object.prototype.hasOwnProperty.call(practiceEnglish, "items"), false, "English practice should derive items instead of copying 128 records");
@@ -93,8 +96,8 @@ assert.equal(practiceEnglish.groups["writing-loop"].title, "Writing");
 assert.equal(practiceEnglish.groups["keyboard-loop"].title, "Keyboard");
 assert.deepEqual(Object.keys(practiceEnglish.templates).toSorted(), ["keyboard", "listen", "repeat", "write"]);
 assert.equal(Object.keys(readingEnglish.units).length, 6);
-assert.equal(Object.keys(readingEnglish.groups).length, 46);
-assert.equal(Object.keys(readingEnglish.items).length, 164);
+assert.equal(Object.keys(readingEnglish.groups).length, 54);
+assert.equal(Object.keys(readingEnglish.items).length, 192);
 assert.equal(readingEnglish.units["grammar-basics"].title, "Unit 4: Grammar basics");
 assert.equal(readingEnglish.groups["grammar-word-order"].title, "Subject + object + verb");
 assert.equal(readingEnglish.items["grammar-word-order-1"].meaning, "I read a book.");
@@ -136,8 +139,8 @@ for (const unit of course.readingUnits) {
   }
 }
 
-assert.equal(translatedReadingGroupCount, 46);
-assert.equal(translatedReadingItemCount, 164);
+assert.equal(translatedReadingGroupCount, 54);
+assert.equal(translatedReadingItemCount, 192);
 
 for (const group of course.practiceGroups) {
   const translatedGroup = practiceEnglish.groups[group.id];

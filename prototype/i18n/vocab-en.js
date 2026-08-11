@@ -75,7 +75,7 @@
     assalamu: "Greeting; peace be upon you",
     waalaykum: "Reply to a greeting",
     "xush-keldingiz": "Welcome",
-    marhaba: "You're welcome; please",
+    erzimaydu: "You're welcome.",
     kechurung: "Sorry; please forgive me",
     yaxshi: "Good; very good",
     qandaq: "How; in what way?",
