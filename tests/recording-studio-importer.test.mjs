@@ -24,6 +24,16 @@ function changedWebm(offset) {
   return copy;
 }
 
+function normalizeTake({ stableId, buffer }) {
+  const normalized = Buffer.from(buffer);
+  if (stableId === "alphabet:existing") normalized[normalized.length - 3] ^= 1;
+  if (stableId === "vocab:created") normalized[normalized.length - 4] ^= 1;
+  return {
+    buffer: normalized,
+    report: { configVersion: "ana-tilim-loudness-v1" }
+  };
+}
+
 function makeTarget({ stableId, category, currentFile, absoluteOutputPath }) {
   const target = {
     stableId,
@@ -69,7 +79,7 @@ function createFixture({ fsApi, symlinkedExistingDirectory = false } = {}) {
       makeTarget({ stableId: "reading:unchanged", category: "reading", currentFile: "unchanged.webm", absoluteOutputPath: paths.unchanged })
     ]
   };
-  const workspace = createRecordingWorkspace({ projectRoot, workspaceRoot, catalog });
+  const workspace = createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, normalizeTake });
   workspace.loadState();
   const existingTake = workspace.saveTake({ stableId: "alphabet:existing", buffer: changedWebm(1), createdAt: "2026-08-10T01:00:00.000Z" });
   const createdTake = workspace.saveTake({ stableId: "vocab:created", buffer: changedWebm(2), createdAt: "2026-08-10T01:01:00.000Z" });
@@ -134,7 +144,7 @@ test("accepts the macOS /var and /private/var aliases for an existing validated 
       ? fixture.workspaceRoot.slice("/private".length)
       : null;
   assert.ok(alternateRoot, "test host must expose a macOS temporary-directory alias");
-  const alternateWorkspace = createRecordingWorkspace({ projectRoot: fixture.projectRoot, workspaceRoot: alternateRoot, catalog: fixture.catalog });
+  const alternateWorkspace = createRecordingWorkspace({ projectRoot: fixture.projectRoot, workspaceRoot: alternateRoot, catalog: fixture.catalog, normalizeTake });
   const controller = createImportController({ projectRoot: fixture.projectRoot, workspaceRoot: alternateRoot, catalog: fixture.catalog, workspace: alternateWorkspace });
 
   assert.deepEqual(controller.previewImport().operations.map((operation) => operation.stableId), ["alphabet:existing", "vocab:created"]);
@@ -234,14 +244,14 @@ test("imports exact replacements with exact backups and a restart-readable impor
   const result = fixture.controller.applyImport({ planId: plan.planId });
 
   assert.match(result.importId, /^[A-Za-z0-9-]+$/);
-  assert.deepEqual(bytesAt(fixture.paths.existing), changedWebm(1));
-  assert.deepEqual(bytesAt(fixture.paths.created), changedWebm(2));
+  assert.deepEqual(bytesAt(fixture.paths.existing), fs.readFileSync(fixture.workspace.getTakePath({ stableId: "alphabet:existing", takeId: fixture.takes.existingTake.id })));
+  assert.deepEqual(bytesAt(fixture.paths.created), fs.readFileSync(fixture.workspace.getTakePath({ stableId: "vocab:created", takeId: fixture.takes.createdTake.id })));
   assert.deepEqual(bytesAt(fixture.paths.unchanged), referenceWebm);
   assert.equal(result.operations.length, 2);
   const existingOperation = result.operations.find((operation) => operation.stableId === "alphabet:existing");
   assert.deepEqual(fs.readFileSync(existingOperation.backupPath), oldExisting);
   assert.equal(sha256(fs.readFileSync(existingOperation.backupPath)), existingOperation.currentSha256);
-  const loaded = createRecordingWorkspace({ projectRoot: fixture.projectRoot, workspaceRoot: fixture.workspaceRoot, catalog: fixture.catalog }).loadState();
+  const loaded = createRecordingWorkspace({ projectRoot: fixture.projectRoot, workspaceRoot: fixture.workspaceRoot, catalog: fixture.catalog, normalizeTake }).loadState();
   assert.equal(loaded.targets["alphabet:existing"].status, "imported");
   assert.equal(loaded.targets["vocab:created"].status, "imported");
   assert.equal(loaded.targets["reading:unchanged"].status, "approved-take");

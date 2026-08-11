@@ -11,6 +11,14 @@ import { createRecordingWorkspace } from "../tools/recording-studio/workspace.mj
 
 const repositoryRoot = path.resolve(import.meta.dirname, "..");
 const validWebm = fs.readFileSync(path.join(repositoryRoot, "prototype/assets/audio/human/alphabet/human_letter_01_b.webm"));
+const normalizedWebm = fs.readFileSync(path.join(repositoryRoot, "prototype/assets/audio/human/alphabet/human_letter_02_p.webm"));
+
+function normalizeTake() {
+  return {
+    buffer: Buffer.from(normalizedWebm),
+    report: { configVersion: "ana-tilim-loudness-v1" }
+  };
+}
 
 function sha256(value) {
   return crypto.createHash("sha256").update(value).digest("hex");
@@ -43,7 +51,7 @@ function createFixture() {
   };
   target.recordingTextHash = sha256(JSON.stringify({ value: target.value, latin: target.latin, meaning: target.meaning, english: target.english }));
   const catalog = { schemaVersion: 1, generatedAt: "2026-08-10T00:00:00.000Z", targets: [target] };
-  const workspace = createRecordingWorkspace({ projectRoot, workspaceRoot, catalog });
+  const workspace = createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, normalizeTake });
   workspace.loadState();
   const controller = createImportController({ projectRoot, workspaceRoot, catalog, workspace });
   return { projectRoot, workspaceRoot, currentPath, catalog, workspace, controller };
@@ -186,6 +194,12 @@ test("streams raw takes safely and supports reviewed workspace and importer rout
   assertSafeJsonResponse(approve, fixture);
   const preview = await request(fixture.server, { method: "POST", pathname: "/api/import/preview", headers: { "Content-Type": "application/json" }, body: "{}" });
   assert.equal(preview.status, 200);
+  assert.deepEqual(json(preview).loudnessStandard, {
+    version: "ana-tilim-loudness-v1",
+    integratedLufs: -18,
+    truePeakDbtp: -1.5,
+    lraLu: 7
+  });
   assert.equal(json(preview).operations[0].sourcePath, undefined);
   assertSafeJsonResponse(preview, fixture);
   const apply = await request(fixture.server, { method: "POST", pathname: "/api/import/apply", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ planId: json(preview).planId }) });
@@ -199,7 +213,7 @@ test("streams raw takes safely and supports reviewed workspace and importer rout
   assert.equal(repeated.status, 400);
   assertSafeJsonResponse(repeated, fixture);
   assert.equal(operation.targetPath, undefined);
-  assert.deepEqual(fs.readFileSync(fixture.currentPath), changedWebm());
+  assert.deepEqual(fs.readFileSync(fixture.currentPath), normalizedWebm);
 });
 
 test("rejects importer replay, multi-value bodies, static traversal, and repeated close", async (t) => {

@@ -16,12 +16,25 @@ const publishedAdditionIds = new Set([
     .map((target) => target.stableId)
 ]);
 const validWebm = fs.readFileSync(catalog.targets.find((target) => target.stableId === "alphabet:aa").absoluteOutputPath);
+const normalizedWebm = fs.readFileSync(catalog.targets.find((target) => target.stableId === "alphabet:be").absoluteOutputPath);
+
+function passthroughNormalizeTake({ buffer }) {
+  return {
+    buffer: Buffer.from(buffer),
+    report: {
+      configVersion: "ana-tilim-loudness-v1",
+      input: { integratedLufs: -18, truePeakDbtp: -1.5, lraLu: 1, thresholdLufs: -28, offsetLu: 0 },
+      output: { integratedLufs: -18, truePeakDbtp: -1.5, lraLu: 1, thresholdLufs: -28, offsetLu: 0 }
+    }
+  };
+}
 
 function createOptions({ catalogOverride = catalog, fsApi } = {}) {
   return {
     projectRoot,
     workspaceRoot: fs.mkdtempSync(path.join(os.tmpdir(), "ana-tilim-recording-workspace-")),
     catalog: catalogOverride,
+    normalizeTake: passthroughNormalizeTake,
     ...(fsApi ? { fsApi } : {})
   };
 }
@@ -206,6 +219,53 @@ test("stores immutable validated takes and an approved take survives restart", (
   assert.throws(() => workspace.approveTake({ stableId: "alphabet:aa", takeId: "take-from-another-target" }), /does not belong/);
   assert.throws(() => workspace.getTakePath({ stableId: "alphabet:be", takeId: second.id }), /does not belong/);
   assert.throws(() => workspace.saveTake({ stableId: "alphabet:unknown", buffer: validWebm }), /unknown recording target/);
+});
+
+test("persists only the normalized take bytes and derives metadata from that output", () => {
+  const options = createOptions();
+  const calls = [];
+  const workspace = createRecordingWorkspace({
+    ...options,
+    normalizeTake({ stableId, buffer }) {
+      calls.push({ stableId, buffer: Buffer.from(buffer) });
+      return {
+        buffer: Buffer.from(normalizedWebm),
+        report: {
+          configVersion: "ana-tilim-loudness-v1",
+          input: { integratedLufs: -12, truePeakDbtp: -0.2, lraLu: 1, thresholdLufs: -22, offsetLu: 0 },
+          output: { integratedLufs: -18, truePeakDbtp: -1.5, lraLu: 1, thresholdLufs: -28, offsetLu: 0 }
+        }
+      };
+    }
+  });
+
+  const take = workspace.saveTake({ stableId: "alphabet:aa", buffer: validWebm, createdAt: "2026-08-10T02:00:00.000Z" });
+  const stored = fs.readFileSync(path.join(options.workspaceRoot, take.relativePath));
+
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].stableId, "alphabet:aa");
+  assert.equal(calls[0].buffer.equals(validWebm), true);
+  assert.equal(stored.equals(normalizedWebm), true);
+  assert.equal(take.sha256, crypto.createHash("sha256").update(normalizedWebm).digest("hex"));
+  assert.equal(take.size, normalizedWebm.length);
+});
+
+test("a take normalization failure creates no workspace state or take file", () => {
+  const options = createOptions();
+  const neverCreatedRoot = path.join(options.workspaceRoot, "normalization-failure-workspace");
+  const workspace = createRecordingWorkspace({
+    ...options,
+    workspaceRoot: neverCreatedRoot,
+    normalizeTake() {
+      throw new Error("fixture loudness normalization failed");
+    }
+  });
+
+  assert.throws(
+    () => workspace.saveTake({ stableId: "alphabet:aa", buffer: validWebm }),
+    /fixture loudness normalization failed/
+  );
+  assert.equal(fs.existsSync(neverCreatedRoot), false);
 });
 
 test("validates WebM before creating any workspace file", () => {

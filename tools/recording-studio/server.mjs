@@ -7,6 +7,7 @@ import { pathToFileURL } from "node:url";
 import { buildRecordingCatalog } from "./catalog.mjs";
 import { createImportController } from "./importer.mjs";
 import { createRecordingWorkspace } from "./workspace.mjs";
+import { LOUDNESS_STANDARD } from "../lib/audio-loudness.mjs";
 import { validateWebmBuffer } from "../lib/webm-audio.mjs";
 
 const LOOPBACK_HOST = "127.0.0.1";
@@ -131,6 +132,12 @@ function publicPlan(plan, catalogById) {
   return {
     planId: plan.planId,
     createdAt: plan.createdAt,
+    loudnessStandard: {
+      version: LOUDNESS_STANDARD.version,
+      integratedLufs: LOUDNESS_STANDARD.integratedLufs,
+      truePeakDbtp: LOUDNESS_STANDARD.truePeakDbtp,
+      lraLu: LOUDNESS_STANDARD.lraLu
+    },
     operations: plan.operations.map(({ sourcePath, targetPath, ...operation }) => {
       const target = catalogById.get(operation.stableId);
       return {

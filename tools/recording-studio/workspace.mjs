@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { LOUDNESS_STANDARD, normalizeWebmBuffer, resolveFfmpegPath } from "../lib/audio-loudness.mjs";
 import { validateWebmBuffer } from "../lib/webm-audio.mjs";
 
 const STATE_SCHEMA_VERSION = 1;
@@ -81,7 +82,7 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, fsApi = fs }) {
+export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, fsApi = fs, normalizeTake: providedNormalizeTake }) {
   assert.equal(typeof projectRoot, "string", "projectRoot is required");
   assert.equal(typeof workspaceRoot, "string", "workspaceRoot is required");
   assert.ok(catalog && Array.isArray(catalog.targets), "recording catalog targets are required");
@@ -90,6 +91,10 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
   const normalizedWorkspaceRoot = path.resolve(workspaceRoot);
   const normalizedTemporaryRoot = path.resolve(os.tmpdir());
   const catalogById = new Map();
+  const normalizeTake = providedNormalizeTake || (({ buffer }) => normalizeWebmBuffer({
+    buffer,
+    ffmpegPath: resolveFfmpegPath()
+  }));
 
   for (const target of catalog.targets) {
     assert.equal(typeof target?.stableId, "string", "catalog target stable ID is required");
@@ -520,7 +525,12 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
     saveTake({ stableId, buffer, createdAt = new Date().toISOString() }) {
       const catalogTarget = requireTarget(stableId);
       assertIsoTimestamp(createdAt, "take createdAt");
-      const validation = validateWebmBuffer(buffer);
+      validateWebmBuffer(buffer);
+      const normalized = normalizeTake({ stableId, buffer: Buffer.from(buffer) });
+      assert.ok(normalized && Buffer.isBuffer(normalized.buffer), "take normalizer must return a WebM buffer");
+      assert.equal(normalized.report?.configVersion, LOUDNESS_STANDARD.version, "take normalizer must return the approved loudness report");
+      const normalizedBuffer = Buffer.from(normalized.buffer);
+      const validation = validateWebmBuffer(normalizedBuffer);
       const state = readState();
       const targetState = requireCurrentText(state, stableId, catalogTarget);
       const takeId = `${createdAt.replace(/[:.]/g, "-")}-${crypto.randomBytes(4).toString("hex")}`;
@@ -531,7 +541,7 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
       let descriptor;
       try {
         descriptor = fsApi.openSync(absolutePath, "wx", 0o600);
-        fsApi.writeFileSync(descriptor, buffer);
+        fsApi.writeFileSync(descriptor, normalizedBuffer);
         fsApi.fsyncSync(descriptor);
       } finally {
         if (descriptor !== undefined) fsApi.closeSync(descriptor);
@@ -544,7 +554,7 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
         size: validation.size,
         durationMs: validation.durationMs,
         recordingTextHash: catalogTarget.recordingTextHash,
-        sha256: crypto.createHash("sha256").update(buffer).digest("hex")
+        sha256: crypto.createHash("sha256").update(normalizedBuffer).digest("hex")
       };
       targetState.takes.push(take);
       if (!["approved-current", "approved-take", "imported"].includes(targetState.status)) targetState.status = "recorded";
