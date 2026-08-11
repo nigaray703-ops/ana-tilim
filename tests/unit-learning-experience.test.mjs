@@ -2325,7 +2325,7 @@ includesAll(
 );
 includesAll(
   englishVocabScreens.lesson,
-  ["Unit 5: Everyday phrases and vocabulary", "Greetings", "Lesson vocabulary", "Everyday greetings", "13 words", "Hello; how are you?", "Recognize", "Keyboard"],
+  ["Unit 5: Everyday phrases and vocabulary", "Greetings", "Lesson vocabulary", "Everyday greetings", "12 words", "Hello; how are you?", "Recognize", "Keyboard"],
   "English vocabulary lesson"
 );
 includesAll(

@@ -510,7 +510,7 @@ const formExampleItems = Object.values(letterDetails).flatMap((letter) =>
 );
 
 assert.equal(comboItems.length, 34, "all 34 basic combinations should be available for ULY review");
-assert.equal(vocabItems.length, 207, "all 207 retained vocabulary items should be available for ULY review");
+assert.equal(vocabItems.length, 206, "all 206 retained vocabulary items should be available for ULY review after removing xeyr");
 assert.equal(readingItems.length, 164, "all 164 reading items should be available for ULY review");
 
 for (const [label, items] of [
@@ -705,7 +705,7 @@ assertVocabTopic({
 });
 assert.ok(vocabGroups.length >= 10 && vocabGroups.length <= 15, "vocab should include 10 to 15 compact daily topics");
 for (const group of vocabGroups) {
-  const minimumGroupItems = group.id === "greetings" ? 13 : 15;
+  const minimumGroupItems = group.id === "greetings" ? 12 : 15;
   assert.ok(
     group.items.length >= minimumGroupItems && group.items.length <= 45,
     `vocab group ${group.id} should include at least ${minimumGroupItems} words without becoming too large`

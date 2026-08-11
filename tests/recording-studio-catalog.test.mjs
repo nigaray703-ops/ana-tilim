@@ -36,7 +36,21 @@ function createManifestFixture({ category, mutate, redirectedAudioRoot }) {
     fs.writeFileSync(path.join(destinationDirectory, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
   }
 
+  const additionsDirectory = path.join(fixtureRoot, "课程/语法与基础句型");
+  fs.mkdirSync(additionsDirectory, { recursive: true });
+  fs.copyFileSync(
+    path.join(projectRoot, "课程/语法与基础句型/final-reading-additions.json"),
+    path.join(additionsDirectory, "final-reading-additions.json")
+  );
+
   return fixtureRoot;
+}
+
+function mutateFinalAdditions(fixtureRoot, mutate) {
+  const contractPath = path.join(fixtureRoot, "课程/语法与基础句型/final-reading-additions.json");
+  const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
+  mutate(contract);
+  fs.writeFileSync(contractPath, `${JSON.stringify(contract, null, 2)}\n`);
 }
 
 function makeFixtureCourseDataMutable(fixtureRoot, mutationsByFile) {
@@ -56,17 +70,17 @@ function makeFixtureCourseDataMutable(fixtureRoot, mutationsByFile) {
   }
 }
 
-test("builds the immutable source-bound 527-target catalog", () => {
+test("builds the immutable source-bound 555-target catalog including 29 first-time recordings", () => {
   const catalog = buildRecordingCatalog({ projectRoot });
 
   assert.equal(catalog.schemaVersion, 1);
   assert.match(catalog.generatedAt, /^\d{4}-\d{2}-\d{2}T/);
-  assert.equal(catalog.targets.length, 527);
+  assert.equal(catalog.targets.length, 555);
   assert.deepEqual(
     Object.fromEntries(categories.map((category) => [category, catalog.targets.filter((item) => item.category === category).length])),
-    { alphabet: 32, combos: 34, vocab: 203, reading: 164, "form-examples": 94 }
+    { alphabet: 32, combos: 34, vocab: 203, reading: 192, "form-examples": 94 }
   );
-  assert.equal(new Set(catalog.targets.map((item) => item.stableId)).size, 527);
+  assert.equal(new Set(catalog.targets.map((item) => item.stableId)).size, 555);
   assert.ok(Object.isFrozen(catalog));
   assert.ok(Object.isFrozen(catalog.targets));
 
@@ -89,7 +103,41 @@ test("builds the immutable source-bound 527-target catalog", () => {
   assert.equal(catalog.targets.find((item) => item.stableId === "alphabet:zhe").initialStatus, "needs-rerecord");
   assert.equal(catalog.targets.find((item) => item.stableId === "vocab:korushkunche").initialStatus, "needs-rerecord");
   assert.equal(catalog.targets.filter((item) => item.initialStatus === "needs-rerecord").length, 2);
-  assert.equal(catalog.targets.filter((item) => item.initialStatus === "pending-review").length, 525);
+  assert.equal(catalog.targets.filter((item) => item.initialStatus === "pending-review").length, 524);
+  assert.equal(catalog.targets.filter((item) => item.initialStatus === "pending").length, 29);
+
+  const firstTimeTargets = catalog.targets.filter((item) => item.initialStatus === "pending");
+  assert.ok(firstTimeTargets.every((item) => item.playable === false));
+  assert.ok(firstTimeTargets.every((item) => fs.existsSync(item.absoluteOutputPath) === false));
+  assert.deepEqual(
+    Object.fromEntries(categories.map((category) => [category, firstTimeTargets.filter((item) => item.category === category).length])),
+    { alphabet: 0, combos: 0, vocab: 1, reading: 28, "form-examples": 0 }
+  );
+  assert.deepEqual(
+    firstTimeTargets.map((item) => item.stableId),
+    [
+      "reading:grammar-person-verbs-1", "reading:grammar-person-verbs-2", "reading:grammar-person-verbs-3",
+      "reading:grammar-possession-1", "reading:grammar-possession-2", "reading:grammar-possession-3",
+      "reading:grammar-location-direction-1", "reading:grammar-location-direction-2", "reading:grammar-location-direction-3",
+      "reading:grammar-basic-time-1", "reading:grammar-basic-time-2", "reading:grammar-basic-time-3",
+      "reading:sentence-self-introduction-1", "reading:sentence-self-introduction-2", "reading:sentence-self-introduction-3", "reading:sentence-self-introduction-4",
+      "reading:sentence-location-direction-1", "reading:sentence-location-direction-2", "reading:sentence-location-direction-3", "reading:sentence-location-direction-4",
+      "reading:sentence-ability-preference-1", "reading:sentence-ability-preference-2", "reading:sentence-ability-preference-3", "reading:sentence-ability-preference-4",
+      "reading:sentence-polite-reason-1", "reading:sentence-polite-reason-2", "reading:sentence-polite-reason-3", "reading:sentence-polite-reason-4",
+      "vocab:erzimaydu"
+    ]
+  );
+  assert.equal(catalog.targets.find((item) => item.stableId === "vocab:erzimaydu").value, "ئەرزىمەيدۇ");
+  assert.equal(catalog.targets.some((item) => item.stableId === "vocab:hayr"), false);
+});
+
+test("rejects any drift in the independently approved first-time recording contract", () => {
+  const fixtureRoot = createManifestFixture({ category: "alphabet", mutate() {} });
+  mutateFinalAdditions(fixtureRoot, (contract) => {
+    contract.units[0].groups[0].items[0].meaningZh = "未经批准的文本";
+  });
+
+  assert.throws(() => buildRecordingCatalog({ projectRoot: fixtureRoot }), /approved first-time recording contract drift/);
 });
 
 test("fails closed when a manifest ID has no exact course-data join", () => {

@@ -16,12 +16,24 @@ const CATEGORY_MANIFESTS = Object.freeze({
 const CATEGORY_COUNTS = Object.freeze({
   alphabet: 32,
   combos: 34,
-  vocab: 203,
+  vocab: 202,
   reading: 164,
   "form-examples": 94
 });
 
 const NEEDS_RERECORD_IDS = new Set(["alphabet:zhe", "vocab:korushkunche"]);
+const FINAL_ADDITIONS_PATH = "课程/语法与基础句型/final-reading-additions.json";
+const FINAL_ADDITIONS_HASH = "083d77edde5e5db9aff650a48e32a7042d092afc38645fef5931fa351c0e34d9";
+const FINAL_ADDITION_GROUPS = Object.freeze([
+  ["grammar-person-verbs", 3],
+  ["grammar-possession", 3],
+  ["grammar-location-direction", 3],
+  ["grammar-basic-time", 3],
+  ["sentence-self-introduction", 4],
+  ["sentence-location-direction", 4],
+  ["sentence-ability-preference", 4],
+  ["sentence-polite-reason", 4]
+]);
 const MISSING_ENGLISH = "暂无英语释义";
 const COURSE_PROJECT_ROOT = path.resolve(import.meta.dirname, "../..");
 const COURSE_DATA_SCRIPTS = Object.freeze([
@@ -270,6 +282,76 @@ function normalizeTarget({ projectRoot, category, item, indexes, stableIds, engl
   });
 }
 
+function loadApprovedFirstTimeRecordings(projectRoot) {
+  const contractPath = path.join(projectRoot, FINAL_ADDITIONS_PATH);
+  const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
+  const contractHash = crypto.createHash("sha256").update(JSON.stringify(contract)).digest("hex");
+  assert.equal(contractHash, FINAL_ADDITIONS_HASH, "approved first-time recording contract drift");
+  assert.equal(contract.schemaVersion, 1);
+  assert.equal(contract.ownerDecision, "approved-topics");
+  assert.equal(contract.releaseStatus, "pending-audio");
+
+  const groups = contract.units.flatMap((unit) => unit.groups.map((group) => ({ ...group, unitId: unit.unitId })));
+  assert.deepEqual(groups.map((group) => [group.id, group.items.length]), FINAL_ADDITION_GROUPS);
+  const readingTargets = groups.flatMap((group) => group.items.map((item) => ({
+    category: "reading",
+    sourceId: item.id,
+    unitId: group.unitId,
+    groupId: group.id,
+    value: item.value,
+    latin: item.latin,
+    meaning: item.meaningZh,
+    english: item.meaningEn,
+    file: `human_reading_${item.id.replaceAll("-", "_")}.webm`,
+    outputPath: `./assets/audio/human/reading/human_reading_${item.id.replaceAll("-", "_")}.webm`
+  })));
+
+  assert.equal(readingTargets.length, 28);
+  assert.equal(contract.vocabularyCorrections.length, 1);
+  const correction = contract.vocabularyCorrections[0];
+  const vocabularyTarget = {
+    category: "vocab",
+    sourceId: correction.id,
+    groupId: "greetings",
+    value: correction.value,
+    latin: correction.latin,
+    meaning: correction.meaningZh,
+    english: correction.meaningEn,
+    file: correction.file,
+    outputPath: `./assets/audio/human/vocab/${correction.file}`
+  };
+  return [...readingTargets, vocabularyTarget];
+}
+
+function normalizeFirstTimeTarget({ projectRoot, candidate, stableIds }) {
+  const stableId = `${candidate.category}:${candidate.sourceId}`;
+  assert.ok(!stableIds.has(stableId), `duplicate stable ID: ${stableId}`);
+  stableIds.add(stableId);
+  for (const field of ["value", "latin", "meaning", "english"]) {
+    assert.ok(typeof candidate[field] === "string" && candidate[field].trim(), `missing ${field} for ${stableId}`);
+  }
+  const absoluteOutputPath = resolveOutputPath({ projectRoot, category: candidate.category, item: candidate });
+  assert.equal(fs.existsSync(absoluteOutputPath), false, `first-time recording target already has audio: ${stableId}`);
+  return Object.freeze({
+    stableId,
+    category: candidate.category,
+    sourceId: candidate.sourceId,
+    unitId: candidate.unitId,
+    groupId: candidate.groupId,
+    value: candidate.value,
+    latin: candidate.latin,
+    meaning: candidate.meaning,
+    english: candidate.english,
+    currentFile: candidate.file,
+    outputPath: candidate.outputPath,
+    absoluteOutputPath,
+    recordingTextHash: recordingTextHash(candidate),
+    playable: false,
+    initialStatus: "pending",
+    source: "approved-final-additions"
+  });
+}
+
 export function buildRecordingCatalog({ projectRoot }) {
   assert.equal(typeof projectRoot, "string", "projectRoot is required");
   const normalizedProjectRoot = path.resolve(projectRoot);
@@ -293,6 +375,10 @@ export function buildRecordingCatalog({ projectRoot }) {
     for (const item of manifest.items) targets.push(normalizeTarget({ projectRoot: normalizedProjectRoot, category, item, indexes, stableIds, englishCatalog }));
   }
 
-  assert.equal(targets.length, 527, "recording catalog count drift");
+  for (const candidate of loadApprovedFirstTimeRecordings(normalizedProjectRoot)) {
+    targets.push(normalizeFirstTimeTarget({ projectRoot: normalizedProjectRoot, candidate, stableIds }));
+  }
+
+  assert.equal(targets.length, 555, "recording catalog count drift");
   return Object.freeze({ schemaVersion: 1, generatedAt: new Date().toISOString(), targets: Object.freeze(targets) });
 }

@@ -14,6 +14,7 @@ const HASH_PATTERN = /^[a-f0-9]{64}$/;
 const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const ALL_STATUSES = new Set(["pending-review", "pending", "needs-rerecord", "recorded", "approved-current", "approved-take", "imported"]);
 const MANUAL_STATUSES = new Set(["pending-review", "pending", "needs-rerecord"]);
+const RETIRED_TARGET_IDS = new Set(["vocab:hayr"]);
 
 function isInside(root, candidate) {
   const relative = path.relative(root, candidate);
@@ -272,6 +273,38 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
     }
   }
 
+  function migrateCatalogState(state) {
+    if (!state || typeof state !== "object" || !state.targets || typeof state.targets !== "object" || Array.isArray(state.targets)) return state;
+    const existingIds = Object.keys(state.targets);
+    const missingIds = [...catalogById.keys()].filter((stableId) => !Object.hasOwn(state.targets, stableId));
+    const retiredIds = existingIds.filter((stableId) => !catalogById.has(stableId));
+    if (missingIds.length === 0 && retiredIds.length === 0) return state;
+
+    const migrated = clone(state);
+    for (const stableId of retiredIds) {
+      assert.ok(RETIRED_TARGET_IDS.has(stableId), `recording workspace contains unknown target: ${stableId}`);
+      const retired = migrated.targets[stableId];
+      assert.ok(
+        retired?.status === "pending-review" && retired.approvedTakeId === null && Array.isArray(retired.takes) && retired.takes.length === 0,
+        `retired recording target still contains learner work: ${stableId}`
+      );
+      delete migrated.targets[stableId];
+    }
+    for (const stableId of missingIds) {
+      const target = catalogById.get(stableId);
+      assert.equal(target.initialStatus, "pending", `existing workspace may only add a new pending recording target: ${stableId}`);
+      migrated.targets[stableId] = {
+        status: target.initialStatus,
+        approvedTakeId: null,
+        recordingTextHash: target.recordingTextHash,
+        takes: []
+      };
+    }
+    migrated.updatedAt = new Date().toISOString();
+    validateState(migrated);
+    return migrated;
+  }
+
   function readState() {
     const file = statePath();
     if (!fsApi.existsSync(file)) {
@@ -284,6 +317,11 @@ export function createRecordingWorkspace({ projectRoot, workspaceRoot, catalog, 
       state = JSON.parse(fsApi.readFileSync(file, "utf8"));
     } catch (error) {
       assert.fail(`malformed recording workspace state: ${error.message}`);
+    }
+    const migratedState = migrateCatalogState(state);
+    if (migratedState !== state) {
+      writeState(migratedState);
+      state = migratedState;
     }
     validateState(state);
     recoverPendingTakeRollback(state);

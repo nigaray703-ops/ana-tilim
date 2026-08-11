@@ -683,7 +683,7 @@ for (const group of courseData.practiceGroups.filter((item) => item.mode !== "re
 }
 
 const chineseRenderCount = renderCount;
-assert.equal(chineseRenderCount, 814, "full UI audit should render every retained main screen, feedback state, both modes of all seven Uyghur keyboard lessons, all seven QWERTY lesson states, six Afanti stories in each allowed language state, syllable warmup/rule/judgment/review/sentence state, real 2/4/8 form state, lesson item, reading group, and practice item");
+assert.equal(chineseRenderCount, 813, "full UI audit should render every retained main screen after the approved xeyr removal, feedback state, both modes of all seven Uyghur keyboard lessons, all seven QWERTY lesson states, six Afanti stories in each allowed language state, syllable warmup/rule/judgment/review/sentence state, real 2/4/8 form state, lesson item, reading group, and practice item");
 
 auditLanguage = "en";
 vm.runInContext('applyInterfaceLanguage("en");', context);

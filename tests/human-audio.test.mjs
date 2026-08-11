@@ -274,7 +274,7 @@ const expectedAudioCoverage = {
   alphabet: { total: 32, recorded: 32, pending: 0 },
   "form-example": { total: 126, recorded: 126, pending: 0 },
   combo: { total: 34, recorded: 34, pending: 0 },
-  vocab: { total: 207, recorded: 207, pending: 0 },
+  vocab: { total: 206, recorded: 206, pending: 0 },
   reading: { total: 164, recorded: 164, pending: 0 }
 };
 const allCoverageTargets = coverageCategories.flatMap((category) => category.items);
@@ -284,9 +284,9 @@ assert.deepEqual(
   ["alphabet", "form-example", "combo", "vocab", "reading"],
   "audio coverage catalog should include every content type that needs its own recording"
 );
-assert.equal(allCoverageTargets.length, 563, "audio coverage catalog should list all 563 retained audio targets");
-assert.equal(new Set(allCoverageTargets.map((item) => item.id)).size, 563, "audio coverage target IDs should be unique");
-assert.equal(allCoverageTargets.filter((item) => item.existingAudio).length, 563, "audio coverage catalog should recognize all 563 connected recordings");
+assert.equal(allCoverageTargets.length, 562, "audio coverage catalog should list all 562 retained audio targets after removing xeyr");
+assert.equal(new Set(allCoverageTargets.map((item) => item.id)).size, 562, "audio coverage target IDs should be unique");
+assert.equal(allCoverageTargets.filter((item) => item.existingAudio).length, 562, "audio coverage catalog should recognize all 562 connected recordings");
 assert.equal(allCoverageTargets.filter((item) => !item.existingAudio).length, 0, "audio coverage catalog should have no pending recordings");
 
 const formExampleTargets = coverageCategories.find((category) => category.id === "form-example").items;

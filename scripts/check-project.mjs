@@ -271,6 +271,11 @@ const checks = [
     args: ["tests/course-data-integrity.test.mjs"]
   },
   {
+    label: "test: final grammar and sentence recording additions",
+    command: node,
+    args: ["tests/final-reading-additions.test.mjs"]
+  },
+  {
     label: "test: learning experience",
     command: node,
     args: ["tests/unit-learning-experience.test.mjs"]

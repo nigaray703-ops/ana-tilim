@@ -124,15 +124,20 @@ function buttonByText(document, label) {
 
 test("recording studio app loads the real API and renders the exact audit baseline", async () => {
   const targets = [
-    ...Array.from({ length: 525 }, (_, index) => fixtureTarget(`alphabet:pending-${index}`)),
+    ...Array.from({ length: 524 }, (_, index) => fixtureTarget(`alphabet:pending-${index}`)),
+    ...Array.from({ length: 29 }, (_, index) => fixtureTarget(`reading:new-${index}`, {
+      category: "reading",
+      playable: false,
+      initialStatus: "pending"
+    })),
     fixtureTarget("alphabet:zhe", { initialStatus: "needs-rerecord" }),
     fixtureTarget("vocab:korushkunche", { category: "vocab", initialStatus: "needs-rerecord" })
   ];
   const { context, document } = createHarness({ catalogTargets: targets });
   await context.recordingStudio.ready;
-  assert.match(document.getElementById("audit-summary").textContent, /527/);
-  assert.match(document.getElementById("audit-summary").textContent, /待审核已有音频 525/);
-  assert.match(document.getElementById("audit-summary").textContent, /需要新录制 0/);
+  assert.match(document.getElementById("audit-summary").textContent, /555/);
+  assert.match(document.getElementById("audit-summary").textContent, /待审核已有音频 524/);
+  assert.match(document.getElementById("audit-summary").textContent, /需要新录制 29/);
   assert.match(document.getElementById("audit-summary").textContent, /需要重新录制 2/);
   assert.deepEqual(
     document.getElementById("status-filter").children.map((option) => option.textContent),
@@ -140,9 +145,9 @@ test("recording studio app loads the real API and renders the exact audit baseli
   );
   assert.deepEqual(
     document.getElementById("status-cards").children.map((card) => card.textContent),
-    ["待审核已有音频 525", "需要新录制 0", "需要重新录制 2", "已录制待采用 0", "已确认 0"]
+    ["待审核已有音频 524", "需要新录制 29", "需要重新录制 2", "已录制待采用 0", "已确认 0"]
   );
-  assert.equal(document.getElementById("target-list").children.length, 527);
+  assert.equal(document.getElementById("target-list").children.length, 555);
   assert.equal(document.getElementById("target-list").children[0].getAttribute("aria-current"), "true");
 });
 

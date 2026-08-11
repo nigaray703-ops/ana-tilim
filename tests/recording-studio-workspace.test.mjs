@@ -59,14 +59,15 @@ function snapshotTree(root) {
   return entries;
 }
 
-test("creates the exact review baseline from the catalog and persists it", () => {
+test("creates the exact expanded review baseline from the catalog and persists it", () => {
   const options = createOptions();
   const workspace = createRecordingWorkspace(options);
   const state = workspace.loadState();
 
   assert.equal(state.schemaVersion, 1);
-  assert.equal(Object.keys(state.targets).length, 527);
-  assert.equal(Object.values(state.targets).filter((target) => target.status === "pending-review").length, 525);
+  assert.equal(Object.keys(state.targets).length, 555);
+  assert.equal(Object.values(state.targets).filter((target) => target.status === "pending-review").length, 524);
+  assert.equal(Object.values(state.targets).filter((target) => target.status === "pending").length, 29);
   assert.equal(Object.values(state.targets).filter((target) => target.status === "needs-rerecord").length, 2);
   assert.equal(state.targets["alphabet:zhe"].status, "needs-rerecord");
   assert.equal(state.targets["vocab:korushkunche"].status, "needs-rerecord");
@@ -74,6 +75,68 @@ test("creates the exact review baseline from the catalog and persists it", () =>
   const afterRestart = createRecordingWorkspace(options).loadState().targets;
   assert.equal(afterRestart["alphabet:aa"].status, "approved-current");
   assert.equal(afterRestart["alphabet:zhe"].status, "needs-rerecord");
+});
+
+test("adds newly approved pending targets to an existing workspace without changing saved review decisions", () => {
+  const retiredHayrTarget = Object.freeze({
+    ...catalog.targets.find((target) => target.stableId === "vocab:xosh"),
+    stableId: "vocab:hayr",
+    sourceId: "hayr",
+    value: "خەير",
+    latin: "xeyr",
+    meaning: "再见、告辞",
+    english: "Goodbye",
+    currentFile: "human_vocab_hayr.webm",
+    outputPath: "./assets/audio/human/vocab/human_vocab_hayr.webm",
+    absoluteOutputPath: path.join(projectRoot, "prototype/assets/audio/human/vocab/human_vocab_hayr.webm"),
+    recordingTextHash: recordingTextHash({ value: "خەير", latin: "xeyr", meaning: "再见、告辞", english: "Goodbye" }),
+    playable: true,
+    initialStatus: "pending-review"
+  });
+  const legacyCatalog = {
+    ...catalog,
+    targets: [...catalog.targets.filter((target) => target.initialStatus !== "pending"), retiredHayrTarget]
+  };
+  const options = createOptions({ catalogOverride: legacyCatalog });
+  const legacyWorkspace = createRecordingWorkspace(options);
+  legacyWorkspace.loadState();
+  legacyWorkspace.markCurrentApproved({ stableId: "alphabet:aa" });
+  legacyWorkspace.setTargetStatus({ stableId: "alphabet:zhe", status: "needs-rerecord" });
+
+  const expandedWorkspace = createRecordingWorkspace({ ...options, catalog });
+  const expanded = expandedWorkspace.loadState();
+  assert.equal(Object.keys(expanded.targets).length, 555);
+  assert.equal(expanded.targets["alphabet:aa"].status, "approved-current");
+  assert.equal(expanded.targets["alphabet:zhe"].status, "needs-rerecord");
+  assert.equal(expanded.targets["reading:grammar-person-verbs-1"].status, "pending");
+  assert.equal(expanded.targets["vocab:erzimaydu"].status, "pending");
+  assert.equal(expanded.targets["vocab:hayr"], undefined);
+
+  const afterRestart = createRecordingWorkspace({ ...options, catalog }).loadState();
+  assert.equal(Object.keys(afterRestart.targets).length, 555);
+  assert.equal(afterRestart.targets["alphabet:aa"].status, "approved-current");
+  assert.equal(afterRestart.targets["vocab:erzimaydu"].status, "pending");
+});
+
+test("refuses to retire xeyr when its old workspace entry contains a take", () => {
+  const current = catalog.targets.find((target) => target.stableId === "vocab:xosh");
+  const retiredHayrTarget = Object.freeze({
+    ...current,
+    stableId: "vocab:hayr",
+    sourceId: "hayr",
+    recordingTextHash: recordingTextHash({ value: "خەير", latin: "xeyr", meaning: "再见、告辞", english: "Goodbye" }),
+    initialStatus: "pending-review"
+  });
+  const legacyCatalog = { ...catalog, targets: [...catalog.targets.filter((target) => target.initialStatus !== "pending"), retiredHayrTarget] };
+  const options = createOptions({ catalogOverride: legacyCatalog });
+  const legacyWorkspace = createRecordingWorkspace(options);
+  legacyWorkspace.loadState();
+  legacyWorkspace.saveTake({ stableId: "vocab:hayr", buffer: validWebm });
+
+  assert.throws(
+    () => createRecordingWorkspace({ ...options, catalog }).loadState(),
+    /retired recording target still contains learner work: vocab:hayr/
+  );
 });
 
 test("locks first-time recording targets to the nonplayable pending contract before creating workspace state", () => {

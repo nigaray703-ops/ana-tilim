@@ -78,7 +78,7 @@ assert.equal(
   Object.values(vocabEnglish.groups).reduce((count, group) => count + Object.keys(group.sections || {}).length, 0),
   28
 );
-assert.equal(Object.keys(vocabEnglish.items).length, 207);
+assert.equal(Object.keys(vocabEnglish.items).length, 206);
 assert.equal(vocabEnglish.groups.greetings.title, "Greetings");
 assert.equal(vocabEnglish.items.yaxshimusiz.meaning, "Hello; how are you?");
 assert.equal(vocabEnglish.items.men.meaning, "I; me");
@@ -209,7 +209,7 @@ for (const group of course.vocabGroups) {
 }
 
 assert.equal(translatedVocabSectionCount, 28);
-assert.equal(translatedVocabItemCount, 207);
+assert.equal(translatedVocabItemCount, 206);
 
 let translatedFormCount = 0;
 let translatedFormExampleCount = 0;
