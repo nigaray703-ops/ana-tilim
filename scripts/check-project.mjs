@@ -326,6 +326,11 @@ const checks = [
     args: ["--test", "tests/audio-loudness.test.mjs"]
   },
   {
+    label: "test: human audio loudness batch",
+    command: node,
+    args: ["--test", "tests/human-audio-loudness-batch.test.mjs"]
+  },
+  {
     label: "test: recording studio catalog",
     command: node,
     args: ["tests/recording-studio-catalog.test.mjs"]
