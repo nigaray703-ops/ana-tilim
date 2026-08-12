@@ -280,7 +280,7 @@
     ee: letter("ee", extended, {
       type: "Vowel",
       cue: "ئ + ې",
-      connection: "Accepts a connection from the previous letter but normally does not join to the next one.",
+      connection: "Joins to the next letter and accepts a connection from the previous letter.",
       soundHint: "Listen to the human recording for this vowel.",
       writingHint: "A vowel at the start of a word needs ئ; notice the ې after it.",
       example: "Learn ئې as part of the vowel group."
@@ -288,7 +288,7 @@
     ii: letter("ii", extended, {
       type: "Vowel",
       cue: "ئ + ى",
-      connection: "Accepts a connection from the previous letter but normally does not join to the next one.",
+      connection: "Joins to the next letter and accepts a connection from the previous letter.",
       soundHint: "Listen to the human recording for this vowel.",
       writingHint: "A vowel at the start of a word needs ئ; ئى is a vowel, while ي is a consonant.",
       example: "ئى and ي are easy to confuse. In Unit 1, first learn which is which."

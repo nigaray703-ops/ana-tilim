@@ -11,13 +11,13 @@
       status: "Available"
     },
     "three-step": {
-      title: "Continuous connections: three letters",
+      title: "Three-letter joining and breaks",
       goal: "Move from two to three letters and focus on each letter's form inside the combination.",
       status: "Available"
     },
     "connection-breaks": {
       title: "Letters that break connections",
-      goal: "See why letters such as د, ر, ز, ۋ and vowels do not connect forward.",
+      goal: "Identify the joining boundaries of د, ر, ز, ۋ, ا, ە, and ۆ, and distinguish accepting a previous join from joining forward.",
       status: "Available"
     }
   };
@@ -149,26 +149,26 @@
     },
     bal: {
       type: "Three-letter combination",
-      rule: "Read با first, then add ل.",
-      hint: "Focus on how the three letters sit together before learning a meaning.",
+      rule: "ب connects to ا; because ا does not connect forward, final ل starts again.",
+      hint: "First see the connection in با, then the break after ا.",
       review: reviewBeforeVocabulary
     },
     man: {
       type: "Three-letter combination",
-      rule: "Read ما first, then add ن.",
-      hint: "Notice the initial form of م and the final form of ن.",
+      rule: "م connects to ا; because ا does not connect forward, final ن starts again.",
+      hint: "First see the connection in ما, then the break after ا.",
       review: reviewBeforeVocabulary
     },
     nan: {
       type: "Three-letter combination",
-      rule: "Read نا first, then add ن.",
-      hint: "The same ن has an initial form at the start and a final form at the end.",
+      rule: "The first ن connects to ا; after ا, the final ن starts again.",
+      hint: "The first ن uses a joined form; the final ن is isolated because the connection has broken.",
       review: reviewBeforeVocabulary
     },
     tal: {
       type: "Three-letter combination",
-      rule: "Read تا first, then add ل.",
-      hint: "Check the dots of ت and the position of the final ل.",
+      rule: "ت connects to ا; because ا does not connect forward, final ل starts again.",
+      hint: "Check the dots above ت, then the break after ا.",
       review: reviewBeforeVocabulary
     },
     bel: {
@@ -210,10 +210,10 @@
       review: wordFormReview
     },
     "qiz-connection": {
-      type: "Connection-break word form",
+      type: "Final-letter joining contrast",
       meaning: "Girl",
-      rule: "ق connects to ى, but ى does not connect forward, so ز is written separately.",
-      hint: "Look at the final form of ى and the isolated form of ز.",
+      rule: "ق, ى, and ز remain connected; ز accepts the connection from ى but would not join to a later letter.",
+      hint: "Notice that ز stays joined to ى; ‘does not join forward’ does not mean an isolated form.",
       review: wordFormReview
     },
     "weten-connection": {
@@ -226,8 +226,8 @@
     "mewe-connection": {
       type: "Connection-break word form",
       meaning: "Fruit",
-      rule: "م connects to ې, but ې does not connect forward; ۋ also does not connect forward.",
-      hint: "This example practises both ې and ۋ.",
+      rule: "م, ې, and ۋ remain connected; ۋ does not join forward, so final ە starts again.",
+      hint: "First see ې joined to ۋ, then the break after ۋ.",
       review: wordFormReview
     },
     "toge-connection": {

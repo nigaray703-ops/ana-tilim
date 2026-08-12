@@ -72,10 +72,10 @@ const expectedVersionedAssets = [
   "./styles.css?v=20260812-final-layout",
   "./app-config.js?v=20260808-editions",
   "./uly-transliteration.js?v=20260728-uly-transliteration",
-  "./course-data/alphabet-data.js?v=20260809-bilingual",
+  "./course-data/alphabet-data.js?v=20260812-joining-rules",
   "./course-data/latin-writing-data.js?v=20260810-unit-maps",
-  "./course-data/combo-data.js?v=20260728-uly-transliteration",
-  "./course-data/syllable-data.js?v=20260809-plan3-final-content",
+  "./course-data/combo-data.js?v=20260812-joining-rules",
+  "./course-data/syllable-data.js?v=20260812-joining-rules",
   "./course-data/vocab-data.js?v=20260811-final-course",
   "./course-data/practice-data.js?v=20260728-learned-markers",
   "./course-data/reading-data.js?v=20260812-five-step-reading",
@@ -84,8 +84,8 @@ const expectedVersionedAssets = [
   "./afanti-content.js?v=20260810-reviewed-afanti",
   "./course-data.js?v=20260810-reviewed-afanti",
   "./i18n/ui-messages.js?v=20260810-feedback-i18n",
-  "./i18n/alphabet-en.js?v=20260809-bilingual",
-  "./i18n/combo-en.js?v=20260809-bilingual",
+  "./i18n/alphabet-en.js?v=20260812-joining-rules",
+  "./i18n/combo-en.js?v=20260812-joining-rules",
   "./i18n/vocab-en.js?v=20260811-final-course",
   "./i18n/practice-en.js?v=20260809-bilingual",
   "./i18n/reading-en.js?v=20260812-five-step-reading",
@@ -123,13 +123,14 @@ for (const url of ["./styles.css?v=20260812-final-layout", "./app.js?v=20260812-
   assert.equal(previousEnglishUiCache.get(url), undefined);
 }
 const staleAlphabetCache = new Map([
-  ["./course-data/alphabet-data.js?v=20260728-uly-transliteration", { release: "pre-bilingual" }]
+  ["./course-data/alphabet-data.js?v=20260728-uly-transliteration", { release: "pre-bilingual" }],
+  ["./course-data/alphabet-data.js?v=20260809-bilingual", { release: "before-joining-audit" }]
 ]);
 const requestedAlphabetAsset = versionedAppAssets.find((url) => url.includes("course-data/alphabet-data.js"));
 assert.equal(
   requestedAlphabetAsset,
-  "./course-data/alphabet-data.js?v=20260809-bilingual",
-  "the bilingual runtime should request the bilingual alphabet data release"
+  "./course-data/alphabet-data.js?v=20260812-joining-rules",
+  "the runtime should request the audited joining-rule alphabet data release"
 );
 assert.equal(
   staleAlphabetCache.get(requestedAlphabetAsset),
@@ -4452,7 +4453,7 @@ for (const unitId of ["letters", "combos"]) {
 }
 includesAll(
   renderState("state.screen = 'unit'; state.selectedUnitId = 'combos'"),
-  ["第三单元：基础组合", "开口组合", "轻声组合", "连续连接：三字母", "连接会断开的字母"],
+  ["第三单元：基础组合", "开口组合", "轻声组合", "三字母组合：连接与断开", "连接会断开的字母"],
   "second unit merged connection groups"
 );
 assert.ok(!app.innerHTML.includes("基础称呼预览"), "second unit should remove the duplicate family preview group");

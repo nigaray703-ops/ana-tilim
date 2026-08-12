@@ -441,7 +441,7 @@ assert.equal(
 );
 assert.equal(
   normalizedDuplicateSyllableTags[0][0].trim(),
-  '<script src="./course-data/syllable-data.js?v=20260809-plan3-final-content"></script>',
+  '<script src="./course-data/syllable-data.js?v=20260812-joining-rules"></script>',
   "duplicate normalization should use the standard syllable-data tag"
 );
 assert.equal(

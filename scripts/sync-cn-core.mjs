@@ -55,7 +55,7 @@ if (!comboDataScriptMatch || !courseDataMatchAfterSyllableRemoval || comboDataSc
   throw new Error(`Cannot update ${indexPath}: combo-data.js must load before course-data.js.`);
 }
 
-const standardSyllableDataScript = '<script src="./course-data/syllable-data.js?v=20260809-plan3-final-content"></script>';
+const standardSyllableDataScript = '<script src="./course-data/syllable-data.js?v=20260812-joining-rules"></script>';
 const syllableInsertionIndex = comboDataScriptMatch.index + comboDataScriptMatch[0].length;
 normalizedIndex = `${indexWithoutSyllableScripts.slice(0, syllableInsertionIndex)}${comboDataScriptMatch[1]}${standardSyllableDataScript}\n${indexWithoutSyllableScripts.slice(syllableInsertionIndex)}`;
 indexUpdateMessages.push("Normalized index.html: syllable-data.js after combo-data.js");
@@ -143,8 +143,8 @@ if (!appMatchBeforeSharedI18n) {
 }
 const sharedI18nScripts = [
   '<script src="./i18n/ui-messages.js?v=20260810-feedback-i18n"></script>',
-  '<script src="./i18n/alphabet-en.js?v=20260809-bilingual"></script>',
-  '<script src="./i18n/combo-en.js?v=20260809-bilingual"></script>',
+  '<script src="./i18n/alphabet-en.js?v=20260812-joining-rules"></script>',
+  '<script src="./i18n/combo-en.js?v=20260812-joining-rules"></script>',
   '<script src="./i18n/vocab-en.js?v=20260811-final-course"></script>',
   '<script src="./i18n/practice-en.js?v=20260809-bilingual"></script>',
   '<script src="./i18n/reading-en.js?v=20260812-five-step-reading"></script>',
@@ -155,6 +155,16 @@ normalizedIndex = `${indexWithoutSharedI18nScripts.slice(0, appMatchBeforeShared
 indexUpdateMessages.push("Normalized index.html: shared i18n runtime before app.js");
 
 const sharedCacheReferences = [
+  {
+    pattern: /(\bsrc=["']\.\/course-data\/alphabet-data\.js)(?:\?[^"']*)?(["'])/g,
+    replacement: "$1?v=20260812-joining-rules$2",
+    label: "alphabet-data.js"
+  },
+  {
+    pattern: /(\bsrc=["']\.\/course-data\/combo-data\.js)(?:\?[^"']*)?(["'])/g,
+    replacement: "$1?v=20260812-joining-rules$2",
+    label: "combo-data.js"
+  },
   {
     pattern: /(\bhref=["']\.\/styles\.css)(?:\?[^"']*)?(["'])/g,
     replacement: "$1?v=20260812-final-layout$2",

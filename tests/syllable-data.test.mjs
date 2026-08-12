@@ -20,7 +20,7 @@ assert.ok(data, "syllable module should expose reviewed training data");
 assert.equal(Object.isFrozen(data), true, "syllable training data should be immutable at its public boundary");
 assert.equal(
   createHash("sha256").update(JSON.stringify(data)).digest("hex"),
-  "334da5f72655b9faf8d9a9f117bdb374f4345b6dd215d53b3f7f8bee0d0f81fe",
+  "66caa282d4636ea55e61814d84efa96bf582338b00acc7fa5bf42052eaa87b22",
   "the complete independently pinned published snapshot must retain every ordered literal and null timing field"
 );
 assert.deepEqual(JSON.parse(JSON.stringify(data.unit)), {
@@ -80,7 +80,7 @@ const expectedConnectionStatements = [
   ["connection-06", "ك 与 ە 之间应断开。", "statement-incorrect", "approved"],
   ["break-01", "د 后不继续连接后一个字母。", "statement-correct", "approved"],
   ["break-02", "ر 或 ە 后应继续连接。", "statement-incorrect", "approved"],
-  ["break-03", "ى 后不继续连接最后的 ز。", "statement-correct", "approved"],
+  ["break-03", "ى 与最后的 ز 连续连接。", "statement-correct", "approved"],
   ["break-04", "ۋ 和 ە 后都无需重启后面的字母。", "statement-incorrect", "approved"],
   ["break-05", "ۋ 后不继续连接后面的字母。", "statement-correct", "approved"],
   ["break-06", "ۆ 后应继续连接 گ。", "statement-incorrect", "approved"]
@@ -94,6 +94,75 @@ assert.deepEqual(
   ]))),
   expectedConnectionStatements,
   "every textual judgment should lock an independently reviewed learner statement and answer"
+);
+
+const joiningTypes = new Map([
+  ["ا", "R"], ["ب", "D"], ["ت", "D"], ["د", "R"], ["ر", "R"], ["ز", "R"],
+  ["ق", "D"], ["ك", "D"], ["گ", "D"], ["ل", "D"], ["م", "D"], ["ن", "D"],
+  ["ڭ", "D"], ["ۋ", "R"], ["ى", "D"], ["ۆ", "R"], ["ې", "D"], ["ە", "R"]
+]);
+
+function joiningSegments(word) {
+  const letters = [...word];
+  const segments = [];
+  for (const [index, letter] of letters.entries()) {
+    assert.ok(joiningTypes.has(letter), `joining audit needs an explicit Unicode Joining_Type for ${letter}`);
+    if (index === 0) {
+      segments.push(letter);
+      continue;
+    }
+    const previousType = joiningTypes.get(letters[index - 1]);
+    const currentType = joiningTypes.get(letter);
+    const pairJoins = new Set(["D", "L"]).has(previousType) && new Set(["D", "R"]).has(currentType);
+    if (pairJoins) segments[segments.length - 1] += letter;
+    else segments.push(letter);
+  }
+  return segments;
+}
+
+const expectedJoiningSegments = new Map([
+  ["connection-01", ["با", "ل"]],
+  ["connection-02", ["ما", "ن"]],
+  ["connection-03", ["نا", "ن"]],
+  ["connection-04", ["تا", "ل"]],
+  ["connection-05", ["بە", "ل"]],
+  ["connection-06", ["كە", "ل"]],
+  ["break-01", ["د", "ا", "د", "ا"]],
+  ["break-02", ["ر", "ە", "ڭ"]],
+  ["break-03", ["قىز"]],
+  ["break-04", ["ۋ", "ە", "تە", "ن"]],
+  ["break-05", ["مېۋ", "ە"]],
+  ["break-06", ["تۆ", "گە"]]
+]);
+
+for (const item of data.connectionItems) {
+  assert.deepEqual(
+    joiningSegments(item.standard),
+    expectedJoiningSegments.get(item.id),
+    `${item.id} should preserve the hand-checked Unicode joining segments`
+  );
+}
+
+const qizJudgment = data.connectionItems.find((item) => item.id === "break-03");
+assert.deepEqual(
+  JSON.parse(JSON.stringify({
+    statement: qizJudgment?.statement,
+    expectedAnswer: qizJudgment?.expectedAnswer,
+    explanation: qizJudgment?.explanation
+  })),
+  {
+    statement: "ى 与最后的 ز 连续连接。",
+    expectedAnswer: "statement-correct",
+    explanation: "ق、ى、ز 连续连接；ز 能接收前面的连接，只是不连接它后面的字母。"
+  },
+  "qiz should teach that ى joins ز and that final ز only blocks a later letter"
+);
+
+const meweJudgment = data.connectionItems.find((item) => item.id === "break-05");
+assert.equal(
+  meweJudgment?.explanation,
+  "م、ې、ۋ 连续连接；ۋ 后断开，最后的 ە 重新开始。",
+  "mewe should teach that ې joins ۋ and only ۋ creates the break before final ە"
 );
 for (const bucketName of ["connection", "break"]) {
   const bucketItems = data.connectionItems.filter((item) => item.mistakeBucket === bucketName);
@@ -203,6 +272,54 @@ const comboManifestById = new Map(
 );
 const readingManifestById = new Map(
   JSON.parse(fs.readFileSync("prototype/assets/audio/human/reading/manifest.json", "utf8")).items.map((item) => [item.id, item])
+);
+
+for (const letterId of ["ee", "ii"]) {
+  assert.equal(
+    aggregateCourse.letterDetails[letterId].connection,
+    "可以连接后面的字母，也可以接收前一个字母的连接。",
+    `${letterId} should use its Unicode dual-joining rule instead of the non-forward vowel template`
+  );
+}
+
+const threeStepGroup = aggregateCourse.comboGroups.find((group) => group.id === "three-step");
+assert.equal(threeStepGroup?.title, "三字母组合：连接与断开");
+assert.equal(
+  aggregateCourse.comboGroups.find((group) => group.id === "connection-breaks")?.goal,
+  "辨认 د、ر、ز、ۋ、ا、ە、ۆ 的连接边界，并区分“可接前面”和“不接后面”。"
+);
+assert.equal(comboById.get("qiz-connection")?.type, "词尾连接对比");
+assert.deepEqual(
+  JSON.parse(JSON.stringify(threeStepGroup?.items.map((item) => [item.id, item.rule, item.hint]))),
+  [
+    ["bal", "ب 与 ا 连接；ا 后不继续连接，所以最后的 ل 重新开始。", "先看 با 的连接，再看 ا 后面的断开。"],
+    ["man", "م 与 ا 连接；ا 后不继续连接，所以最后的 ن 重新开始。", "先看 ما 的连接，再看 ا 后面的断开。"],
+    ["nan", "第一个 ن 与 ا 连接；ا 后断开，最后的 ن 重新开始。", "开头的 ن 使用连接形；末尾的 ن 因前面断开而使用独立形。"],
+    ["tal", "ت 与 ا 连接；ا 后不继续连接，所以最后的 ل 重新开始。", "注意 ت 上方的点，再看 ا 后面的断开。"],
+    ["bel", "ب 接 ە，ە 后面不继续连接，所以 ل 重新开始。", "重点看 ە 后面的断开。"],
+    ["kel", "ك 接 ە，ە 后面断开，再写 ل。", "同样是 ە 导致后面重新开始。"],
+    ["men-combo", "م 接 ە，ە 后面断开，再写 ن。", "这个词形以后会在词汇里继续出现。"],
+    ["sen-combo", "س 接 ە，ە 后面断开，再写 ن。", "和 مەن 对比，开头字母不同。"]
+  ],
+  "every three-letter lesson should distinguish a connected pair from the break before the final letter"
+);
+
+assert.deepEqual(
+  JSON.parse(JSON.stringify([
+    [comboById.get("qiz-connection")?.rule, comboById.get("qiz-connection")?.hint],
+    [comboById.get("mewe-connection")?.rule, comboById.get("mewe-connection")?.hint]
+  ])),
+  [
+    [
+      "ق、ى、ز 连续连接；ز 能接收前面的连接，只是不连接它后面的字母。",
+      "注意 ز 与前面的 ى 相连；“不后连”不等于使用独立形。"
+    ],
+    [
+      "م、ې、ۋ 连续连接；ۋ 后不继续连接，所以最后的 ە 重新开始。",
+      "先看 ې 与 ۋ 连续相连，再看 ۋ 后面的断开。"
+    ]
+  ],
+  "combo explanations should match the hand-checked joining segments"
 );
 
 function assertSourceBindings(candidate) {

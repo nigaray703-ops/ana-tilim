@@ -43,15 +43,15 @@ const comboGroups = [
   {
     id: "three-step",
     kind: "combo",
-    title: "连续连接：三字母",
+    title: "三字母组合：连接与断开",
     letters: ["بال", "مان", "نان", "تال", "بەل", "كەل", "مەن", "سەن"],
     goal: "从两字母过渡到三字母，重点看每个字母在词里的写法",
     status: "可学习",
     items: [
-      { id: "bal", value: "بال", latin: "bal", type: "三字母组合", parts: ["ب", "ا", "ل"], prompt: "bal", rule: "先读 با，再接 ل。", hint: "先不要急着背词义，只看三个字母连起来。", review: "组合练习；如作为词汇使用，需要审校。" },
-      { id: "man", value: "مان", latin: "man", type: "三字母组合", parts: ["م", "ا", "ن"], prompt: "man", rule: "先读 ما，再接 ن。", hint: "观察 م 的词首形和 ن 的词尾形。", review: "组合练习；如作为词汇使用，需要审校。" },
-      { id: "nan", value: "نان", latin: "nan", type: "三字母组合", parts: ["ن", "ا", "ن"], prompt: "nan", rule: "先读 نا，再接 ن。", hint: "同一个 ن 在开头和结尾形态不同。", review: "组合练习；如作为词汇使用，需要审校。" },
-      { id: "tal", value: "تال", latin: "tal", type: "三字母组合", parts: ["ت", "ا", "ل"], prompt: "tal", rule: "先读 تا，再接 ل。", hint: "观察 ت 的点和最后 ل 的位置。", review: "组合练习；如作为词汇使用，需要审校。" },
+      { id: "bal", value: "بال", latin: "bal", type: "三字母组合", parts: ["ب", "ا", "ل"], prompt: "bal", rule: "ب 与 ا 连接；ا 后不继续连接，所以最后的 ل 重新开始。", hint: "先看 با 的连接，再看 ا 后面的断开。", review: "组合练习；如作为词汇使用，需要审校。" },
+      { id: "man", value: "مان", latin: "man", type: "三字母组合", parts: ["م", "ا", "ن"], prompt: "man", rule: "م 与 ا 连接；ا 后不继续连接，所以最后的 ن 重新开始。", hint: "先看 ما 的连接，再看 ا 后面的断开。", review: "组合练习；如作为词汇使用，需要审校。" },
+      { id: "nan", value: "نان", latin: "nan", type: "三字母组合", parts: ["ن", "ا", "ن"], prompt: "nan", rule: "第一个 ن 与 ا 连接；ا 后断开，最后的 ن 重新开始。", hint: "开头的 ن 使用连接形；末尾的 ن 因前面断开而使用独立形。", review: "组合练习；如作为词汇使用，需要审校。" },
+      { id: "tal", value: "تال", latin: "tal", type: "三字母组合", parts: ["ت", "ا", "ل"], prompt: "tal", rule: "ت 与 ا 连接；ا 后不继续连接，所以最后的 ل 重新开始。", hint: "注意 ت 上方的点，再看 ا 后面的断开。", review: "组合练习；如作为词汇使用，需要审校。" },
       { id: "bel", value: "بەل", latin: "bel", type: "三字母组合", parts: ["ب", "ە", "ل"], prompt: "bel", rule: "ب 接 ە，ە 后面不继续连接，所以 ل 重新开始。", hint: "重点看 ە 后面的断开。", review: "组合练习；如作为词汇使用，需要审校。" },
       { id: "kel", value: "كەل", latin: "kel", type: "三字母组合", parts: ["ك", "ە", "ل"], prompt: "kel", rule: "ك 接 ە，ە 后面断开，再写 ل。", hint: "同样是 ە 导致后面重新开始。", review: "组合练习；如作为词汇使用，需要审校。" },
       { id: "men-combo", value: "مەن", latin: "men", type: "三字母组合", parts: ["م", "ە", "ن"], prompt: "men", rule: "م 接 ە，ە 后面断开，再写 ن。", hint: "这个词形以后会在词汇里继续出现。", review: "组合练习；如作为词汇使用，需要审校。" },
@@ -63,14 +63,14 @@ const comboGroups = [
     kind: "combo",
     title: "连接会断开的字母",
     letters: ["دادا", "رەڭ", "قىز", "ۋەتەن", "مېۋە", "تۆگە"],
-    goal: "专门看 د、ر、ز、ۋ 和元音类字母后面为什么会断开",
+    goal: "辨认 د、ر、ز、ۋ、ا、ە、ۆ 的连接边界，并区分“可接前面”和“不接后面”。",
     status: "可学习",
     items: [
       { id: "dada-connection", value: "دادا", latin: "dada", type: "断开连接词形", parts: ["د", "ا", "د", "ا"], prompt: "dada", meaning: "爸爸、家庭称呼变体", rule: "د 和 ا 后面都不继续连接，所以能看到中间断开。", hint: "这个例子很适合看“不接后面”的规则。", review: "变体/口语身份待母语者审校。" },
       { id: "reng-connection", value: "رەڭ", latin: "reng", type: "断开连接词形", parts: ["ر", "ە", "ڭ"], prompt: "reng", meaning: "颜色", rule: "ر 后面不继续连接，ە 后面也不继续连接，所以 ڭ 重新开始。", hint: "连续看到两个会断开的字母。", review: "词形示例，正式考核前待审校。" },
-      { id: "qiz-connection", value: "قىز", latin: "qiz", type: "断开连接词形", parts: ["ق", "ى", "ز"], prompt: "qiz", meaning: "女孩", rule: "ق 接 ى，ى 后面不继续连接，最后写 ز。", hint: "看 ى 的前连式和 ز 的独立形。", review: "词形示例，正式考核前待审校。" },
+      { id: "qiz-connection", value: "قىز", latin: "qiz", type: "词尾连接对比", parts: ["ق", "ى", "ز"], prompt: "qiz", meaning: "女孩", rule: "ق、ى、ز 连续连接；ز 能接收前面的连接，只是不连接它后面的字母。", hint: "注意 ز 与前面的 ى 相连；“不后连”不等于使用独立形。", review: "词形示例，正式考核前待审校。" },
       { id: "weten-connection", value: "ۋەتەن", latin: "weten", type: "断开连接词形", parts: ["ۋ", "ە", "ت", "ە", "ن"], prompt: "weten", meaning: "家园、祖国", rule: "ۋ 和 ە 都容易让后面的字母重新开始。", hint: "先找出哪里断开，再看 ت 和 ن。", review: "词形示例，正式考核前待审校。" },
-      { id: "mewe-connection", value: "مېۋە", latin: "mewe", type: "断开连接词形", parts: ["م", "ې", "ۋ", "ە"], prompt: "mewe", meaning: "水果", rule: "م 接 ې，ې 后面断开；ۋ 后面也不继续连接。", hint: "这个例子同时练 ې 和 ۋ。", review: "词形示例，正式考核前待审校。" },
+      { id: "mewe-connection", value: "مېۋە", latin: "mewe", type: "断开连接词形", parts: ["م", "ې", "ۋ", "ە"], prompt: "mewe", meaning: "水果", rule: "م、ې、ۋ 连续连接；ۋ 后不继续连接，所以最后的 ە 重新开始。", hint: "先看 ې 与 ۋ 连续相连，再看 ۋ 后面的断开。", review: "词形示例，正式考核前待审校。" },
       { id: "toge-connection", value: "تۆگە", latin: "töge", type: "断开连接词形", parts: ["ت", "ۆ", "گ", "ە"], prompt: "töge", meaning: "骆驼", rule: "ت 接 ۆ，ۆ 后面断开，再从 گ 开始。", hint: "看圆唇元音 ۆ 的断开作用。", review: "词形示例，正式考核前待审校。" }
     ]
   }

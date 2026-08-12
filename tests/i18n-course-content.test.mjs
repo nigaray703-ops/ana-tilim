@@ -73,6 +73,51 @@ assert.equal(Object.keys(comboEnglish.items).length, 34);
 assert.equal(comboEnglish.groups["open-a"].title, "Open-vowel combinations: ا");
 assert.equal(comboEnglish.items.ba.type, "Two-letter combination");
 assert.equal(comboEnglish.items["dada-connection"].meaning, "Dad; a family form of address");
+for (const letterId of ["ee", "ii"]) {
+  assert.equal(
+    alphabetEnglish.letterDetails[letterId].connection,
+    "Joins to the next letter and accepts a connection from the previous letter.",
+    `English ${letterId} should describe its Unicode dual-joining behavior`
+  );
+}
+assert.equal(comboEnglish.groups["three-step"].title, "Three-letter joining and breaks");
+assert.equal(
+  comboEnglish.groups["connection-breaks"].goal,
+  "Identify the joining boundaries of د, ر, ز, ۋ, ا, ە, and ۆ, and distinguish accepting a previous join from joining forward."
+);
+assert.deepEqual(
+  [
+    [comboEnglish.items.bal.rule, comboEnglish.items.bal.hint],
+    [comboEnglish.items.man.rule, comboEnglish.items.man.hint],
+    [comboEnglish.items.nan.rule, comboEnglish.items.nan.hint],
+    [comboEnglish.items.tal.rule, comboEnglish.items.tal.hint]
+  ],
+  [
+    ["ب connects to ا; because ا does not connect forward, final ل starts again.", "First see the connection in با, then the break after ا."],
+    ["م connects to ا; because ا does not connect forward, final ن starts again.", "First see the connection in ما, then the break after ا."],
+    ["The first ن connects to ا; after ا, the final ن starts again.", "The first ن uses a joined form; the final ن is isolated because the connection has broken."],
+    ["ت connects to ا; because ا does not connect forward, final ل starts again.", "Check the dots above ت, then the break after ا."]
+  ]
+);
+assert.deepEqual(
+  [
+    comboEnglish.items["qiz-connection"].type,
+    comboEnglish.items["qiz-connection"].rule,
+    comboEnglish.items["qiz-connection"].hint
+  ],
+  [
+    "Final-letter joining contrast",
+    "ق, ى, and ز remain connected; ز accepts the connection from ى but would not join to a later letter.",
+    "Notice that ز stays joined to ى; ‘does not join forward’ does not mean an isolated form."
+  ]
+);
+assert.deepEqual(
+  [comboEnglish.items["mewe-connection"].rule, comboEnglish.items["mewe-connection"].hint],
+  [
+    "م, ې, and ۋ remain connected; ۋ does not join forward, so final ە starts again.",
+    "First see ې joined to ۋ, then the break after ۋ."
+  ]
+);
 assert.equal(Object.keys(vocabEnglish.groups).length, 12);
 assert.equal(
   Object.values(vocabEnglish.groups).reduce((count, group) => count + Object.keys(group.sections || {}).length, 0),

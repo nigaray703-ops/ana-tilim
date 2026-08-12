@@ -557,7 +557,7 @@ const letterDetails = {
       { label: "词中", value: "ـېـ" },
       { label: "词尾", value: "ـې" }
     ],
-    connection: "可以接收前面连接，但后面通常不继续连接。",
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
     soundHint: "正式版以真人音频为准。",
     writingHint: "词首元音要带 ئ；先看 ئ 后面的 ې。",
     example: "ئې 放在元音组里统一学习。"
@@ -574,7 +574,7 @@ const letterDetails = {
       { label: "词中", value: "ـىـ" },
       { label: "词尾", value: "ـى" }
     ],
-    connection: "可以接收前面连接，但后面通常不继续连接。",
+    connection: "可以连接后面的字母，也可以接收前一个字母的连接。",
     soundHint: "正式版以真人音频为准。",
     writingHint: "词首元音要带 ئ；ئى 是元音入口，ي 是辅音。",
     example: "ئى 和 ي 很容易混，第一单元先认身份。"
