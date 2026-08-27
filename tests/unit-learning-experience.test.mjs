@@ -796,8 +796,8 @@ assert.deepEqual(globalUnits.map(({ id, title }) => [id, title]), [
   ["sentence-patterns", "第七单元：基础句型"],
   ["dialogue-theater", "第八单元：对话小剧场"],
   ["short-stories", "第九单元：小故事"],
-  ["uyghur-proverbs", "第十单元：维吾尔谚语"],
-  ["famous-quotes", "第十一单元：名人名言"],
+  ["uyghur-proverbs", "第十单元：维吾尔语谚语与智慧短句"],
+  ["famous-quotes", "第十一单元：文化人物主题学习句"],
   ["afanti-stories", "第十二单元：阿凡提小故事"]
 ]);
 
@@ -1019,7 +1019,7 @@ assert.deepEqual(domesticUnits.map(({ id, title }) => [id, title]), [
   ["sentence-patterns", "第七单元：基础句型"],
   ["dialogue-theater", "第八单元：对话小剧场"],
   ["short-stories", "第九单元：小故事"],
-  ["uyghur-proverbs", "第十单元：维吾尔谚语"],
+  ["uyghur-proverbs", "第十单元：维吾尔语谚语与智慧短句"],
   ["afanti-stories", "第十一单元：阿凡提小故事"]
 ]);
 const domesticLearningPath = domesticApp.render("state.screen = 'learn'");
@@ -1028,13 +1028,13 @@ assert.equal(
   11,
   "domestic learning path should render all eleven domestic course cards"
 );
-assert.ok(!domesticLearningPath.includes("名人名言"), "domestic learning path should hide famous quotes");
+assert.ok(!domesticLearningPath.includes("文化人物主题学习句"), "domestic learning path should hide cultural-figure themed learning lines");
 assert.ok(
-  domesticLearningPath.indexOf("第九单元：小故事") < domesticLearningPath.indexOf("第十单元：维吾尔谚语"),
+  domesticLearningPath.indexOf("第九单元：小故事") < domesticLearningPath.indexOf("第十单元：维吾尔语谚语与智慧短句"),
   "domestic learning path should keep existing visible cards in edition order"
 );
 assert.ok(
-  domesticLearningPath.indexOf("第十单元：维吾尔谚语") < domesticLearningPath.indexOf("第十一单元：阿凡提小故事"),
+  domesticLearningPath.indexOf("第十单元：维吾尔语谚语与智慧短句") < domesticLearningPath.indexOf("第十一单元：阿凡提小故事"),
   "domestic learning path should place the approved Afanti unit last"
 );
 assert.deepEqual(
@@ -1054,7 +1054,7 @@ assert.deepEqual(
     ["第七单元", "基础句型"],
     ["第八单元", "对话小剧场"],
     ["第九单元", "小故事"],
-    ["第十单元", "维吾尔谚语"],
+    ["第十单元", "维吾尔语谚语与智慧短句"],
     ["第十一单元", "阿凡提小故事"]
   ],
   "domestic progress summaries should include only visible units"
@@ -1154,8 +1154,8 @@ assert.deepEqual(
     ["第七单元", "基础句型"],
     ["第八单元", "对话小剧场"],
     ["第九单元", "小故事"],
-    ["第十单元", "维吾尔谚语"],
-    ["第十一单元", "名人名言"],
+    ["第十单元", "维吾尔语谚语与智慧短句"],
+    ["第十一单元", "文化人物主题学习句"],
     ["第十二单元", "阿凡提小故事"]
   ]
 );
@@ -4402,8 +4402,8 @@ includesAll(
     "第七单元：基础句型",
     "第八单元：对话小剧场",
     "第九单元：小故事",
-    "第十单元：维吾尔谚语",
-    "第十一单元：名人名言",
+    "第十单元：维吾尔语谚语与智慧短句",
+    "第十一单元：文化人物主题学习句",
     "第十二单元：阿凡提小故事",
     "问候、人称代词、称呼、数字、动物"
   ],
@@ -4562,8 +4562,8 @@ includesAll(
 );
 includesAll(
   renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'famous-quotes'; state.selectedReadingGroupId = 'quote-mahmud-kashgari'"),
-  ["名人名言", "reading-meaning", "语言是了解一个民族的钥匙。", "词典也能保存民族的记忆。", "学习语言，就是学习看世界的方法。"],
-  "famous quote reading lesson"
+  ["文化人物主题学习句", "reading-meaning", "语言是了解一个民族的钥匙。", "词典能保存民族的记忆。", "学习语言，就是学习看世界的方法。"],
+  "cultural-figure themed learning lesson"
 );
 assert.ok(!app.innerHTML.includes("人物介绍") && !app.innerHTML.includes("11 世纪语言学家"), "quote pages should omit the removed person introduction");
 assert.doesNotMatch(app.innerHTML, /reading-profile-(?:facts|visual|portrait|placeholder)/, "quote pages should not show the removed portrait or fact grid");
@@ -4589,8 +4589,8 @@ assert.ok(!simpleQuoteIntroHtml.includes("11 世纪思想家、诗人，《福�
 assert.doesNotMatch(simpleQuoteIntroHtml, /reading-profile-(?:facts|visual|portrait|placeholder)/, "all quote pages should use the same simple introduction layout");
 includesAll(
   renderState("state.screen = 'reading'; state.selectedReadingUnitId = 'uyghur-proverbs'; state.selectedReadingGroupId = 'proverb-bilim-kuch'"),
-  ["维吾尔谚语", "reading-meaning", "知识就是力量。", "学到的东西不会丢。", "不学的人，路会变窄。"],
-  "proverb reading lesson"
+  ["维吾尔语谚语与智慧短句", "reading-meaning", "知识就是力量。", "学到的东西不会丢。", "不学的人，路会变窄。"],
+  "proverb and wisdom-saying reading lesson"
 );
 assertLearnerCopyClean("proverb reading lesson");
 assert.ok(!app.innerHTML.includes("reading-lesson"), "proverb reading lesson should not show the meaning/lesson section");
@@ -4598,7 +4598,7 @@ const unifiedProverbHtml = renderState(
   "state.screen = 'reading'; state.selectedReadingUnitId = 'uyghur-proverbs'; state.selectedReadingGroupId = 'proverb-emgek'"
 );
 assert.ok(
-  unifiedProverbHtml.includes('class="uyghur reading-value">تېرىقماي ھوسۇل بولماس.</div>'),
+  unifiedProverbHtml.includes('class="uyghur reading-value">تېرىماي ھوسۇل ئالغىلى بولمايدۇ.</div>'),
   "the affected proverb should use the same reading sentence class as its neighbors"
 );
 assert.equal(

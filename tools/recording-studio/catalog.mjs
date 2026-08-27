@@ -23,7 +23,7 @@ const CATEGORY_COUNTS = Object.freeze({
 
 const NEEDS_RERECORD_IDS = new Set(["alphabet:zhe", "vocab:korushkunche"]);
 const FINAL_ADDITIONS_PATH = "课程/语法与基础句型/final-reading-additions.json";
-const FINAL_ADDITIONS_HASH = "237948cc87ebcecfbf707d955c23f903e680bfb960e46a4e5ce08b88a9068c41";
+const FINAL_ADDITIONS_HASH = "ae8f321e1ac96dc3c3158cf30dbae101c7bff0248b0863a95a7874f97f384688";
 const FINAL_ADDITION_GROUPS = Object.freeze([
   ["grammar-person-verbs", 3],
   ["grammar-possession", 3],

@@ -351,8 +351,8 @@ const englishUnitNames = Object.freeze({
   "sentence-patterns": "Basic sentence patterns",
   "dialogue-theater": "Mini dialogues",
   "short-stories": "Short stories",
-  "uyghur-proverbs": "Uyghur proverbs",
-  "famous-quotes": "Famous quotes",
+  "uyghur-proverbs": "Uyghur proverbs and wisdom sayings",
+  "famous-quotes": "Cultural figures — themed learning lines",
   "afanti-stories": "Afanti stories"
 });
 const englishUnitDetails = Object.freeze({

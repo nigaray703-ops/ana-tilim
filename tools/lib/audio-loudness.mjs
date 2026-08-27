@@ -110,17 +110,7 @@ function analysisArgs(truePeakDbtp = LOUDNESS_STANDARD.truePeakDbtp) {
   ];
 }
 
-function normalizationArgs(input) {
-  const filter = [
-    `loudnorm=I=${LOUDNESS_STANDARD.integratedLufs}:TP=${ENCODING_TRUE_PEAK_DBTP}:LRA=${LOUDNESS_STANDARD.lraLu}`,
-    `measured_I=${input.integratedLufs}`,
-    `measured_LRA=${input.lraLu}`,
-    `measured_TP=${input.truePeakDbtp}`,
-    `measured_thresh=${input.thresholdLufs}`,
-    `offset=${input.offsetLu}`,
-    "linear=true",
-    "print_format=json"
-  ].join(":");
+function encodingArgs(filter) {
   return [
     "-hide_banner", "-nostdin", "-i", "pipe:0",
     "-map_metadata", "-1",
@@ -129,6 +119,29 @@ function normalizationArgs(input) {
     "-c:a", "libopus", "-b:a", "64k", "-vbr", "on", "-application", "voip",
     "-f", "webm", "pipe:1"
   ];
+}
+
+function normalizationArgs(input) {
+  return encodingArgs([
+    `loudnorm=I=${LOUDNESS_STANDARD.integratedLufs}:TP=${ENCODING_TRUE_PEAK_DBTP}:LRA=${LOUDNESS_STANDARD.lraLu}`,
+    `measured_I=${input.integratedLufs}`,
+    `measured_LRA=${input.lraLu}`,
+    `measured_TP=${input.truePeakDbtp}`,
+    `measured_thresh=${input.thresholdLufs}`,
+    `offset=${input.offsetLu}`,
+    "linear=true",
+    "print_format=json"
+  ].join(":"));
+}
+
+function guardedPeakNormalizationArgs(input) {
+  const gainDb = (LOUDNESS_STANDARD.integratedLufs - input.integratedLufs).toFixed(2);
+  return encodingArgs(`volume=${gainDb}dB,alimiter=limit=0.68:attack=5:release=50:level=false`);
+}
+
+function outputMeetsLoudnessStandard(output) {
+  return isIntegratedLoudnessWithinTolerance(output.integratedLufs)
+    && output.truePeakDbtp <= LOUDNESS_STANDARD.truePeakDbtp;
 }
 
 export function normalizeWebmBuffer({
@@ -141,17 +154,38 @@ export function normalizeWebmBuffer({
   const firstPass = runProcess(spawnSync, ffmpegPath, analysisArgs(ENCODING_TRUE_PEAK_DBTP), { input: buffer }, "ffmpeg analysis");
   const input = parseLoudnormAnalysis(firstPass.stderr);
   const normalization = runProcess(spawnSync, ffmpegPath, normalizationArgs(input), { input: buffer }, "ffmpeg normalization");
-  const outputBuffer = injectWebmDurationMilliseconds(normalization.stdout, inputValidation.durationMs);
-  const outputValidation = validateWebmBuffer(outputBuffer);
-  const verification = runProcess(spawnSync, ffmpegPath, analysisArgs(), { input: outputBuffer }, "ffmpeg output verification");
-  const output = parseLoudnormAnalysis(verification.stderr);
+  let outputBuffer = injectWebmDurationMilliseconds(normalization.stdout, inputValidation.durationMs);
+  let outputValidation = validateWebmBuffer(outputBuffer);
+  let verification = runProcess(spawnSync, ffmpegPath, analysisArgs(), { input: outputBuffer }, "ffmpeg output verification");
+  let output = parseLoudnormAnalysis(verification.stderr);
 
-  const durationDifference = Math.abs(outputValidation.durationMs - inputValidation.durationMs);
   const durationTolerance = Math.max(
     LOUDNESS_STANDARD.durationToleranceMs,
     inputValidation.durationMs * 0.03
   );
-  assert.ok(durationDifference <= durationTolerance, "normalized WebM duration drift exceeds the allowed tolerance");
+  assert.ok(
+    Math.abs(outputValidation.durationMs - inputValidation.durationMs) <= durationTolerance,
+    "normalized WebM duration drift exceeds the allowed tolerance"
+  );
+
+  if (!outputMeetsLoudnessStandard(output)) {
+    const fallback = runProcess(
+      spawnSync,
+      ffmpegPath,
+      guardedPeakNormalizationArgs(input),
+      { input: buffer },
+      "ffmpeg guarded peak normalization"
+    );
+    outputBuffer = injectWebmDurationMilliseconds(fallback.stdout, inputValidation.durationMs);
+    outputValidation = validateWebmBuffer(outputBuffer);
+    verification = runProcess(spawnSync, ffmpegPath, analysisArgs(), { input: outputBuffer }, "ffmpeg guarded output verification");
+    output = parseLoudnormAnalysis(verification.stderr);
+    assert.ok(
+      Math.abs(outputValidation.durationMs - inputValidation.durationMs) <= durationTolerance,
+      "guarded normalized WebM duration drift exceeds the allowed tolerance"
+    );
+  }
+
   assert.ok(
     isIntegratedLoudnessWithinTolerance(output.integratedLufs),
     "normalized WebM is outside the integrated loudness tolerance"

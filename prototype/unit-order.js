@@ -14,8 +14,8 @@
     "sentence-patterns": "基础句型",
     "dialogue-theater": "对话小剧场",
     "short-stories": "小故事",
-    "uyghur-proverbs": "维吾尔谚语",
-    "famous-quotes": "名人名言",
+    "uyghur-proverbs": "维吾尔语谚语与智慧短句",
+    "famous-quotes": "文化人物主题学习句",
     "afanti-stories": "阿凡提小故事"
   });
   const NUMERALS = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"];

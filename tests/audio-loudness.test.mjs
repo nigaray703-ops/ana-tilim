@@ -169,6 +169,37 @@ test("normalizes and verifies WebM through three pipe-only ffmpeg passes", () =>
   assert.match(calls[2].args[calls[2].args.indexOf("-af") + 1], /TP=-1\.5/);
 });
 
+test("uses guarded peak limiting when linear loudnorm cannot satisfy both release gates", () => {
+  const calls = [];
+  let analysisCount = 0;
+  const spawnSync = (file, args, options) => {
+    calls.push({ file, args: [...args], input: Buffer.from(options.input) });
+    if (args.at(-1) === "pipe:1") {
+      return { status: 0, stdout: Buffer.from(validWebm), stderr: Buffer.alloc(0) };
+    }
+    analysisCount += 1;
+    const measurements = [
+      loudnormJson({ integrated: -20.34, peak: 0.15, lra: 6.2, threshold: -30.68, offset: 0.58 }),
+      loudnormJson({ integrated: -21.35, peak: -1.17, lra: 6.1, threshold: -31.69, offset: 0.53 }),
+      loudnormJson({ integrated: -20.71, peak: -2.2, lra: 5.4, threshold: -30.92, offset: 0.52 })
+    ];
+    return { status: 0, stdout: Buffer.alloc(0), stderr: Buffer.from(measurements[analysisCount - 1]) };
+  };
+
+  const result = normalizeWebmBuffer({ buffer: validWebm, ffmpegPath: "/trusted/ffmpeg", spawnSync });
+
+  assert.equal(calls.length, 5);
+  assert.deepEqual(result.report, {
+    configVersion: "ana-tilim-loudness-v3",
+    input: { integratedLufs: -20.34, truePeakDbtp: 0.15, lraLu: 6.2, thresholdLufs: -30.68, offsetLu: 0.58 },
+    output: { integratedLufs: -20.71, truePeakDbtp: -2.2, lraLu: 5.4, thresholdLufs: -30.92, offsetLu: 0.52 }
+  });
+  const fallbackFilter = calls[3].args[calls[3].args.indexOf("-af") + 1];
+  assert.equal(fallbackFilter, "volume=0.34dB,alimiter=limit=0.68:attack=5:release=50:level=false");
+  assert.equal(calls[3].input.equals(validWebm), true, "fallback should reprocess the original take only once");
+  assert.match(calls[4].args[calls[4].args.indexOf("-af") + 1], /TP=-1\.5/);
+});
+
 test("accepts only the 0.01 LU two-decimal measurement edge at the lower tolerance boundary", () => {
   function runWithMeasuredOutput(integrated) {
     let count = 0;

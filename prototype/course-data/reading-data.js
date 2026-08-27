@@ -727,8 +727,8 @@ const finalReadingGroups = Object.freeze(
           "id": "sentence-polite-reason-1",
           "value": "كەچۈرۈڭ، سۇ بېرىڭ.",
           "latin": "Kechürüng, su bëring.",
-          "meaning": "请问，请给我水。",
-          "pattern": "请问 + 请给水",
+          "meaning": "不好意思，请给我水。",
+          "pattern": "不好意思 + 请给水",
           "lesson": "礼貌请求",
           "reviewStatus": "approved"
         },
@@ -1105,8 +1105,8 @@ const legacyReadingTrainingByGroupId = Object.freeze({
       steps: ["rule", "compare", "recognition", "ordering", "completion"],
       compareItemIds: ["sentence-like-need-1", "sentence-like-need-4"],
       recognition: {
-        promptZh: "哪一句表示“我要馕”？",
-        promptEn: "Which sentence means ‘I want naan’ ?",
+        promptZh: "哪一句表示“我需要馕”？",
+        promptEn: "Which sentence means ‘I need naan’ ?",
         options: [{ id: "a", itemId: "sentence-like-need-1" }, { id: "b", itemId: "sentence-like-need-2" }],
         answerId: "b"
       },
@@ -1116,13 +1116,13 @@ const legacyReadingTrainingByGroupId = Object.freeze({
         completedValue: "مەن چاي ئىچىمەن."
       },
       completion: {
-        promptZh: "补全“我要水”",
-        promptEn: "Complete ‘I want water’",
+        promptZh: "补全“我需要水”",
+        promptEn: "Complete ‘I need water’",
         options: [{ id: "a", value: "سۇ لازىم" }, { id: "b", value: "نان لازىم" }],
         answerId: "a",
         completedValue: "ماڭا سۇ لازىم.",
-        meaningZh: "我要水。",
-        meaningEn: "I want water."
+        meaningZh: "我需要水。",
+        meaningEn: "I need water."
       }
     }
   },
@@ -1461,11 +1461,11 @@ const readingUnits = [
       },
       {
         id: "sentence-like-need",
-        title: "我要…… / 我喜欢……",
+        title: "我需要…… / 我喜欢……",
         ...legacyReadingTrainingByGroupId["sentence-like-need"],
         items: [
-          { id: "sentence-like-need-1", value: "ماڭا سۇ لازىم.", meaning: "我要水。", reviewStatus: "待母语者审校" },
-          { id: "sentence-like-need-2", value: "ماڭا نان لازىم.", meaning: "我要馕。", reviewStatus: "待母语者审校" },
+          { id: "sentence-like-need-1", value: "ماڭا سۇ لازىم.", meaning: "我需要水。", reviewStatus: "待母语者审校" },
+          { id: "sentence-like-need-2", value: "ماڭا نان لازىم.", meaning: "我需要馕。", reviewStatus: "待母语者审校" },
           { id: "sentence-like-need-3", value: "مەن چاي ئىچىمەن.", meaning: "我喝茶。", reviewStatus: "待母语者审校" },
           { id: "sentence-like-need-4", value: "مەن ئانا تىلىمنى ياخشى كۆرىمەن.", meaning: "我喜欢我的母语。", reviewStatus: "待母语者审校" }
         ]
@@ -1530,7 +1530,7 @@ const readingUnits = [
         items: [
           { id: "dialogue-family-1", speaker: "A", value: "بۇ كىم؟", meaning: "这是谁？" },
           { id: "dialogue-family-2", speaker: "B", value: "بۇ مېنىڭ ئانام.", meaning: "这是我的妈妈。" },
-          { id: "dialogue-family-3", speaker: "A", value: "دادىڭىز بارمۇ؟", meaning: "你爸爸在吗？" },
+          { id: "dialogue-family-3", speaker: "A", value: "دادىڭىز ئۆيدىمۇ؟", meaning: "你爸爸在家吗？" },
           { id: "dialogue-family-4", speaker: "B", value: "ھەئە، دادام ئۆيدە.", meaning: "是的，我爸爸在家。" }
         ]
       },
@@ -1538,9 +1538,9 @@ const readingUnits = [
         id: "dialogue-shopping",
         title: "买东西",
         items: [
-          { id: "dialogue-shopping-1", speaker: "A", value: "نان بارمۇ؟", meaning: "有面包吗？" },
-          { id: "dialogue-shopping-2", speaker: "B", value: "بار، قانچە لازىم؟", meaning: "有，需要多少？" },
-          { id: "dialogue-shopping-3", speaker: "A", value: "ئىككى دانە لازىم.", meaning: "需要两个。" },
+          { id: "dialogue-shopping-1", speaker: "A", value: "نان بارمۇ؟", meaning: "有馕吗？" },
+          { id: "dialogue-shopping-2", speaker: "B", value: "بار، قانچە لازىم؟", meaning: "有，需要几个？" },
+          { id: "dialogue-shopping-3", speaker: "A", value: "ئىككى دانە لازىم.", meaning: "我需要两个。" },
           { id: "dialogue-shopping-4", speaker: "B", value: "مانا، ئېلىڭ.", meaning: "给您，请拿。" }
         ]
       },
@@ -1549,7 +1549,7 @@ const readingUnits = [
         title: "问路",
         items: [
           { id: "dialogue-road-1", speaker: "A", value: "مەكتەپ قەيەردە؟", meaning: "学校在哪里？" },
-          { id: "dialogue-road-2", speaker: "B", value: "ئۇ ئالدىدا.", meaning: "它在前面。" },
+          { id: "dialogue-road-2", speaker: "B", value: "ئۇدۇل مېڭىڭ.", meaning: "一直往前走。" },
           { id: "dialogue-road-3", speaker: "A", value: "يىراقمۇ؟", meaning: "远吗？" },
           { id: "dialogue-road-4", speaker: "B", value: "ياق، يېقىن.", meaning: "不，近。" }
         ]
@@ -1590,7 +1590,7 @@ const readingUnits = [
         items: [
           { id: "story-my-day-1", value: "مەن ئەتىگەندە ئورنىمدىن تۇرىمەن.", meaning: "我早上起床。" },
           { id: "story-my-day-2", value: "يۈزۈمنى يۇيىمەن.", meaning: "我洗脸。" },
-          { id: "story-my-day-3", value: "نان يەيمەن، چاي ئىچىمەن.", meaning: "我吃面包，喝茶。" },
+          { id: "story-my-day-3", value: "نان يەيمەن، چاي ئىچىمەن.", meaning: "我吃馕，喝茶。" },
           { id: "story-my-day-4", value: "كېيىن مەكتەپكە بارىمەن.", meaning: "然后我去学校。" },
           { id: "story-my-day-5", value: "كەچتە ئۆيگە قايتىمەن.", meaning: "晚上我回家。" }
         ]
@@ -1599,11 +1599,11 @@ const readingUnits = [
         id: "story-my-family",
         title: "我的家",
         items: [
-          { id: "story-my-family-1", value: "بىزنىڭ ئۆيىمىزدە ئاتا-ئانام بار.", meaning: "我们家里有爸爸妈妈。" },
+          { id: "story-my-family-1", value: "مەن ئاتا-ئانام بىلەن بىللە تۇرىمەن.", meaning: "我和父母住在一起。" },
           { id: "story-my-family-2", value: "مېنىڭ بىر ئاكام بار.", meaning: "我有一个哥哥。" },
           { id: "story-my-family-3", value: "سىڭلىم كىچىك.", meaning: "我的妹妹还小。" },
           { id: "story-my-family-4", value: "بىز بىللە تاماق يەيمىز.", meaning: "我们一起吃饭。" },
-          { id: "story-my-family-5", value: "ئۆيىمىز ئىسسىق ۋە خاتىرجەم.", meaning: "我们的家温暖又安心。" }
+          { id: "story-my-family-5", value: "ئۆيىمىز ئىسسىق ۋە خاتىرجەم.", meaning: "我们的家温暖又安宁。" }
         ]
       },
       {
@@ -1613,7 +1613,7 @@ const readingUnits = [
           { id: "story-market-1", value: "بۈگۈن ئانام بىلەن بازارغا باردىم.", meaning: "今天我和妈妈去了市场。" },
           { id: "story-market-2", value: "بازاردا كۆپ ئادەم بار ئىدى.", meaning: "市场里有很多人。" },
           { id: "story-market-3", value: "بىز پەمىدۇر ۋە بەرەڭگە ئالدۇق.", meaning: "我们买了番茄和土豆。" },
-          { id: "story-market-4", value: "ئانام نانمۇ ئالدى.", meaning: "妈妈也买了面包。" },
+          { id: "story-market-4", value: "ئانام نانمۇ ئالدى.", meaning: "妈妈也买了馕。" },
           { id: "story-market-5", value: "كېيىن ئۆيگە قايتتۇق.", meaning: "然后我们回家了。" }
         ]
       },
@@ -1624,8 +1624,8 @@ const readingUnits = [
           { id: "story-friend-1", value: "مېنىڭ ياخشى دوستۇم بار.", meaning: "我有一个好朋友。" },
           { id: "story-friend-2", value: "ئۇنىڭ ئىسمى ئەلى.", meaning: "他的名字叫阿里。" },
           { id: "story-friend-3", value: "بىز بىللە ئوينايمىز.", meaning: "我们一起玩。" },
-          { id: "story-friend-4", value: "ئۇ ماڭا ياردەم قىلىدۇ.", meaning: "他会帮助我。" },
-          { id: "story-friend-5", value: "دوستلۇق ياخشى نەرسە.", meaning: "友谊是美好的。" }
+          { id: "story-friend-4", value: "ئۇ ماڭا ياردەم قىلىدۇ.", meaning: "他帮助我。" },
+          { id: "story-friend-5", value: "دوستلۇق ياخشى نەرسە.", meaning: "友谊是一件美好的事。" }
         ]
       },
       {
@@ -1634,7 +1634,7 @@ const readingUnits = [
         items: [
           { id: "story-rain-1", value: "بۈگۈن ھاۋا بۇلۇتلۇق.", meaning: "今天天气多云。" },
           { id: "story-rain-2", value: "چۈشتىن كېيىن يامغۇر ياغدى.", meaning: "下午下雨了。" },
-          { id: "story-rain-3", value: "مەن دېرىزىدىن سىرتقا قارىدىم.", meaning: "我从窗户看外面。" },
+          { id: "story-rain-3", value: "مەن دېرىزىدىن سىرتقا قارىدىم.", meaning: "我透过窗户向外看了看。" },
           { id: "story-rain-4", value: "يەر ھۆل بولدى.", meaning: "地面湿了。" },
           { id: "story-rain-5", value: "يامغۇر ئاۋازى يۇمشاق ئاڭلاندى.", meaning: "雨声听起来很轻柔。" }
         ]
@@ -1645,9 +1645,9 @@ const readingUnits = [
         items: [
           { id: "story-mother-language-1", value: "مېنىڭ ئانا تىلىم ئۇيغۇر تىلى.", meaning: "我的母语是维吾尔语。" },
           { id: "story-mother-language-2", value: "مەن ھەر كۈنى بىر ئاز ئۆگىنىمەن.", meaning: "我每天学一点。" },
-          { id: "story-mother-language-3", value: "بىر ھەرپنى ياخشى بىلىمەن.", meaning: "我先认真认识一个字母。" },
+          { id: "story-mother-language-3", value: "بىر ھەرپنى ياخشى بىلىمەن.", meaning: "我很熟悉一个字母。" },
           { id: "story-mother-language-4", value: "كېيىن بىر سۆزنى ئوقۇيمەن.", meaning: "然后我读一个词。" },
-          { id: "story-mother-language-5", value: "ئانا تىلىم قەلبىمگە يېقىن.", meaning: "我的母语离我的心很近。" }
+          { id: "story-mother-language-5", value: "ئانا تىلىم قەلبىمگە يېقىن.", meaning: "我的母语贴近我的心。" }
         ]
       }
     ]
@@ -1656,9 +1656,9 @@ const readingUnits = [
     id: "famous-quotes",
     kind: "reading",
     readingKind: "quote",
-    title: "第八单元：名人名言",
-    subtitle: "10 位名人，每位 3 条学习句",
-    status: "待来源审校",
+    title: "第八单元：文化人物主题学习句",
+    subtitle: "10 位文化人物主题，每位 3 条学习句（非原文引语）",
+    status: "主题学习句，非直接引语",
     groups: [
       {
         id: "quote-mahmud-kashgari",
@@ -1667,7 +1667,7 @@ const readingUnits = [
         intro: "11 世纪语言学家，《突厥语大词典》的作者，常被视为突厥语言文化的重要记录者。",
         items: [
           { id: "quote-mahmud-kashgari-line-1", value: "تىل بىر خەلقنى تونۇشنىڭ ئاچقۇچىدۇر.", meaning: "语言是了解一个民族的钥匙。", lesson: "学习母语，也是在认识自己的文化。", reviewStatus: "学习版译句，待来源审校" },
-          { id: "quote-mahmud-kashgari-line-2", value: "لۇغەت خەلقنىڭ ئەسلىمىسىنى ساقلايدۇ.", meaning: "词典也能保存民族的记忆。", lesson: "词语记录生活，也记录来处。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-mahmud-kashgari-line-2", value: "لۇغەت خەلقنىڭ ئەسلىمىسىنى ساقلايدۇ.", meaning: "词典能保存民族的记忆。", lesson: "词语记录生活，也记录来处。", reviewStatus: "学习版译句，待来源审校" },
           { id: "quote-mahmud-kashgari-line-3", value: "تىل ئۆگىنىش دۇنيانى كۆرۈشنى ئۆگىنىشتۇر.", meaning: "学习语言，就是学习看世界的方法。", lesson: "语言会改变我们理解世界的方式。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
@@ -1679,7 +1679,7 @@ const readingUnits = [
         items: [
           { id: "quote-yusuf-hajib-line-1", value: "بىلىم ئادەمنىڭ يولىنى يورۇتىدۇ.", meaning: "知识照亮人的道路。", lesson: "学习让人看清方向。", reviewStatus: "学习版译句，待来源审校" },
           { id: "quote-yusuf-hajib-line-2", value: "ياخشى سۆز كۆڭۈلنى يورۇتىدۇ.", meaning: "好话能照亮人的心。", lesson: "语言也能带来温度。", reviewStatus: "学习版译句，待来源审校" },
-          { id: "quote-yusuf-hajib-line-3", value: "ئەقىل بىلەن يول تاپىلىدۇ.", meaning: "有智慧，才能找到路。", lesson: "做选择时要先思考。", reviewStatus: "学习版译句，待来源审校" }
+          { id: "quote-yusuf-hajib-line-3", value: "ئەقىل بىلەن يول تاپىلىدۇ.", meaning: "依靠智慧可以找到道路。", lesson: "做选择时要先思考。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
@@ -1688,7 +1688,7 @@ const readingUnits = [
         titleUyghur: "ئەھمەد يۈكنەكى",
         intro: "中世纪文学人物，《真理的入门》常与他的名字联系在一起，作品重视礼仪和道德。",
         items: [
-          { id: "quote-ahmet-yukneki-line-1", value: "ئەدەب ئادەمنىڭ زىننىتىدۇر.", meaning: "礼貌是人的装饰。", lesson: "说话有礼，是语言学习的重要习惯。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-ahmet-yukneki-line-1", value: "ئەدەب ئادەمنىڭ زىننىتىدۇر.", meaning: "礼仪是人的装饰。", lesson: "说话有礼，是语言学习的重要习惯。", reviewStatus: "学习版译句，待来源审校" },
           { id: "quote-ahmet-yukneki-line-2", value: "ياخشى خۇلق ئادەمنى گۈزەل قىلىدۇ.", meaning: "好的品行让人更美。", lesson: "语言和品行常常连在一起。", reviewStatus: "学习版译句，待来源审校" },
           { id: "quote-ahmet-yukneki-line-3", value: "نادانلىق يولنى قاراڭغۇ قىلىدۇ.", meaning: "无知会让道路变暗。", lesson: "学习能让人少走弯路。", reviewStatus: "学习版译句，待来源审校" }
         ]
@@ -1700,8 +1700,8 @@ const readingUnits = [
         intro: "近代历史书写者，常被提到与新疆地方史、文化记录相关。",
         items: [
           { id: "quote-molla-musa-line-1", value: "تارىخنى بىلگەن ئادەم ئۆزىنى ياخشىراق تونۇيدۇ.", meaning: "懂得历史的人，更能认识自己。", lesson: "了解来处，才能看清自己。", reviewStatus: "学习版译句，待来源审校" },
-          { id: "quote-molla-musa-line-2", value: "يېزىلغان سۆز ئۇنتۇلغان ئىشنى ساقلايدۇ.", meaning: "写下来的话能保存被遗忘的事。", lesson: "记录能保护记忆。", reviewStatus: "学习版译句，待来源审校" },
-          { id: "quote-molla-musa-line-3", value: "ئۆتكەننى بىلىش بۈگۈنگە ياردەم بېرىدۇ.", meaning: "了解过去，会帮助今天。", lesson: "历史能给现在提供参照。", reviewStatus: "学习版译句，待来源审校" }
+          { id: "quote-molla-musa-line-2", value: "يېزىلغان سۆز ئۇنتۇلغان ئىشنى ساقلايدۇ.", meaning: "文字能保存被遗忘的事情。", lesson: "记录能保护记忆。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-molla-musa-line-3", value: "ئۆتكەننى بىلىش بۈگۈنگە ياردەم بېرىدۇ.", meaning: "了解过去，对今天有帮助。", lesson: "历史能给现在提供参照。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
@@ -1722,8 +1722,8 @@ const readingUnits = [
         intro: "20 世纪维吾尔诗人，常被记住为年轻、有激情的文学人物。",
         items: [
           { id: "quote-lutpulla-mutellip-line-1", value: "ياشلىق ئۈمىد بىلەن گۈزەل.", meaning: "青春因希望而美丽。", lesson: "学习也需要希望。", reviewStatus: "学习版译句，待来源审校" },
-          { id: "quote-lutpulla-mutellip-line-2", value: "يۈرەكتىكى ئوت سۆزگە ئايلىنىدۇ.", meaning: "心里的火会变成语言。", lesson: "表达来自真实的情感。", reviewStatus: "学习版译句，待来源审校" },
-          { id: "quote-lutpulla-mutellip-line-3", value: "ۋەتەننى سۆيگەن ئادەم تىلىنىمۇ سۆيىدۇ.", meaning: "热爱家园的人，也会热爱自己的语言。", lesson: "语言和情感常常相连。", reviewStatus: "学习版译句，待来源审校" }
+          { id: "quote-lutpulla-mutellip-line-2", value: "يۈرەكتىكى ئوت سۆزگە ئايلىنىدۇ.", meaning: "心中的火会化为话语。", lesson: "表达来自真实的情感。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-lutpulla-mutellip-line-3", value: "ۋەتەننى سۆيگەن ئادەم تىلىنىمۇ سۆيىدۇ.", meaning: "热爱故土的人，也会热爱自己的语言。", lesson: "语言和情感常常相连。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
@@ -1743,8 +1743,8 @@ const readingUnits = [
         titleUyghur: "زۇنۇن قادىرى",
         intro: "现代维吾尔作家，作品常与小说、戏剧和日常生活叙事联系在一起。",
         items: [
-          { id: "quote-zunun-qadiri-line-1", value: "ھېكايە ئادەمنىڭ كۆڭلىنى ئاچىدۇ.", meaning: "故事能打开人的心。", lesson: "故事能把词语放回生活。", reviewStatus: "学习版译句，待来源审校" },
-          { id: "quote-zunun-qadiri-line-2", value: "كىچىك ئادەمنىڭ تۇرمۇشىمۇ چوڭ مەنىگە ئىگە.", meaning: "普通人的生活也有大的意义。", lesson: "日常生活值得被表达。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-zunun-qadiri-line-1", value: "ھېكايە ئادەمنىڭ كۆڭلىنى ئاچىدۇ.", meaning: "故事能让人心情开朗。", lesson: "故事能把词语放回生活。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-zunun-qadiri-line-2", value: "ئاددىي ئادەمنىڭ تۇرمۇشىمۇ چوڭ مەنىگە ئىگە.", meaning: "普通人的生活也有重要的意义。", lesson: "日常生活值得被表达。", reviewStatus: "学习版译句，待来源审校" },
           { id: "quote-zunun-qadiri-line-3", value: "سەھنە ئادەمنىڭ ئاۋازىنى ئاڭلىتىدۇ.", meaning: "舞台能让人的声音被听见。", lesson: "表达需要被看见和听见。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
@@ -1754,9 +1754,9 @@ const readingUnits = [
         titleUyghur: "زوردۇن سابىر",
         intro: "现代维吾尔作家，常以小说和幽默、生活观察被读者记住。",
         items: [
-          { id: "quote-zordun-sabir-line-1", value: "كۈلكە ھەقىقەتنى يۇمشاق ئېيتىدۇ.", meaning: "笑声能温和地说出真实。", lesson: "幽默也能表达认真。", reviewStatus: "学习版译句，待来源审校" },
-          { id: "quote-zordun-sabir-line-2", value: "تۇرمۇشنى كۆزىتىش يازغۇچىنىڭ دەرسى.", meaning: "观察生活，是作家的课堂。", lesson: "语言从生活里来。", reviewStatus: "学习版译句，待来源审校" },
-          { id: "quote-zordun-sabir-line-3", value: "ئاددىي سۆز چوڭ مەنىنى كۆتۈرىدۇ.", meaning: "简单的话也能承载大的意思。", lesson: "简单表达也可以有力量。", reviewStatus: "学习版译句，待来源审校" }
+          { id: "quote-zordun-sabir-line-1", value: "كۈلكە ھەقىقەتنى يۇمشاق ئېيتىدۇ.", meaning: "笑声能温和地说出真相。", lesson: "幽默也能表达认真。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-zordun-sabir-line-2", value: "تۇرمۇشنى كۆزىتىش يازغۇچىنىڭ دەرسى.", meaning: "观察生活是作家的一堂课。", lesson: "语言从生活里来。", reviewStatus: "学习版译句，待来源审校" },
+          { id: "quote-zordun-sabir-line-3", value: "ئاددىي سۆزمۇ چوڭ مەنىنى ئىپادىلەيدۇ.", meaning: "简单的话也能表达深刻的含义。", lesson: "简单表达也可以有力量。", reviewStatus: "学习版译句，待来源审校" }
         ]
       },
       {
@@ -1776,8 +1776,8 @@ const readingUnits = [
     id: "uyghur-proverbs",
     kind: "reading",
     readingKind: "proverb",
-    title: "第九单元：维吾尔谚语",
-    subtitle: "10 个主题，每组 3 条智慧短句",
+    title: "第九单元：维吾尔语谚语与智慧短句",
+    subtitle: "10 个主题，每组 3 条谚语或主题学习句",
     status: "待母语者审校",
     groups: [
       {
@@ -1793,7 +1793,7 @@ const readingUnits = [
         id: "proverb-yaxshi-soz",
         title: "好话暖心",
         items: [
-          { id: "proverb-yaxshi-soz-line-1", value: "ياخشى سۆز جان ئوزۇقى.", meaning: "好话是心灵的食粮。", lesson: "温和的话能让人舒服。", reviewStatus: "待母语者审校" },
+          { id: "proverb-yaxshi-soz-line-1", value: "ياخشى سۆز جان ئوزۇقى.", meaning: "好话是灵魂的食粮。", lesson: "温和的话能让人舒服。", reviewStatus: "待母语者审校" },
           { id: "proverb-yaxshi-soz-line-2", value: "ياخشى گەپ يۈرەكنى ئىللىتىدۇ.", meaning: "好话能暖人心。", lesson: "说话方式会影响关系。", reviewStatus: "待母语者审校" },
           { id: "proverb-yaxshi-soz-line-3", value: "تىلدىكى شېرىنلىك كۆڭۈلگە بارىدۇ.", meaning: "话里的甜，会走进心里。", lesson: "礼貌表达更容易被接受。", reviewStatus: "待母语者审校" }
         ]
@@ -1822,7 +1822,7 @@ const readingUnits = [
         items: [
           { id: "proverb-emgek-line-1", value: "ئەمگەك قىلغان ئەزىز.", meaning: "劳动的人值得尊敬。", lesson: "努力和付出本身就有价值。", reviewStatus: "待母语者审校" },
           { id: "proverb-emgek-line-2", value: "ئەمگەك مېۋىسى تاتلىق.", meaning: "劳动的果实是甜的。", lesson: "付出之后才会有收获。", reviewStatus: "待母语者审校" },
-          { id: "proverb-emgek-line-3", value: "تېرىقماي ھوسۇل بولماس.", meaning: "不播种，就没有收成。", lesson: "结果来自前面的努力。", reviewStatus: "待母语者审校" }
+          { id: "proverb-emgek-line-3", value: "تېرىماي ھوسۇل ئالغىلى بولمايدۇ.", meaning: "不播种，就无法获得收成。", lesson: "结果来自前面的努力。", reviewStatus: "待母语者审校" }
         ]
       },
       {
@@ -1848,7 +1848,7 @@ const readingUnits = [
         title: "耐心有回报",
         items: [
           { id: "proverb-sabr-line-1", value: "سەۋرنىڭ ئاخىرى ئالتۇن.", meaning: "耐心的最后是金子。", lesson: "坚持常常会得到好结果。", reviewStatus: "待母语者审校" },
-          { id: "proverb-sabr-line-2", value: "سەۋر قىلغان يەتكەن.", meaning: "有耐心的人能到达。", lesson: "慢慢来，也能走到目标。", reviewStatus: "待母语者审校" },
+          { id: "proverb-sabr-line-2", value: "سەۋر قىلغان يەتكەن.", meaning: "有耐心的人终能达到目标。", lesson: "慢慢来，也能走到目标。", reviewStatus: "待母语者审校" },
           { id: "proverb-sabr-line-3", value: "ئالدىرىغان ئىش پۈتمەس.", meaning: "太着急，事情反而做不好。", lesson: "急躁会影响结果。", reviewStatus: "待母语者审校" }
         ]
       },
@@ -1857,7 +1857,7 @@ const readingUnits = [
         title: "母语连着心",
         items: [
           { id: "proverb-ana-til-line-1", value: "ئانا تىل جان تىلى.", meaning: "母语是心灵的语言。", lesson: "母语连接家庭、记忆和身份。", reviewStatus: "待母语者审校" },
-          { id: "proverb-ana-til-line-2", value: "ئانا تىلىنى بىلگەن ئۆزىنى بىلىدۇ.", meaning: "懂母语的人，更懂自己。", lesson: "语言也会帮助人认识身份。", reviewStatus: "待母语者审校" },
+          { id: "proverb-ana-til-line-2", value: "ئانا تىلىنى بىلگەن ئۆزىنى بىلىدۇ.", meaning: "懂得母语的人，也懂得自己。", lesson: "语言也会帮助人认识身份。", reviewStatus: "待母语者审校" },
           { id: "proverb-ana-til-line-3", value: "تىل بار يەردە ئەسلىمە بار.", meaning: "有语言的地方，就有记忆。", lesson: "语言保存着生活痕迹。", reviewStatus: "待母语者审校" }
         ]
       },
@@ -1867,7 +1867,7 @@ const readingUnits = [
         items: [
           { id: "proverb-qaduwq-line-1", value: "سۇ ئىچكەن قۇدۇقنى ئۇنتۇما.", meaning: "不要忘记喝过水的井。", lesson: "得到帮助后，要记得来源。", reviewStatus: "待母语者审校" },
           { id: "proverb-qaduwq-line-2", value: "ياخشىلىقنى ئۇنتۇما.", meaning: "不要忘记别人的好。", lesson: "感恩会让关系更长久。", reviewStatus: "待母语者审校" },
-          { id: "proverb-qaduwq-line-3", value: "رەھمەت ئېيتقان كۆڭۈل يېقىنلىشىدۇ.", meaning: "会说谢谢，心就会更近。", lesson: "感谢是一种很重要的表达。", reviewStatus: "待母语者审校" }
+          { id: "proverb-qaduwq-line-3", value: "رەھمەت ئېيتىش كۆڭۈللەرنى يېقىنلاشتۇرىدۇ.", meaning: "说谢谢能拉近彼此的心。", lesson: "感谢是一种很重要的表达。", reviewStatus: "待母语者审校" }
         ]
       }
     ]

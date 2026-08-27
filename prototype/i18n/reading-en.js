@@ -199,12 +199,12 @@
         subtitle: "Very short stories from daily life"
       },
       "famous-quotes": {
-        title: "Unit 8: Famous quotes",
-        subtitle: "10 notable people, with 3 learning sentences each"
+        title: "Unit 8: Cultural figures — themed learning lines",
+        subtitle: "10 cultural figures, with 3 themed learning lines each (not direct quotations)"
       },
       "uyghur-proverbs": {
-        title: "Unit 9: Uyghur proverbs",
-        subtitle: "10 themes with 3 short sayings each"
+        title: "Unit 9: Uyghur proverbs and wisdom sayings",
+        subtitle: "10 themes with 3 proverbs or themed learning lines each"
       }
     },
     groups: {
@@ -250,7 +250,7 @@
         rule: "Use بار for having something and يوق for not having it; add مۇ after بار when asking a question."
       },
       "sentence-like-need": {
-        title: "I want... / I like...",
+        title: "I need... / I like...",
         rule: "Use ماڭا … لازىم to express a need; in everyday action or preference sentences, place the verb at the end."
       },
       "sentence-time": {
@@ -436,8 +436,8 @@
       "sentence-have-2": { meaning: "I do not have a pen." },
       "sentence-have-3": { meaning: "Do you have a book?" },
       "sentence-have-4": { meaning: "We have naan." },
-      "sentence-like-need-1": { meaning: "I want water." },
-      "sentence-like-need-2": { meaning: "I want naan." },
+      "sentence-like-need-1": { meaning: "I need water." },
+      "sentence-like-need-2": { meaning: "I need naan." },
       "sentence-like-need-3": { meaning: "I drink tea." },
       "sentence-like-need-4": { meaning: "I love my mother tongue." },
       "sentence-time-1": { meaning: "What day is it today?" },
@@ -458,14 +458,14 @@
       "dialogue-greeting-4": { speaker: "Speaker B", meaning: "See you later." },
       "dialogue-family-1": { speaker: "Speaker A", meaning: "Who is this?" },
       "dialogue-family-2": { speaker: "Speaker B", meaning: "This is my mother." },
-      "dialogue-family-3": { speaker: "Speaker A", meaning: "Is your father here?" },
+      "dialogue-family-3": { speaker: "Speaker A", meaning: "Is your father at home?" },
       "dialogue-family-4": { speaker: "Speaker B", meaning: "Yes, my father is at home." },
-      "dialogue-shopping-1": { speaker: "Speaker A", meaning: "Do you have bread?" },
-      "dialogue-shopping-2": { speaker: "Speaker B", meaning: "Yes. How much would you like?" },
-      "dialogue-shopping-3": { speaker: "Speaker A", meaning: "I would like two." },
+      "dialogue-shopping-1": { speaker: "Speaker A", meaning: "Do you have naan?" },
+      "dialogue-shopping-2": { speaker: "Speaker B", meaning: "Yes. How many do you need?" },
+      "dialogue-shopping-3": { speaker: "Speaker A", meaning: "I need two." },
       "dialogue-shopping-4": { speaker: "Speaker B", meaning: "Here you are. Please take them." },
       "dialogue-road-1": { speaker: "Speaker A", meaning: "Where is the school?" },
-      "dialogue-road-2": { speaker: "Speaker B", meaning: "It is straight ahead." },
+      "dialogue-road-2": { speaker: "Speaker B", meaning: "Go straight ahead." },
       "dialogue-road-3": { speaker: "Speaker A", meaning: "Is it far?" },
       "dialogue-road-4": { speaker: "Speaker B", meaning: "No, it is close." },
       "dialogue-school-1": { speaker: "Speaker A", meaning: "Is there a class today?" },
@@ -478,24 +478,24 @@
       "dialogue-guest-4": { speaker: "Speaker B", meaning: "Yes, I would." },
       "story-my-day-1": { meaning: "I get up in the morning." },
       "story-my-day-2": { meaning: "I wash my face." },
-      "story-my-day-3": { meaning: "I eat bread and drink tea." },
+      "story-my-day-3": { meaning: "I eat naan and drink tea." },
       "story-my-day-4": { meaning: "Then I go to school." },
       "story-my-day-5": { meaning: "I return home in the evening." },
-      "story-my-family-1": { meaning: "My mother and father are in our family." },
+      "story-my-family-1": { meaning: "I live with my parents." },
       "story-my-family-2": { meaning: "I have an older brother." },
       "story-my-family-3": { meaning: "My younger sister is still little." },
       "story-my-family-4": { meaning: "We eat together." },
-      "story-my-family-5": { meaning: "Our home is warm and safe." },
+      "story-my-family-5": { meaning: "Our home is warm and peaceful." },
       "story-market-1": { meaning: "Today my mother and I went to the market." },
       "story-market-2": { meaning: "There were many people at the market." },
       "story-market-3": { meaning: "We bought tomatoes and potatoes." },
-      "story-market-4": { meaning: "My mother also bought bread." },
+      "story-market-4": { meaning: "My mother also bought naan." },
       "story-market-5": { meaning: "Then we went home." },
       "story-friend-1": { meaning: "I have a good friend." },
       "story-friend-2": { meaning: "His name is Ali." },
       "story-friend-3": { meaning: "We play together." },
       "story-friend-4": { meaning: "He helps me." },
-      "story-friend-5": { meaning: "Friendship is wonderful." },
+      "story-friend-5": { meaning: "Friendship is a good thing." },
       "story-rain-1": { meaning: "The weather is cloudy today." },
       "story-rain-2": { meaning: "It rained in the afternoon." },
       "story-rain-3": { meaning: "I looked outside through the window." },
@@ -503,7 +503,7 @@
       "story-rain-5": { meaning: "The rain sounded gentle." },
       "story-mother-language-1": { meaning: "My mother tongue is Uyghur." },
       "story-mother-language-2": { meaning: "I learn a little every day." },
-      "story-mother-language-3": { meaning: "I begin by carefully learning one letter." },
+      "story-mother-language-3": { meaning: "I know one letter well." },
       "story-mother-language-4": { meaning: "Then I read a word." },
       "story-mother-language-5": { meaning: "My mother tongue is close to my heart." },
       "quote-mahmud-kashgari-line-1": {
@@ -531,7 +531,7 @@
         lesson: "Think before making a choice."
       },
       "quote-ahmet-yukneki-line-1": {
-        meaning: "Courtesy is a person's adornment.",
+        meaning: "Good manners are a person's adornment.",
         lesson: "Speaking politely is an important habit in language learning."
       },
       "quote-ahmet-yukneki-line-2": {
@@ -571,7 +571,7 @@
         lesson: "Learning also needs hope."
       },
       "quote-lutpulla-mutellip-line-2": {
-        meaning: "The fire in the heart becomes language.",
+        meaning: "The fire in the heart turns into words.",
         lesson: "Expression comes from genuine feeling."
       },
       "quote-lutpulla-mutellip-line-3": {
@@ -591,7 +591,7 @@
         lesson: "Cultural memory gives people direction."
       },
       "quote-zunun-qadiri-line-1": {
-        meaning: "Stories can open people's hearts.",
+        meaning: "Stories can cheer people up.",
         lesson: "Stories place words back into everyday life."
       },
       "quote-zunun-qadiri-line-2": {
@@ -607,7 +607,7 @@
         lesson: "Humour can also express something serious."
       },
       "quote-zordun-sabir-line-2": {
-        meaning: "Observing life is a writer's classroom.",
+        meaning: "Observing life is a lesson for a writer.",
         lesson: "Language comes from life."
       },
       "quote-zordun-sabir-line-3": {
@@ -639,7 +639,7 @@
         lesson: "Learning gives you more choices in life."
       },
       "proverb-yaxshi-soz-line-1": {
-        meaning: "Kind words nourish the heart.",
+        meaning: "Kind words are nourishment for the soul.",
         lesson: "Gentle words put people at ease."
       },
       "proverb-yaxshi-soz-line-2": {
@@ -683,7 +683,7 @@
         lesson: "Rewards come after effort."
       },
       "proverb-emgek-line-3": {
-        meaning: "Without sowing, there is no harvest.",
+        meaning: "Without sowing, you cannot obtain a harvest.",
         lesson: "Results grow from earlier effort."
       },
       "proverb-dost-line-1": {

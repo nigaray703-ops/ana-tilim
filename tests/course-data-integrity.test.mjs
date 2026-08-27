@@ -583,8 +583,8 @@ const grammarUnit = assertReadingUnit({ id: "grammar-basics", title: "语法入�
 const sentenceUnit = assertReadingUnit({ id: "sentence-patterns", title: "基础句型", minGroups: 12, maxGroups: 12, expectedKind: "sentence" });
 const dialogueUnit = assertReadingUnit({ id: "dialogue-theater", title: "对话小剧场", minGroups: 5, maxGroups: 8, expectedKind: "dialogue" });
 const storyUnit = assertReadingUnit({ id: "short-stories", title: "小故事", minGroups: 5, maxGroups: 8, expectedKind: "story" });
-const quoteUnit = assertReadingUnit({ id: "famous-quotes", title: "名人名言", minGroups: 10, maxGroups: 10, expectedKind: "quote" });
-const proverbUnit = assertReadingUnit({ id: "uyghur-proverbs", title: "维吾尔谚语", minGroups: 10, maxGroups: 10, expectedKind: "proverb" });
+const quoteUnit = assertReadingUnit({ id: "famous-quotes", title: "文化人物主题学习句", minGroups: 10, maxGroups: 10, expectedKind: "quote" });
+const proverbUnit = assertReadingUnit({ id: "uyghur-proverbs", title: "维吾尔语谚语与智慧短句", minGroups: 10, maxGroups: 10, expectedKind: "proverb" });
 
 for (const group of [...grammarUnit.groups, ...sentenceUnit.groups, ...dialogueUnit.groups, ...storyUnit.groups, ...quoteUnit.groups, ...proverbUnit.groups]) {
   assertText(group.id, `reading group ${group.id} id`);

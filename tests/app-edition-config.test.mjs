@@ -57,8 +57,8 @@ function aggregateReadingUnits(appConfig) {
       ANA_TILIM_PRACTICE: {},
       ANA_TILIM_READING: {
         readingUnits: [
-          { id: "uyghur-proverbs", title: "维吾尔谚语" },
-          { id: "famous-quotes", title: "名人名言" }
+          { id: "uyghur-proverbs", title: "维吾尔语谚语与智慧短句" },
+          { id: "famous-quotes", title: "文化人物主题学习句" }
         ]
       },
       ANA_TILIM_AFANTI_DATA: { stories: [], unit: { id: "afanti-stories" } },
@@ -73,16 +73,16 @@ function aggregateReadingUnits(appConfig) {
 }
 
 assert.deepEqual(aggregateReadingUnits({ hiddenUnitIds: ["famous-quotes"] }), [
-  { id: "uyghur-proverbs", title: "维吾尔谚语" }
+  { id: "uyghur-proverbs", title: "维吾尔语谚语与智慧短句" }
 ]);
 assert.deepEqual(aggregateReadingUnits({
-  readingUnitTitleOverrides: { "uyghur-proverbs": "第八单元：维吾尔谚语" }
+  readingUnitTitleOverrides: { "uyghur-proverbs": "第八单元：维吾尔语谚语与智慧短句" }
 }), [
-  { id: "uyghur-proverbs", title: "维吾尔谚语" },
-  { id: "famous-quotes", title: "名人名言" }
+  { id: "uyghur-proverbs", title: "维吾尔语谚语与智慧短句" },
+  { id: "famous-quotes", title: "文化人物主题学习句" }
 ]);
 assert.deepEqual(aggregateReadingUnits({ hiddenReadingUnitIds: ["famous-quotes"] }), [
-  { id: "uyghur-proverbs", title: "维吾尔谚语" }
+  { id: "uyghur-proverbs", title: "维吾尔语谚语与智慧短句" }
 ]);
 
 const expectedCoreFiles = [
