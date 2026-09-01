@@ -5,8 +5,43 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateWebmBuffer } from "../tools/lib/webm-audio.mjs";
 
-export const FINAL_AUDIO_FILES = Object.freeze([
+export const ALPHABET_AUDIO_FILES = Object.freeze([
+  "assets/audio/human/alphabet/human_letter_01_b.webm",
+  "assets/audio/human/alphabet/human_letter_02_p.webm",
+  "assets/audio/human/alphabet/human_letter_03_t.webm",
+  "assets/audio/human/alphabet/human_letter_04_n.webm",
+  "assets/audio/human/alphabet/human_letter_05_j.webm",
+  "assets/audio/human/alphabet/human_letter_06_ch.webm",
+  "assets/audio/human/alphabet/human_letter_07_x.webm",
+  "assets/audio/human/alphabet/human_letter_08_d.webm",
+  "assets/audio/human/alphabet/human_letter_09_r.webm",
+  "assets/audio/human/alphabet/human_letter_10_z.webm",
   "assets/audio/human/alphabet/human_letter_11_zh.webm",
+  "assets/audio/human/alphabet/human_letter_12_s.webm",
+  "assets/audio/human/alphabet/human_letter_13_sh.webm",
+  "assets/audio/human/alphabet/human_letter_14_gh.webm",
+  "assets/audio/human/alphabet/human_letter_15_f.webm",
+  "assets/audio/human/alphabet/human_letter_16_q.webm",
+  "assets/audio/human/alphabet/human_letter_17_k.webm",
+  "assets/audio/human/alphabet/human_letter_18_g.webm",
+  "assets/audio/human/alphabet/human_letter_19_ng.webm",
+  "assets/audio/human/alphabet/human_letter_20_l.webm",
+  "assets/audio/human/alphabet/human_letter_21_m.webm",
+  "assets/audio/human/alphabet/human_letter_22_h.webm",
+  "assets/audio/human/alphabet/human_letter_23_w_v.webm",
+  "assets/audio/human/alphabet/human_letter_24_y.webm",
+  "assets/audio/human/alphabet/human_letter_25_a.webm",
+  "assets/audio/human/alphabet/human_letter_26_e.webm",
+  "assets/audio/human/alphabet/human_letter_27_o.webm",
+  "assets/audio/human/alphabet/human_letter_28_u.webm",
+  "assets/audio/human/alphabet/human_letter_29_oe.webm",
+  "assets/audio/human/alphabet/human_letter_30_ue.webm",
+  "assets/audio/human/alphabet/human_letter_31_ee.webm",
+  "assets/audio/human/alphabet/human_letter_32_i.webm"
+]);
+
+export const FINAL_AUDIO_FILES = Object.freeze([
+  ...ALPHABET_AUDIO_FILES,
   "assets/audio/human/vocab/human_vocab_korushkunche.webm",
   "assets/audio/human/vocab/human_vocab_erzimeydu.webm",
   "assets/audio/human/reading/human_reading_grammar_person_verbs_2.webm",
@@ -39,6 +74,7 @@ export const FINAL_AUDIO_FILES = Object.freeze([
 
 const RELEASE_FILES = Object.freeze([
   ...FINAL_AUDIO_FILES,
+  "assets/audio/human/alphabet/manifest.json",
   "assets/audio/human/reading/manifest.json",
   "assets/audio/human/vocab/manifest.json"
 ]);
