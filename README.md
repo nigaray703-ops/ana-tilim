@@ -29,6 +29,16 @@
 > 作品；不得复制、换牌、重新发布本网站，也不得把本项目、Fork 或轻微修改版声称为自己
 > 原创。完整规则见 [LICENSE.md](./LICENSE.md)。
 
+## Quick review / 快速了解
+
+Start with the official website: explore alphabet and pronunciation, vocabulary, a listening or dictation activity, and reading or keyboard practice. The edition comparison below explains the different account and storage behavior.
+
+建议先体验正式网站中的字母与发音、词汇、听写或听力，以及阅读或键盘练习；下方版本对照说明账号与学习进度保存方式的差异。
+
+For implementation review, start with `prototype/`, `tests/`, and `scripts/check-project.mjs`. The commands below are reproducible review instructions, not a claim that the latest deployment has passed every check or a complete accessibility audit.
+
+源码审查可从上述目录和检查脚本开始。下方命令用于复核当前源码，不代表最新部署已经通过全部检查或完整无障碍审计。版权、真人音频和贡献规则见下文及对应规则文件。
+
 ## About / 项目介绍
 
 Ana Tilim means “My Mother Tongue.” The project is designed for people learning
